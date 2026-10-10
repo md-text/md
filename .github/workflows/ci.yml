@@ -1,0 +1,74 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      # install-crystal installs packages without refreshing the package
+      # index, which fails when the runner image's index has gone stale.
+      - name: Update package index
+        run: sudo apt-get update -y
+      - uses: crystal-lang/install-crystal@v1
+      - name: Install dependencies
+        run: shards install
+      - name: Check formatting
+        run: crystal tool format --check
+      - name: Run ameba
+        run: make lint
+
+  test:
+    name: Test (${{ matrix.runner }}, Crystal ${{ matrix.crystal }})
+    runs-on: ${{ matrix.runner }}
+    strategy:
+      fail-fast: false
+      matrix:
+        runner: [ubuntu-latest, ubuntu-24.04-arm, macos-15, macos-15-intel]
+        crystal: [latest]
+        include:
+          # Catch upcoming Crystal changes early, on one platform.
+          - runner: ubuntu-latest
+            crystal: nightly
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Update package index (Linux)
+        if: runner.os == 'Linux'
+        run: sudo apt-get update -y
+
+      - uses: crystal-lang/install-crystal@v1
+        with:
+          crystal: ${{ matrix.crystal }}
+
+      # Crysterm reads terminfo through unibilium, the one native library
+      # beyond Crystal's own runtime that md links against.
+      - name: Install unibilium (Linux)
+        if: runner.os == 'Linux'
+        run: sudo apt-get install -y libunibilium-dev
+      - name: Install unibilium (macOS)
+        if: runner.os == 'macOS'
+        run: brew install unibilium
+
+      - name: Install dependencies
+        run: shards install
+
+      - name: Run specs
+        run: crystal spec
+
+      - name: Build
+        run: shards build
+
+      # The binary starts and exits without a terminal.
+      - name: Smoke test
+        run: |
+          bin/md --version
+          bin/md --help

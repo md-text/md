@@ -1,0 +1,26 @@
+name: md
+version: 0.1.0
+
+authors:
+  - Davor Ocelic <docelic@crystallabs.io>
+
+description: |
+  Markdown viewer and editor for the terminal, built on Crysterm.
+
+crystal: ">= 1.21.0"
+
+license: AGPL-3.0-or-later
+
+targets:
+  md:
+    main: src/bin/md.cr
+
+dependencies:
+  crysterm:
+    github: crystallabs/crysterm
+    version: ~> 1.0
+
+development_dependencies:
+  ameba:
+    github: crystal-ameba/ameba
+    version: ~> 1.7

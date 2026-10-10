@@ -1,0 +1,11 @@
+# Temporary: build against the sibling Crysterm and Tput checkouts, which
+# carry fixes not yet released (quit keys under a keyboard grab, keyboard
+# input from the controlling terminal when stdin carries the document, exact
+# widths for text-presentation emoji, the rich-text viewer following the CSS
+# theme/stylesheet). Remove once releases include them and shard.yml's
+# version bounds are raised.
+dependencies:
+  crysterm:
+    path: ../crysterm2
+  tput:
+    path: ../tput.cr

@@ -1,0 +1,236 @@
+# md
+
+md is a Markdown viewer and editor for the terminal. It renders a parsed
+document for reading, edits the Markdown source, and shows editor and rendered
+view side by side with live updates as you type. It can also follow a document
+arriving on standard input, re-rendering and scrolling as new text comes in.
+
+md is built on [Crysterm](https://github.com/crystallabs/crysterm) and ships as
+a single self-contained binary for Linux and macOS: download it, put it on your
+`PATH`, and run it in any terminal.
+
+> **Status:** early development. Viewing, editing, the side-by-side layout
+> and streaming from standard input work; the menu bar and status bar are
+> still empty. See [PLAN.md](PLAN.md).
+
+[![CI](https://github.com/crystallabs/md/actions/workflows/ci.yml/badge.svg)](https://github.com/crystallabs/md/actions/workflows/ci.yml)
+[![Release](https://img.shields.io/github/v/release/crystallabs/md?sort=semver)](https://github.com/crystallabs/md/releases/latest)
+[![License: AGPL-3.0-or-later](https://img.shields.io/badge/license-AGPL--3.0--or--later-blue.svg)](LICENSE)
+
+## Installation
+
+### Prebuilt binaries (recommended)
+
+Every release on the [releases page](https://github.com/crystallabs/md/releases)
+includes an archive per platform:
+
+| Archive                              | Platform                                  |
+| ------------------------------------ | ----------------------------------------- |
+| `md-vX.Y.Z-linux-x86_64.tar.gz`      | Linux, 64-bit Intel/AMD (any distribution) |
+| `md-vX.Y.Z-linux-aarch64.tar.gz`     | Linux, 64-bit ARM (any distribution)       |
+| `md-vX.Y.Z-macos-aarch64.tar.gz`     | macOS, Apple Silicon                       |
+| `md-vX.Y.Z-macos-x86_64.tar.gz`      | macOS, Intel                               |
+
+The Linux binaries are fully static and run on any distribution without
+installing anything else. The macOS binaries depend only on libraries that
+ship with macOS.
+
+To install, download the archive for your platform, verify it, unpack it and
+move the binary somewhere on your `PATH`. For example, on Linux x86_64:
+
+```sh
+VERSION=vX.Y.Z   # see the releases page for the latest version
+curl -LO https://github.com/crystallabs/md/releases/download/$VERSION/md-$VERSION-linux-x86_64.tar.gz
+curl -LO https://github.com/crystallabs/md/releases/download/$VERSION/md-$VERSION-linux-x86_64.tar.gz.sha256
+shasum -a 256 -c md-$VERSION-linux-x86_64.tar.gz.sha256
+tar xzf md-$VERSION-linux-x86_64.tar.gz
+sudo install -m 0755 md-$VERSION-linux-x86_64/md /usr/local/bin/md
+md --version
+```
+
+On macOS, a binary downloaded with a web browser is quarantined by Gatekeeper
+and refused on first start. Downloading with `curl` as above avoids that;
+otherwise clear the flag with `xattr -d com.apple.quarantine md`.
+
+Windows is not supported natively, since md needs a POSIX terminal. The Linux
+binary runs under the [Windows Subsystem for Linux](https://learn.microsoft.com/windows/wsl/).
+
+### From source
+
+See [Building from source](#building-from-source) below.
+
+## Usage
+
+```sh
+md                    # open an empty editor
+md README.md          # open a file for viewing
+md notes.md           # a file that does not exist yet opens in the editor
+md - < README.md      # read the document from standard input
+some-command | md     # follow output as it arrives (`-` is optional here)
+md --help             # list the options
+md --version          # print the version
+```
+
+The window has three panes side by side: the Markdown source editor, the
+rendered viewer and a table of contents. A new document starts with only the
+editor shown; a file or a stream starts with only the viewer. Show any
+combination you like; the viewer re-renders as you type, and the table of
+contents follows the document's headings. A document arriving on standard
+input is rendered as it comes in, and the viewer keeps scrolling to the end
+until you scroll up.
+
+| Key                | Action                                                                    |
+| ------------------ | ------------------------------------------------------------------------- |
+| `F2`, `F3`, `F4`   | Show and focus the editor, viewer or table of contents; hide it if it is already focused (the last pane stays) |
+| `Tab`, `Shift-Tab` | Move focus to the next or previous shown pane (in the viewer, `Tab` first cycles links) |
+| `Enter`            | In the table of contents, jump the viewer to the selected heading; in the viewer, follow the focused link |
+| `Space`, `Enter`   | In the viewer, read on by a page or by a line (arrows, `PageUp`/`PageDown`, `Home`/`End` as usual) |
+| `Insert`           | Toggle the editor between inserting and overwriting (the `INS`/`OVR` field) |
+| `F5`               | Cycle the mouse mode (the `🖱=` field)                                    |
+| `Alt-F`, `Alt-V`, `Alt-O` | Open the File, View and Options menus (`F10` too)                  |
+| `Ctrl-S`           | Save; without a file name yet, asks for one (File → Save As… always asks) |
+| `Ctrl-Q`           | Quit (`q` too, anywhere but in the editor)                                |
+
+The editor has the usual editing keys: arrows and `Home`/`End`, `Shift` +
+arrows to select, `Ctrl-Z`/`Alt-Z` to undo and redo, `Ctrl-K`/`Ctrl-Y` to kill
+and yank, and the mouse to position the cursor, select and scroll.
+
+The status bar shows the document's name (a save result or warning takes its
+place for a moment), the caret's line and column while editing or the reading
+position while viewing (`Top`, `Bot`, a percentage, or `All` when the whole
+document fits), the line and word counts, the encoding and line endings, and
+whether the document is modified. Two fields at the right are toggles you can
+click: `INS`/`OVR` switches the editor between inserting and overwriting, and
+the mouse field — `🖱=` on terminals known to render the icon, `M=` elsewhere —
+cycles the mouse modes, named after vi's `set mouse=` values:
+
+| Mode      | The mouse works…                                                            |
+| --------- | --------------------------------------------------------------------------- |
+| `mouse=a` | always                                                                      |
+| `mouse=n` | while reading, in the viewer or the table of contents (vi's Normal mode)   |
+| `mouse=i` | while editing, in the editor (vi's Insert mode)                             |
+| `mouse=`  | never                                                                       |
+
+While the mouse does not work for md, the terminal's own text selection and
+copy work instead. With the mouse off you cannot click the field, so `F5`
+cycles the modes from the keyboard too, and the Options menu offers them as
+well, next to the overwrite mode. The File menu saves, saves as and quits;
+the View menu shows and hides the panes.
+
+The View menu also has *Follow cursor*: with it on, moving the cursor in the
+editor puts the viewer's cursor on the same place in the rendered document,
+scrolled to the same row of its pane, and moving it in the viewer does the
+same in the editor.
+The pane you are in leads. The match is by source line, so inside formatted
+text the other cursor lands near rather than exactly on the spot, and a line
+that renders nothing (a blank line, a code fence) maps to the rendered block
+just above it. *Highlight line*, also in the View menu, tints the row the
+cursor is on in each pane; together with *Follow cursor* the two tinted rows
+are the same place in the document, which makes the pairing easy to see.
+
+Save As asks for the name in place of the status bar, the way vi's command
+line replaces its status line: the current name is filled in, `Tab` and
+`Shift-Tab` complete file names, `Up` recalls earlier answers, `Enter` saves,
+and `Escape` (or `Backspace` on an empty line) gives up.
+
+## Building from source
+
+md is written in [Crystal](https://crystal-lang.org). You need:
+
+- Crystal 1.21 or newer, with its `shards` dependency manager (included in all
+  official packages);
+- the [unibilium](https://github.com/neovim/unibilium) terminfo library with
+  its development headers;
+- `make` (optional, but the commands below assume it).
+
+On Debian or Ubuntu:
+
+```sh
+curl -fsSL https://crystal-lang.org/install.sh | sudo bash
+sudo apt-get install -y libunibilium-dev make
+```
+
+On macOS with [Homebrew](https://brew.sh):
+
+```sh
+brew install crystal unibilium make
+```
+
+Then, in a clone of this repository:
+
+```sh
+make release          # fetch dependencies and build an optimized bin/md
+sudo make install     # copy it to /usr/local/bin (set PREFIX to change)
+```
+
+`make` alone builds a faster-compiling, unoptimized binary for development.
+Both place the binary in `bin/md`.
+
+> **Temporary:** `shard.override.yml` builds against Crysterm and Tput
+> checkouts in `../crysterm2` and `../tput.cr`, which carry fixes md needs
+> that are not yet released. Clone them there (or edit the paths), or delete
+> the override once releases with those fixes are out and `shard.yml`
+> requires them.
+
+## Development
+
+```sh
+make                  # build bin/md
+make test             # run the specs
+make lint             # run ameba (static analysis) and the formatter check
+make format           # reformat the sources
+make check            # test + lint, the same as CI
+```
+
+Layout:
+
+```
+src/bin/md.cr         executable entry point
+src/md.cr             library root
+src/md/cli.cr         command-line parsing
+src/md/source.cr      where the document comes from (file, stdin, nothing)
+src/md/app.cr         the Crysterm application: window, panes, keys, streaming
+src/md/app_status.cr  the status bar fields, the mouse modes
+src/md/app_menu.cr    the menu bar
+src/md/version.cr     Md::VERSION, read from shard.yml at compile time
+spec/                 specs (crystal spec)
+```
+
+CI runs the specs and lints every push and pull request on Linux (x86_64,
+aarch64) and macOS (Intel, Apple Silicon), with the latest Crystal release
+and, on one platform, Crystal nightly.
+
+### Releasing
+
+1. Set the new version in `shard.yml` and move the *Unreleased* entries in
+   `CHANGELOG.md` under a heading for it.
+2. Commit, then tag and push:
+
+   ```sh
+   git tag -a vX.Y.Z -m "md vX.Y.Z"
+   git push origin main vX.Y.Z
+   ```
+
+The *Release* workflow creates the GitHub release for the tag and attaches a
+binary archive, with a SHA-256 checksum, for every supported platform. The
+workflow can also be run by hand from the *Actions* tab against an existing
+tag, or without a tag to produce the archives as workflow artifacts only.
+
+## Contributing
+
+See [CONTRIBUTING.md](CONTRIBUTING.md).
+
+## License
+
+Copyright (C) 2026 Davor Ocelic
+
+This program is free software: you can redistribute it and/or modify it under
+the terms of the GNU Affero General Public License as published by the Free
+Software Foundation, either version 3 of the License, or (at your option) any
+later version.
+
+This program is distributed in the hope that it will be useful, but WITHOUT ANY
+WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A
+PARTICULAR PURPOSE. See the GNU Affero General Public License for more details.
+
+See [LICENSE](LICENSE) for the full text.

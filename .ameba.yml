@@ -1,0 +1,10 @@
+# Ameba (Crystal static analysis) configuration.
+#
+# Lint the shipping code and its specs only. All rules run at their defaults;
+# when a rule has to be disabled or scoped, add it here with a comment that
+# explains why, so the suppressions stay auditable.
+Version: "1.7.0"
+
+Globs:
+  - src/**/*.cr
+  - spec/**/*.cr

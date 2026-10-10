@@ -1,0 +1,142 @@
+# Builds release binaries for every supported platform and attaches them to the
+# GitHub release for the tag.
+#
+# Supported platforms (Crysterm needs a POSIX terminal: Windows is not
+# supported, but the Linux binaries run under WSL):
+#   linux-x86_64, linux-aarch64   fully static (musl), run on any distribution
+#   macos-x86_64, macos-aarch64   depend only on libraries that ship with macOS
+#
+# Trigger: push a tag `vX.Y.Z`, or run the workflow by hand ("Run workflow"),
+# optionally naming an existing tag to attach the archives to. A run without a
+# tag only builds and keeps the archives as workflow artifacts.
+name: Release
+
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Release tag to build and attach the archives to (empty builds the current ref without attaching)
+        required: false
+        default: ""
+
+permissions:
+  contents: write
+
+env:
+  CRYSTAL_VERSION: 1.21.1
+  TAG: ${{ inputs.tag || (github.ref_type == 'tag' && github.ref_name) || '' }}
+  GH_TOKEN: ${{ github.token }}
+
+jobs:
+  # Created up front so that the build jobs only ever upload to it.
+  release:
+    name: Create release
+    runs-on: ubuntu-latest
+    steps:
+      - name: Create the release unless it exists
+        if: env.TAG != ''
+        run: |
+          gh release view "$TAG" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1 ||
+            gh release create "$TAG" --repo "$GITHUB_REPOSITORY" --title "$TAG" --verify-tag --generate-notes
+
+  build:
+    name: Build ${{ matrix.os }}-${{ matrix.arch }}
+    needs: release
+    runs-on: ${{ matrix.runner }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: linux
+            arch: x86_64
+            runner: ubuntu-latest
+          - os: linux
+            arch: aarch64
+            runner: ubuntu-24.04-arm
+          - os: macos
+            arch: x86_64
+            runner: macos-15-intel
+          - os: macos
+            arch: aarch64
+            runner: macos-15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ env.TAG || github.ref }}
+
+      # The build runs in the Crystal Alpine image via docker so that the
+      # binary is fully static, independent of the runner's architecture
+      # (Alpine containers cannot host GitHub's JavaScript actions on arm64).
+      # unibilium-dev ships libunibilium.a. The readline fallback for terminal
+      # size detection (never reached when ioctl works) is compiled out with
+      # -Dwithout_readline so that readline and ncurses need not be linked in.
+      - name: Build static binary (Linux)
+        if: matrix.os == 'linux'
+        run: |
+          docker run --rm -v "$PWD:/app" -w /app "crystallang/crystal:$CRYSTAL_VERSION-alpine" sh -ec '
+            apk add --no-cache unibilium-dev
+            shards install --production
+            mkdir -p bin
+            crystal build --release --no-debug --static -Dwithout_readline -o bin/md src/bin/md.cr
+            file bin/md
+          '
+          sudo chown -R "$(id -u):$(id -g)" bin lib
+          bin/md --version
+
+      - name: Install Crystal (macOS)
+        if: matrix.os == 'macos'
+        uses: crystal-lang/install-crystal@v1
+        with:
+          crystal: ${{ env.CRYSTAL_VERSION }}
+
+      # macOS has no fully static binaries. The Homebrew libraries are linked
+      # statically, by putting a directory holding only their .a files first
+      # in the linker's search path, so that the binary depends on nothing
+      # but the libraries that ship with the system (libedit, libiconv, libz,
+      # libutil, libSystem).
+      - name: Build binary (macOS)
+        if: matrix.os == 'macos'
+        run: |
+          brew install unibilium libyaml pcre2 bdw-gc
+          mkdir static
+          for lib in unibilium/libunibilium libyaml/libyaml pcre2/libpcre2-8 bdw-gc/libgc; do
+            prefix="$(brew --prefix "${lib%/*}")"
+            ln -s "$prefix/lib/${lib#*/}.a" static/
+          done
+          shards install --production
+          mkdir -p bin
+          crystal build --release --no-debug --link-flags "-L$PWD/static" -o bin/md src/bin/md.cr
+          otool -L bin/md
+          if otool -L bin/md | tail -n +2 | grep -vE '^[[:space:]]+(/usr/lib/|/System/)'; then
+            echo "bin/md links against non-system libraries"; exit 1
+          fi
+          bin/md --version
+
+      - name: Package
+        id: package
+        run: |
+          version="${TAG:-v$(sed -n 's/^version: *//p' shard.yml)}"
+          name="md-${version}-${{ matrix.os }}-${{ matrix.arch }}"
+          mkdir "$name"
+          cp bin/md README.md LICENSE CHANGELOG.md "$name/"
+          tar czf "$name.tar.gz" "$name"
+          shasum -a 256 "$name.tar.gz" > "$name.tar.gz.sha256"
+          echo "name=$name" >> "$GITHUB_OUTPUT"
+
+      - name: Upload workflow artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ steps.package.outputs.name }}
+          path: |
+            ${{ steps.package.outputs.name }}.tar.gz
+            ${{ steps.package.outputs.name }}.tar.gz.sha256
+          if-no-files-found: error
+
+      - name: Attach to release
+        if: env.TAG != ''
+        run: |
+          gh release upload "$TAG" --repo "$GITHUB_REPOSITORY" --clobber \
+            "${{ steps.package.outputs.name }}.tar.gz" "${{ steps.package.outputs.name }}.tar.gz.sha256"

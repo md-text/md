@@ -1,0 +1,16 @@
+# Dependencies and build output
+/lib/
+/bin/
+/.shards/
+/.crystal/
+/docs/
+*.dwarf
+
+# Release archives produced by the workflow or by hand
+/md-*.tar.gz
+/md-*.tar.gz.sha256
+
+# Editors and operating systems
+.DS_Store
+*.swp
+*~
