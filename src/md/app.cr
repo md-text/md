@@ -46,7 +46,7 @@ module Md
   # `app_search.cr`; opening, reloading and watching the file, the guard
   # against losing unsaved changes and the history of recent files in
   # `app_file.cr`; auto-save and the backup file in `app_autosave.cr`;
-  # copying, and the clipboard mode (Options → Clipboard), in
+  # copying and pasting, and the clipboard mode (Options → Clipboard), in
   # `app_clipboard.cr`;
   # the editing that knows Markdown — lists continued on `Enter` and
   # indented with `Tab`, the Format menu — in `app_edit.cr`.

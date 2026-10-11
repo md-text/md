@@ -28,12 +28,55 @@ module Md
     # paired command (`pbpaste`, `wl-paste`, `xclip -o`…), and in every
     # mode the terminal's own paste works, as bracketed paste. Whatever the
     # mode, copy and paste within md work through the in-process clipboard.
+    #
+    # Edit → Paste (`#paste`, `Ctrl+V`) pastes the clipboard as the mode
+    # reads it, into the editor at the caret, replacing a selection, as one
+    # undo step. In the editor `Ctrl-V` is the editor's own paste and does
+    # the same; from the viewer or the table of contents the key reaches
+    # the entry, which shows and focuses the editor with its caret on the
+    # source of the viewer's (`#formatting_editor`, as the Format entries
+    # do) and pastes there. Edit → Paste Special (`#paste_from_terminal`,
+    # `#paste_from_command`, `#paste_from_internal`, `#paste_from_kill_ring`)
+    # names the source instead of leaving it to the mode, the way editors'
+    # "Paste from…" menus do (`QTextEdit` has none; emacs has `yank-pop`):
+    # the terminal's clipboard, asked for through OSC 52 and pasted when the
+    # terminal answers, or given up on with a notice after
+    # `#terminal_paste_timeout`, since many terminals never answer a read;
+    # the paste command's output (`pbpaste`, `wl-paste`…), an entry that
+    # cannot be picked when none was found; the in-process buffer, what md
+    # itself last copied; and the editor's kill ring — what `Ctrl-K`,
+    # `Ctrl-U` and `Alt-D` killed — as a submenu remade each time the Edit
+    # menu opens (`Event::AboutToShow`), most recent first, numbered
+    # `1`–`9` and `0` for the tenth, so `Ctrl-Y`'s entry is `1` and any
+    # older one is a pick away, a `yank-pop` without the cycling.
     alias ClipboardMode = Crysterm::Application::Clipboard::Mode
 
     # A reactive property, so the Options → Clipboard entries bind to it
     # (`#build_menus`); `#clipboard_mode` and `#clipboard_mode=` are its
     # plain face. Applied to the clipboard as it changes (`#setup_clipboard`).
     @clipboard_mode : Crysterm::Reactive::Property(ClipboardMode) = Crysterm::Reactive::Property.new(ClipboardMode::Terminal)
+
+    # How long a paste from the terminal waits for the OSC 52 answer before
+    # it is given up on with a notice.
+    TERMINAL_PASTE_TIMEOUT = 2.seconds
+
+    # How many kill ring entries the From Kill Ring submenu lists, and how
+    # many columns of each it shows.
+    KILL_RING_MENU_MAX = 10
+    KILL_RING_PREVIEW  = 40
+
+    # The wait for the terminal's answer to the next paste from it (specs
+    # shorten it).
+    property terminal_paste_timeout : Time::Span = TERMINAL_PASTE_TIMEOUT
+
+    # A paste from the terminal in flight: the window handler waiting for
+    # the answer, the timer that gives up on it, and the request's number,
+    # so a timer that fires after its request was answered reports nothing.
+    @terminal_paste : EventHandler::Subscription?
+    @terminal_paste_timer : Crysterm::Timer?
+    @terminal_paste_request = 0
+    # The From Kill Ring submenu's action, remade as the Edit menu opens.
+    @kill_ring_action : Crysterm::Action?
 
     def clipboard_mode : ClipboardMode
       @clipboard_mode.value
@@ -80,6 +123,150 @@ module Md
       end
     end
 
+    # Edit → Paste; see the class comment. In Command mode a paste command
+    # that fails, or none found, pastes nothing, with the clipboard's word
+    # on why.
+    def paste : Nil
+      text = clipboard.text
+      if error = clipboard.error
+        notice "Cannot paste: #{error}"
+        return
+      end
+      paste_text text
+    end
+
+    # Paste Special → From Terminal Clipboard; see the class comment. The
+    # terminal is asked (`Window#request_clipboard`, OSC 52) and the paste
+    # waits for its answer, which arrives on the input as
+    # `Event::ClipboardChanged`; a request still waiting when the next is
+    # made is dropped.
+    def paste_from_terminal : Nil
+      end_terminal_paste
+      request = @terminal_paste_request += 1
+      @terminal_paste = @window.on(Crysterm::Event::ClipboardChanged) do |e|
+        end_terminal_paste
+        paste_text e.content
+      end
+      @terminal_paste_timer = @window.after(@terminal_paste_timeout) do
+        # The timer fires on its own fiber; the editor is touched on the
+        # render fiber, where the answer may have landed meanwhile.
+        @window.post do
+          next unless @terminal_paste && request == @terminal_paste_request
+          end_terminal_paste
+          notice "The terminal did not answer the clipboard request"
+        end
+      end
+      @window.request_clipboard
+      notice "Asking the terminal for its clipboard…"
+    end
+
+    # Paste Special → From Command: the paste command's output, whatever
+    # the mode; a command that fails pastes nothing, with a notice.
+    def paste_from_command : Nil
+      unless argv = clipboard.paste_command
+        notice "No clipboard command found"
+        return
+      end
+      if text = clipboard.command_runner.call(argv, "")
+        paste_text text
+      else
+        notice "Cannot paste: #{argv[0]} failed"
+      end
+    end
+
+    # Paste Special → From Internal Buffer: what md last copied, or last
+    # received from the terminal, whatever the mode.
+    def paste_from_internal : Nil
+      paste_text clipboard.internal_text
+    end
+
+    # The editor's kill ring, most recent entry first: `#paste_from_kill_ring`
+    # takes an index into this.
+    def kill_ring_entries : Array(String)
+      @editor.kill_ring.entries.reverse
+    end
+
+    # Paste Special → From Kill Ring: pastes entry *index* of
+    # `#kill_ring_entries` — 0 is the most recent, what `Ctrl-Y` yanks.
+    def paste_from_kill_ring(index : Int32 = 0) : Nil
+      unless text = kill_ring_entries[index]?
+        notice(index == 0 ? "Nothing killed yet" : "No kill ring entry #{index + 1}")
+        return
+      end
+      paste_text text
+    end
+
+    # Pastes *text* into the editor — shown and focused, its caret on the
+    # source of the viewer's when the viewer led — at the caret, replacing
+    # the selection, as one undo step (`#insert_text`, what typing it would
+    # do), and says how much. Nothing to paste is a notice.
+    private def paste_text(text : String) : Nil
+      if text.empty?
+        notice "Nothing to paste"
+        return
+      end
+      editor = formatting_editor
+      editor.focus unless editor.focused?
+      editor.insert_text text
+      notice "Pasted #{amount text}"
+    end
+
+    # Takes down a paste from the terminal still waiting: answered, given
+    # up on, or superseded.
+    private def end_terminal_paste : Nil
+      @terminal_paste.try &.off
+      @terminal_paste = nil
+      @terminal_paste_timer.try &.stop
+      @terminal_paste_timer = nil
+    end
+
+    # The Edit menu's Paste and Paste Special entries (from `#build_menus`).
+    # The Command entry names the command found, like Options → Clipboard's,
+    # and cannot be picked when there is none; the kill ring submenu starts
+    # empty and is filled as the menu opens.
+    private def add_paste_actions(edit : Crysterm::Widget::Menu) : Nil
+      # `Ctrl+V` reaches the entry from a pane that does not paste itself
+      # (the editor's own `Ctrl-V` is its paste).
+      edit.add_action("&Paste", shortcut: "Ctrl+V") { paste }
+      terminal = Crysterm::Action.new "From &Terminal Clipboard"
+      terminal.on(Crysterm::Event::Triggered) { paste_from_terminal }
+      argv = clipboard.paste_command
+      command = Crysterm::Action.new "From &Command (#{argv ? argv[0] : "none found"})"
+      command.enabled = !argv.nil?
+      command.on(Crysterm::Event::Triggered) { paste_from_command }
+      internal = Crysterm::Action.new "From &Internal Buffer"
+      internal.on(Crysterm::Event::Triggered) { paste_from_internal }
+      ring = Crysterm::Action.new "From &Kill Ring"
+      ring.enabled = false
+      @kill_ring_action = ring
+      edit.add_submenu "Paste &Special", [terminal, command, internal, ring]
+      edit.on(Crysterm::Event::AboutToShow) { refresh_kill_ring_menu }
+    end
+
+    # Remakes the From Kill Ring submenu from the ring as the Edit menu
+    # opens (Qt's `aboutToShow`): the entries most recent first, up to
+    # `KILL_RING_MENU_MAX`, each numbered and previewed; the entry is
+    # disabled while the ring is empty.
+    private def refresh_kill_ring_menu : Nil
+      return unless action = @kill_ring_action
+      actions = kill_ring_entries.first(KILL_RING_MENU_MAX).map_with_index do |text, index|
+        a = Crysterm::Action.new "&#{(index + 1) % 10} #{kill_preview text}"
+        a.on(Crysterm::Event::Triggered) { paste_from_kill_ring index }
+        a
+      end
+      action.menu = actions
+      action.enabled = !actions.empty?
+    end
+
+    # A kill ring entry on one menu row: its line breaks shown as `⏎`, cut
+    # to `KILL_RING_PREVIEW` columns, and its `&` kept from reading as a
+    # mnemonic.
+    private def kill_preview(text : String) : String
+      line = text.gsub('
+', '⏎').gsub('&', "&&")
+      line.size > KILL_RING_PREVIEW ? "#{line[0, KILL_RING_PREVIEW - 1]}…" : line
+    end
+
     # Puts the mode on the clipboard now and whenever it changes.
     private def setup_clipboard : Nil
       clipboard.mode = @clipboard_mode.value
@@ -102,13 +289,18 @@ module Md
     # else its characters — and, when the clipboard could not pass it on
     # (Command mode without a working command), that it stayed within md.
     private def copied(text : String) : Nil
-      lines = text.count('\n') + 1
-      amount = lines > 1 ? "#{lines} lines" : "#{text.size} #{text.size == 1 ? "character" : "characters"}"
       if error = clipboard.error
-        notice "Copied #{amount} within md only: #{error}"
+        notice "Copied #{amount text} within md only: #{error}"
       else
-        notice "Copied #{amount}"
+        notice "Copied #{amount text}"
       end
+    end
+
+    # How much *text* is, for a notice: its lines when there are several,
+    # else its characters.
+    private def amount(text : String) : String
+      lines = text.count('\n') + 1
+      lines > 1 ? "#{lines} lines" : "#{text.size} #{text.size == 1 ? "character" : "characters"}"
     end
 
     # The viewer blocks a copy takes, as a range of block indexes: the

@@ -425,11 +425,13 @@ module Md
       true
     end
 
-    # The editor, for a Format entry: shown when it is hidden, and with the
-    # viewer leading — the entry chosen while reading — its caret put on the
-    # source of the viewer's, so the entry acts on what the reader looks at.
+    # The editor, for a Format entry (and a paste, `app_clipboard.cr`):
+    # shown when it is hidden, and with the viewer leading — the entry
+    # chosen while reading, in the viewer or the table of contents — its
+    # caret put on the source of the viewer's, so the entry acts on what the
+    # reader looks at.
     private def formatting_editor : Crysterm::Widget::PlainTextEdit
-      from_viewer = @viewer.focused?
+      from_viewer = !@editor.focused?
       show_pane Pane::Editor unless @editor.visible?
       if from_viewer
         pos = editor_position(@viewer.cursor_position)

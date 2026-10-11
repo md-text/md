@@ -177,6 +177,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   and `\0` for the pattern's groups and the whole match, as `String#sub`
   does. Every replacement is undoable, `a` as one step, and a notice gives
   the count.
+- Edit → Paste (`Ctrl-V`) pastes the clipboard, as Options → Clipboard
+  reads it, into the editor at the caret, replacing the selection, as one
+  undo step; from the viewer or the table of contents the key reaches the
+  entry, which shows the editor and pastes at the source of the viewer's
+  caret. Edit → Paste Special names the source: From Terminal Clipboard
+  asks the terminal through the OSC 52 read and pastes when it answers (a
+  notice gives up after two seconds, since many terminals never answer),
+  From Command pastes the paste command's output, From Internal Buffer what
+  md itself last copied, and From Kill Ring an entry of the editor's kill
+  ring — `Ctrl-K`'s, `Ctrl-U`'s and `Alt-D`'s kills — from a submenu
+  remade as the Edit menu opens, most recent first, emacs' `yank-pop` as a
+  menu. (Crysterm's clipboard exposes its in-process mirror as
+  `internal_text`.)
 
 [Unreleased]: https://github.com/crystallabs/md/commits/main
 

@@ -29,6 +29,7 @@ module Md
       {"Ctrl-R", "Reload the file from disk."},
       {"Ctrl-S", "Save; without a file name yet, ask for one."},
       {"Ctrl-C", "Copy the selection, or with nothing selected the current block (the line, in the editor); Edit -> Copy as Markdown copies the block's source."},
+      {"Ctrl-V", "Paste the clipboard into the editor at the caret; outside the editor, at the source of the viewer's caret. Edit -> Paste Special pastes from the terminal's clipboard, the paste command, md's own buffer or the editor's kill ring."},
       {"Ctrl-F, /, ?", "Search; `/' and `?' outside the editor, `?' backward."},
       {"Ctrl-G, Alt-G, n, N", "Next and previous match (n and N outside the editor)."},
       {"Ctrl-L, :", "Go to a source line (`:' outside the editor)."},

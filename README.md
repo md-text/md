@@ -122,6 +122,7 @@ of the editor and the viewer, and the table of contents its columns.
 | `Ctrl-R`           | Reload the file from disk (File → Reload)                                 |
 | `Ctrl-S`           | Save; without a file name yet, asks for one (File → Save As… always asks) |
 | `Ctrl-C`           | Copy the selection, or with nothing selected the current block (the line, in the editor) as plain text (Edit → Copy; Edit → Copy as Markdown copies the block's source) |
+| `Ctrl-V`           | Paste the clipboard into the editor at the caret; from the viewer or the table of contents, at the source of the viewer's caret (Edit → Paste; Edit → Paste Special names the source) |
 | `Ctrl-F`, `/`, `?` | Search; asks for the pattern (`/` and `?` outside the editor, `?` backward; Edit → Find…) |
 | `Ctrl-G`, `Alt-G`, `n`, `N` | Next and previous match (`n` and `N` outside the editor; Edit → Find Next, Find Previous) |
 | `Alt-H`            | Replace; asks for the pattern and the replacement, then about each match (Edit → Replace…) |
@@ -196,6 +197,25 @@ md last copied. The terminal's own paste works in every mode (md takes
 bracketed paste), and so do the terminal's own selection and copy with the
 mouse while the mouse mode leaves the mouse to the terminal (above). The
 mode is kept across runs with the other settings.
+
+### Pasting
+
+Edit → Paste (`Ctrl-V`) pastes the clipboard, as the mode reads it, into
+the editor at the caret, replacing the selection, as one undo step. In the
+editor `Ctrl-V` is the editor's own paste and does the same; from the
+viewer or the table of contents the key reaches the entry, which shows the
+editor if it is hidden, puts its caret on the source of the viewer's and
+pastes there — the Format menu's way of acting on what you are reading.
+
+Edit → Paste Special names the source instead of leaving it to the mode,
+the way editors' "Paste from…" menus do:
+
+| Entry                    | Pastes…                                                                 |
+| ------------------------ | ----------------------------------------------------------------------- |
+| From Terminal Clipboard  | what the terminal holds, asked for through the OSC 52 read; the paste happens when the terminal answers, and a notice gives up after two seconds, since many terminals (and tmux or screen without passthrough) never answer a read |
+| From Command             | the paste command's output (`pbpaste`, `wl-paste`, …); the entry names the command found and cannot be picked when there is none |
+| From Internal Buffer     | what md itself last copied, or last received from the terminal, without asking anything outside |
+| From Kill Ring           | an entry of the editor's kill ring — what `Ctrl-K`, `Ctrl-U` and `Alt-D` killed — from a submenu remade each time the Edit menu opens, most recent first, numbered `1`–`9` and `0` for the tenth, each shown as its first forty columns with line breaks as `⏎`; `1` is what `Ctrl-Y` yanks, so an older kill is a pick away, emacs' `yank-pop` without the cycling |
 
 Options → Theme picks the colors the whole window is drawn in, from the
 themes built into Crysterm — the same ones its `--colors-theme` option

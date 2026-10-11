@@ -268,3 +268,162 @@ describe "Md::App clipboard modes" do
     end
   end
 end
+
+# The Paste Special entries under Edit, by their text.
+private def paste_special(app)
+  menu(app, 1).actions.find!(&.text.==("Paste &Special")).menu || [] of Crysterm::Action
+end
+
+describe "Md::App pasting" do
+  it "pastes the clipboard into the editor at the caret, replacing the selection, as one undo step" do
+    with_clipboard do |clip|
+      with_app Md::Source.new, text: CLIP_DOC, view: false do |app|
+        clip.mode = Crysterm::Application::Clipboard::Mode::Internal
+        clip.copy "pasted"
+        app.show_pane Md::App::Pane::Viewer
+        app.editor.focus
+        app.editor.cursor_position = 0
+        app.paste
+        app.markdown.should start_with "pasted# Title"
+        app.viewer.document.plain_text.should start_with "pasted# Title" # the viewer followed
+        notice(app).should eq " Pasted 6 characters"
+        app.editor.selection_anchor = 0
+        app.editor.cursor_pos = 6
+        clip.copy "two\nlines"
+        app.paste
+        app.markdown.should start_with "two\nlines# Title"
+        notice(app).should eq " Pasted 2 lines"
+        app.editor.document.undo # the deletion and the insertion together
+        app.markdown.should start_with "pasted# Title"
+      end
+    end
+  end
+
+  it "says when there is nothing to paste, and why a command paste failed" do
+    with_clipboard do |clip, recorder|
+      with_app do |app|
+        clip.mode = Crysterm::Application::Clipboard::Mode::Internal
+        clip.copy ""
+        app.paste
+        notice(app).should eq " Nothing to paste"
+        app.clipboard_mode = Md::App::ClipboardMode::Command
+        recorder.output = nil
+        app.paste
+        notice(app).should eq " Cannot paste: paste-cmd failed"
+        recorder.output = "from the command"
+        app.paste
+        recorder.calls.last.should eq({["paste-cmd", "--out"], ""})
+        app.markdown.should eq "from the command"
+      end
+    end
+  end
+
+  it "pastes on Ctrl+V from the viewer, showing and focusing the editor at the source of the viewer's caret" do
+    with_clipboard do |clip|
+      with_app Md::Source.new(path: "doc.md"), text: CLIP_DOC, view: true do |app, window|
+        clip.mode = Crysterm::Application::Clipboard::Mode::Internal
+        clip.copy "NEW "
+        caret_on app, "Last words"
+        app.visible_panes.should eq [Md::App::Pane::Viewer]
+        press(window, Tput::Key::CtrlV).accepted?.should be_true
+        app.visible_panes.should eq [Md::App::Pane::Editor, Md::App::Pane::Viewer]
+        app.editor.focused?.should be_true
+        app.markdown.should contain "NEW Last words."
+        # From the table of contents too.
+        caret_on app, "A paragraph"
+        app.show_pane(Md::App::Pane::Toc).focus
+        press(window, Tput::Key::CtrlV).accepted?.should be_true
+        app.editor.focused?.should be_true
+        app.markdown.should contain "NEW A paragraph"
+      end
+    end
+  end
+
+  it "offers the sources under Edit → Paste Special" do
+    with_clipboard do |clip|
+      with_app do |app|
+        entries = paste_special(app)
+        entries.map(&.text).should eq ["From &Terminal Clipboard", "From &Command (paste-cmd)", "From &Internal Buffer", "From &Kill Ring"]
+        entries.map(&.enabled?).should eq [true, true, true, false]
+        menu(app, 1).actions.find!(&.text.==("&Paste")).shortcut_text.should eq "Ctrl+V"
+      end
+      clip.paste_command = nil
+      with_app do |app|
+        entries = paste_special(app)
+        entries[1].text.should eq "From &Command (none found)"
+        entries[1].enabled?.should be_false
+      end
+    end
+  end
+
+  it "pastes the command's output and the internal buffer whatever the mode" do
+    with_clipboard do |clip, recorder|
+      with_app do |app|
+        clip.mode = Crysterm::Application::Clipboard::Mode::Terminal
+        clip.copy "internal"
+        recorder.output = "from the command"
+        app.paste_from_command
+        app.markdown.should eq "from the command"
+        app.editor.select_all
+        app.paste_from_internal
+        app.markdown.should eq "internal"
+        recorder.output = nil
+        app.paste_from_command
+        notice(app).should eq " Cannot paste: paste-cmd failed"
+        app.markdown.should eq "internal"
+      end
+    end
+  end
+
+  it "asks the terminal for its clipboard and pastes the answer, or gives up after the wait" do
+    with_clipboard do |clip|
+      with_app do |app, window|
+        clip.mode = Crysterm::Application::Clipboard::Mode::Internal # the terminal is asked regardless
+        window.output.as(IO::Memory).clear
+        app.paste_from_terminal
+        sent(window).should contain "\e]52;c;?" # the OSC 52 read
+        notice(app).should contain "Asking the terminal"
+        window.emit Crysterm::Event::ClipboardChanged, Crysterm::Event::ClipboardChanged.new("from the terminal")
+        app.markdown.should eq "from the terminal"
+        notice(app).should eq " Pasted 17 characters"
+        # A late answer is not a second paste.
+        window.emit Crysterm::Event::ClipboardChanged, Crysterm::Event::ClipboardChanged.new("again")
+        app.markdown.should eq "from the terminal"
+
+        app.terminal_paste_timeout = 30.milliseconds
+        app.paste_from_terminal
+        settle { notice(app).includes? "did not answer" }
+        app.markdown.should eq "from the terminal"
+        window.emit Crysterm::Event::ClipboardChanged, Crysterm::Event::ClipboardChanged.new("too late")
+        app.markdown.should eq "from the terminal"
+      end
+    end
+  end
+
+  it "lists the kill ring most recent first as the Edit menu opens, and pastes the entry picked" do
+    with_clipboard do |_|
+      with_app do |app|
+        ring = Crysterm::KillRing.new
+        app.editor.kill_ring = ring
+        app.paste_from_kill_ring
+        notice(app).should eq " Nothing killed yet"
+        ring.kill "first kill"
+        ring.interrupt
+        ring.kill "second\nkill & more"
+        app.kill_ring_entries.should eq ["second\nkill & more", "first kill"]
+        edit = menu(app, 1)
+        edit.emit Crysterm::Event::AboutToShow
+        ring_action = paste_special(app)[3]
+        ring_action.enabled?.should be_true
+        entries = ring_action.menu || [] of Crysterm::Action
+        entries.map(&.text).should eq ["&1 second⏎kill && more", "&2 first kill"]
+        entries[1].trigger
+        app.markdown.should eq "first kill"
+        app.paste_from_kill_ring 0
+        app.markdown.should eq "first killsecond\nkill & more"
+        app.paste_from_kill_ring 5
+        notice(app).should eq " No kill ring entry 6"
+      end
+    end
+  end
+end

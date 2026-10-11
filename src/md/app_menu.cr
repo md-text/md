@@ -1,8 +1,8 @@
 module Md
   class App
     # The menu bar: File (open, the recent files, reload, save, quit), Edit
-    # (copy, find, repeat the find, replace, go to a line, jump between headings, go
-    # back), Format (the Markdown markup, `app_edit.cr`), View (which panes
+    # (copy, paste and paste from a named source, find, repeat the find,
+    # replace, go to a line, jump between headings, go back), Format (the Markdown markup, `app_edit.cr`), View (which panes
     # are shown and resizing them, whether the editor's and the viewer's
     # carets are kept in sync, whether the caret's line is highlighted,
     # whether the editor numbers its lines, the text's layout — soft wrap, a
@@ -58,9 +58,11 @@ module Md
 
       edit = bar.add_menu "&Edit"
       # `Ctrl+C` reaches the entry when the focused pane has no selection to
-      # copy itself (`app_clipboard.cr`).
+      # copy itself, `Ctrl+V` from a pane that does not paste
+      # (`app_clipboard.cr`).
       edit.add_action("&Copy", shortcut: "Ctrl+C") { copy }
       edit.add_action("Copy as &Markdown") { copy_as_markdown }
+      add_paste_actions edit
       edit.add_separator
       edit.add_action("&Find…", shortcut: "Ctrl+F") { search_prompt }
       edit.add_action("Find &Next", shortcut: "Ctrl+G") { find_next }
