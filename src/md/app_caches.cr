@@ -28,12 +28,14 @@ module Md
       Path[cache].join("md").to_s
     end
 
-    # Options → Clear Caches…: asks, with how many recent files and
-    # recovery files there are, then clears (`#clear_caches`).
+    # Options → Clear Caches…: asks, with how many recent files, positions
+    # (a recent file's place other than its start) and recovery files there
+    # are — each count given, a `(0)` included — then clears (`#clear_caches`).
     def clear_caches_prompt : Nil
-      recent = @history.try(&.recent.size) || 0
+      entries = @history.try(&.recent) || [] of History::Entry
+      positions = entries.count { |e| e.line > 1 || e.column > 1 }
       recovery = Dir.exists?(App.autosave_dir) ? Dir.children(App.autosave_dir).size : 0
-      ask_choice("Clear the recent files (#{recent}), positions, and recovery files (#{recovery})?", [{"Clear", "(y)es"}, {"Cancel", "(n)o"}]) do |index|
+      ask_choice("Clear the recent files (#{entries.size}), positions (#{positions}), and recovery files (#{recovery})?", [{"Clear", "(y)es"}, {"Cancel", "(n)o"}]) do |index|
         clear_caches if index == 0
       end
     end

@@ -79,18 +79,23 @@ describe "Md::App clear caches" do
       File.write File.join(autosave_dir, "unnamed-20260101-120000-1.md"), "lost\n"
       history = Md::History.new(history_path)
       history.touch "a.md", 1, 1, true
+      history.touch "b.md", 12, 3, true
       with_app history: history do |app|
         entry = menu(app, 4).actions.find!(&.text.==("Clea&r Caches…"))
         entry.trigger
-        question(app).should eq "Clear the recent files (1), positions, and recovery files (1)? (y)es, (n)o: "
+        # Every count is given, a position being a place other than a file's start.
+        question(app).should eq "Clear the recent files (2), positions (1), and recovery files (1)? (y)es, (n)o: "
         answer app, 'n'
-        history.recent.size.should eq 1
+        history.recent.size.should eq 2
         Dir.children(autosave_dir).size.should eq 1
         entry.trigger
         answer app, 'y'
         history.recent.should be_empty
         Dir.children(autosave_dir).should be_empty
-        notice(app).should eq " Cleared 1 recent file, 1 recovery file"
+        notice(app).should eq " Cleared 2 recent files, 1 recovery file"
+        entry.trigger
+        question(app).should eq "Clear the recent files (0), positions (0), and recovery files (0)? (y)es, (n)o: "
+        answer app, 'n'
       end
     end
   end
