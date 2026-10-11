@@ -248,8 +248,9 @@ The editor knows the syntax it holds. `Enter` at the end of a list item —
 `- `, `* `, `+ `, `1. ` or `1) `, a task `- [ ] `, indented or inside a
 blockquote — starts the next item with the same marker (the number one
 higher, the task box empty), taking along any text after the caret; on an
-empty item, `Enter` ends the list instead; on any other line it is a
-newline. `Tab` and `Shift-Tab` indent and outdent the caret's line, or
+empty item, `Enter` ends the list instead — so two `Enter`s in a row end a
+list, a task list or a numbered one alike, and a third is a plain newline;
+on any other line `Enter` is a newline. `Tab` and `Shift-Tab` indent and outdent the caret's line, or
 every line of the selection (Format → Indent and Outdent): a list item, or
 a selection with one in it, moves by the list's rules — an item nests under
 the item above by that item's content offset, two columns for `- `, three

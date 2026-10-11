@@ -54,6 +54,37 @@ describe "Md::App editing" do
     end
   end
 
+  it "ends the list on two Enters in a row — a bullet, a task or a number — and a third is a plain newline" do
+    with_app text: "- one\n\n- [x] done\n\n3. third\n", view: false do |app, window|
+      place app, 0, 5
+      press window, Tput::Key::Enter # continues
+      app.markdown.lines[1].should eq "- "
+      press(window, Tput::Key::Enter).accepted?.should be_true # the empty item ends the list
+      app.markdown.should eq "- one\n\n\n- [x] done\n\n3. third\n"
+      app.editor.cursor_position.should eq 6
+      press window, Tput::Key::Enter # a plain newline, the editor's own
+      app.markdown.should eq "- one\n\n\n\n- [x] done\n\n3. third\n"
+
+      place app, 4, 10
+      press window, Tput::Key::Enter
+      app.markdown.lines[5].should eq "- [ ] " # the box still there
+      press window, Tput::Key::Enter
+      app.markdown.lines[5].should eq ""
+      press window, Tput::Key::Enter
+      app.markdown.lines[5, 2].should eq ["", ""]
+
+      place app, 8, 8
+      press window, Tput::Key::Enter
+      app.markdown.lines[9].should eq "4. "
+      press window, Tput::Key::Enter
+      app.markdown.lines[9].should eq ""
+      press window, Tput::Key::Enter
+      app.markdown.should end_with "3. third\n\n\n"
+      app.editor.undo.should be_true # each step one undo step
+      app.markdown.should end_with "3. third\n\n"
+    end
+  end
+
   it "leaves Enter to the editor off a list item, or with the caret inside the marker" do
     with_app text: "text\n- one\n", view: false do |app, window|
       place app, 0, 4
