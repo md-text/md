@@ -15,12 +15,14 @@ module Md
     # (`--colors-stylesheet`) layers over the theme and stays over whichever
     # one is picked.
     #
-    # The choice is kept in the settings, by the name `--colors-theme` spells
-    # it (`"dark"`, `"breeze_dark"`). `--colors-theme` (or Crysterm's config
-    # file or environment) wins for the run it is given — the stored choice
-    # is not applied over it — and is not recorded, so the next plain run is
-    # back to the stored choice; picking a theme from the menu records it as
-    # usual.
+    # The choice is Crysterm's `colors.theme` option itself: the property is
+    # linked to it (`app_config.cr`), so a pick from the menu is recorded
+    # there and kept in the config file, and `--colors-theme` (or
+    # `CRYSTERM_COLORS_THEME`, or Crysterm's own config file) is what the
+    # property starts from. The option's precedence does the rest:
+    # `--colors-theme` wins for the run it is given and is not recorded,
+    # while the stored choice stays stored, so the next plain run is back to
+    # it; a pick from the menu is recorded as usual.
     alias Theme = Crysterm::CSS::Theme::Choice
 
     # The themes offered, in menu order: the terminal's own colors first, as
@@ -31,7 +33,7 @@ module Md
     # A reactive property, so the View → Theme entries bind to it
     # (`#build_menus`); `#theme` and `#theme=` are its plain face. Starts
     # as the theme Crysterm installed when the window was created, which is
-    # its config's.
+    # its `colors.theme` option's.
     @theme : Crysterm::Reactive::Property(Theme) = Crysterm::Reactive::Property.new(Crysterm::Config.colors_theme)
 
     def theme : Theme
@@ -48,12 +50,6 @@ module Md
     def cycle_theme : Theme
       index = THEMES.index(@theme.value)
       self.theme = THEMES[index ? (index + 1) % THEMES.size : 0]
-    end
-
-    # Whether Crysterm's config names the theme for this run, in which case
-    # the stored choice stands down (`#apply_settings`).
-    def theme_configured? : Bool
-      Superconf.configured? "colors.theme"
     end
 
     # Installs the chosen theme on changes. Crysterm notices the new default

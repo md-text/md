@@ -66,33 +66,26 @@ describe "Md::App rulers" do
   end
 
   it "keeps the choice across runs" do
-    dir = File.tempname("md-spec-rulers-settings")
-    Dir.mkdir_p dir
-    path = File.join(dir, "settings.json")
-    begin
-      File.write path, <<-JSON
-        {"version": 1, "settings": {"rulers": true}}
-        JSON
-      settings = Md::Settings.load(path)
-      with_app Md::Source.new(path: "doc.md"), text: RULERS_DOC, view: true, settings: settings do |app|
+    with_config "md:\n  rulers: true\n" do |path|
+      with_app Md::Source.new(path: "doc.md"), text: RULERS_DOC, view: true, config: true do |app|
         app.rulers?.should be_true
         app.editor.rulers?.should be_true
         app.viewer.rulers?.should be_true
-        settings.dirty?.should be_false
+        Md::Config.dirty?.should be_false
         app.rulers = false
-        settings.dirty?.should be_true
-        app.save_settings
+        Md::Config.dirty?.should be_true
+        app.save_config
       end
-      Md::Settings.load(path).rulers?.should be_false
-    ensure
-      FileUtils.rm_rf dir
+      config_file(path)["md"]["rulers"].as_bool.should be_false
     end
   end
 
-  it "has the panes' own default without a store" do
-    with_app settings: Md::Settings.new("unused.json") do |app|
-      app.rulers?.should be_false
-      app.settings.try(&.dirty?).should be_false
+  it "has the panes' own default without a config file" do
+    with_config do
+      with_app config: true do |app|
+        app.rulers?.should be_false
+        Md::Config.dirty?.should be_false
+      end
     end
   end
 end

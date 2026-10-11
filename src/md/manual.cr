@@ -113,13 +113,35 @@ module Md
         end
         io << <<-'ROFF'
           .PP
-          Crysterm, the toolkit md is built on, takes options of its own
-          (\fB\-\-colors\-theme\fR, \fB\-\-colors\-stylesheet\fR, \fB\-\-log\-file\fR
-          and more) on the same command line, each also settable in
+          The View and Options menu choices are options too, listed under
+          SETTINGS below. Crysterm, the toolkit md is built on, takes options of
+          its own (\fB\-\-colors\-theme\fR, \fB\-\-colors\-stylesheet\fR,
+          \fB\-\-log\-file\fR and more) on the same command line, each also
+          settable in \fI~/.config/md/config.yml\fR, in
           \fI~/.config/crysterm/config.yml\fR or by a \fBCRYSTERM_*\fR environment
           variable; \fBmd \-\-help \-\-verbose\fR lists them.
           ROFF
         io << '\n'
+        io << ".SH SETTINGS\n"
+        io << <<-'ROFF'
+          The choices made in the View and Options menus are kept across runs in
+          \fI~/.config/md/config.yml\fR (see FILES), and each is an option of
+          Crysterm's configuration registry: a key in that file, an environment
+          variable and a command-line option, the later winning, with a pick in a
+          menu recorded at once. A value given on the command line or in the
+          environment is for that run and is not written to the file. A boolean
+          option is switched off with its \fB\-\-no\-\fR form
+          (\fB\-\-no\-md\-soft\-wrap\fR). The theme is Crysterm's own
+          \fBcolors.theme\fR (\fB\-\-colors\-theme\fR, \fBCRYSTERM_COLORS_THEME\fR).
+          ROFF
+        io << '\n'
+        Config.options.each do |option|
+          io << ".TP\n"
+          flag = option.bool? ? roff_flag(option.cli, nil) : roff_flag(option.cli, "VALUE")
+          io << flag << " (\\fB" << roff(Superconf.env_name(option)) << "\\fR, \\fI" << roff(option.key) << "\\fR)\n"
+          default = option.default_string.presence || "\"\""
+          io << wrap(roff("#{option.description}. Default: #{default}.")) << '\n'
+        end
         io << ".SH KEYS\n"
         KEYS.each do |keys, action|
           io << ".TP\n.B " << roff(keys) << '\n' << wrap(roff(action)) << '\n'
@@ -140,9 +162,12 @@ module Md
           middle of the window, as View \-> Dialog Style says.
           .SH FILES
           .TP
-          .I $XDG_CONFIG_HOME/md/settings.json
+          .I $XDG_CONFIG_HOME/md/config.yml
           The View and Options choices and the pane sizes, kept across runs
-          (\fI~/.config/md/settings.json\fR by default).
+          (\fI~/.config/md/config.yml\fR by default): YAML with one mapping per
+          option group, \fBmd\fR for md's own settings and Crysterm's groups for
+          its options, written when md quits if anything changed and by Options
+          \-> Save Config. Entries md does not know are kept.
           .TP
           .I $XDG_STATE_HOME/md/history.json
           The recently opened files and the position in each
@@ -161,8 +186,8 @@ module Md
           \fB\-\-log\-file\fR name another).
           .TP
           .I ~/.config/crysterm/config.yml
-          Crysterm's configuration: the theme, the stylesheet, the mouse and
-          keyboard settings.
+          Crysterm's configuration for every program built on it: the theme, the
+          stylesheet, the mouse and keyboard settings. md's own file wins over it.
           .SH EXIT STATUS
           0 on success, 1 when a file cannot be read or md cannot start, 2 on a
           usage error.
@@ -196,6 +221,11 @@ module Md
             io << "    #{flags}) return ;;\n"
           end
         end
+        # A setting's value is free text (`--md-mouse-mode off`): no completion.
+        Config.options.each do |option|
+          next if option.bool?
+          io << "    #{option.cli}) return ;;\n"
+        end
         io << "  esac\n"
         io << "  case $cur in\n"
         io << "    -*) COMPREPLY=($(compgen -W '#{all_flags.join(' ')}' -- \"$cur\")) ;;\n"
@@ -224,6 +254,11 @@ module Md
                 end
           io << "  " << head << '[' << zsh_text(option.text) << ']' << arg << "' \\\n"
         end
+        Config.options.each do |option|
+          arg = option.bool? ? "" : ":value:"
+          io << "  '" << option.cli << '[' << zsh_text(option.description) << ']' << arg << "' \\\n"
+          io << "  '" << option.cli.sub("--", "--no-") << "[Disable " << zsh_text(option.key) << "]' \\\n" if option.bool?
+        end
         io << "  '1:file:_files'\n"
       end
     end
@@ -245,12 +280,19 @@ module Md
           end
           io << " -d '" << option.text.gsub("'", "\\'") << "'\n"
         end
+        Config.options.each do |option|
+          io << "complete -c md -l " << option.cli[2..]
+          io << " -x" unless option.bool?
+          io << " -d '" << option.description.gsub("'", "\\'") << "'\n"
+          io << "complete -c md -l no-" << option.cli[2..] << " -d 'Disable " << option.key << "'\n" if option.bool?
+        end
       end
     end
 
-    # Every flag, short and long, in table order.
+    # Every flag, short and long, in table order, then the settings' flags
+    # (`Config.flags`).
     private def self.all_flags : Array(String)
-      CLI::OPTIONS.flat_map { |option| [option.short, option.long].compact }
+      CLI::OPTIONS.flat_map { |option| [option.short, option.long].compact } + Config.flags
     end
 
     # *text* for roff: its backslashes and hyphens escaped (a hyphen in roff

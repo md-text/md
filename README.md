@@ -80,7 +80,7 @@ md - < README.md      # read the document from standard input
 some-command | md     # follow output as it arrives (`-` is optional here)
 md --export html README.md > README.html   # render to standard output and exit
 some-command | md --to text                # ...as plain text; `--to` is `--export`
-md --help             # list the options (`--help --verbose` adds Crysterm's)
+md --help             # list the options (`--help --verbose` adds the settings and Crysterm's)
 md --version          # print the version
 man md                # the manual page, once installed
 ```
@@ -489,15 +489,48 @@ choices, not a cache, and stay.
 ### Settings
 
 The choices made in the View and Options menus — Resizable Panes, Sync
-Cursor, Highlight Line, Line Numbers, Soft Wrap, Hard Wrap, Text Width, Center Text, Rulers,
-Guides, Dialog Style, Ask Before Discarding Changes, Auto-Save, Keep a Backup
-File, the mouse mode, the clipboard mode and the theme — and the pane sizes are
-kept across runs in
-`$XDG_CONFIG_HOME/md/settings.json` (`~/.config/md/settings.json`), written
-when md quits. Watch File is not kept: like `--watch`, it is for the run at
-hand. The file is plain JSON and can be edited by hand; a missing or broken
-one simply means the defaults. The pane sizes are `pane_sizes`, the widths
-in columns of the editor, the viewer and the table of contents, hidden ones
+Cursor, Highlight Line, Line Numbers, Soft Wrap, Hard Wrap, Text Width,
+Center Text, Rulers, Guides, Dialog Style, Ask Before Discarding Changes,
+Auto-Save, Keep a Backup File, the mouse mode, the clipboard mode and the
+theme — and the pane sizes are kept across runs in
+`$XDG_CONFIG_HOME/md/config.yml` (`~/.config/md/config.yml`), written when
+md quits if anything changed. Watch File is not kept: like `--watch`, it is
+for the run at hand.
+
+Every one of those choices is a configuration option of Crysterm's registry,
+beside the toolkit's own (the theme is Crysterm's `colors.theme`), so each
+can be given four ways, the later winning: in the config file, as an
+environment variable, on the command line, or in the menu while md runs.
+`md --help --verbose` lists them all, with their defaults:
+
+```sh
+md --md-text-width 80 --md-rulers notes.md   # this run only
+MD_MOUSE_MODE=off md notes.md                # likewise
+cat ~/.config/md/config.yml
+```
+
+```yaml
+md:
+  text_width: 80
+  rulers: true
+  mouse_mode: Off
+colors:
+  theme: breeze-light
+```
+
+A choice given on the command line or in the environment is for that run:
+it is not written to the file, and an entry the file already has for it stays
+as it was (`--colors-theme dark` shows the document in the dark theme once,
+and the next plain run is back to the stored theme). A pick in a menu is
+recorded at once, whatever had set the option before. The file is YAML (JSON
+reads too), as `--crysterm-dump-config` prints it, with one mapping per
+option group — `md` for md's own choices, `colors`, `media` and the rest for
+Crysterm's, which it can hold as well, so a theme or a media backend meant
+for md alone goes here rather than in Crysterm's `~/.config/crysterm/config.yml`.
+Entries md does not know are kept across a rewrite, so an older md does not
+shed a newer one's settings; a broken file stops md with a message naming the
+entry. The pane sizes are `md.pane_sizes`, the widths in columns of the
+editor, the viewer and the table of contents, comma-separated, hidden ones
 included (`0` for a pane never resized); the editor and the viewer are
 fitted to the terminal in that proportion, the table of contents keeps its
 columns.
@@ -574,8 +607,8 @@ src/md/app_theme.cr   the theme: Crysterm's built-in themes, switched at runtime
 src/md/app_autosave.cr auto-save to a recovery file; the backup file
 src/md/app_view.cr    soft wrap, text width and centering
 src/md/app_clipboard.cr copying; the clipboard modes
-src/md/app_settings.cr the View and Options choices kept across runs
-src/md/settings.cr    the settings store (~/.config/md/settings.json)
+src/md/app_config.cr  the View and Options choices linked to their options, the config file written
+src/md/config.cr      the choices as Crysterm (Superconf) options; the config file (~/.config/md/config.yml)
 src/md/history.cr     the recent files and positions (~/.local/state/md/history.json)
 src/md/version.cr     Md::VERSION, read from shard.yml at compile time
 spec/                 specs (crystal spec)

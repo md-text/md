@@ -113,8 +113,11 @@ module Md
       if options.help?
         stdout.puts help
         if options.verbose?
+          # The settings first, as md's own, then the toolkit's without them.
           stdout.puts
-          stdout.puts Crysterm.toolkit_options_help(except: OWN_FLAGS)
+          stdout.puts Config.help
+          stdout.puts
+          stdout.puts Crysterm.toolkit_options_help(except: OWN_FLAGS + Config.flags.to_set)
         end
       end
       return 0 if options.help? || options.version?
@@ -127,6 +130,11 @@ module Md
       end
 
       source = Source.resolve(options.positional, stdin.tty?)
+      # The config file, the MD_*/CRYSTERM_* variables and the toolkit and
+      # settings flags among *args*: for the window about to open, so a
+      # `--help` or an `--export` reads none of it. A `--crysterm-dump-config`
+      # prints every option and exits here.
+      Config.configure argv: args
       log_to_file
       launch(source, options, stdin).run
     rescue ex : ArgumentError | OptionParser::Exception
@@ -240,19 +248,20 @@ module Md
     # existing file in view mode, or an empty editor (named after a file
     # that does not exist yet, or unnamed) — unless `--view` or `--edit`
     # said which pane. The history of recent files and positions comes
-    # along with the settings; `--watch` follows the file from the start, `--line` opens on
-    # that line.
+    # along, and the View and Options choices are linked to the
+    # configuration (`Config`, loaded by `.run`) and kept in its file;
+    # `--watch` follows the file from the start, `--line` opens on that
+    # line.
     private def self.launch(source : Source, options : Options, stdin : IO) : App
       history = History.load
-      settings = Settings.load
       view = options.view
       line = options.line
       if source.stdin?
-        App.new source, stream: stdin, view: view.nil? ? true : view, history: history, settings: settings, line: line
+        App.new source, stream: stdin, view: view.nil? ? true : view, history: history, config: true, line: line
       elsif (path = source.path) && File.exists?(path)
-        App.new source, text: read_file(path), view: view.nil? ? true : view, history: history, settings: settings, watch: options.watch?, line: line
+        App.new source, text: read_file(path), view: view.nil? ? true : view, history: history, config: true, watch: options.watch?, line: line
       else
-        App.new source, view: view || false, history: history, settings: settings, watch: options.watch?, line: line
+        App.new source, view: view || false, history: history, config: true, watch: options.watch?, line: line
       end
     end
   end

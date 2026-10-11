@@ -5,9 +5,9 @@ require "file_utils"
 # screen to read; the theme is one global for every window (creating one
 # installs Crysterm's config theme), so each spec puts back the one it
 # found.
-private def with_theme_app(settings = nil, &)
+private def with_theme_app(config = false, &)
   saved = Crysterm::CSS.theme
-  with_app Md::Source.new(path: "doc.md"), text: "# Title\n\nSome text.\n", view: true, settings: settings do |app, window|
+  with_app Md::Source.new(path: "doc.md"), text: "# Title\n\nSome text.\n", view: true, config: config do |app, window|
     yield app, window
   end
 ensure
@@ -129,43 +129,42 @@ describe "Md::App theme" do
   end
 
   it "restores the stored theme at start and records the picked one" do
-    dir = File.tempname("md-spec-theme")
-    Dir.mkdir_p dir
-    path = File.join(dir, "settings.json")
-    begin
-      File.write path, %({"version": 1, "settings": {"theme": "light"}})
-      settings = Md::Settings.load(path)
-      with_theme_app settings do |app, window|
+    with_config "colors:\n  theme: light\n" do |path|
+      with_theme_app config: true do |app, window|
+        # The window itself takes the option's theme when it is created
+        # (Crysterm installs its config theme at the first window of the
+        # process, which in a spec run was an earlier one), so the property
+        # and the entries are what is checked here.
         app.theme.should eq Md::App::Theme::Light
-        Crysterm::CSS.theme.try(&.name).should eq "light"
         theme_entries(app).map(&.checked?).should eq checked_at(2)
-        viewer_bg(app, window).should eq Crysterm::CSS::Theme.light.primaries["surface"]
-        settings.dirty?.should be_false # applying is not a change
+        Md::Config.dirty?.should be_false # applying is not a change
 
         theme_entries(app)[3].trigger
-        settings.dirty?.should be_true
-        app.save_settings
+        Crysterm::Config.colors_theme.should eq Md::App::Theme::BreezeDark # Crysterm's option is the choice
+        Md::Config.dirty?.should be_true
+        app.save_config
       end
-      stored = Md::Settings.load(path)
-      stored.theme.should eq Md::App::Theme::BreezeDark
-      stored.get?("theme", String).should eq "breeze_dark" # as --colors-theme spells it, by Crystal's enum names
-    ensure
-      FileUtils.rm_rf dir
+      config_file(path)["colors"]["theme"].as_s.should eq "BreezeDark" # as --colors-theme reads it
     end
   end
 
-  it "lets --colors-theme win for the run without recording it" do
-    Crysterm::Config.colors_theme = Md::App::Theme::Dark
-    settings = Md::Settings.new("unused.json", {"theme" => JSON::Any.new("light")})
-    with_theme_app settings do |app|
-      app.theme.should eq Md::App::Theme::Dark
-      settings.dirty?.should be_false
-      theme_entries(app).map(&.checked?).should eq checked_at(1)
+  it "lets --colors-theme win for the run without recording it, the stored theme kept" do
+    with_config "colors:\n  theme: light\n", argv: ["--colors-theme", "dark"] do |path|
+      with_theme_app config: true do |app|
+        app.theme.should eq Md::App::Theme::Dark
+        Md::Config.dirty?.should be_false
+        theme_entries(app).map(&.checked?).should eq checked_at(1)
+        app.rulers = true # something else changes, so the file is written at exit
+        app.save_config
+      end
+      config_file(path)["colors"]["theme"].as_s.should eq "light" # the file's own entry stays
 
-      theme_entries(app)[2].trigger # a pick from the menu is recorded as ever
-      settings.theme.should eq Md::App::Theme::Light
+      with_theme_app config: true do |app|
+        theme_entries(app)[2].trigger # a pick from the menu is recorded as ever
+        Crysterm::Config.colors_theme.should eq Md::App::Theme::Light
+        app.save_config
+      end
+      config_file(path)["colors"]["theme"].as_s.should eq "Light"
     end
-  ensure
-    Crysterm::Config.colors_theme = Md::App::Theme::Terminal
   end
 end

@@ -3,7 +3,7 @@ require "file_utils"
 module Md
   class App
     # Options → Clear Caches…: what md keeps for itself between runs, as
-    # opposed to the user's choices (`Settings`, which stay) — the history
+    # opposed to the user's choices (the config file, which stays) — the history
     # of recent files and positions (`History`, File → Open Recent), the
     # auto-save recovery files (`App.autosave_dir`) and the cache
     # directory (`App.cache_dir`), where Crysterm's log goes while md runs

@@ -26,7 +26,7 @@ module Md
     # The sizes are kept across runs as the splitter's state (`#pane_sizes`,
     # Qt's `saveState`): the width each pane wants, in cells — `[editor,
     # viewer, toc]`, 0 for a pane never sized — restored and recorded with
-    # the other settings (`app_settings.cr`). Cells rather than proportions:
+    # the other settings (`app_config.cr`). Cells rather than proportions:
     # the table of contents is a column that should not scale with the
     # terminal, and the splitter fits the two stretching panes to the width
     # at hand in proportion anyway, so a wider or narrower terminal next time
@@ -34,8 +34,8 @@ module Md
     getter splitter : Crysterm::Widget::Splitter
 
     # View → Resizable Panes; see the class comment. A reactive property, so
-    # the menu entry binds to it (`#build_menus`) and the settings keep it
-    # (`app_settings.cr`); `#resizable_panes?` and `#resizable_panes=` are
+    # the menu entry binds to it (`#build_menus`) and the config keeps it
+    # (`app_config.cr`); `#resizable_panes?` and `#resizable_panes=` are
     # its plain face.
     @resizable_panes : Crysterm::Reactive::Property(Bool) = Crysterm::Reactive::Property.new(true)
 

@@ -195,27 +195,25 @@ describe "Md::App auto-save" do
     end
   end
 
-  it "keeps both choices in the settings, and offers them in the Options menu" do
-    settings = Md::Settings.new "unused.json"
-    with_app settings: settings do |app|
-      options = app.main.menu_bar.menus[4]
-      autosave = options.actions.find { |a| a.text == "A&uto-Save" } || fail("no Auto-Save entry")
-      backup = options.actions.find { |a| a.text == "&Keep a Backup File" } || fail("no backup entry")
-      autosave.checked?.should be_true
-      backup.checked?.should be_true
-      autosave.trigger
-      app.autosave?.should be_false
-      settings.autosave?.should be_false
-      app.backup_file = false
-      backup.checked?.should be_false
-      settings.backup_file?.should be_false
-    end
-    settings.autosave = false
-    settings.backup_file = false
-    with_app settings: settings do |app|
-      app.autosave?.should be_false
-      app.backup_file?.should be_false
-      settings.dirty?.should be_true # from the sets above, not from applying
+  it "keeps both choices in the config, and offers them in the Options menu" do
+    with_config do
+      with_app config: true do |app|
+        options = app.main.menu_bar.menus[4]
+        autosave = options.actions.find { |a| a.text == "A&uto-Save" } || fail("no Auto-Save entry")
+        backup = options.actions.find { |a| a.text == "&Keep a Backup File" } || fail("no backup entry")
+        autosave.checked?.should be_true
+        backup.checked?.should be_true
+        autosave.trigger
+        app.autosave?.should be_false
+        Crysterm::Config.md_autosave.should be_false
+        app.backup_file = false
+        backup.checked?.should be_false
+        Crysterm::Config.md_backup_file.should be_false
+      end
+      with_app config: true do |app|
+        app.autosave?.should be_false
+        app.backup_file?.should be_false
+      end
     end
   end
 end

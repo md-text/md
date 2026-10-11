@@ -1,6 +1,7 @@
 require "spec"
 require "../src/md"
 require "file_utils"
+require "yaml"
 
 # The helpers every App spec shares: a headless window (an in-memory
 # terminal of 100 by 30 cells), an App on it, the keys pressed the way the
@@ -14,13 +15,44 @@ end
 # An App on a headless window, destroyed after the block, with the
 # constructor's own defaults: a new document in the editor unless *text* is
 # given, which the viewer shows.
-def with_app(source = Md::Source.new, text = "", view = !text.empty?, settings = nil, history = nil, watch = false, line = nil, &)
+def with_app(source = Md::Source.new, text = "", view = !text.empty?, config = false, history = nil, watch = false, line = nil, &)
   window = headless_window
   begin
-    yield Md::App.new(source, text: text, view: view, window: window, settings: settings, history: history, watch: watch, line: line), window
+    yield Md::App.new(source, text: text, view: view, window: window, config: config, history: history, watch: watch, line: line), window
   ensure
     window.destroy
   end
+end
+
+# Runs the block with the configuration loaded as md loads it at start —
+# from a config file holding *yaml* (none when nil) in a scratch
+# `XDG_CONFIG_HOME`, so `Md::Config.path` is the scratch file, and from
+# *argv* — and yields the file's path. The options are put back to their
+# defaults afterwards: the registry is one for the whole spec run.
+def with_config(yaml : String? = nil, argv = [] of String, &)
+  dir = File.tempname("md-spec-config")
+  previous = ENV["XDG_CONFIG_HOME"]?
+  ENV["XDG_CONFIG_HOME"] = dir
+  path = Md::Config.path
+  begin
+    Dir.mkdir_p File.dirname(path)
+    File.write path, yaml if yaml
+    Md::Config.configure file: path, argv: argv
+    yield path
+  ensure
+    Md::Config.reset
+    if previous
+      ENV["XDG_CONFIG_HOME"] = previous
+    else
+      ENV.delete "XDG_CONFIG_HOME"
+    end
+    FileUtils.rm_rf dir
+  end
+end
+
+# The parsed config file at *path*.
+def config_file(path : String) : YAML::Any
+  YAML.parse File.read(path)
 end
 
 # Presses a key the way the terminal delivers it, and returns the event so

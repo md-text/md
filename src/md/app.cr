@@ -112,6 +112,11 @@ module Md
     @sync_cursor : Crysterm::Reactive::Property(Bool) = Crysterm::Reactive::Property.new(false)
     # View → Highlight Line; see the class comment. Likewise.
     @highlight_line : Crysterm::Reactive::Property(Bool) = Crysterm::Reactive::Property.new(false)
+    # View → Line Numbers: the editor's gutter (Crysterm's
+    # `PlainTextEdit#line_numbers`), as a property the menu entry and the
+    # config link to; the editor's own event keeps it in step with the
+    # editor (`#initialize`).
+    @line_numbers : Crysterm::Reactive::Property(Bool) = Crysterm::Reactive::Property.new(false)
 
     # The status bar's fields (see `#build_status` in `app_status.cr`).
     @name_field : Crysterm::Widget::Label
@@ -130,14 +135,14 @@ module Md
     # A *window* can be supplied (e.g. a headless one in specs); by default one
     # is opened on the terminal. With a *history*, the file's remembered
     # position is restored and the recent files are offered and kept; with
-    # *settings*, the View and Options choices are restored and kept
-    # (`app_settings.cr`); with *watch*, the file is followed from the start
+    # *config*, the View and Options choices are linked to their options and
+    # kept in the config file (`app_config.cr`); with *watch*, the file is followed from the start
     # (`--watch`). A *line* (`+N`, `--line N`) is where the panes start
     # instead of the remembered position: the user asked, so the history
     # does not get a say.
     def initialize(@source : Source, text : String = "", stream : IO? = nil,
                    view : Bool = !stream.nil? || !text.empty?, window : Crysterm::Window? = nil,
-                   @history : History? = nil, @settings : Settings? = nil, watch : Bool = false,
+                   @history : History? = nil, @config : Bool = false, watch : Bool = false,
                    line : Int32? = nil)
       @window = window || Crysterm::Window.new(title: title)
       @window.always_propagated_chars << 'q'
@@ -197,6 +202,8 @@ module Md
         @viewer.highlight_current_line = @highlight_line.value
         refresh_status
       end
+      @line_numbers.on_change { @editor.line_numbers = @line_numbers.value }
+      @editor.on(Crysterm::Event::LineNumbersChanged) { |e| @line_numbers.value = e.visible }
       @watch_file.on_change do
         setup_file
         refresh_status
@@ -212,7 +219,7 @@ module Md
       build_menus
       build_status
       setup_clipboard
-      apply_settings
+      link_config
       if line
         go_to_line line
       else
@@ -250,7 +257,7 @@ module Md
       status = @window.exec
       finish_autosave
       save_history
-      save_settings
+      save_config
       status
     end
 
@@ -338,6 +345,15 @@ module Md
     # both panes (the property's change handler, in `#initialize`).
     def highlight_line=(value : Bool) : Bool
       @highlight_line.value = value
+    end
+
+    def line_numbers? : Bool
+      @line_numbers.value
+    end
+
+    # Shows or hides the editor's line numbers (View → Line Numbers).
+    def line_numbers=(value : Bool) : Bool
+      @line_numbers.value = value
     end
 
     # The viewer position rendered from editor position *pos*: the start of

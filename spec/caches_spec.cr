@@ -40,11 +40,10 @@ describe "Md::App clear caches" do
       history.touch "a.md", 1, 1, true
       history.touch "b.md", 2, 1, true
       history.save.should be_true
-      settings = Md::Settings.new "unused.json"
-      settings.soft_wrap = false
+      Crysterm::Config.md_soft_wrap = false
       path = tempfile "text\n"
       begin
-        with_app Md::Source.new(path: path), text: "text\n", view: true, history: history, settings: settings do |app|
+        with_app Md::Source.new(path: path), text: "text\n", view: true, history: history do |app|
           app.autosave_interval = 30.milliseconds
           recent = menu(app, 0).actions[1]
           recent.enabled?.should be_true
@@ -60,7 +59,7 @@ describe "Md::App clear caches" do
           Dir.children(autosave_dir).should be_empty
           Dir.children(cache_dir).should be_empty
           recent.enabled?.should be_false
-          app.soft_wrap?.should be_false # the settings are not a cache
+          app.soft_wrap?.should be_false # the config is not a cache
           settle { File.exists? own }    # the document's own copy comes back
           app.finish_autosave
 
@@ -68,6 +67,7 @@ describe "Md::App clear caches" do
           notice(app).should eq " Cleared 0 recent files, 0 recovery files"
         end
       ensure
+        Crysterm::Config.reset "md.soft_wrap"
         File.delete? path
       end
     end

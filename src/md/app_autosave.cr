@@ -5,7 +5,7 @@ module Md
     # (`make-backup-files`, the `file~` beside the file) and an auto-save of
     # the unsaved edits to a recovery file (`auto-save-mode`, the `#file#`).
     # Both are checkable entries in the Options menu — Keep a Backup File,
-    # Auto-Save — on by default and kept across runs (`Settings`).
+    # Auto-Save — on by default and kept across runs (`app_config.cr`).
     #
     # The backup is made on the first save to an existing file, once per
     # file per session, so it holds what was on disk when the session took

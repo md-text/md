@@ -93,26 +93,17 @@ describe "Md::App guides" do
   end
 
   it "keeps the choice across runs" do
-    dir = File.tempname("md-spec-guides-settings")
-    Dir.mkdir_p dir
-    path = File.join(dir, "settings.json")
-    begin
-      File.write path, <<-JSON
-        {"version": 1, "settings": {"guides": true}}
-        JSON
-      settings = Md::Settings.load(path)
-      with_app Md::Source.new(path: "doc.md"), text: GUIDES_DOC, view: true, settings: settings do |app|
+    with_config "md:\n  guides: true\n" do |path|
+      with_app Md::Source.new(path: "doc.md"), text: GUIDES_DOC, view: true, config: true do |app|
         app.guides?.should be_true
         app.editor.guides_enabled?.should be_true
         app.viewer.guides_enabled?.should be_true
-        settings.dirty?.should be_false
+        Md::Config.dirty?.should be_false
         app.guides = false
-        settings.dirty?.should be_true
-        app.save_settings
+        Md::Config.dirty?.should be_true
+        app.save_config
       end
-      Md::Settings.load(path).guides?.should be_false
-    ensure
-      FileUtils.rm_rf dir
+      config_file(path)["md"]["guides"].as_bool.should be_false
     end
   end
 end

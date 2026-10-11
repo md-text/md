@@ -242,6 +242,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   the Markdown continuation.) Format → Rewrap Paragraph (`Alt-Q`) refills
   the paragraph at the cursor, or the selection's paragraphs, to the same
   column, with the same Markdown rules.
+- Every View and Options choice is a configuration option as well, in
+  Crysterm's registry beside the toolkit's own: `md.sync_cursor`,
+  `md.text_width`, `md.mouse_mode` and the rest, each settable in the config
+  file, as an `MD_*` environment variable (`MD_TEXT_WIDTH=80`) or on the
+  command line (`--md-text-width 80`, `--no-md-soft-wrap`), the later
+  winning, with a pick in a menu recorded in the option at once. `md --help
+  --verbose` and the man page's SETTINGS section list them with their
+  defaults; the shell completions know the flags.
+
+### Changed
+
+- The settings live in `$XDG_CONFIG_HOME/md/config.yml`
+  (`~/.config/md/config.yml`), YAML in the layout `--crysterm-dump-config`
+  prints, one mapping per option group, instead of `settings.json`, which is
+  no longer read. The file can hold Crysterm's options too, for md alone. It
+  is written when md quits if anything changed, with what was picked during
+  the run and what it already had; a value given on the command line or in
+  the environment is for that run and leaves the file's own entry standing,
+  and entries md does not know are kept. A broken file stops md with a
+  message naming the entry.
 
 [Unreleased]: https://github.com/crystallabs/md/commits/main
 

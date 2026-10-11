@@ -11,7 +11,8 @@ module Md
     # `app_dialogs.cr`) and whether the file is watched) and Options (the two
     # modes the status bar toggles — overwrite mode and the mouse mode — the
     # unsaved-changes guard, auto-save and the backup file
-    # (`app_autosave.cr`), the clipboard mode, and Clear Caches…,
+    # (`app_autosave.cr`), the clipboard mode, the config file's entries
+    # (`app_config.cr`) and Clear Caches…,
     # `app_caches.cr`), so every setting is reachable from the keyboard
     # through the menus as well, `Alt+F`/`Alt+E`/`Alt+M`/`Alt+V`/`Alt+O`
     # opening them (Format's letter is `m`, since Options has `o` and `Alt+R`
@@ -22,7 +23,7 @@ module Md
     # check entry (`#add_toggle`) or, for a choice among several, a radio
     # submenu (`#add_choices`, Qt's exclusive `QActionGroup`: exactly one
     # entry is checked, and re-picking it keeps it); the pane entries follow
-    # the panes, and the overwrite and line-number entries follow the
+    # the panes, and the overwrite entry follows the
     # editor. Only the pane entries' enabled state is re-synced by
     # `#refresh_menus`; the recent files are remade by `#refresh_recent_menu`.
     #
@@ -96,12 +97,7 @@ module Md
       view.add_separator
       add_toggle view, "S&ync Cursor", @sync_cursor
       add_toggle view, "&Highlight Line", @highlight_line
-      # The editor's own state, like overwrite mode: the gutter is Crysterm's
-      # (`PlainTextEdit#line_numbers`), the entry follows its event.
-      numbers = Crysterm::Action.new "Line &Numbers", checkable: true
-      numbers.bind_checked(@editor, Crysterm::Event::LineNumbersChanged) { @editor.line_numbers? }
-      numbers.on(Crysterm::Event::Triggered) { |e| @editor.line_numbers = e.checked }
-      view.add_action numbers
+      add_toggle view, "Line &Numbers", @line_numbers
       view.add_separator
       add_toggle(view, "&Soft Wrap", @soft_wrap).shortcut = "Alt+W"
       add_toggle view, "H&ard Wrap", @hard_wrap

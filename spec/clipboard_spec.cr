@@ -247,17 +247,15 @@ describe "Md::App clipboard modes" do
     end
   end
 
-  it "keeps the mode in the settings and restores it" do
+  it "keeps the mode in the config and restores it" do
     with_clipboard do |clip|
-      settings = Md::Settings.new("unused.json")
-      settings.clipboard_mode.should be_nil
-      settings.clipboard_mode = Md::App::ClipboardMode::Internal
-      settings.get("clipboard_mode", "").should eq "internal"
-      with_app settings: settings do |app|
-        app.clipboard_mode.should eq Md::App::ClipboardMode::Internal
-        clip.mode.should eq Crysterm::Application::Clipboard::Mode::Internal
-        app.clipboard_mode = Md::App::ClipboardMode::Terminal
-        settings.clipboard_mode.should eq Md::App::ClipboardMode::Terminal
+      with_config "md:\n  clipboard_mode: internal\n" do
+        with_app config: true do |app|
+          app.clipboard_mode.should eq Md::App::ClipboardMode::Internal
+          clip.mode.should eq Crysterm::Application::Clipboard::Mode::Internal
+          app.clipboard_mode = Md::App::ClipboardMode::Terminal
+          Crysterm::Config.md_clipboard_mode.should eq Md::App::ClipboardMode::Terminal
+        end
       end
       # A new app without a stored choice starts from the default, and
       # applies it to the shared clipboard.

@@ -101,21 +101,14 @@ describe "Md::App hard wrap" do
   end
 
   it "keeps the choice across runs" do
-    dir = File.tempname("md-spec-hard-wrap")
-    Dir.mkdir_p dir
-    path = File.join(dir, "settings.json")
-    begin
-      File.write path, %({"version": 1, "settings": {"hard_wrap": true}})
-      settings = Md::Settings.load(path)
-      with_app settings: settings do |app|
+    with_config "md:\n  hard_wrap: true\n" do |path|
+      with_app config: true do |app|
         app.hard_wrap?.should be_true
         app.editor.hard_wrap_column.should eq 80
         app.hard_wrap = false
-        app.save_settings
+        app.save_config
       end
-      Md::Settings.load(path).hard_wrap?.should be_false
-    ensure
-      FileUtils.rm_rf dir
+      config_file(path)["md"]["hard_wrap"].as_bool.should be_false
     end
   end
 end

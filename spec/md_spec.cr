@@ -29,15 +29,25 @@ describe Md::CLI do
     output.to_s.should_not contain "--colors-theme"
   end
 
-  it "lists the Crysterm toolkit options with --help --verbose, in either order" do
+  it "lists the settings and the Crysterm toolkit options with --help --verbose, in either order" do
     ["--help", "--verbose"].each_permutation do |flags|
       output = IO::Memory.new
       Md::CLI.run(flags, stdout: output).should eq 0
-      output.to_s.should contain "Usage: md"
-      output.to_s.should contain "--colors-theme=VALUE"
-      output.to_s.should contain "--crysterm-dump-config"
-      output.to_s.index!("Usage: md").should be < output.to_s.index!("--colors-theme")
+      text = output.to_s
+      text.should contain "Usage: md"
+      text.should contain "--md-sync-cursor"
+      text.should contain "--colors-theme=VALUE"
+      text.should contain "--crysterm-dump-config"
+      text.index!("Usage: md").should be < text.index!("--md-sync-cursor")
+      text.index!("--md-sync-cursor").should be < text.index!("--colors-theme")
+      text.scan("--md-sync-cursor").size.should eq 1 # in the settings, not again among the toolkit's
     end
+  end
+
+  it "keeps the settings out of plain help" do
+    output = IO::Memory.new
+    Md::CLI.run(["--help"], stdout: output).should eq 0
+    output.to_s.should_not contain "--md-"
   end
 
   it "passes Crysterm toolkit options through" do

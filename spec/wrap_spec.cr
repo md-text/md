@@ -110,44 +110,37 @@ describe "Md::App text layout" do
   end
 
   it "keeps the three choices across runs" do
-    dir = File.tempname("md-spec-wrap-settings")
-    Dir.mkdir_p dir
-    path = File.join(dir, "settings.json")
-    begin
-      File.write path, <<-JSON
-        {"version": 1, "settings": {"soft_wrap": false, "text_width": 80, "center_text": false}}
-        JSON
-      settings = Md::Settings.load(path)
-      with_app Md::Source.new(path: "doc.md"), text: LONG_DOC, view: true, settings: settings do |app|
+    with_config "md:\n  soft_wrap: false\n  text_width: 80\n  center_text: false\n" do |path|
+      with_app Md::Source.new(path: "doc.md"), text: LONG_DOC, view: true, config: true do |app|
         app.soft_wrap?.should be_false
         app.editor.wrap_content?.should be_false
         app.text_width.should eq 80
         app.center_text?.should be_false
         app.viewer.line_wrap_column.should eq 80
         app.viewer.line_wrap_column_alignment.should eq Tput::AlignFlag::Left
-        settings.dirty?.should be_false
+        Md::Config.dirty?.should be_false
 
         app.text_width = 100
         app.center_text = true
-        settings.dirty?.should be_true
-        app.save_settings
+        Md::Config.dirty?.should be_true
+        app.save_config
       end
 
-      reloaded = Md::Settings.load(path)
-      reloaded.soft_wrap?.should be_false
-      reloaded.text_width.should eq 100
-      reloaded.center_text?.should be_true
-    ensure
-      FileUtils.rm_rf dir
+      file = config_file(path)["md"]
+      file["soft_wrap"].as_bool.should be_false
+      file["text_width"].as_i.should eq 100
+      file["center_text"].as_bool.should be_true
     end
   end
 
-  it "has the panes' own defaults without a store" do
-    with_app settings: Md::Settings.new("unused.json") do |app|
-      app.soft_wrap?.should be_true
-      app.text_width.should eq 0
-      app.center_text?.should be_true
-      app.settings.try(&.dirty?).should be_false
+  it "has the panes' own defaults without a config file" do
+    with_config do
+      with_app config: true do |app|
+        app.soft_wrap?.should be_true
+        app.text_width.should eq 0
+        app.center_text?.should be_true
+        Md::Config.dirty?.should be_false
+      end
     end
   end
 end

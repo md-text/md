@@ -362,20 +362,20 @@ describe "Md::App menus" do
   end
 end
 
-describe "Md::App settings" do
-  it "applies the stored choices and records changes, saving them at exit" do
-    dir = File.tempname("md-spec-settings")
-    Dir.mkdir_p dir
-    path = File.join(dir, "settings.json")
-    begin
-      File.write path, <<-JSON
-        {"version": 1, "settings": {"sync_cursor": true, "highlight_line": true,
-         "confirm_discard": false, "mouse_mode": "insert", "line_numbers": true,
-         "pane_sizes": [40, 60, 20]}}
-        JSON
-      settings = Md::Settings.load(path)
-      with_app Md::Source.new(path: "doc.md"), text: DOC, view: true, settings: settings do |app, window|
-        app.settings.should be settings
+describe "Md::App config" do
+  it "applies the configured choices and records changes, saving them at exit" do
+    yaml = <<-YAML
+      md:
+        sync_cursor: true
+        highlight_line: true
+        confirm_discard: false
+        mouse_mode: insert
+        line_numbers: true
+        pane_sizes: "40,60,20"
+      YAML
+    with_config yaml do |path|
+      with_app Md::Source.new(path: "doc.md"), text: DOC, view: true, config: true do |app, window|
+        app.config?.should be_true
         app.sync_cursor?.should be_true
         app.highlight_line?.should be_true
         app.editor.highlight_current_line?.should be_true
@@ -384,45 +384,49 @@ describe "Md::App settings" do
         app.mouse_mode.should eq Md::App::MouseMode::Insert
         window.mouse_enabled?.should be_false # reading in the viewer: not in `i`
         app.editor.line_numbers?.should be_true
+        app.pane_sizes.should eq [40, 60, 20]
         follow, highlight = menu(app, 3).actions[5, 2]
         follow.checked?.should be_true
         highlight.checked?.should be_true
-        settings.dirty?.should be_false # applying is not a change
+        Md::Config.dirty?.should be_false # applying is not a change
 
         follow.trigger
         app.sync_cursor?.should be_false
+        Crysterm::Config.md_sync_cursor.should be_false # recorded at once
         app.cycle_mouse_mode.should eq Md::App::MouseMode::Off
         app.confirm_discard = true
         app.editor.line_numbers = false
-        settings.dirty?.should be_true
-        app.save_settings
-        settings.dirty?.should be_false
+        app.line_numbers?.should be_false
+        Md::Config.dirty?.should be_true
+        app.save_config
+        Md::Config.dirty?.should be_false
       end
 
-      reloaded = Md::Settings.load(path)
-      reloaded.sync_cursor?.should be_false
-      reloaded.highlight_line?.should be_true
-      reloaded.confirm_discard?.should be_true
-      reloaded.mouse_mode.should eq Md::App::MouseMode::Off
-      reloaded.line_numbers?.should be_false
-      reloaded.pane_sizes.should eq [40, 60, 20]
-    ensure
-      FileUtils.rm_rf dir
+      file = config_file(path)["md"]
+      file["sync_cursor"].as_bool.should be_false
+      file["highlight_line"].as_bool.should be_true
+      file["confirm_discard"].as_bool.should be_true
+      file["mouse_mode"].as_s.should eq "Off"
+      file["line_numbers"].as_bool.should be_false
+      file["pane_sizes"].as_s.should eq "40,60,20"
     end
   end
 
-  it "keeps the defaults for choices never made, and runs without a store" do
-    with_app settings: Md::Settings.new("unused.json") do |app|
-      app.sync_cursor?.should be_false
-      app.highlight_line?.should be_false
-      app.confirm_discard?.should be_true
-      app.mouse_mode.should eq Md::App::MouseMode::All
-      app.settings.try(&.dirty?).should be_false
+  it "keeps the defaults for choices never made, and runs without the config" do
+    with_config do
+      with_app config: true do |app|
+        app.sync_cursor?.should be_false
+        app.highlight_line?.should be_false
+        app.confirm_discard?.should be_true
+        app.mouse_mode.should eq Md::App::MouseMode::All
+        Md::Config.dirty?.should be_false
+      end
     end
     with_app do |app|
-      app.settings.should be_nil
+      app.config?.should be_false
       app.sync_cursor = true
-      app.save_settings
+      Crysterm::Config.md_sync_cursor.should be_false # a spec's pick stays its own
+      app.save_config
     end
   end
 end

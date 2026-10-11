@@ -149,55 +149,41 @@ describe "Md::App panes" do
     end
   end
 
-  it "keeps Resizable Panes in the settings" do
-    dir = File.tempname("md-spec-resizable")
-    Dir.mkdir_p dir
-    path = File.join(dir, "settings.json")
-    begin
-      File.write path, %({"version": 1, "settings": {"resizable_panes": false}})
-      settings = Md::Settings.load(path)
-      with_app text: PANES_DOC, settings: settings do |app|
+  it "keeps Resizable Panes in the config" do
+    with_config "md:\n  resizable_panes: false\n" do
+      with_app text: PANES_DOC, config: true do |app|
         app.resizable_panes?.should be_false
         app.splitter.resizable?.should be_false
         app.resizable_panes = true
-        settings.resizable_panes?.should be_true
+        Crysterm::Config.md_resizable_panes.should be_true
       end
-    ensure
-      FileUtils.rm_rf dir
     end
   end
 
-  it "keeps the pane sizes in the settings and restores them" do
-    dir = File.tempname("md-spec-panes")
-    Dir.mkdir_p dir
-    path = File.join(dir, "settings.json")
-    begin
-      File.write path, %({"version": 1, "settings": {"pane_sizes": [20, 40, 25]}})
-      settings = Md::Settings.load(path)
-      with_app text: PANES_DOC, settings: settings do |app|
+  it "keeps the pane sizes in the config and restores them" do
+    with_config %(md:\n  pane_sizes: "20,40,25"\n) do |path|
+      with_app text: PANES_DOC, config: true do |app|
         show_all app
         app.pane_sizes.should eq [20, 40, 25]
         app.splitter.sizes.should eq [24, 49, 25] # the same proportions, the outline as set
-        settings.dirty?.should be_false
+        Md::Config.dirty?.should be_false
         app.splitter.dividers[0].position = 30
-        app.save_settings
-        settings.dirty?.should be_false
+        app.save_config
+        Md::Config.dirty?.should be_false
       end
 
-      reloaded = Md::Settings.load(path)
-      reloaded.pane_sizes.should eq [30, 43, 25]
-      with_app text: PANES_DOC, settings: reloaded do |app|
+      config_file(path)["md"]["pane_sizes"].as_s.should eq "30,43,25"
+      Md::Config.configure file: path
+      with_app text: PANES_DOC, config: true do |app|
         show_all app
         app.splitter.sizes.should eq [30, 43, 25]
       end
 
       # A value that is not one width per pane is left alone.
-      File.write path, %({"version": 1, "settings": {"pane_sizes": [40, 60]}})
-      with_app text: PANES_DOC, settings: Md::Settings.load(path) do |app|
+      Crysterm::Config.md_pane_sizes = "40,60"
+      with_app text: PANES_DOC, config: true do |app|
         app.pane_sizes.should eq [0, 0, Md::App::TOC_WIDTH]
       end
-    ensure
-      FileUtils.rm_rf dir
     end
   end
 end

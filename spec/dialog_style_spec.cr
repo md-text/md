@@ -14,19 +14,20 @@ end
 
 describe "Md::App dialog style" do
   it "asks at the prompt by default, offers the styles under View → Dialog Style, and keeps the choice" do
-    settings = Md::Settings.new "unused.json"
-    with_app settings: settings do |app|
-      app.dialog_style.should eq Md::App::DialogStyle::LinePrompt
-      styles = menu(app, 3).actions.find!(&.text.==("&Dialog Style")).menu || [] of Crysterm::Action
-      styles.map(&.text).should eq ["&Modal Dialogs", "&Line Prompts"]
-      styles.map(&.checked?).should eq [false, true]
-      styles[0].trigger
-      app.dialog_style.should eq Md::App::DialogStyle::Modal
-      styles.map(&.checked?).should eq [true, false]
-      settings.dialog_style.should eq Md::App::DialogStyle::Modal
-    end
-    with_app settings: settings do |app|
-      app.dialog_style.should eq Md::App::DialogStyle::Modal
+    with_config do
+      with_app config: true do |app|
+        app.dialog_style.should eq Md::App::DialogStyle::LinePrompt
+        styles = menu(app, 3).actions.find!(&.text.==("&Dialog Style")).menu || [] of Crysterm::Action
+        styles.map(&.text).should eq ["&Modal Dialogs", "&Line Prompts"]
+        styles.map(&.checked?).should eq [false, true]
+        styles[0].trigger
+        app.dialog_style.should eq Md::App::DialogStyle::Modal
+        styles.map(&.checked?).should eq [true, false]
+        Crysterm::Config.md_dialog_style.should eq Md::App::DialogStyle::Modal
+      end
+      with_app config: true do |app|
+        app.dialog_style.should eq Md::App::DialogStyle::Modal
+      end
     end
   end
 
