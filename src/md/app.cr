@@ -179,8 +179,7 @@ module Md
     def run : Int32
       # A handler of md's that raises must not take the app down with unsaved
       # text in the editor: opt into Crysterm continuing, with a notice.
-      application = @window.application || Crysterm::Application.global
-      application.on(Crysterm::Event::HandlerError) { |e| internal_error e.error }
+      @main.report_handler_errors(NOTICE_TIMEOUT) { |error| error_notice error }
       @window.exec
     end
 

@@ -132,15 +132,19 @@ module Md
       refresh_menus
     end
 
-    # Reports an error that escaped one of md's handlers (Crysterm's
-    # `Event::HandlerError`). The app goes on, so unsaved text can still be
-    # saved: a notice names the error in the status bar, the backtrace goes
-    # to the log (`CLI` points Crysterm's `log.file` at md's cache directory).
+    # Reports an error that escaped one of md's handlers the way `#run` has
+    # Crysterm report them (`MainWindow#report_handler_errors`): the app goes
+    # on, so unsaved text can still be saved, a notice names the error in
+    # the status bar, and the backtrace goes to the log (`CLI` points
+    # Crysterm's `log.file` at md's cache directory).
     def internal_error(error : Exception) : Nil
-      ::Log.error(exception: error) { "md: internal error" }
-      where = Crysterm::Config.log_file
-      where = "stderr" if where.empty?
-      notice "Internal error: #{error.message} (see #{where})"
+      @main.report_handler_error(error, NOTICE_TIMEOUT) { |e| error_notice e }
+    end
+
+    # Crysterm's notice for *error*, with the leading space md's fields and
+    # notices share.
+    private def error_notice(error : Exception) : String
+      " #{Crysterm::Widget::MainWindow.handler_error_message(error)}"
     end
 
     # The mouse field's icon: the registry's mouse glyph at the terminal's
