@@ -124,6 +124,15 @@ module Md
       set "highlight_line", value
     end
 
+    # View → Line numbers.
+    def line_numbers? : Bool?
+      get? "line_numbers", Bool
+    end
+
+    def line_numbers=(value : Bool) : Nil
+      set "line_numbers", value
+    end
+
     # Options → Ask before discarding changes.
     def confirm_discard? : Bool?
       get? "confirm_discard", Bool

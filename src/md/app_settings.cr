@@ -3,12 +3,12 @@ module Md
     # The settings kept across runs (`Settings`), when the app keeps them
     # (the CLI does; specs pass none, or one on a temporary file). The View
     # and Options choices that are reactive properties — Follow cursor,
-    # Highlight line, Ask before discarding changes, the mouse mode — are
-    # restored from the store on construction and recorded in it as they
-    # change, whoever changes them (a menu entry, a key, a setter), and the
-    # store is written at exit (`#save_settings`, from `#run`). Watch file is
-    # not among them: it is per run, as `--watch` is; overwrite mode is the
-    # editor's state, not a choice.
+    # Highlight line, Ask before discarding changes, the mouse mode — and
+    # the editor's line numbers are restored from the store on construction
+    # and recorded in it as they change, whoever changes them (a menu entry,
+    # a key, a setter), and the store is written at exit (`#save_settings`,
+    # from `#run`). Watch file is not among them: it is per run, as
+    # `--watch` is; overwrite mode is the editor's state, not a choice.
     getter settings : Settings?
 
     # Puts the stored choices into the properties — a choice never made reads
@@ -21,10 +21,12 @@ module Md
       settings.highlight_line?.try { |value| @highlight_line.value = value }
       settings.confirm_discard?.try { |value| @confirm_discard.value = value }
       settings.mouse_mode.try { |mode| @mouse_mode.value = mode }
+      settings.line_numbers?.try { |value| @editor.line_numbers = value }
       @follow_cursor.on_change { settings.follow_cursor = @follow_cursor.value }
       @highlight_line.on_change { settings.highlight_line = @highlight_line.value }
       @confirm_discard.on_change { settings.confirm_discard = @confirm_discard.value }
       @mouse_mode.on_change { settings.mouse_mode = @mouse_mode.value }
+      @editor.on(Crysterm::Event::LineNumbersChanged) { |e| settings.line_numbers = e.visible }
     end
 
     # Writes the settings, when any changed. A write that fails is let go:

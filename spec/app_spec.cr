@@ -324,7 +324,7 @@ describe "Md::App menus" do
       menu(app, 0).actions.map(&.text).should eq ["&Open…", "Open &Recent", "&Reload", "", "&Save", "Save &As…", "", "&Quit"]
       menu(app, 0).actions[1].enabled?.should be_false # no history, nothing recent
       menu(app, 1).actions.map(&.text).should eq ["&Find…", "Find &Next", "Find &Previous", "Clear &Highlight", "", "&Go to Line…", "Nex&t Heading", "Pre&vious Heading", "", "&Back", "For&ward"]
-      menu(app, 2).actions.map(&.text).should eq ["&Editor", "&Viewer", "&Table of contents", "", "&Follow cursor", "&Highlight line", "", "&Watch file"]
+      menu(app, 2).actions.map(&.text).should eq ["&Editor", "&Viewer", "&Table of contents", "", "&Follow cursor", "&Highlight line", "Line &numbers", "", "&Watch file"]
       menu(app, 3).actions.map(&.text).should eq ["&Overwrite mode", "&Ask before discarding changes", "&Mouse"]
     end
   end
@@ -388,7 +388,8 @@ describe "Md::App settings" do
     begin
       File.write path, <<-JSON
         {"version": 1, "settings": {"follow_cursor": true, "highlight_line": true,
-         "confirm_discard": false, "mouse_mode": "insert", "pane_sizes": [40, 60]}}
+         "confirm_discard": false, "mouse_mode": "insert", "line_numbers": true,
+         "pane_sizes": [40, 60]}}
         JSON
       settings = Md::Settings.load(path)
       with_app Md::Source.new(path: "doc.md"), text: DOC, view: true, settings: settings do |app, window|
@@ -400,6 +401,7 @@ describe "Md::App settings" do
         app.confirm_discard?.should be_false
         app.mouse_mode.should eq Md::App::MouseMode::Insert
         window.mouse_enabled?.should be_false # reading in the viewer: not in `i`
+        app.editor.line_numbers?.should be_true
         follow, highlight = menu(app, 2).actions[4, 2]
         follow.checked?.should be_true
         highlight.checked?.should be_true
@@ -409,6 +411,7 @@ describe "Md::App settings" do
         app.follow_cursor?.should be_false
         app.cycle_mouse_mode.should eq Md::App::MouseMode::Off
         app.confirm_discard = true
+        app.editor.line_numbers = false
         settings.dirty?.should be_true
         app.save_settings
         settings.dirty?.should be_false
@@ -419,6 +422,7 @@ describe "Md::App settings" do
       reloaded.highlight_line?.should be_true
       reloaded.confirm_discard?.should be_true
       reloaded.mouse_mode.should eq Md::App::MouseMode::Off
+      reloaded.line_numbers?.should be_false
       reloaded.get("pane_sizes", [] of Int32).should eq [40, 60]
     ensure
       FileUtils.rm_rf dir

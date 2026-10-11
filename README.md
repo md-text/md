@@ -211,6 +211,8 @@ that renders nothing (a blank line, a code fence) maps to the rendered block
 just above it. *Highlight line*, also in the View menu, tints the row the
 cursor is on in each pane; together with *Follow cursor* the two tinted rows
 are the same place in the document, which makes the pairing easy to see.
+*Line numbers* puts a gutter with the source line numbers on the editor's
+left, the way code editors do; the choice is kept across runs.
 
 Save As asks for the name in place of the status bar, the way vi's command
 line replaces its status line: the current name is filled in, `Tab` and

@@ -3,8 +3,8 @@ module Md
     # The menu bar: File (open, the recent files, reload, save, quit), Edit
     # (find, repeat the find, go to a line, jump between headings), View
     # (which panes are shown, whether the editor's and the viewer's carets
-    # follow each other, whether the caret's line is highlighted, and
-    # whether the file is watched) and Options (the two modes the status bar
+    # follow each other, whether the caret's line is highlighted, whether
+    # the editor numbers its lines, and whether the file is watched) and Options (the two modes the status bar
     # toggles — overwrite mode and the mouse mode — and the unsaved-changes
     # guard, so every setting is reachable from the keyboard through the
     # menus as well, `Alt+F`/`Alt+E`/`Alt+V`/`Alt+O` opening them). The
@@ -76,6 +76,12 @@ module Md
       highlight = Crysterm::Action.new "&Highlight line", checkable: true
       highlight.bind_checked @highlight_line
       view.add_action highlight
+      # The editor's own state, like overwrite mode: the gutter is Crysterm's
+      # (`PlainTextEdit#line_numbers`), the entry follows its event.
+      numbers = Crysterm::Action.new "Line &numbers", checkable: true
+      numbers.bind_checked(@editor, Crysterm::Event::LineNumbersChanged) { @editor.line_numbers? }
+      numbers.on(Crysterm::Event::Triggered) { |e| @editor.line_numbers = e.checked }
+      view.add_action numbers
       view.add_separator
       watch = Crysterm::Action.new "&Watch file", checkable: true
       watch.bind_checked @watch_file
