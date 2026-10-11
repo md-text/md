@@ -132,7 +132,7 @@ of the editor and the viewer, and the table of contents its columns.
 | `Alt-Left`, `Alt-Right` | Back and Forward (Edit → Back, Forward); in the editor and the viewer these move by word instead |
 | `Enter`, `Tab`, `Shift-Tab` | In the editor, on a list item: continue the list (an empty item ends it), indent and outdent the item or the selected lines (Format → Indent, Outdent) |
 | `Ctrl-B`, `Alt-I`, `Alt-C` | Bold, italic and code around the selection or the word at the caret, or off again (Format → Bold, Italic, Code) |
-| `Alt-X`            | Add, tick or untick a list item's task box (Format → Toggle Task)         |
+| `Alt-X`            | Tick or untick a list item's task box, or give it a ticked one (Format → Check Task; Format → Task Box adds and removes the box) |
 | `Ctrl-Up`, `Ctrl-Down` | Promote or demote the heading on the caret's line (Format → Promote Heading, Demote Heading) |
 | `Ctrl-Q`           | Quit (`q` too, anywhere but in the editor; File → Quit); asks first when changes are unsaved |
 
@@ -225,15 +225,16 @@ Format → Bold, Italic and Code (`Ctrl-B`, `Alt-I`, `Alt-C`) put `**`, `*`
 or backticks around the selection, or the word at the caret, or insert the
 pair with the caret between when there is neither; on text that already has
 them (`_` and `__` count too) they take them off, and the text stays
-selected, so a second press undoes the first. Format → Toggle Task
-(`Alt-X`) gives a list item a `[ ]` box, ticks it `[x]` and unticks it
-again; Format → Promote Heading and Demote Heading (`Ctrl-Up`, `Ctrl-Down`)
+selected, so a second press undoes the first. Format → Task Box gives a
+list item a `[ ]` box and takes it off again; Format → Check Task (`Alt-X`)
+ticks the box `[x]` and unticks it, and gives an item without a box a
+ticked one; Format → Promote Heading and Demote Heading (`Ctrl-Up`, `Ctrl-Down`)
 move the caret's line one heading level up or down, a paragraph being the
 level above `#`. Each change is one undo step.
 
 The keys are not all Qt's: `Ctrl-B` is, but a terminal sends the same byte
 for `Ctrl-I` and `Tab`, and cannot tell `Ctrl-Shift-X` from `Ctrl-X`, so
-Italic, Code and Toggle Task use `Alt` chords the editor does not
+Italic, Code and Check Task use `Alt` chords the editor does not
 (`Alt-B` and `Alt-F` are its readline word moves). The Format menu works
 from any pane: chosen while reading, it edits the source of the viewer's
 caret, showing the editor if it is hidden.

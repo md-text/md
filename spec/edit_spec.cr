@@ -109,21 +109,44 @@ describe "Md::App editing" do
     end
   end
 
-  it "toggles a list item's task box, and says so off a list" do
+  it "gives a list item a task box and takes it off, ticks and unticks it, and says so off a list" do
     with_app text: "- item\ntext\n", view: false do |app, window|
       app.show_pane Md::App::Pane::Viewer
       place app, 0, 3
-      app.toggle_task.should be_true
+      app.toggle_task_box.should be_true
       app.markdown.should eq "- [ ] item\ntext\n"
-      press(window, Tput::Key::AltX).accepted?.should be_true
+      press(window, Tput::Key::AltX).accepted?.should be_true # Check Task
       app.markdown.should eq "- [x] item\ntext\n"
       app.viewer.document.blocks[0].block_format.checked?.should be_true # the viewer followed
-      app.toggle_task.should be_true
+      app.check_task.should be_true
       app.markdown.should eq "- [ ] item\ntext\n"
+      app.toggle_task_box.should be_true # the box off again
+      app.markdown.should eq "- item\ntext\n"
+      app.check_task.should be_true # no box yet: a ticked one
+      app.markdown.should eq "- [x] item\ntext\n"
+      app.toggle_task_box.should be_true
+      app.markdown.should eq "- item\ntext\n"
+      app.editor.undo.should be_true # each one step
+      app.markdown.should eq "- [x] item\ntext\n"
       place app, 1, 0
-      app.toggle_task.should be_false
+      app.toggle_task_box.should be_false
       notice(app).should contain "Not a list item"
-      app.markdown.should eq "- [ ] item\ntext\n"
+      app.check_task.should be_false
+      app.markdown.should eq "- [x] item\ntext\n"
+    end
+  end
+
+  it "boxes and checks every list item of a selection, each as it is, in one undo step" do
+    with_app text: "- a\n- [x] b\ntext\n- [ ] c\n", view: false do |app|
+      select_text app, 0, app.editor.document.size
+      app.toggle_task_box.should be_true
+      app.markdown.should eq "- [ ] a\n- b\ntext\n- c\n"
+      app.check_task.should be_true
+      app.markdown.should eq "- [x] a\n- [x] b\ntext\n- [x] c\n"
+      app.editor.undo.should be_true
+      app.markdown.should eq "- [ ] a\n- b\ntext\n- c\n"
+      app.editor.undo.should be_true
+      app.markdown.should eq "- a\n- [x] b\ntext\n- [ ] c\n"
     end
   end
 

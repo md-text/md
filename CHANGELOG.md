@@ -163,8 +163,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   indent and outdent the item, or the selected lines, by the item above's
   content offset (Format → Indent, Outdent). Format → Bold, Italic and Code
   (`Ctrl-B`, `Alt-I`, `Alt-C`) wrap the selection or the word at the caret
-  in `**`, `*` or backticks, or unwrap it; Toggle Task (`Alt-X`) adds,
-  ticks and unticks a `[ ]` box; Promote Heading and Demote Heading
+  in `**`, `*` or backticks, or unwrap it; Task Box adds a `[ ]` box to a
+  list item and takes it off, Check Task (`Alt-X`) ticks and unticks it (an
+  item without a box gets a ticked one); Promote Heading and Demote Heading
   (`Ctrl-Up`, `Ctrl-Down`) change the line's heading level. Each change is
   one undo step.
 - Edit → Replace… (`Alt-H`, since Qt's `Ctrl-H` is Backspace in a terminal): the

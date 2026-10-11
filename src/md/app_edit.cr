@@ -43,9 +43,10 @@ module Md
     # included. On any other line `Enter` and `Tab` keep their meanings: a
     # newline, and focus to the next pane.
     #
-    # Format → Toggle Task (`Alt-X`) gives a list item a task box, or ticks
-    # and unticks the one it has: `- item` → `- [ ] item` → `- [x] item` →
-    # `- [ ] item`. Format → Bold, Italic and Code (`Ctrl-B`, `Alt-I`,
+    # Format → Task Box gives a list item a task box, or takes off the one
+    # it has: `- item` ⇄ `- [ ] item`. Format → Check Task (`Alt-X`) ticks
+    # the box and unticks it, `- [ ] item` ⇄ `- [x] item`; an item without
+    # a box gets one ticked. Format → Bold, Italic and Code (`Ctrl-B`, `Alt-I`,
     # `Alt-C`) wrap the selection — or the word at the caret, or, with
     # neither, a pair the caret is put between — in `**`, `*` and backticks,
     # and take them off again from text that has them (`_` and `__` count
@@ -57,7 +58,7 @@ module Md
     # The keys: `Ctrl-B` is Qt's bold, and the editor does not use it. Qt's
     # `Ctrl-I` is out of reach — a terminal sends the same byte for `Ctrl-I`
     # and `Tab` — and so is `Ctrl-Shift-X`, which a terminal does not tell
-    # from `Ctrl-X`, so Italic, Code and Toggle Task take `Alt` chords the
+    # from `Ctrl-X`, so Italic, Code and Check Task take `Alt` chords the
     # editor leaves alone (`Alt-B` and `Alt-F` are readline's word moves
     # there). The list keys are the editor's own (`MarkdownEdit#key_filter`),
     # taken ahead of its editing keys and only on list lines, so they are
@@ -132,34 +133,31 @@ module Md
       toggle_wrap "`"
     end
 
-    # Format → Toggle Task: a task box on the caret's list item, or on every
-    # list item of the selection — added when there is none, ticked when
-    # empty, emptied when ticked. Returns whether there was an item, with a
-    # notice when there was not.
-    def toggle_task : Bool
-      editor = formatting_editor
-      doc = editor.document
-      first, last = selected_blocks
-      items = (first..last).compact_map do |i|
-        (item = ListItem.parse(doc.blocks[i].text)) ? {i, item} : nil
-      end
-      if items.empty?
-        notice "Not a list item"
-        return false
-      end
-      doc.edit do
-        items.each do |i, item|
-          at = doc.blocks[i].position + item.quote.size + item.indent.size + item.content_offset
-          if task = item.task
-            Crysterm::TextCursor.new(doc, at + 1, at + 2).insert_text(task[1] == ' ' ? "x" : " ")
-          else
-            Crysterm::TextCursor.new(doc, at).insert_text(item.spacing.empty? ? " [ ] " : "[ ] ")
-          end
+    # Format → Task Box: a task box on the caret's list item, or on every
+    # list item of the selection — `[ ] ` added to an item without one, and
+    # taken off an item that has one. Returns whether there was an item,
+    # with a notice when there was not.
+    def toggle_task_box : Bool
+      edit_task_items do |doc, box, item|
+        if task = item.task
+          Crysterm::TextCursor.new(doc, box, box + task.size).remove_selected_text
+        else
+          Crysterm::TextCursor.new(doc, box).insert_text(item.spacing.empty? ? " [ ] " : "[ ] ")
         end
-        nil
       end
-      edited
-      true
+    end
+
+    # Format → Check Task: the box ticked when empty and emptied when
+    # ticked, on the same items; an item without a box gets a ticked one,
+    # so a plain item is done in one key. Likewise.
+    def check_task : Bool
+      edit_task_items do |doc, box, item|
+        if task = item.task
+          Crysterm::TextCursor.new(doc, box + 1, box + 2).insert_text(task[1] == ' ' ? "x" : " ")
+        else
+          Crysterm::TextCursor.new(doc, box).insert_text(item.spacing.empty? ? " [x] " : "[x] ")
+        end
+      end
     end
 
     # Format → Indent and Outdent, and `Tab`/`Shift-Tab` in the editor: the
@@ -238,7 +236,8 @@ module Md
       format.add_action("&Italic", shortcut: "Alt+I") { toggle_italic }
       format.add_action("&Code", shortcut: "Alt+C") { toggle_code }
       format.add_separator
-      format.add_action("&Toggle Task", shortcut: "Alt+X") { toggle_task }
+      format.add_action("&Task Box") { toggle_task_box }
+      format.add_action("Chec&k Task", shortcut: "Alt+X") { check_task }
       format.add_action("I&ndent") { indent_list(1) || notice "Not a list item" }
       format.add_action("&Outdent") { indent_list(-1) || notice "Not a list item" }
       format.add_separator
@@ -301,6 +300,34 @@ module Md
         return item if fits.call item
       end
       nil
+    end
+
+    # The list items the caret's line or the selection's lines hold, each
+    # yielded with the document and the position of its task box — where
+    # the box is, or where one would go, after the marker's spacing — for
+    # the block to edit, all in one undo step. Returns whether there was an
+    # item, with a notice when there was not. The position is taken as each
+    # item's turn comes, so an earlier item's edit has already moved it.
+    private def edit_task_items(& : Crysterm::TextDocument, Int32, ListItem ->) : Bool
+      editor = formatting_editor
+      doc = editor.document
+      first, last = selected_blocks
+      items = (first..last).compact_map do |i|
+        (item = ListItem.parse(doc.blocks[i].text)) ? {i, item} : nil
+      end
+      if items.empty?
+        notice "Not a list item"
+        return false
+      end
+      doc.edit do
+        items.each do |i, item|
+          at = doc.blocks[i].position + item.quote.size + item.indent.size + item.content_offset
+          yield doc, at, item
+        end
+        nil
+      end
+      edited
+      true
     end
 
     # Wraps the selection — or the word at the caret — in *marker*, or

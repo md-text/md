@@ -38,7 +38,7 @@ module Md
       {"Alt-W", "Soft Wrap in the editor on and off."},
       {"Enter, Tab, Shift-Tab", "In the editor, on a list item: continue the list (an empty item ends it), indent and outdent the item or the selected lines."},
       {"Ctrl-B, Alt-I, Alt-C", "Bold, italic and code around the selection or the word at the caret, or off again."},
-      {"Alt-X", "Add, tick or untick a list item's task box."},
+      {"Alt-X", "Tick or untick a list item's task box, or give it a ticked one (Format -> Check Task; Format -> Task Box adds and removes the box)."},
       {"Ctrl-Up, Ctrl-Down", "Promote or demote the heading on the caret's line."},
       {"Ctrl-Q, q", "Quit (q anywhere but in the editor); asks first when changes are unsaved."},
     ]
