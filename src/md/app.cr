@@ -374,32 +374,19 @@ module Md
       save
     end
 
-    # Reads *io* in the background, line by line, feeding each line to
-    # `#receive` on the render fiber and ending with `#finish_stream`. The
-    # viewer follows the tail while it was already at the bottom, so new text
-    # scrolls into view until the reader scrolls up.
+    # Reads *io* in the background (`Window#pump`), line by line, feeding
+    # each line to `#receive` on the render fiber and ending with
+    # `#finish_stream`. The viewer follows the tail while it was already at
+    # the bottom, so new text scrolls into view until the reader scrolls up.
     def stream(io : IO) : Nil
       @streaming = true
       @editor_stale = true
       @viewer.follow_tail = true
-      spawn name: "md-stream" do
-        begin
-          while line = io.gets(chomp: false)
-            post_chunk line
-          end
-        rescue ex : IO::Error
-          @window.post { notice "Stream ended: #{ex.message}" }
-        end
-        @window.post { finish_stream }
+      ended = ->(error : IO::Error?) do
+        notice "Stream ended: #{error.message}" if error
+        finish_stream
       end
-    end
-
-    # Hands *chunk* to the render fiber. A method rather than a block in the
-    # read loop: the closure must capture this call's own *chunk*, not the
-    # loop variable, which the reader has already moved on from (or set to
-    # `nil` at the end of input) by the time the render fiber runs it.
-    private def post_chunk(chunk : String) : Nil
-      @window.post { receive chunk }
+      @window.pump(io, name: "md-stream", done: ended) { |line| receive line }
     end
 
     # Appends a streamed *chunk* of Markdown to the document. Must run on the
