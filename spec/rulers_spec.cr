@@ -3,7 +3,8 @@ require "file_utils"
 
 # View → Rulers → Horizontal and Vertical: a column ruler along the top row
 # of the editor and the viewer and a row ruler down their left, each on its
-# own, through Crysterm's `AbstractScrollArea#column_ruler` and `#row_ruler`;
+# own, through Crysterm's `AbstractScrollArea#column_ruler` and `#row_ruler`
+# — the row ruler a tape of ticks beside the editor's line-number gutter;
 # kept across runs.
 
 # One paragraph some 270 columns long on one source line, then a short one.
@@ -62,13 +63,20 @@ describe "Md::App rulers" do
     end
   end
 
-  it "counts the text's columns, and sits outside the editor's line-number gutter" do
+  it "counts the text's columns, and stands between the editor's line-number gutter and the text as ticks" do
     with_app Md::Source.new, text: RULERS_DOC, view: false do |app, window|
       app.rulers = true
       app.editor.line_numbers = true
       window.repaint
-      pane_row(window, app.editor, 1)[0, 6].should eq " │ 1 w"
-      pane_row(window, app.editor, 0)[0, 10].should eq "     ────┼"
+      # The gutter numbers the lines, so the row ruler is a one-column tape
+      # of ticks after it; the column ruler's tape starts at the text.
+      pane_row(window, app.editor, 1)[0, 5].should eq " 1 │w"
+      pane_row(window, app.editor, 0)[0, 10].should eq "    ────┼─"
+      app.editor.line_numbers = false
+      window.repaint
+      # Without the gutter the row ruler numbers the rows itself.
+      pane_row(window, app.editor, 1)[0, 3].should eq " │w"
+      pane_row(window, app.editor, 0)[0, 10].should eq "  ────┼───"
       app.show_pane Md::App::Pane::Viewer
       app.text_width = 40
       window.repaint

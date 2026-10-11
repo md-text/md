@@ -248,7 +248,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   on its own, counted in the text's columns — a `│` on every tenth column
   with its number right after it, a capped, centered column's tape starting
   where the text does, and both sliding with the text when it scrolls — the
-  row ruler outside the editor's line-number gutter. Kept across runs as
+  row ruler between the editor's line-number gutter and the text, a tape of
+  ticks while the gutter numbers the lines. Kept across runs as
   `horizontal_ruler` and `vertical_ruler`. (Crysterm's `AbstractScrollArea`
   learnt `column_ruler` and `row_ruler`, reserved as viewport margins and
   styled by `::ruler`.)

@@ -24,8 +24,8 @@ module Md
     # the pair) — Crysterm's `AbstractScrollArea#column_ruler` and
     # `#row_ruler`, counted in the text's columns, so with a
     # text width set and centered the tape starts where the text does, and
-    # in the editor the row ruler sits outside the line-number gutter, which
-    # keeps numbering source lines while the ruler numbers rows. View →
+    # in the editor the row ruler stands between the line-number gutter and
+    # the text, as ticks alone while the gutter numbers the lines. View →
     # Guides (`#guides?`) draws a vertical line in the column just before the
     # text and the one just after it (`AbstractScrollArea#guides_enabled`):
     # with a text width set in a wider pane, the capped column's edges; with

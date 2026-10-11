@@ -457,8 +457,10 @@ on its own: a tape of `─` with a `┼` every fifth
 column and a `│` on every tenth with its number right after it (`│20` marks
 column 20), counted in the text's own columns — a
 capped, centered column's tape starts where the text does, and both slide
-with the text when it scrolls. In the editor the row ruler sits outside the
-line-number gutter and numbers rows where the gutter numbers source lines.
+with the text when it scrolls. In the editor the row ruler stands between
+the line-number gutter and the text, and while the gutter numbers the source
+lines it is a one-column tape of ticks (`┼` every fifth row, `╪` every
+tenth); without the gutter it numbers the rows itself.
 *Guides* draws a thin vertical line in the column just before the text and
 the one just after it, in the blank cells only, so with a Text Width set in
 a wider pane the capped column's edges are marked. With the rulers shown,
