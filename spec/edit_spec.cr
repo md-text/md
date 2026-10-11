@@ -94,18 +94,65 @@ describe "Md::App editing" do
       app.markdown.should eq "  - a\n    continued\n\n  - b\n"
       app.editor.undo.should be_true
       app.markdown.should eq "- a\n  continued\n\n- b\n"
-      app.indent_list(-1).should be_true # at the margin already: taken, nothing to do
+      app.indent_lines(-1).should be_false # at the margin already: nothing to do
       app.markdown.should eq "- a\n  continued\n\n- b\n"
     end
   end
 
-  it "lets Tab move focus off a list item" do
-    with_app text: "text\n", view: false do |app, window|
+  it "indents any other line by four spaces with Tab and outdents it with Shift-Tab, staying in the editor" do
+    with_app text: "text\n\tcode\n> quoted\n", view: false do |app, window|
       app.show_pane Md::App::Pane::Viewer
       app.editor.focus
+      place app, 0, 2
+      press(window, Tput::Key::Tab).accepted?.should be_true
+      app.markdown.should eq "    text\n\tcode\n> quoted\n"
+      app.editor.cursor_position.should eq 6
+      app.editor.focused?.should be_true
+      press(window, Tput::Key::ShiftTab).accepted?.should be_true
+      app.markdown.should eq "text\n\tcode\n> quoted\n"
+      # At the margin: nothing comes off, and the key still stays put.
+      press(window, Tput::Key::ShiftTab).accepted?.should be_true
+      app.markdown.should eq "text\n\tcode\n> quoted\n"
+      app.editor.focused?.should be_true
+      # A leading tab is one unit; a quoted line indents after its marker.
+      place app, 1, 3
+      press window, Tput::Key::ShiftTab
+      app.markdown.should eq "text\ncode\n> quoted\n"
+      place app, 2, 3
       press window, Tput::Key::Tab
+      app.markdown.should eq "text\ncode\n>     quoted\n"
+      # A selection of plain lines moves together, in one undo step.
+      select_text app, 0, app.editor.document.size
+      press window, Tput::Key::Tab
+      app.markdown.should eq "    text\n    code\n>         quoted\n"
+      app.editor.undo.should be_true
+      app.markdown.should eq "text\ncode\n>     quoted\n"
+    end
+  end
+
+  it "shows Tab and Shift+Tab on Format → Indent and Outdent, keys that are theirs in the editor alone" do
+    with_app text: "text\n", view: false do |app, window|
+      indent, outdent = menu(app, 2).actions[6, 2]
+      indent.text.should eq "I&ndent"
+      indent.shortcut_text.should eq "Tab"
+      outdent.shortcut_text.should eq "Shift+Tab"
+      indent.shortcut_context.widget?.should be_true
+      app.editor.actions.should eq [indent, outdent]
+      # Outside the editor, Tab cycles the focus as before, indenting
+      # nothing (the viewer has it for its links first).
+      app.show_pane(Md::App::Pane::Toc).focus
+      press(window, Tput::Key::Tab).accepted?.should be_true
       app.markdown.should eq "text\n"
-      app.viewer.focused?.should be_true
+      app.toc.focused?.should be_false
+      app.show_pane(Md::App::Pane::Viewer).focus
+      press(window, Tput::Key::Tab).accepted?.should be_true
+      app.markdown.should eq "text\n"
+      # The entry itself indents from any pane, through the editor.
+      app.viewer.focus
+      indent.trigger
+      app.markdown.should eq "    text\n"
+      outdent.trigger
+      app.markdown.should eq "text\n"
     end
   end
 

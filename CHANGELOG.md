@@ -169,8 +169,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   View. `Enter` on a list item — bullets, numbers, tasks, indented or in a
   blockquote — continues the list with the same marker (the number raised,
   the task box emptied) and ends it on an empty item; `Tab` and `Shift-Tab`
-  indent and outdent the item, or the selected lines, by the item above's
-  content offset (Format → Indent, Outdent). Format → Bold, Italic and Code
+  indent and outdent the caret's line or the selected lines (Format →
+  Indent, Outdent, whose shortcuts they are in the editor): a list item by
+  the item above's content offset, any other line by four spaces. `Tab` no
+  longer leaves the editor; `F2`–`F4` and the mouse do. Format → Bold, Italic and Code
   (`Ctrl-B`, `Alt-I`, `Alt-C`) wrap the selection or the word at the caret
   in `**`, `*` or backticks, or unwrap it; Task Box adds a `[ ]` box to a
   list item and takes it off, Check Task (`Alt-X`) ticks and unticks it (an

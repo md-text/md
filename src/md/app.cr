@@ -58,7 +58,8 @@ module Md
   #
   # Keys: `F2`/`F3`/`F4` show and focus the editor/viewer/table of contents,
   # or hide it when it is already focused; `Tab` cycles focus between the
-  # shown panes; `Insert` toggles overwrite mode in the editor; `F5` cycles
+  # shown panes, except in the editor, where it indents (`app_edit.cr`);
+  # `Insert` toggles overwrite mode in the editor; `F5` cycles
   # the mouse mode; `F6` the theme (`app_theme.cr`); `Ctrl-Z` outside the
   # editor suspends md as the shell's `Ctrl-Z` would (in the editor it is
   # undo); `Alt-R` hands the keys to a divider (`app_panes.cr`), and `Enter`

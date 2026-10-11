@@ -3,7 +3,7 @@ module Md
   # with a hook ahead of its keys. `#key_filter` sees every key press first
   # and returns whether it took the key; a taken key is accepted and goes no
   # further — the editor would otherwise type the newline `Enter` stands
-  # for, and `Tab` would move the focus. Overriding the editor's key
+  # for, and the window would move the focus on `Tab`. Overriding the editor's key
   # handling is how Qt does it too (`keyPressEvent`, returning without
   # calling the base); a handler subscribed on the widget would not do,
   # since the editor's own handling runs whether or not an earlier handler
@@ -43,17 +43,23 @@ module Md
     # indentation and marker, the number one higher and the task box empty,
     # taking along whatever followed the caret. On an empty item, the marker
     # alone, `Enter` ends the list instead, removing the marker, as editors
-    # do (Qt's `QTextEdit` takes an empty item out of its list). `Tab` and
-    # `Shift-Tab` on a list item, or on a selection with one in it, indent
-    # and outdent the lines (Format → Indent and Outdent): an item nests
-    # under the nearest item above it at the same or a shallower level, by
-    # that item's content offset — two columns for `- `, three for `1. ` —
-    # which is what CommonMark asks of a child list, so a bullet under
-    # `1. step` is indented by three; outdenting goes back to the
-    # indentation of the nearest shallower item, or to the margin. Every
-    # line of the selection moves by the same amount, continuation lines
-    # included. On any other line `Enter` and `Tab` keep their meanings: a
-    # newline, and focus to the next pane.
+    # do (Qt's `QTextEdit` takes an empty item out of its list). On any
+    # other line `Enter` keeps its meaning, a newline.
+    #
+    # `Tab` and `Shift-Tab` indent and outdent the caret's line, or the
+    # selection's lines (Format → Indent and Outdent, `#indent_lines`). A
+    # list item, or a selection with one in it, moves by the list's rules:
+    # an item nests under the nearest item above it at the same or a
+    # shallower level, by that item's content offset — two columns for
+    # `- `, three for `1. ` — which is what CommonMark asks of a child list,
+    # so a bullet under `1. step` is indented by three; outdenting goes back
+    # to the indentation of the nearest shallower item, or to the margin.
+    # Every line of the selection moves by the same amount, continuation
+    # lines included. Any other line moves by Markdown's indent unit, four
+    # spaces (`INDENT`); outdenting takes up to four spaces, or a tab, off
+    # its front. So `Tab` never leaves the editor, as it does not leave a
+    # `QPlainTextEdit` (`tabChangesFocus` is off by default): `F2`–`F4` and
+    # the mouse put the focus elsewhere.
     #
     # Format → Task Box gives a list item a task box, or takes off the one
     # it has: `- item` ⇄ `- [ ] item`. Format → Check Task (`Alt-X`) ticks
@@ -84,9 +90,16 @@ module Md
     # and `Tab` — and so is `Ctrl-Shift-X`, which a terminal does not tell
     # from `Ctrl-X`, so Italic, Code and Check Task take `Alt` chords the
     # editor leaves alone (`Alt-B` and `Alt-F` are readline's word moves
-    # there). The list keys are the editor's own (`MarkdownEdit#key_filter`),
-    # taken ahead of its editing keys and only on list lines, so they are
-    # not menu shortcuts and Indent and Outdent show none.
+    # there). `Enter`, `Tab` and `Shift-Tab` are the editor's own
+    # (`MarkdownEdit#key_filter`), taken ahead of its editing keys — and of
+    # the window's focus cycling, which would otherwise have `Tab`. Indent
+    # and Outdent still show `Tab` and `Shift+Tab` as their shortcuts, in
+    # Qt's way of a key that is an entry's only in one widget: the actions
+    # are added to the editor (`QWidget::addAction`) with the `Widget`
+    # shortcut context (`Qt::WidgetShortcut`), so Crysterm fires them only
+    # while the editor has the focus, and elsewhere `Tab` cycles the panes
+    # as before. The filter has the key first and accepts it, so a press
+    # indents once, whichever path it takes.
     #
     # Every change is one edit of the editor's document — one undo step —
     # and goes through `#edited` like typing, so the viewer follows. The
@@ -136,6 +149,10 @@ module Md
 
     # The blockquote markers a line starts with.
     QUOTE = /\A(?:[ \t]*>)*/
+
+    # Markdown's indent unit for a line in no list: the four spaces of an
+    # indented code block or a continuation paragraph.
+    INDENT = 4
 
     # A line's heading prefix: what precedes the hashes (blockquote markers,
     # indentation), then the hashes with their spacing when there are any.
@@ -265,11 +282,12 @@ module Md
     end
 
     # Format → Indent and Outdent, and `Tab`/`Shift-Tab` in the editor: the
-    # caret's line, or the selection's lines, moved one list level in
-    # (*direction* 1) or out (-1); see the class comment. Returns whether a
-    # list item was among the lines — nothing else is indented, so `Tab`
-    # keeps moving focus elsewhere.
-    def indent_list(direction : Int32) : Bool
+    # caret's line, or the selection's lines, moved one level in
+    # (*direction* 1) or out (-1) — by the list's rules with a list item
+    # among them, by `INDENT` otherwise; see the class comment. Returns
+    # whether the lines moved: an item cannot nest deeper than one level
+    # under the item above, and nothing comes off a line at the margin.
+    def indent_lines(direction : Int32) : Bool
       editor = formatting_editor
       doc = editor.document
       first, last = selected_blocks
@@ -278,11 +296,15 @@ module Md
           break({i, item})
         end
       end
-      return false unless found
-      index, item = found
-      target = direction > 0 ? nested_indent(index, item) : outdented_indent(index, item)
-      delta = target - item.indent.size
-      return true if delta == 0
+      if found
+        index, item = found
+        target = direction > 0 ? nested_indent(index, item) : outdented_indent(index, item)
+        delta = target - item.indent.size
+      else
+        delta = direction * INDENT
+      end
+      return false if delta == 0
+      moved = false
       doc.edit do
         (first..last).each do |i|
           block = doc.blocks[i]
@@ -292,15 +314,20 @@ module Md
           start = block.position + quote
           if delta > 0
             Crysterm::TextCursor.new(doc, start).insert_text " " * delta
+            moved = true
           else
-            room = text.size - quote - text[quote..].lstrip(" \t").size
-            Crysterm::TextCursor.new(doc, start, start + Math.min(-delta, room)).remove_selected_text
+            # A leading tab is one unit of indentation; spaces come off by
+            # the count, as far as there are any.
+            room = text[quote]? == '\t' ? 1 : Math.min(-delta, text.size - quote - text[quote..].lstrip(' ').size)
+            next if room == 0
+            Crysterm::TextCursor.new(doc, start, start + room).remove_selected_text
+            moved = true
           end
         end
         nil
       end
-      edited
-      true
+      edited if moved
+      moved
     end
 
     # Format → Promote Heading: the caret's line one level up (`##` → `#`;
@@ -322,14 +349,20 @@ module Md
     end
 
     # The editor's keys that know the syntax, ahead of its own: `Enter` on a
-    # list item, `Tab` and `Shift-Tab` on list lines. Returns whether the
-    # key was taken.
+    # list item, `Tab` and `Shift-Tab` on any line — taken whether or not
+    # the lines could move, so `Tab` stays in the editor. Returns whether
+    # the key was taken.
     private def markdown_key(e : Crysterm::Event::KeyPress) : Bool
       case e.key
-      when Tput::Key::Enter    then continue_list
-      when Tput::Key::Tab      then indent_list 1
-      when Tput::Key::ShiftTab then indent_list -1
-      else                          false
+      when Tput::Key::Enter then continue_list
+      when Tput::Key::Tab
+        indent_lines 1
+        true
+      when Tput::Key::ShiftTab
+        indent_lines -1
+        true
+      else
+        false
       end
     end
 
@@ -418,8 +451,14 @@ module Md
       format.add_separator
       format.add_action("&Task Box") { toggle_task_box }
       format.add_action("Chec&k Task", shortcut: "Alt+X") { check_task }
-      format.add_action("I&ndent") { indent_list(1) || notice "Not a list item" }
-      format.add_action("&Outdent") { indent_list(-1) || notice "Not a list item" }
+      indent = format.add_action("I&ndent", shortcut: "Tab") { indent_lines 1 }
+      outdent = format.add_action("&Outdent", shortcut: "Shift+Tab") { indent_lines -1 }
+      # The editor's keys (see the class comment): the entries' shortcuts
+      # only while the editor has the focus.
+      {indent, outdent}.each do |action|
+        action.shortcut_context = Crysterm::Action::ShortcutContext::Widget
+        @editor.add_action action
+      end
       format.add_separator
       format.add_action("&Promote Heading", shortcut: "Ctrl+Up") { promote_heading }
       format.add_action("&Demote Heading", shortcut: "Ctrl+Down") { demote_heading }

@@ -112,7 +112,7 @@ viewer, and the table of contents its columns.
 | Key                | Action                                                                    |
 | ------------------ | ------------------------------------------------------------------------- |
 | `F2`, `F3`, `F4`   | Show and focus the editor, viewer or table of contents; hide it if it is already focused (the last pane stays) |
-| `Tab`, `Shift-Tab` | Move focus to the next or previous shown pane (in the viewer, `Tab` first cycles links) |
+| `Tab`, `Shift-Tab` | Outside the editor, move focus to the next or previous shown pane (in the viewer, `Tab` first cycles links); in the editor, indent and outdent the caret's line or the selected lines (Format → Indent, Outdent) |
 | `Enter`            | In the table of contents, jump the viewer to the selected heading; in the viewer, follow the focused link |
 | `Space`, `Enter`   | In the viewer, read on by a page or by a line (arrows, `PageUp`/`PageDown`, `Home`/`End` as usual) |
 | `Insert`           | Toggle the editor between inserting and overwriting (the `INS`/`OVR` field) |
@@ -135,7 +135,7 @@ viewer, and the table of contents its columns.
 | `Alt-R`            | Resize the panes from the keyboard (when View → Resizable Panes is on): `Left`/`Right` move the divider next to the pane, `Enter`/`Escape` return |
 | `Backspace`        | Outside the editor, go back to where you were before the last link or open (Edit → Back) |
 | `Alt-Left`, `Alt-Right` | Back and Forward (Edit → Back, Forward); in the editor and the viewer these move by word instead |
-| `Enter`, `Tab`, `Shift-Tab` | In the editor, on a list item: continue the list (an empty item ends it), indent and outdent the item or the selected lines (Format → Indent, Outdent) |
+| `Enter`            | In the editor, on a list item: continue the list (an empty item ends it) |
 | `Ctrl-B`, `Alt-I`, `Alt-C` | Bold, italic and code around the selection or the word at the caret, or off again (Format → Bold, Italic, Code) |
 | `Alt-X`            | Tick or untick a list item's task box, or give it a ticked one (Format → Check Task; Format → Task Box adds and removes the box) |
 | `Ctrl-Up`, `Ctrl-Down` | Promote or demote the heading on the caret's line (Format → Promote Heading, Demote Heading) |
@@ -248,12 +248,18 @@ The editor knows the syntax it holds. `Enter` at the end of a list item —
 `- `, `* `, `+ `, `1. ` or `1) `, a task `- [ ] `, indented or inside a
 blockquote — starts the next item with the same marker (the number one
 higher, the task box empty), taking along any text after the caret; on an
-empty item, `Enter` ends the list instead. `Tab` and `Shift-Tab` on a list
-item indent and outdent it (Format → Indent and Outdent), and every line of
-a selection with it: an item nests under the item above by that item's
-content offset — two columns for `- `, three for `1. `, as CommonMark wants
-a child list — and outdents back to the indentation of the nearest shallower
-item. On any other line `Enter` and `Tab` keep their meanings.
+empty item, `Enter` ends the list instead; on any other line it is a
+newline. `Tab` and `Shift-Tab` indent and outdent the caret's line, or
+every line of the selection (Format → Indent and Outdent): a list item, or
+a selection with one in it, moves by the list's rules — an item nests under
+the item above by that item's content offset, two columns for `- `, three
+for `1. `, as CommonMark wants a child list, and outdents back to the
+indentation of the nearest shallower item — and any other line by
+Markdown's unit of four spaces, `Shift-Tab` taking up to four spaces, or a
+tab, off its front. `Tab` therefore never leaves the editor, as it does not
+leave a text field in Qt; `F2`, `F3`, `F4` and the mouse do, and there is
+no other focus key a terminal could tell from `Tab` (`Ctrl-Tab` arrives as
+`Tab`). Outside the editor `Tab` cycles the panes as before.
 
 Format → Bold, Italic and Code (`Ctrl-B`, `Alt-I`, `Alt-C`) put `**`, `*`
 or backticks around the selection, or the word at the caret, or insert the
@@ -269,9 +275,10 @@ level above `#`. Each change is one undo step.
 The keys are not all Qt's: `Ctrl-B` is, but a terminal sends the same byte
 for `Ctrl-I` and `Tab`, and cannot tell `Ctrl-Shift-X` from `Ctrl-X`, so
 Italic, Code and Check Task use `Alt` chords the editor does not
-(`Alt-B` and `Alt-F` are its readline word moves). The Format menu works
-from any pane: chosen while reading, it edits the source of the viewer's
-caret, showing the editor if it is hidden.
+(`Alt-B` and `Alt-F` are its readline word moves). Indent and Outdent show
+`Tab` and `Shift+Tab`, keys that are theirs in the editor alone. The Format
+menu works from any pane: chosen while reading, it edits the source of the
+viewer's caret, showing the editor if it is hidden.
 
 ### Searching and jumping
 

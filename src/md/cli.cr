@@ -171,7 +171,7 @@ module Md
         document as it streams in.
 
         Keys: F2 editor, F3 viewer, F4 table of contents (show/focus, or hide
-        when focused), Tab next pane, Ctrl-O open, Ctrl-S save, Ctrl-F find,
+        when focused), Tab next pane (outside the editor), Ctrl-O open, Ctrl-S save, Ctrl-F find,
         Ctrl-L go to line, Ctrl-Q quit; F10 or Alt-F for the menus.
 
         Options:

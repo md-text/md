@@ -17,7 +17,7 @@ module Md
     # The keys, as the man page lists them (the README's table, in short).
     KEYS = [
       {"F2, F3, F4", "Show and focus the editor, the viewer or the table of contents; hide it when it is already focused (the last pane stays)."},
-      {"Tab, Shift-Tab", "Focus the next or the previous shown pane (in the viewer, Tab first cycles the links)."},
+      {"Tab, Shift-Tab", "Outside the editor, focus the next or the previous shown pane (in the viewer, Tab first cycles the links); in the editor, indent and outdent the caret's line or the selected lines (Format -> Indent, Outdent): a list item by the list's rules, any other line by four spaces. F2, F3 and F4 or the mouse leave the editor."},
       {"Enter", "In the table of contents, jump the viewer to the selected heading; in the viewer, follow the focused link."},
       {"Space, Enter", "In the viewer, read on by a page or by a line."},
       {"Insert", "Toggle the editor between inserting and overwriting."},
@@ -37,7 +37,7 @@ module Md
       {"Backspace, Alt-Left, Alt-Right", "Back to where you were before the last link or open (Backspace outside the editor), and Forward again."},
       {"Alt-R", "Resize the panes from the keyboard (when View -> Resizable Panes is on): Left and Right move the divider next to the pane, Enter or Escape return."},
       {"Alt-W", "Soft Wrap in the editor on and off."},
-      {"Enter, Tab, Shift-Tab", "In the editor, on a list item: continue the list (an empty item ends it), indent and outdent the item or the selected lines."},
+      {"Enter", "In the editor, on a list item: continue the list; on an empty item, end it."},
       {"Ctrl-B, Alt-I, Alt-C", "Bold, italic and code around the selection or the word at the caret, or off again."},
       {"Alt-X", "Tick or untick a list item's task box, or give it a ticked one (Format -> Check Task; Format -> Task Box adds and removes the box)."},
       {"Ctrl-Up, Ctrl-Down", "Promote or demote the heading on the caret's line."},
