@@ -114,7 +114,7 @@ of the editor and the viewer, and the table of contents its columns.
 | `Space`, `Enter`   | In the viewer, read on by a page or by a line (arrows, `PageUp`/`PageDown`, `Home`/`End` as usual) |
 | `Insert`           | Toggle the editor between inserting and overwriting (the `INS`/`OVR` field) |
 | `F5`               | Cycle the mouse mode (the `🖱=` field)                                    |
-| `F6`               | Cycle the theme: terminal, dark, light (View → Theme)                     |
+| `F6`               | Cycle the theme: terminal, dark, light and the five Qt themes (View → Theme) |
 | `Ctrl-Z`           | Outside the editor, suspend md to the shell (`fg` resumes); in the editor, undo |
 | `Alt-F`, `Alt-E`, `Alt-M`, `Alt-V`, `Alt-O` | Open the File, Edit, Format, View and Options menus (`F10` too) |
 | `Alt-W`            | Soft Wrap in the editor on and off (View → Soft Wrap)                     |
@@ -227,8 +227,12 @@ the way editors' "Paste from…" menus do:
 View → Theme picks the colors the whole window is drawn in, from the
 themes built into Crysterm — the same ones its `--colors-theme` option
 names: `terminal` derives a palette from your terminal's own colors, so md
-blends in, and `dark` and `light` are fixed palettes. The window switches at
-once, and `F6` cycles through them from the keyboard. The choice is kept
+blends in, `dark` and `light` are fixed palettes, and `breeze-dark`,
+`breeze-light`, `qdarkstyle-dark`, `qdarkstyle-light` and `qtmodern-dark`
+are the Qt themes of those names (Breeze, QDarkStyle and qtmodern), their
+Qt stylesheets embedded in Crysterm and laid over its own rules, so the
+whole window takes the Qt theme's look. The window switches at once, and
+`F6` cycles through all of them from the keyboard. The choice is kept
 with the other settings; `--colors-theme` given on the command line (or in
 Crysterm's config file or environment) wins for that run and is not kept,
 so the next plain run is back to the stored theme. A stylesheet of your own

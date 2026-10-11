@@ -78,6 +78,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   whole window restyled at once. The choice is kept in the settings;
   `--colors-theme` wins for its run without being kept, and a
   `--colors-stylesheet` of your own stays over whichever theme is on.
+- View → Theme offers the five Qt themes embedded in Crysterm — Breeze
+  Dark and Light, QDarkStyle Dark and Light and Qt Modern Dark — after
+  Terminal, Dark and Light: a Qt stylesheet laid over Crysterm's rules, in
+  a palette drawn from its window colors, so the whole window takes the
+  look. `F6` cycles through all eight, `--colors-theme breeze-dark` names
+  one for a run, and the choice is kept in the settings like the others.
 - The menus show their entries' keys: File → Open…, Reload, Save and Quit
   and Edit → Find…, Find Next, Find Previous and Go to Line… carry their
   shortcuts (Crysterm's action shortcuts, spelled `Ctrl+O` as Qt does),
