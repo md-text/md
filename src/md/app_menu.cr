@@ -25,12 +25,12 @@ module Md
 
       view = bar.add_menu "&View"
       Pane.each do |pane|
-        action = Crysterm::Action.new pane_label(pane), checkable: true, checked: widget(pane).visible?
-        action.on(Crysterm::Event::Triggered) do |e|
-          e.checked ? show_pane(pane).focus : hide_pane(pane)
-          # The last shown pane cannot be hidden: the check follows the panes.
-          refresh_status
-        end
+        # Crysterm's toggle action shows and hides the pane and keeps its
+        # check on the pane's visibility; showing from the menu also focuses
+        # the pane. The last shown pane's entry is disabled rather than
+        # refused (`#refresh_menus`), where `#hide_pane` refuses the keys.
+        action = widget(pane).toggle_view_action pane_label(pane)
+        action.on(Crysterm::Event::Triggered) { |e| widget(pane).focus if e.checked }
         view.add_action action
         @view_actions[pane] = action
       end
@@ -64,7 +64,8 @@ module Md
 
     # Brings the checkable menu entries in line with the panes and modes.
     def refresh_menus : Nil
-      @view_actions.each { |pane, action| action.checked = widget(pane).visible? }
+      last = visible_panes.size == 1
+      @view_actions.each { |pane, action| action.enabled = !(last && widget(pane).visible?) }
       @follow_action.try &.checked = @follow_cursor
       @highlight_action.try &.checked = @highlight_line
       @overwrite_action.try &.checked = @editor.overwrite_mode?

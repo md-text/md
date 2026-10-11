@@ -137,6 +137,22 @@ module Md
         @toc.document = doc unless @toc.document.same? doc
       end
       @window.on(Crysterm::Event::KeyPress) { |e| key_pressed e }
+      # A pane coming on screen is brought up to date first — the editor from
+      # a stream it missed, the viewer and table of contents from edits made
+      # while they were hidden — then the panes are aligned and the status
+      # refreshed. The keys (`#show_pane`) and the View menu (the panes'
+      # `toggle_view_action`s) both show a pane through here.
+      @editor.on(Crysterm::Event::Show) do
+        fill_editor if @editor_stale
+        pane_shown
+      end
+      {@viewer, @toc}.each do |w|
+        w.on(Crysterm::Event::Show) do
+          render_viewer if @viewer_stale
+          pane_shown
+        end
+      end
+      Pane.each { |pane| widget(pane).on(Crysterm::Event::Hide) { refresh_status } }
 
       Pane.each { |pane| widget(pane).hide }
       load text unless text.empty?
@@ -179,17 +195,12 @@ module Md
       Pane.values.select { |pane| widget(pane).visible? }
     end
 
-    # Shows *pane* (bringing its content up to date first) and returns its
-    # widget, so a caller can `.focus` it.
+    # Shows *pane* and returns its widget, so a caller can `.focus` it. The
+    # pane's `Show` handler (see `#initialize`) brings its content up to
+    # date, as it does for a show from the View menu.
     def show_pane(pane : Pane) : Crysterm::Widget
-      case pane
-      in .editor?        then fill_editor if @editor_stale
-      in .viewer?, .toc? then render_viewer if @viewer_stale
-      end
       w = widget(pane)
       w.show
-      sync_follow
-      refresh_status
       w
     end
 
@@ -203,7 +214,6 @@ module Md
       had_focus = w.focused?
       w.hide
       widget(remaining.first).focus if had_focus
-      refresh_status
       true
     end
 
@@ -286,6 +296,13 @@ module Md
       @viewer.highlight_current_line = value
       refresh_status
       value
+    end
+
+    # After a pane was shown: the panes aligned, the status (and the View
+    # menu's entries) refreshed.
+    private def pane_shown : Nil
+      sync_follow
+      refresh_status
     end
 
     # Aligns the panes from the focused one, when following.
