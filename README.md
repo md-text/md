@@ -320,7 +320,6 @@ src/md/cli.cr         the command line: the option table, parsing, launching
 src/md/source.cr      where the document comes from (file, stdin, nothing)
 src/md/export.cr      --export: the document rendered to standard output
 src/md/manual.cr      --generate: the man page and the shell completions
-src/md/history.cr     the recent files and positions, kept across runs
 src/md/app.cr         the Crysterm application: window, panes, keys, streaming
 src/md/app_status.cr  the status bar fields, the mouse modes
 src/md/app_menu.cr    the menu bar
