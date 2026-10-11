@@ -170,8 +170,10 @@ describe "Md::App go to line and headings" do
       press window, ']'
       app.viewer.cursor_position.should eq plain.index("Beta")
       app.editor.text_cursor.block_number.should eq 4
+      app.toc.selected_node.try(&.text).should eq "Beta"
       press window, ']'
       app.viewer.cursor_position.should eq plain.index("Gamma")
+      app.toc.selected_node.try(&.text).should eq "Gamma"
       press window, ']'
       app.viewer.cursor_position.should eq plain.index("Gamma") # none below
       notice(app).should contain "No heading below"
@@ -179,6 +181,7 @@ describe "Md::App go to line and headings" do
       app.viewer.cursor_position.should eq plain.index("Beta")
       press window, Tput::Key::AltUp
       app.viewer.cursor_position.should eq plain.index("Alpha")
+      app.toc.selected_node.try(&.text).should eq "Alpha"
       app.jump_heading(-1).should be_false
       press window, Tput::Key::AltDown
       app.viewer.cursor_position.should eq plain.index("Beta")
@@ -189,6 +192,22 @@ describe "Md::App go to line and headings" do
       app.jump_heading(-1).should be_true
       app.viewer.cursor_position.should eq plain.index("Beta")
       app.editor.text_cursor.block_number.should eq 4
+      app.toc.selected_node.try(&.text).should eq "Beta"
+    end
+  end
+
+  it "expands a collapsed table of contents branch to select the heading jumped to" do
+    with_app Md::Source.new, text: SEARCH_DOC, view: false do |app, window|
+      app.show_pane Md::App::Pane::Viewer
+      app.viewer.focus
+      window.repaint
+      alpha = app.toc.nodes[0]
+      alpha.text.should eq "Alpha"
+      app.toc.collapse alpha
+      app.toc.nodes.map(&.text).should eq ["Alpha"]
+      app.jump_heading(1).should be_true
+      alpha.expanded?.should be_true
+      app.toc.selected_node.try(&.text).should eq "Beta"
     end
   end
 end
