@@ -58,32 +58,18 @@ module Md
       help_text = parser.to_s
 
       # Crysterm reads its toolkit options (--colors-theme, --colors-stylesheet,
-      # ...) straight from ARGV before this parser runs, without consuming them.
-      # Register them as no-ops so that they pass through transparently: not
-      # reported as unknown, absent from help, and a value given as a separate
-      # word (`--colors-theme dark`) is not mistaken for a file. md's own flags
+      # ...) straight from ARGV before this parser runs, without consuming
+      # them; this parser gets the arguments with them taken out, so they are
+      # neither reported as unknown nor mistaken for a file. md's own flags
       # take precedence over a toolkit flag of the same name.
       own_flags = Set{"-V", "--version", "-h", "--help", "-v", "--verbose"}
-      Crysterm::Config.each do |opt|
-        next if own_flags.includes?(opt.cli)
-        if opt.bool?
-          parser.on(opt.cli, "") { }
-          parser.on(opt.cli.sub("--", "--no-"), "") { }
-        else
-          parser.on("#{opt.cli}=VALUE", "") { |_| }
-        end
-      end
-      # Loads an extra Crysterm config file. (`--crysterm-dump-config` needs no
-      # entry: Crysterm exits before this parser runs.)
-      parser.on("--crysterm-config=FILE", "") { |_| }
-
-      parser.parse(args)
+      parser.parse Crysterm.strip_toolkit_args(args, except: own_flags)
 
       if help
         stdout.puts help_text
         if verbose
           stdout.puts
-          stdout.puts toolkit_help(own_flags)
+          stdout.puts Crysterm.toolkit_options_help(except: own_flags)
         end
       end
 
@@ -115,51 +101,6 @@ module Md
     # over the UI.
     private def self.log_to_file : Nil
       Crysterm.default_log_file "md"
-    end
-
-    # The Crysterm toolkit options, formatted like md's own help: every option
-    # Superconf has registered (Crysterm's and its libraries'), with its
-    # description and default, plus the framework flags. Shown by
-    # `--help --verbose`; *own_flags* are md's and are left out.
-    private def self.toolkit_help(own_flags : Set(String)) : String
-      toolkit = OptionParser.new
-      toolkit.banner = <<-BANNER
-        Crysterm toolkit options. Each can also be set in ~/.config/crysterm/config.yml
-        or by a CRYSTERM_* environment variable; see --crysterm-dump-config.
-        BANNER
-      Crysterm::Config.each do |opt|
-        next if own_flags.includes?(opt.cli)
-        default = opt.default_string.presence || "\"\""
-        description = wrap("#{opt.description} (default: #{default})")
-        if opt.bool?
-          toolkit.on(opt.cli, description) { }
-          toolkit.on(opt.cli.sub("--", "--no-"), "Disable #{opt.key}") { }
-        else
-          toolkit.on("#{opt.cli}=VALUE", description) { |_| }
-        end
-      end
-      toolkit.on("--crysterm-config=FILE", wrap("Load Crysterm configuration from FILE (YAML or JSON)")) { |_| }
-      toolkit.on("--crysterm-dump-config [FORMAT]",
-        wrap("Dump the Crysterm configuration (yaml|json|env|pretty|report) and exit")) { |_| }
-      toolkit.to_s
-    end
-
-    # Word-wraps *text* to fit next to OptionParser's flag column within 80 columns.
-    private def self.wrap(text : String, width : Int32 = 42) : String
-      lines = [] of String
-      line = ""
-      text.split(' ') do |word|
-        if line.empty?
-          line = word
-        elsif line.size + 1 + word.size <= width
-          line += " #{word}"
-        else
-          lines << line
-          line = word
-        end
-      end
-      lines << line unless line.empty?
-      lines.join('\n')
     end
 
     # Builds the application for *source*: a stream from standard input, an
