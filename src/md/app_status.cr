@@ -58,7 +58,7 @@ module Md
     # Switches the mouse mode and applies it to the terminal at once.
     def mouse_mode=(mode : MouseMode) : MouseMode
       @mouse_mode = mode
-      apply_mouse_mode
+      @window.apply_mouse_policy
       refresh_status
       mode
     end
@@ -72,14 +72,6 @@ module Md
     # focus.
     def mouse_active? : Bool
       @mouse_mode.active? @editor.focused?
-    end
-
-    # Turns the terminal's mouse reporting on or off to match
-    # `#mouse_active?`; a no-op when it already matches.
-    private def apply_mouse_mode : Nil
-      want = mouse_active?
-      return if want == @window.mouse_enabled?
-      want ? @window.enable_mouse : @window.disable_mouse
     end
 
     # Fills the status bar: the document's name, the caret or reading
@@ -111,12 +103,11 @@ module Md
       # The reading position depends on the viewer's size, known only once
       # it is laid out (and again after every resize).
       @viewer.on(Crysterm::Event::Resize) { refresh_status }
-      Pane.each do |pane|
-        widget(pane).on(Crysterm::Event::FocusIn) do
-          apply_mouse_mode
-          refresh_status
-        end
-      end
+      Pane.each { |pane| widget(pane).on(Crysterm::Event::FocusIn) { refresh_status } }
+      # The mode decides per focused pane whether the mouse serves; Crysterm
+      # applies the answer to the terminal on every focus change, and
+      # `#mouse_mode=` re-applies it when the mode changes.
+      @window.mouse_policy = ->(focused : Crysterm::Widget?) { @mouse_mode.active?(focused.same?(@editor)) }
       refresh_status
     end
 
