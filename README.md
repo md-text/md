@@ -140,7 +140,7 @@ viewer, and the table of contents its columns.
 | `Alt-Left`, `Alt-Right` | Previous File and Next File (File → Previous File, Next File); in the editor and the viewer these move by word instead |
 | `Enter`            | In the editor, on a list item: continue the list (an empty item ends it) |
 | `Ctrl-B`, `Alt-I`, `Alt-C` | Bold, italic and code around the selection or the word at the caret, or off again (Format → Bold, Italic, Code) |
-| `Alt-X`            | Tick or untick a list item's task box, or give it a ticked one (Format → Toggle Task Checkbox; Format → As a Task adds and removes the box) |
+| `Alt-X`            | Tick or untick a list item's task box, or give it a ticked one (Format → Toggle Task; Format → Task, a check entry, adds and removes the box) |
 | `Ctrl-Up`, `Ctrl-Down` | Promote or demote the heading on the caret's line (Format → Promote Heading, Demote Heading) |
 | `Alt-Q`            | Refill the paragraph at the caret, or the selected paragraphs, to the wrap column (Format → Rewrap → Paragraph; Rewrap → Document refills them all) |
 | `Ctrl-Q`           | Quit (`q` too, anywhere but in the editor; File → Quit); asks first when changes are unsaved |
@@ -308,16 +308,18 @@ Format → Bold, Italic and Code (`Ctrl-B`, `Alt-I`, `Alt-C`) put `**`, `*`
 or backticks around the selection, or the word at the caret, or insert the
 pair with the caret between when there is neither; on text that already has
 them (`_` and `__` count too) they take them off, and the text stays
-selected, so a second press undoes the first. Format → As a Task gives a
-list item a `[ ]` box and takes it off again; Format → Toggle Task Checkbox (`Alt-X`)
-ticks the box `[x]` and unticks it, and gives an item without a box a
+selected, so a second press undoes the first. Format → Task, a check entry
+whose check shows whether the item at the caret is a task when the menu
+opens, gives a list item a `[ ]` box and takes it off again; Format →
+Toggle Task (`Alt-X`) ticks the box `[x]` and unticks it, and gives an item
+without a box a
 ticked one; Format → Promote Heading and Demote Heading (`Ctrl-Up`, `Ctrl-Down`)
 move the caret's line one heading level up or down, a paragraph being the
 level above `#`. Each change is one undo step.
 
 The keys are not all Qt's: `Ctrl-B` is, but a terminal sends the same byte
 for `Ctrl-I` and `Tab`, and cannot tell `Ctrl-Shift-X` from `Ctrl-X`, so
-Italic, Code and Toggle Task Checkbox use `Alt` chords the editor does not
+Italic, Code and Toggle Task use `Alt` chords the editor does not
 (`Alt-B` and `Alt-F` are its readline word moves). Indent and Outdent show
 `Tab` and `Shift+Tab`, keys that are theirs in the editor alone. The Format
 menu works from any pane: chosen while reading, it edits the source of the

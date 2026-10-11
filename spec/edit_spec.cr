@@ -214,6 +214,28 @@ describe "Md::App editing" do
     end
   end
 
+  it "shows on the Task entry whether the caret's item is a task, as the menu opens, and flips it" do
+    with_app text: "- [ ] task\n- item\ntext\n", view: false do |app|
+      format = menu(app, 2)
+      task = format.actions.find! { |a| a.text == "&Task" }
+      task.checkable?.should be_true
+      toggle = format.actions.find! { |a| a.text == "Toggle Tas&k" }
+      toggle.shortcut_text.should eq "Alt+X"
+      place app, 0, 2
+      format.emit Crysterm::Event::AboutToShow
+      task.checked?.should be_true
+      place app, 1, 2
+      format.emit Crysterm::Event::AboutToShow
+      task.checked?.should be_false
+      task.trigger # picking the entry: checked, and the box with it
+      task.checked?.should be_true
+      app.markdown.should eq "- [ ] task\n- [ ] item\ntext\n"
+      place app, 2, 0
+      format.emit Crysterm::Event::AboutToShow
+      task.checked?.should be_false # no item
+    end
+  end
+
   it "boxes and checks every list item of a selection, each as it is, in one undo step" do
     with_app text: "- a\n- [x] b\ntext\n- [ ] c\n", view: false do |app|
       select_text app, 0, app.editor.document.size

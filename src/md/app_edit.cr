@@ -61,8 +61,10 @@ module Md
     # `QPlainTextEdit` (`tabChangesFocus` is off by default): `F1`–`F3` and
     # the mouse put the focus elsewhere.
     #
-    # Format → As a Task gives a list item a task box, or takes off the one
-    # it has: `- item` ⇄ `- [ ] item`. Format → Toggle Task Checkbox
+    # Format → Task, a check entry, gives a list item a task box, or takes
+    # off the one it has: `- item` ⇄ `- [ ] item`; its check shows whether
+    # the caret's item is a task, read as the menu opens
+    # (`#refresh_task_entry`, Qt's `aboutToShow`). Format → Toggle Task
     # (`Alt-X`) ticks the box and unticks it, `- [ ] item` ⇄ `- [x] item`;
     # an item without a box gets one ticked. Format → Bold, Italic and Code (`Ctrl-B`, `Alt-I`,
     # `Alt-C`) wrap the selection — or the word at the caret, or, with
@@ -88,7 +90,7 @@ module Md
     # `Alt-Q` is Emacs's fill, free in the editor too. Qt's
     # `Ctrl-I` is out of reach — a terminal sends the same byte for `Ctrl-I`
     # and `Tab` — and so is `Ctrl-Shift-X`, which a terminal does not tell
-    # from `Ctrl-X`, so Italic, Code and Toggle Task Checkbox take `Alt` chords the
+    # from `Ctrl-X`, so Italic, Code and Toggle Task take `Alt` chords the
     # editor leaves alone (`Alt-B` and `Alt-F` are readline's word moves
     # there). `Enter`, `Tab` and `Shift-Tab` are the editor's own
     # (`MarkdownEdit#key_filter`), taken ahead of its editing keys — and of
@@ -106,6 +108,9 @@ module Md
     # Format entries work from any pane: from the viewer they act on the
     # editor at the source of the viewer's caret, showing the editor when
     # it is hidden.
+
+    # The Format → Task entry, whose check follows the caret's item.
+    @task_action : Crysterm::Action?
 
     # A list item line taken apart: the blockquote markers before it (`>`
     # with the spacing between them; empty outside a quote), its
@@ -212,10 +217,10 @@ module Md
       toggle_wrap "`"
     end
 
-    # Format → As a Task: a task box on the caret's list item, or on every
-    # list item of the selection — `[ ] ` added to an item without one, and
-    # taken off an item that has one. Returns whether there was an item,
-    # with a notice when there was not.
+    # Format → Task: a task box on the caret's list item, or on every list
+    # item of the selection — `[ ] ` added to an item without one, and taken
+    # off an item that has one. Returns whether there was an item, with a
+    # notice when there was not.
     def toggle_task_box : Bool
       edit_task_items do |doc, box, item|
         if task = item.task
@@ -226,7 +231,7 @@ module Md
       end
     end
 
-    # Format → Toggle Task Checkbox: the box ticked when empty and emptied when
+    # Format → Toggle Task: the box ticked when empty and emptied when
     # ticked, on the same items; an item without a box gets a ticked one,
     # so a plain item is done in one key. Likewise.
     def check_task : Bool
@@ -464,8 +469,14 @@ module Md
       format.add_action("&Italic", shortcut: "Alt+I") { toggle_italic }
       format.add_action("&Code", shortcut: "Alt+C") { toggle_code }
       format.add_separator
-      format.add_action("&As a Task") { toggle_task_box }
-      format.add_action("&Toggle Task Checkbox", shortcut: "Alt+X") { check_task }
+      # The check is the caret's item's, read as the menu opens; picking the
+      # entry flips it and the box with it.
+      task = Crysterm::Action.new "&Task", checkable: true
+      task.on(Crysterm::Event::Triggered) { toggle_task_box }
+      format.add_action task
+      @task_action = task
+      format.on(Crysterm::Event::AboutToShow) { refresh_task_entry }
+      format.add_action("Toggle Tas&k", shortcut: "Alt+X") { check_task }
       indent = format.add_action("I&ndent", shortcut: "Tab") { indent_lines 1 }
       outdent = format.add_action("&Outdent", shortcut: "Shift+Tab") { indent_lines -1 }
       # The editor's keys (see the class comment): the entries' shortcuts
@@ -484,6 +495,22 @@ module Md
       document = Crysterm::Action.new "&Document"
       document.on(Crysterm::Event::Triggered) { rewrap_document }
       format.add_submenu "Re&wrap", [paragraph, document]
+    end
+
+    # Puts the caret's item's state on the Task entry as the Format menu
+    # opens: checked when the item at the caret — the first list item of
+    # the selection, when there is one — has a task box; unchecked on an
+    # item without one, and on a line that is no item. Through the
+    # formatting target, so the viewer's caret counts while reading.
+    private def refresh_task_entry : Nil
+      action = @task_action || return
+      doc = formatting_editor.document
+      first, last = selected_blocks
+      item = (first..last).each do |i|
+        parsed = ListItem.parse(doc.blocks[i].text) || next
+        break parsed
+      end
+      action.checked = !item.try(&.task).nil?
     end
 
     # `Enter` on a list item with the caret past the marker: the item
