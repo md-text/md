@@ -371,11 +371,9 @@ module Md
     # Scrolls *follower* so its caret sits on the same viewport row as
     # *leader*'s: editing in the middle of one pane shows the matching text
     # in the middle of the other (`#text_cursor=` alone scrolls just enough
-    # to bring the caret to an edge). Clamped by the scroll itself at the
-    # document's ends.
+    # to bring the caret to an edge).
     private def align_rows(leader : Crysterm::Widget, follower : Crysterm::Widget) : Nil
-      row = leader.cursor_row - leader.scroll_position
-      follower.scroll_to follower.cursor_row - row
+      follower.scroll_cursor_to_row leader.cursor_viewport_row
     end
 
     # Writes the document to its file. Without a file name (a new or streamed
