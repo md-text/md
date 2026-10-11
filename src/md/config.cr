@@ -215,23 +215,12 @@ module Md
     # too) with its description and default, under a banner saying where
     # else it can be set.
     def self.help : String
-      parser = OptionParser.new
-      parser.banner = <<-BANNER
+      banner = <<-BANNER
         Settings: the View and Options menu choices. Each can also be set in
         #{path.sub(Path.home.to_s, "~")} or by an MD_* environment variable; a pick in
         a menu is kept there (Options → Save Config).
         BANNER
-      options.each do |option|
-        default = option.default_string.presence || "\"\""
-        description = Crysterm.wrap_help("#{option.description} (default: #{default})")
-        if option.bool?
-          parser.on(option.cli, description) { }
-          parser.on(option.cli.sub("--", "--no-"), "Disable #{option.key}") { }
-        else
-          parser.on("#{option.cli}=VALUE", description) { |_| }
-        end
-      end
-      parser.to_s
+      Crysterm.options_help banner, options
     end
 
     # The flags `.help` lists, which the toolkit's list leaves out.

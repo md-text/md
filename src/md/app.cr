@@ -221,7 +221,7 @@ module Md
       build_menus
       build_status
       setup_clipboard
-      link_config
+      apply_config
       if line
         go_to_line line
       else

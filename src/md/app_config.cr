@@ -26,7 +26,7 @@ module Md
     # from a property's default reaches the panes through its change handler,
     # so this runs once the bar and the panes exist — and, when the app keeps
     # the configuration, links each property to its option (see above).
-    private def link_config : Nil
+    private def apply_config : Nil
       link @resizable_panes, "md.resizable_panes"
       link @sync_cursor, "md.sync_cursor"
       link @highlight_line, "md.highlight_line"
@@ -54,8 +54,8 @@ module Md
       # the links'.
       apply_pane_sizes
       return unless @config
-      handle = Superconf.on_change("md.pane_sizes") { apply_pane_sizes }
-      @window.on(Crysterm::Event::Destroy) { Superconf.off_change "md.pane_sizes", handle }
+      handle = Crysterm::Config.on_change("md.pane_sizes") { apply_pane_sizes }
+      @window.on(Crysterm::Event::Destroy) { Crysterm::Config.off_change "md.pane_sizes", handle }
     end
 
     # Puts option *key*'s value into *property*, and links the two when the
