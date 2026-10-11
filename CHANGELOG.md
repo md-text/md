@@ -296,3 +296,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   the focus next to panes that keep theirs. The multi-line editor now keeps
   one background in either state, as Qt keeps a `QPlainTextEdit`'s base
   color. (Fixed in Crysterm, which md builds against.)
+- Menus and submenus are readable under the Breeze Light theme (and the
+  other Qt themes): their rows painted the terminal's default background,
+  dark on a dark terminal, under the theme's dark text, since Qt's
+  `QMenu::item { background: transparent }` was taken as "the terminal
+  default" instead of "the menu's background shows through". Crysterm now
+  resolves a transparent background to the parent's, as CSS and Qt do; only a
+  widget with nothing behind it keeps the terminal default. (Fixed in
+  Crysterm, which md builds against.)
