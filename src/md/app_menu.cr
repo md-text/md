@@ -66,7 +66,7 @@ module Md
       edit.add_action("Find &Next", shortcut: "Ctrl+G") { find_next }
       edit.add_action("Find &Previous", shortcut: "Alt+G") { find_next reverse: true }
       edit.add_action("&Replace…", shortcut: "Alt+H") { replace_prompt }
-      edit.add_action("Clear &Highlight") { clear_search_highlight }
+      edit.add_action("Clear Search &Highlights") { clear_search_highlight }
       edit.add_separator
       edit.add_action("&Go to Line…", shortcut: "Ctrl+L") { go_to_line_prompt }
       edit.add_action("Nex&t Heading", shortcut: "Alt+Down") { jump_heading 1 }

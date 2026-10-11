@@ -68,7 +68,7 @@ describe "Md::App search" do
       app.editor.insert_text "\n\nAnother needle."
       app.editor.extra_selections.size.should eq 4
       app.viewer.extra_selections.size.should eq 4
-      clear = app.main.menu_bar.menus[1].actions.find! { |a| a.text == "Clear &Highlight" }
+      clear = app.main.menu_bar.menus[1].actions.find! { |a| a.text == "Clear Search &Highlights" }
       clear.trigger
       app.editor.extra_selections.should be_empty
       app.viewer.extra_selections.should be_empty

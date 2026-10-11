@@ -249,7 +249,7 @@ the table of contents). The pattern is a regular expression when it is a
 valid one and plain text otherwise, and it ignores case unless it contains
 an uppercase letter, as vi's `smartcase` does. The search wraps around the
 end of the document with a notice. Every match is underlined in both panes
-and the current one is selected; Edit → Clear Highlight takes the underlines
+and the current one is selected; Edit → Clear Search Highlights takes the underlines
 off, and `n` still knows the pattern.
 
 Replacing (`Alt-H`, Edit → Replace…) works like vi's `:s///c`, at the same

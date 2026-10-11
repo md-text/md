@@ -45,7 +45,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   case-insensitive unless it has an uppercase letter — and `n`/`N`
   (`Ctrl-G`/`Alt-G`) repeat it either way, wrapping around with a notice.
   Matches are underlined in both panes and the current one is selected;
-  Edit → Clear Highlight takes the underlines off. `:` (`Ctrl-L`) goes to a
+  Edit → Clear Search Highlights takes the underlines off. `:` (`Ctrl-L`) goes to a
   source line in both panes, `]` and `[` (`Alt-Down`/`Alt-Up`) to the next
   and previous heading.
 - File → Open… (`Ctrl-O`) opens another file, asked for in place of the

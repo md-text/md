@@ -13,7 +13,7 @@ module Md
     # case-insensitive unless it has an uppercase letter (vi's `smartcase`).
     # The search wraps around with a notice, as vi's does. Every match is
     # underlined (`ExtraSelection`s, re-made as the text changes) and the
-    # current one is the pane's selection; Edit → Clear Highlight takes the
+    # current one is the pane's selection; Edit → Clear Search Highlights takes the
     # underlines off (vi's `:nohlsearch`).
     #
     # Go to line (`:` in the viewer, `Ctrl-L` anywhere, Edit → Go to Line…)
