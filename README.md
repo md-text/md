@@ -137,9 +137,9 @@ viewer, and the table of contents its columns.
 | `Alt-Left`, `Alt-Right` | Back and Forward (Edit → Back, Forward); in the editor and the viewer these move by word instead |
 | `Enter`            | In the editor, on a list item: continue the list (an empty item ends it) |
 | `Ctrl-B`, `Alt-I`, `Alt-C` | Bold, italic and code around the selection or the word at the caret, or off again (Format → Bold, Italic, Code) |
-| `Alt-X`            | Tick or untick a list item's task box, or give it a ticked one (Format → Check Task; Format → Task Box adds and removes the box) |
+| `Alt-X`            | Tick or untick a list item's task box, or give it a ticked one (Format → Toggle Task Checkbox; Format → As a Task adds and removes the box) |
 | `Ctrl-Up`, `Ctrl-Down` | Promote or demote the heading on the caret's line (Format → Promote Heading, Demote Heading) |
-| `Alt-Q`            | Refill the paragraph at the caret, or the selected paragraphs, to the wrap column (Format → Rewrap Paragraph) |
+| `Alt-Q`            | Refill the paragraph at the caret, or the selected paragraphs, to the wrap column (Format → Rewrap → Paragraph; Rewrap → Document refills them all) |
 | `Ctrl-Q`           | Quit (`q` too, anywhere but in the editor; File → Quit); asks first when changes are unsaved |
 
 The File, Edit and Format menus show these keys next to their entries, spelled as
@@ -305,8 +305,8 @@ Format → Bold, Italic and Code (`Ctrl-B`, `Alt-I`, `Alt-C`) put `**`, `*`
 or backticks around the selection, or the word at the caret, or insert the
 pair with the caret between when there is neither; on text that already has
 them (`_` and `__` count too) they take them off, and the text stays
-selected, so a second press undoes the first. Format → Task Box gives a
-list item a `[ ]` box and takes it off again; Format → Check Task (`Alt-X`)
+selected, so a second press undoes the first. Format → As a Task gives a
+list item a `[ ]` box and takes it off again; Format → Toggle Task Checkbox (`Alt-X`)
 ticks the box `[x]` and unticks it, and gives an item without a box a
 ticked one; Format → Promote Heading and Demote Heading (`Ctrl-Up`, `Ctrl-Down`)
 move the caret's line one heading level up or down, a paragraph being the
@@ -314,7 +314,7 @@ level above `#`. Each change is one undo step.
 
 The keys are not all Qt's: `Ctrl-B` is, but a terminal sends the same byte
 for `Ctrl-I` and `Tab`, and cannot tell `Ctrl-Shift-X` from `Ctrl-X`, so
-Italic, Code and Check Task use `Alt` chords the editor does not
+Italic, Code and Toggle Task Checkbox use `Alt` chords the editor does not
 (`Alt-B` and `Alt-F` are its readline word moves). Indent and Outdent show
 `Tab` and `Shift+Tab`, keys that are theirs in the editor alone. The Format
 menu works from any pane: chosen while reading, it edits the source of the
@@ -473,10 +473,11 @@ Width when one is set, else 80. The carried line keeps its place in the
 Markdown: in a list item it is indented to the item's text, in a blockquote
 it gets the `> `, and a code block, a heading or a table row is never
 broken. The keystroke and the wrap it caused undo as one step. Format →
-Rewrap Paragraph (`Alt-Q`, Emacs's fill) refills the paragraph at the
-cursor, or every paragraph the selection touches, to the same column — a
-list item keeping its marker, a quote its markers, code blocks untouched —
-whether or not Hard Wrap is on.
+Rewrap → Paragraph (`Alt-Q`, Emacs's fill) refills the paragraph at the
+cursor, or every paragraph the selection touches, and Rewrap → Document
+every paragraph in the file, to the same column — a list item keeping its
+marker, a quote its markers, code blocks untouched — whether or not Hard
+Wrap is on.
 
 Save As asks for the name in place of the status bar, the way vi's command
 line replaces its status line: the current name is filled in, `Tab` and

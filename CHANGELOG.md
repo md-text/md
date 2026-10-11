@@ -192,8 +192,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   the item above's content offset, any other line by four spaces. `Tab` no
   longer leaves the editor; `F2`–`F4` and the mouse do. Format → Bold, Italic and Code
   (`Ctrl-B`, `Alt-I`, `Alt-C`) wrap the selection or the word at the caret
-  in `**`, `*` or backticks, or unwrap it; Task Box adds a `[ ]` box to a
-  list item and takes it off, Check Task (`Alt-X`) ticks and unticks it (an
+  in `**`, `*` or backticks, or unwrap it; As a Task adds a `[ ]` box to a
+  list item and takes it off, Toggle Task Checkbox (`Alt-X`) ticks and unticks it (an
   item without a box gets a ticked one); Promote Heading and Demote Heading
   (`Ctrl-Up`, `Ctrl-Down`) change the line's heading level. Each change is
   one undo step.

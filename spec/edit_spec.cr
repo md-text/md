@@ -193,7 +193,7 @@ describe "Md::App editing" do
       place app, 0, 3
       app.toggle_task_box.should be_true
       app.markdown.should eq "- [ ] item\ntext\n"
-      press(window, Tput::Key::AltX).accepted?.should be_true # Check Task
+      press(window, Tput::Key::AltX).accepted?.should be_true # Toggle Task Checkbox
       app.markdown.should eq "- [x] item\ntext\n"
       app.viewer.document.blocks[0].block_format.checked?.should be_true # the viewer followed
       app.check_task.should be_true

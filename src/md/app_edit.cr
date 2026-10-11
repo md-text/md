@@ -61,10 +61,10 @@ module Md
     # `QPlainTextEdit` (`tabChangesFocus` is off by default): `F2`–`F4` and
     # the mouse put the focus elsewhere.
     #
-    # Format → Task Box gives a list item a task box, or takes off the one
-    # it has: `- item` ⇄ `- [ ] item`. Format → Check Task (`Alt-X`) ticks
-    # the box and unticks it, `- [ ] item` ⇄ `- [x] item`; an item without
-    # a box gets one ticked. Format → Bold, Italic and Code (`Ctrl-B`, `Alt-I`,
+    # Format → As a Task gives a list item a task box, or takes off the one
+    # it has: `- item` ⇄ `- [ ] item`. Format → Toggle Task Checkbox
+    # (`Alt-X`) ticks the box and unticks it, `- [ ] item` ⇄ `- [x] item`;
+    # an item without a box gets one ticked. Format → Bold, Italic and Code (`Ctrl-B`, `Alt-I`,
     # `Alt-C`) wrap the selection — or the word at the caret, or, with
     # neither, a pair the caret is put between — in `**`, `*` and backticks,
     # and take them off again from text that has them (`_` and `__` count
@@ -88,7 +88,7 @@ module Md
     # `Alt-Q` is Emacs's fill, free in the editor too. Qt's
     # `Ctrl-I` is out of reach — a terminal sends the same byte for `Ctrl-I`
     # and `Tab` — and so is `Ctrl-Shift-X`, which a terminal does not tell
-    # from `Ctrl-X`, so Italic, Code and Check Task take `Alt` chords the
+    # from `Ctrl-X`, so Italic, Code and Toggle Task Checkbox take `Alt` chords the
     # editor leaves alone (`Alt-B` and `Alt-F` are readline's word moves
     # there). `Enter`, `Tab` and `Shift-Tab` are the editor's own
     # (`MarkdownEdit#key_filter`), taken ahead of its editing keys — and of
@@ -212,7 +212,7 @@ module Md
       toggle_wrap "`"
     end
 
-    # Format → Task Box: a task box on the caret's list item, or on every
+    # Format → As a Task: a task box on the caret's list item, or on every
     # list item of the selection — `[ ] ` added to an item without one, and
     # taken off an item that has one. Returns whether there was an item,
     # with a notice when there was not.
@@ -226,7 +226,7 @@ module Md
       end
     end
 
-    # Format → Check Task: the box ticked when empty and emptied when
+    # Format → Toggle Task Checkbox: the box ticked when empty and emptied when
     # ticked, on the same items; an item without a box gets a ticked one,
     # so a plain item is done in one key. Likewise.
     def check_task : Bool
@@ -464,8 +464,8 @@ module Md
       format.add_action("&Italic", shortcut: "Alt+I") { toggle_italic }
       format.add_action("&Code", shortcut: "Alt+C") { toggle_code }
       format.add_separator
-      format.add_action("&Task Box") { toggle_task_box }
-      format.add_action("Chec&k Task", shortcut: "Alt+X") { check_task }
+      format.add_action("&As a Task") { toggle_task_box }
+      format.add_action("&Toggle Task Checkbox", shortcut: "Alt+X") { check_task }
       indent = format.add_action("I&ndent", shortcut: "Tab") { indent_lines 1 }
       outdent = format.add_action("&Outdent", shortcut: "Shift+Tab") { indent_lines -1 }
       # The editor's keys (see the class comment): the entries' shortcuts
