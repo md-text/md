@@ -17,3 +17,6 @@
 .DS_Store
 *.swp
 *~
+
+# The lib symlink a worktree may carry (the pattern above matches only a directory)
+/lib
