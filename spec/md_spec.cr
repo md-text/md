@@ -57,4 +57,48 @@ describe Md::CLI do
     Md::CLI.run(["a.md", "b.md"], stdout: IO::Memory.new, stderr: error).should eq 2
     error.to_s.should contain "unexpected argument: b.md"
   end
+
+  it "takes a line from +N or --line, apart from the file" do
+    options = Md::CLI.parse(["+12", "notes.md"])
+    options.line.should eq 12
+    options.positional.should eq ["notes.md"]
+    Md::CLI.parse(["notes.md", "--line", "7"]).line.should eq 7
+    Md::CLI.parse(["-l7"]).line.should eq 7
+    Md::CLI.parse(["--line=7"]).line.should eq 7
+    Md::CLI.parse(["+"]).line.should eq 0 # the end, as in vim
+    Md::CLI.parse(["notes.md"]).line.should be_nil
+    # Beyond `--`, `+N` is a file name.
+    Md::CLI.parse(["--", "+1"]).positional.should eq ["+1"]
+  end
+
+  it "rejects a line that is not a number, and a --line without one" do
+    error = IO::Memory.new
+    Md::CLI.run(["--line", "ten"], stdout: IO::Memory.new, stderr: error).should eq 2
+    error.to_s.should contain "not a line number: ten"
+    error = IO::Memory.new
+    Md::CLI.run(["+abc"], stdout: IO::Memory.new, stderr: error).should eq 2
+    error.to_s.should contain "not a line number: +abc"
+    error = IO::Memory.new
+    Md::CLI.run(["--line"], stdout: IO::Memory.new, stderr: error).should eq 2
+    error.to_s.should contain "Missing option: --line"
+    error.to_s.should contain "Usage: md"
+  end
+
+  it "takes --view and --edit, but not both" do
+    Md::CLI.parse(["--view", "new.md"]).view.should be_true
+    Md::CLI.parse(["--edit", "README.md"]).view.should be_false
+    Md::CLI.parse(["README.md"]).view.should be_nil
+    Md::CLI.parse(["--view", "--view"]).view.should be_true
+    error = IO::Memory.new
+    Md::CLI.run(["--view", "--edit"], stdout: IO::Memory.new, stderr: error).should eq 2
+    error.to_s.should contain "--view and --edit cannot be combined"
+  end
+
+  it "lists the new options in help" do
+    output = IO::Memory.new
+    Md::CLI.run(["--help"], stdout: output).should eq 0
+    help = output.to_s
+    help.should contain "[+N]"
+    {"-l N, --line N", "--view", "--edit"}.each { |flag| help.should contain flag }
+  end
 end

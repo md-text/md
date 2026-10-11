@@ -5,10 +5,10 @@ private def headless_window
   Crysterm::Window.new input: IO::Memory.new, output: IO::Memory.new, width: 100, height: 30
 end
 
-private def with_app(source = Md::Source.new, text = "", view = !text.empty?, history = nil, watch = false, &)
+private def with_app(source = Md::Source.new, text = "", view = !text.empty?, history = nil, watch = false, line = nil, &)
   window = headless_window
   begin
-    yield Md::App.new(source, text: text, view: view, window: window, history: history, watch: watch), window
+    yield Md::App.new(source, text: text, view: view, window: window, history: history, watch: watch, line: line), window
   ensure
     window.destroy
   end
@@ -331,6 +331,22 @@ describe "Md::App history" do
       end
     ensure
       FileUtils.rm_rf dir
+    end
+  end
+
+  it "opens on the line asked for, over the remembered position" do
+    text = (1..20).map { |i| "Line #{i}" }.join("\n\n") + "\n"
+    history = Md::History.new("unused.json")
+    history.touch "doc.md", 11, 3, true
+    with_app Md::Source.new(path: "doc.md"), text: text, view: true, history: history, line: 5 do |app|
+      app.editor.text_cursor.block_number.should eq 4
+      app.editor.text_cursor.column_number.should eq 0
+      app.viewer.document.plain_text[app.viewer.cursor_position, 6].should eq "Line 3"
+    end
+    # Past the end: the last line. In the editor as well as in the viewer.
+    with_app Md::Source.new(path: "doc.md"), text: text, view: false, line: 500 do |app|
+      app.visible_panes.should eq [Md::App::Pane::Editor]
+      app.editor.text_cursor.block_number.should eq 39
     end
   end
 

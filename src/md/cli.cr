@@ -5,23 +5,84 @@ require "./source"
 module Md
   # Command-line front end: parses arguments and starts the application.
   module CLI
+    # What the command line asked for; the option handlers fill it in
+    # (`.parse`).
+    class Options
+      # The arguments that are not options: the file, or `-`.
+      getter positional = [] of String
+      property? help = false
+      property? version = false
+      property? verbose = false
+      property? watch = false
+      # The source line to open on (`+N`, `--line N`); without one, the
+      # position remembered for the file is restored.
+      property line : Int32?
+      # `--view` (true) or `--edit` (false); without either, the `Source`
+      # decides the pane.
+      property view : Bool?
+    end
+
+    # The flags md itself owns. Crysterm reads its toolkit options
+    # (--colors-theme, --colors-stylesheet, ...) straight from ARGV before
+    # the parser runs, without consuming them; `.parse` takes them out of
+    # the arguments so they are neither reported as unknown nor mistaken
+    # for a file, keeping these, which take precedence over a toolkit flag
+    # of the same name.
+    OWN_FLAGS = Set{"-V", "--version", "-h", "--help", "-v", "--verbose", "-w", "--watch",
+                    "-l", "--line", "--view", "--edit"}
+
     # Runs the program with the given arguments and returns the process exit
     # status. `stdout`/`stderr` are injectable so that specs can capture them.
     def self.run(args : Array(String), stdout : IO = STDOUT, stderr : IO = STDERR) : Int32
-      # Set by the option handlers when the program should exit without
-      # starting the application (after `--version`, `--help` or a usage error).
-      status : Int32? = nil
-      positional = [] of String
-      help = false
-      verbose = false
-      watch = false
-      # md's own usage text, captured before the Crysterm toolkit flags are
-      # registered below so that they never appear in help or usage errors.
-      help_text : String? = nil
+      options = parse(args)
+      stdout.puts "md #{VERSION}" if options.version?
+      if options.help?
+        stdout.puts help
+        if options.verbose?
+          stdout.puts
+          stdout.puts Crysterm.toolkit_options_help(except: OWN_FLAGS)
+        end
+      end
+      return 0 if options.help? || options.version?
 
+      source = Source.resolve(options.positional, STDIN.tty?)
+      log_to_file
+      launch(source, options).run
+    rescue ex : ArgumentError | OptionParser::Exception
+      stderr.puts "md: #{ex.message}"
+      stderr.puts help
+      2
+    rescue ex : Error
+      stderr.puts "md: #{ex.message}"
+      1
+    rescue ex
+      # An error that escaped the app: Crysterm restores the terminal before
+      # `exec` raises it, so the report lands on the shell screen.
+      stderr.puts "md: internal error: #{ex.inspect_with_backtrace}"
+      1
+    end
+
+    # Parses *args* into `Options`. A usage error — an unknown option, a
+    # value that is not a line number, `--view` together with `--edit` —
+    # raises `ArgumentError`; a missing value raises
+    # `OptionParser::MissingOption`.
+    def self.parse(args : Array(String)) : Options
+      options = Options.new
+      build_parser(options).parse Crysterm.strip_toolkit_args(args, except: OWN_FLAGS)
+      options
+    end
+
+    # md's own usage text: the banner and its options, never the Crysterm
+    # toolkit's (those are listed by `--help --verbose`).
+    def self.help : String
+      build_parser(Options.new).to_s
+    end
+
+    # The option parser, its handlers writing into *options*.
+    private def self.build_parser(options : Options) : OptionParser
       parser = OptionParser.new
       parser.banner = <<-BANNER
-        Usage: md [options] [FILE | -]
+        Usage: md [options] [+N] [FILE | -]
 
         Views and edits Markdown. With no FILE, opens an empty editor; with a
         FILE, views it (a FILE that does not exist yet opens in the editor).
@@ -35,68 +96,44 @@ module Md
         Options:
         BANNER
 
-      parser.on("-V", "--version", "Print the version and exit") do
-        stdout.puts "md #{VERSION}"
-        status ||= 0
+      parser.on("-V", "--version", "Print the version and exit") { options.version = true }
+      parser.on("-h", "--help", "Show this help and exit") { options.help = true }
+      parser.on("-v", "--verbose", "Be more verbose (with --help: also list the\nCrysterm toolkit options)") { options.verbose = true }
+      parser.on("-w", "--watch", "Reload FILE as it changes on disk (View → Watch file)") { options.watch = true }
+      parser.on("-l N", "--line N", "Open on source line N, like +N (past the end:\nthe last line); otherwise the remembered position") do |value|
+        options.line = line_number(value)
       end
-      parser.on("-h", "--help", "Show this help and exit") do
-        help = true
-        status ||= 0
-      end
-      parser.on("-v", "--verbose", "Be more verbose (with --help: also list the\nCrysterm toolkit options)") do
-        verbose = true
-      end
-      parser.on("-w", "--watch", "Reload FILE as it changes on disk (View → Watch file)") do
-        watch = true
-      end
-      parser.invalid_option do |flag|
-        stderr.puts "md: unknown option: #{flag}"
-        stderr.puts(help_text || parser)
-        status = 2
-      end
+      parser.on("--view", "Open the viewer, even on a new FILE") { options.view = pane_choice(options, true) }
+      parser.on("--edit", "Open the editor, even on an existing FILE") { options.view = pane_choice(options, false) }
+      parser.invalid_option { |flag| raise ArgumentError.new("unknown option: #{flag}") }
       parser.unknown_args do |rest, after_dashes|
-        # Unknown options have already been reported by `invalid_option`; what
-        # remains are the positional arguments (`-` included).
-        positional = rest + after_dashes
-      end
-
-      help_text = parser.to_s
-
-      # Crysterm reads its toolkit options (--colors-theme, --colors-stylesheet,
-      # ...) straight from ARGV before this parser runs, without consuming
-      # them; this parser gets the arguments with them taken out, so they are
-      # neither reported as unknown nor mistaken for a file. md's own flags
-      # take precedence over a toolkit flag of the same name.
-      own_flags = Set{"-V", "--version", "-h", "--help", "-v", "--verbose", "-w", "--watch"}
-      parser.parse Crysterm.strip_toolkit_args(args, except: own_flags)
-
-      if help
-        stdout.puts help_text
-        if verbose
-          stdout.puts
-          stdout.puts Crysterm.toolkit_options_help(except: own_flags)
+        # What remains are the positional arguments (`-` included) and the
+        # `+N` of pagers and editors (`less +N`, `vim +N`), which
+        # `OptionParser` does not know as an option; a bare `+` is the end
+        # of the document, as in vim. A file whose name starts with `+`
+        # goes after `--`.
+        rest.each do |arg|
+          if arg.starts_with?('+')
+            options.line = arg == "+" ? 0 : line_number(arg)
+          else
+            options.positional << arg
+          end
         end
+        options.positional.concat after_dashes
       end
+      parser
+    end
 
-      if exit_status = status
-        return exit_status
-      end
+    # The pane *view* asks for, unless *options* already asked for the other
+    # one: `--view --edit` is a usage error, not a last-wins.
+    private def self.pane_choice(options : Options, view : Bool) : Bool
+      raise ArgumentError.new("--view and --edit cannot be combined") if options.view == !view
+      view
+    end
 
-      source = Source.resolve(positional, STDIN.tty?)
-      log_to_file
-      launch(source, watch).run
-    rescue ex : ArgumentError
-      stderr.puts "md: #{ex.message}"
-      stderr.puts(help_text || parser)
-      2
-    rescue ex : Error
-      stderr.puts "md: #{ex.message}"
-      1
-    rescue ex
-      # An error that escaped the app: Crysterm restores the terminal before
-      # `exec` raises it, so the report lands on the shell screen.
-      stderr.puts "md: internal error: #{ex.inspect_with_backtrace}"
-      1
+    # *value* as a line number, or a usage error.
+    private def self.line_number(value : String) : Int32
+      value.to_i? || raise ArgumentError.new("not a line number: #{value}")
     end
 
     # Where Crysterm's log goes while md runs: `$XDG_CACHE_HOME/md/md.log`
@@ -110,23 +147,26 @@ module Md
 
     # Builds the application for *source*: a stream from standard input, an
     # existing file in view mode, or an empty editor (named after a file
-    # that does not exist yet, or unnamed). The history of recent files and
-    # positions and the settings come along; *watch* follows the file from
-    # the start.
-    private def self.launch(source : Source, watch : Bool = false) : App
+    # that does not exist yet, or unnamed) — unless `--view` or `--edit`
+    # said which pane. The history of recent files and positions comes
+    # along with the settings; `--watch` follows the file from the start, `--line` opens on
+    # that line.
+    private def self.launch(source : Source, options : Options) : App
       history = History.load
       settings = Settings.load
+      view = options.view
+      line = options.line
       if source.stdin?
-        App.new source, stream: STDIN, history: history, settings: settings
+        App.new source, stream: STDIN, view: view.nil? ? true : view, history: history, settings: settings, line: line
       elsif (path = source.path) && File.exists?(path)
         text = begin
           File.read path
         rescue ex : IO::Error
           raise Error.new("cannot read #{path}: #{ex.message}")
         end
-        App.new source, text: text, view: true, history: history, settings: settings, watch: watch
+        App.new source, text: text, view: view.nil? ? true : view, history: history, settings: settings, watch: options.watch?, line: line
       else
-        App.new source, history: history, settings: settings, watch: watch
+        App.new source, view: view || false, history: history, settings: settings, watch: options.watch?, line: line
       end
     end
   end

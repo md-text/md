@@ -114,10 +114,13 @@ module Md
     # position is restored and the recent files are offered and kept; with
     # *settings*, the View and Options choices are restored and kept
     # (`app_settings.cr`); with *watch*, the file is followed from the start
-    # (`--watch`).
+    # (`--watch`). A *line* (`+N`, `--line N`) is where the panes start
+    # instead of the remembered position: the user asked, so the history
+    # does not get a say.
     def initialize(@source : Source, text : String = "", stream : IO? = nil,
                    view : Bool = !stream.nil? || !text.empty?, window : Crysterm::Window? = nil,
-                   @history : History? = nil, @settings : Settings? = nil, watch : Bool = false)
+                   @history : History? = nil, @settings : Settings? = nil, watch : Bool = false,
+                   line : Int32? = nil)
       @window = window || Crysterm::Window.new(title: title)
       @window.always_propagated_chars << 'q'
 
@@ -191,7 +194,11 @@ module Md
       build_menus
       build_status
       apply_settings
-      restore_position
+      if line
+        go_to_line line
+      else
+        restore_position
+      end
       refresh_recent_menu
       self.watch_file = watch
     end

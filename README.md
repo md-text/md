@@ -66,6 +66,9 @@ md                    # open an empty editor
 md README.md          # open a file for viewing
 md notes.md           # a file that does not exist yet opens in the editor
 md --watch notes.md   # ...and reload it whenever it changes on disk
+md +120 notes.md      # open on source line 120 (`--line 120` too)
+md --edit README.md   # open the editor rather than the viewer on a file
+md --view new.md      # or the viewer on a document that does not exist yet
 md - < README.md      # read the document from standard input
 some-command | md     # follow output as it arrives (`-` is optional here)
 md --help             # list the options
@@ -74,8 +77,11 @@ md --version          # print the version
 
 The window has three panes side by side: the Markdown source editor, the
 rendered viewer and a table of contents. A new document starts with only the
-editor shown; a file or a stream starts with only the viewer. Show any
-combination you like; the viewer re-renders as you type, and the table of
+editor shown; a file or a stream starts with only the viewer (`--edit` and
+`--view` override that choice). `+N` or `--line N` puts both panes on source
+line `N`, as `less +N` and `vim +N` do — past the end lands on the last line,
+and a bare `+` is the end — instead of the position md remembers for the
+file. Show any combination you like; the viewer re-renders as you type, and the table of
 contents follows the document's headings. A document arriving on standard
 input is rendered as it comes in, and the viewer keeps scrolling to the end
 until you scroll up.
