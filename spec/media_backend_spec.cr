@@ -65,10 +65,10 @@ describe "Md::App media backend" do
       ]
       # Each mnemonic once in the submenu.
       letters = entries.reject(&.separator?).compact_map(&.mnemonic)
-      letters.size.should eq entries.reject(&.separator?).size
+      letters.size.should eq entries.count { |entry| !entry.separator? }
       letters.uniq.size.should eq letters.size
       # The groups are separated: the cell grid, the terminal's graphics, the overlays.
-      entries.select(&.separator?).size.should eq 4
+      entries.count(&.separator?).should eq 4
       entries[entries.index!(entry(app, Backend::Sixel)) - 1].separator?.should be_true
       entries[entries.index!(entry(app, Backend::Overlay)) - 1].separator?.should be_true
       backends.map(&.checked?).should eq checked_for(Backend::Auto)

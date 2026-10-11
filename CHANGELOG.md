@@ -94,7 +94,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   which is on. Change for 5s, a check entry above Auto-detect, makes a pick
   a trial: five seconds of the backend, then back to the one before, the
   checks following; another pick restarts the time, picking the original
-  ends the trial, and unchecking during one keeps the tried backend.
+  ends the trial, and unchecking during one keeps the tried backend. The
+  backend is kept with the other settings, as Crysterm's `media.backend`.
+- View → Color Depth (Crysterm's `colors.depth`: Auto-detect, Monochrome, 8,
+  16, 256 Colors, True Color; the whole window is redrawn at the new depth),
+  View → Terminal Links (`render.hyperlinks`: whether the viewer's links are
+  the terminal's own hyperlinks — Auto-detect, On, Off) and Options → Reduced
+  Motion (`render.reduced_motion`): three more of Crysterm's options in the
+  menus, kept with the other settings.
 - The menus show their entries' keys: File → Open…, Reload, Save and Quit
   and Edit → Find…, Find Next, Find Previous and Go to Line… carry their
   shortcuts (Crysterm's action shortcuts, spelled `Ctrl+O` as Qt does),

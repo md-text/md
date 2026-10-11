@@ -164,7 +164,7 @@ describe "Md::App config menu" do
     with_config do |path|
       with_app config: true do |app|
         options = menu(app, 4).actions.map(&.text)
-        options.should eq ["&Overwrite Mode", "&Ask Before Discarding Changes", "A&uto-Save", "&Keep a Backup File", "&Mouse", "&Clipboard", "", "&Load Config…", "&Save Config", "Sa&ve Config As…", "", "Clea&r Caches…"]
+        options.should eq ["&Overwrite Mode", "&Ask Before Discarding Changes", "A&uto-Save", "&Keep a Backup File", "&Mouse", "&Clipboard", "Re&duced Motion", "", "&Load Config…", "&Save Config", "Sa&ve Config As…", "", "Clea&r Caches…"]
         app.guides = true
         menu(app, 4).actions.find!(&.text.==("&Save Config")).trigger
         notice(app).should eq " Saved #{path}"

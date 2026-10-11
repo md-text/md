@@ -44,6 +44,10 @@ module Md
       link @mouse_mode, "md.mouse_mode"
       link @clipboard_mode, "md.clipboard_mode"
       link @theme, "colors.theme"
+      link @media_backend, "media.backend"
+      link @color_depth, "colors.depth"
+      link @hyperlinks, "render.hyperlinks"
+      link @reduced_motion, "render.reduced_motion"
       # The pane sizes are not a property: applied from the option now and,
       # with the configuration kept, whenever it changes (a file loaded);
       # recorded at exit. The window's end unhooks the listener, as it does

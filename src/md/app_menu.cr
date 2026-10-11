@@ -114,6 +114,10 @@ module Md
       add_choices(view, "The&me", THEMES, @theme) { |theme| theme_label theme }
       # How images are drawn, with the Change for 5s trial (`app_media.cr`).
       build_media_menu view
+      # Two more of Crysterm's options (`app_toolkit.cr`); `L` and `K` are
+      # free here.
+      add_choices(view, "Co&lor Depth", COLOR_DEPTHS, @color_depth) { |depth| color_depth_label depth }
+      add_choices(view, "Terminal Lin&ks", Hyperlinks.values, @hyperlinks) { |policy| hyperlinks_label policy }
       view.add_separator
       add_choices(view, "&Dialog Style", DialogStyle.values, @dialog_style) { |style| dialog_style_label style }
       add_toggle view, "&Watch File", @watch_file
@@ -131,6 +135,8 @@ module Md
       # there is none.
       clipboard = add_choices(options, "&Clipboard", ClipboardMode.values, @clipboard_mode) { |mode| clipboard_label mode }
       clipboard[ClipboardMode::Command.value].enabled = !self.clipboard.copy_command.nil?
+      # Crysterm's `render.reduced_motion` (`app_toolkit.cr`); `d` is free.
+      add_toggle options, "Re&duced Motion", @reduced_motion
       options.add_separator
       # The config file (`app_config.cr`): applied from a file now, written
       # now, or written elsewhere; `L` and `S` are free here, `A` is Ask's.

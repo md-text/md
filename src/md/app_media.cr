@@ -106,9 +106,9 @@ module Md
         if @media_trial_returning
           notice "Media backend: back to #{backend.label}"
         elsif @media_trial.value && backend != @media_trial_origin
-          @media_trial_origin ||= previous
+          origin = (@media_trial_origin ||= previous)
           arm_media_trial
-          notice "Media backend: #{backend.label} for #{media_trial_text}, then back to #{@media_trial_origin.not_nil!.label}"
+          notice "Media backend: #{backend.label} for #{media_trial_text}, then back to #{origin.label}"
         else
           cancel_media_trial
           notice "Media backend: #{backend.label}"

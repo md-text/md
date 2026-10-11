@@ -266,6 +266,21 @@ stylesheet sets (`background-image` in a `--colors-stylesheet`) and on
 whatever media Crysterm adds later. The backend is kept with the other
 settings; Change for 5s is not, like Overwrite Mode.
 
+Three more of Crysterm's options sit in the menus, for a reader who would
+otherwise set them on the command line. View → Color Depth is how many
+colors the window is drawn with — Auto-detect, the default, takes the
+terminal's word, and Monochrome, 8, 16, 256 Colors or True Color force a
+depth, for a terminal that reports fewer colors than it shows, or to see a
+theme as a plainer terminal would; the whole window is redrawn at the new
+depth at once (`--colors-depth`). View → Terminal Links is whether the
+links in the viewer are also the terminal's own hyperlinks, to click or
+hover where the terminal does that: Auto-detect turns them on where the
+terminal is known to support them, On trusts the terminal over the
+detection, Off is for a terminal that shows the escape sequence instead
+(`--render-hyperlinks`). Options → Reduced Motion skips Crysterm's
+animations — a pressed button, a fade — and shows their end state at once
+(`--render-reduced-motion`). All three are kept with the other settings.
+
 ### Editing Markdown
 
 The editor knows the syntax it holds. `Enter` at the end of a list item —
@@ -553,7 +568,9 @@ Crysterm's, which it can hold as well, so a theme or a media backend meant
 for md alone goes here rather than in Crysterm's `~/.config/crysterm/config.yml`.
 Entries md does not know are kept across a rewrite, so an older md does not
 shed a newer one's settings; a broken file stops md with a message naming the
-entry.
+entry. One YAML caution: write a value that YAML reads as a boolean, such as
+Terminal Links' `off`, in quotes (`hyperlinks: "off"`); md's own writes
+quote every word.
 
 The Options menu reaches the file directly: *Save Config* writes it now,
 without waiting for the exit; *Save Config As…* asks for a file name, the

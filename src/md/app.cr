@@ -210,6 +210,7 @@ module Md
       end
       wire_theme
       wire_media
+      wire_toolkit
       wire_view
       wire_resizable
 

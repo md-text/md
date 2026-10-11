@@ -130,7 +130,7 @@ describe "Md::App theme" do
 
   it "restores the stored theme at start and records the picked one" do
     with_config "colors:\n  theme: light\n" do |path|
-      with_theme_app config: true do |app, window|
+      with_theme_app config: true do |app, _|
         # The window itself takes the option's theme when it is created
         # (Crysterm installs its config theme at the first window of the
         # process, which in a spec run was an earlier one), so the property

@@ -90,10 +90,10 @@ module Md
   # precedence of a pick: its values replace what a variable or a flag set,
   # as the user asked for them, and are recorded as picks.
   module Config
-    # The Crysterm options md's menus offer; with the `md.*` options, what
-    # `.reset` puts back (specs) and what the settings section of `--help
-    # --verbose` and the man page lists.
-    CRYSTERM_KEYS = ["colors.theme"]
+    # The Crysterm options md's menus offer — the theme, the media backend,
+    # the color depth, the terminal links and reduced motion — which `.reset`
+    # puts back with the `md.*` options (specs).
+    CRYSTERM_KEYS = ["colors.theme", "media.backend", "colors.depth", "render.hyperlinks", "render.reduced_motion"]
 
     # Whether any option changed since the last load at start or save to
     # the config file, so a quiet exit skips the write.
@@ -277,7 +277,7 @@ module Md
     # them: a key without a dot at the top, a group whose name a top-level key
     # takes flat.
     private def self.emit(values : Hash(String, Superconf::AbstractOption | YAML::Any), yaml : YAML::Builder) : Nil
-      keys = values.keys.sort
+      keys = values.keys.sort!
       top, dotted = keys.partition { |key| !key.includes?('.') }
       yaml.mapping do
         top.each do |key|
