@@ -19,18 +19,19 @@ module Md
     # `QDesktopServices::openUrl` does. A link to a file that does not exist
     # is a notice, not a new document.
     #
-    # Back and Forward (Edit → Back and Forward, `Alt-Left` and `Alt-Right`;
-    # `Backspace` too in the viewer and the table of contents; Qt's
-    # `QTextBrowser::backward`/`forward`) retrace the places left. A step is a
-    # link followed — to another file, or to a heading in this one, as in Qt,
-    # where an anchor jump is a history step, so a table of contents jump can
-    # be undone too — or a file opened over this one (File → Open, Open
-    # Recent). A place is the file and the caret's source position, put back
-    # through `#go_to_line`; going back to another file passes the guard like
-    # any open. The stack is md's, not the viewer's: the editor is the source
-    # of truth, and the viewer's own history would only swap the viewer's
-    # document, so the viewer's link following is turned off
-    # (`open_links = false`) and it is left with the event.
+    # Previous File and Next File (File → Previous File, Next File, `Alt-Left`
+    # and `Alt-Right`; `Backspace` too in the viewer and the table of
+    # contents; Qt's `QTextBrowser::backward`/`forward`, for files) retrace
+    # the files left. A step is a file opened over this one — a link
+    # followed to another file, File → Open, Open Recent — and a place is
+    # the file and the caret's source position in it, put back through
+    # `#go_to_line`; going to another file passes the guard like any open. A
+    # jump within the document (a `#heading` link, the table of contents) is
+    # not a step: Previous File leads to a file, as its name says. The stack
+    # is md's, not the viewer's: the editor is the source of truth, and the
+    # viewer's own history would only swap the viewer's document, so the
+    # viewer's link following is turned off (`open_links = false`) and it is
+    # left with the event.
 
     # A place the reader left: the document's file (`nil` for a new or
     # streamed document, which has nowhere to be reopened from) and the
@@ -47,10 +48,10 @@ module Md
 
     @back = [] of Place
     @forward = [] of Place
-    @back_action : Crysterm::Action?
-    @forward_action : Crysterm::Action?
-    # Set while Back or Forward reopens a file, so the open is not recorded
-    # as a step of its own.
+    @previous_action : Crysterm::Action?
+    @next_action : Crysterm::Action?
+    # Set while Previous File or Next File reopens a file, so the open is
+    # not recorded as a step of its own.
     @retracing = false
 
     # Opens *url* with the platform's opener — `open` on macOS, `xdg-open`
@@ -64,11 +65,11 @@ module Md
       spawn(name: "md-opener") { process.wait }
     end
 
-    def back_available? : Bool
+    def previous_file_available? : Bool
       !@back.empty?
     end
 
-    def forward_available? : Bool
+    def next_file_available? : Bool
       !@forward.empty?
     end
 
@@ -78,7 +79,7 @@ module Md
     def follow_link(url : String) : Nil
       path, fragment = Crysterm::Widget::TextBrowser.sanitize_location url
       if path.empty?
-        jump_to_anchor fragment
+        go_to_anchor fragment
       elsif target = local_target(path)
         follow_file target, fragment
       else
@@ -86,29 +87,31 @@ module Md
       end
     end
 
-    # Goes back to the place left last (Edit → Back), through the guard when
-    # it is in another file. Returns whether there was one.
-    def go_back : Bool
+    # Goes back to the file left last, where it was left (File → Previous
+    # File), through the guard. Returns whether there was one.
+    def previous_file : Bool
       travel(@back, @forward) || begin
-        notice "Nothing to go back to"
+        notice "No previous file"
         false
       end
     end
 
-    # Undoes the last Back (Edit → Forward). Returns whether there was one.
-    def go_forward : Bool
+    # Undoes the last Previous File (File → Next File). Returns whether
+    # there was one.
+    def next_file : Bool
       travel(@forward, @back) || begin
-        notice "Nothing to go forward to"
+        notice "No next file"
         false
       end
     end
 
     # The links' part of the viewer's wiring (from `#wire_panes`): the follow
     # is ours, and `Backspace` (`Ctrl-H` on terminals that send it so) goes
-    # back through our stack. The viewer binds the key to its own history,
-    # which stays empty with `open_links` off; our handler, subscribed here,
-    # runs before the reading listener the viewer subscribes when focused, so
-    # the key is ours first and a no-op for the viewer after.
+    # to the previous file through our stack. The viewer binds the key to
+    # its own history, which stays empty with `open_links` off; our handler,
+    # subscribed here, runs before the reading listener the viewer
+    # subscribes when focused, so the key is ours first and a no-op for the
+    # viewer after.
     private def wire_links : Nil
       @viewer.open_links = false
       @viewer.on(Crysterm::Event::AnchorClick) { |e| follow_link e.url }
@@ -116,42 +119,41 @@ module Md
         next if e.accepted?
         next unless e.key.in?(Tput::Key::Backspace, Tput::Key::CtrlH)
         e.accept
-        go_back
+        previous_file
       end
     end
 
-    # `Backspace` outside the editor goes back (the table of contents; the
-    # viewer handles its own); returns whether *key* was it. In the editor
-    # the key deletes, and an unconsumed one (at the start of the text) is
-    # left alone.
+    # `Backspace` outside the editor goes to the previous file (the table of
+    # contents; the viewer handles its own); returns whether *key* was it.
+    # In the editor the key deletes, and an unconsumed one (at the start of
+    # the text) is left alone.
     private def navigation_key(key : Tput::Key) : Bool
       return false if !key.backspace? || @editor.focused?
-      go_back
+      previous_file
       true
     end
 
-    # Edit → Back and Forward, after *menu*'s last entry, with Qt's shortcuts
-    # for them (`Alt-Left`/`Alt-Right`, which the menu names); disabled while
-    # there is nothing to go to.
+    # File → Previous File and Next File, after *menu*'s last entry, with
+    # Qt's shortcuts for a browser's back and forward (`Alt-Left`/`Alt-Right`,
+    # which the menu names); disabled while there is no file to go to.
     private def add_navigation_actions(menu : Crysterm::Widget::Menu) : Nil
-      menu.add_separator
-      back = Crysterm::Action.new "&Back"
-      back.shortcut = "Alt+Left"
-      back.on(Crysterm::Event::Triggered) { go_back }
-      menu.add_action back
-      @back_action = back
-      forward = Crysterm::Action.new "For&ward"
-      forward.shortcut = "Alt+Right"
-      forward.on(Crysterm::Event::Triggered) { go_forward }
-      menu.add_action forward
-      @forward_action = forward
+      previous = Crysterm::Action.new "&Previous File"
+      previous.shortcut = "Alt+Left"
+      previous.on(Crysterm::Event::Triggered) { previous_file }
+      menu.add_action previous
+      @previous_action = previous
+      following = Crysterm::Action.new "&Next File"
+      following.shortcut = "Alt+Right"
+      following.on(Crysterm::Event::Triggered) { next_file }
+      menu.add_action following
+      @next_action = following
       refresh_navigation
     end
 
     # Records the place left when a file is opened over the document
-    # (`#open_file`): a Back step, unless Back or Forward is doing the
-    # opening. A document without a file is gone for good once another is
-    # opened over it, and so are the places in it.
+    # (`#open_file`): a Previous File step, unless Previous File or Next
+    # File is doing the opening. A document without a file is gone for good
+    # once another is opened over it, and so are the places in it.
     private def leave_document : Nil
       return if @retracing
       if @source.path
@@ -161,15 +163,6 @@ module Md
         @forward.clear
         refresh_navigation
       end
-    end
-
-    # Jumps to the heading *name* (a fragment without its `#`) in the
-    # document shown, the place left recorded. Returns whether there is one.
-    private def jump_to_anchor(name : String) : Bool
-      here = place
-      return false unless go_to_anchor name
-      push here
-      true
     end
 
     # Puts the viewer on heading *name* — on its top row, as a browser lands
@@ -248,9 +241,9 @@ module Md
       Place.new @source.path, line, column
     end
 
-    # Puts *here* on the Back stack — once, when it is already on top — and
-    # forgets the Forward stack: a new step leaves the undone ones behind, as
-    # in any browser.
+    # Puts *here* on the Previous File stack — once, when it is already on
+    # top — and forgets the Next File stack: a new step leaves the undone
+    # ones behind, as in any browser.
     private def push(here : Place?) : Nil
       return unless here
       @back << here unless @back.last? == here
@@ -296,11 +289,11 @@ module Md
       end
     end
 
-    # Keeps the Back and Forward entries enabled only while they lead
-    # somewhere (which also stands their shortcuts down).
+    # Keeps the Previous File and Next File entries enabled only while they
+    # lead somewhere (which also stands their shortcuts down).
     private def refresh_navigation : Nil
-      @back_action.try &.enabled = back_available?
-      @forward_action.try &.enabled = forward_available?
+      @previous_action.try &.enabled = previous_file_available?
+      @next_action.try &.enabled = next_file_available?
     end
   end
 end

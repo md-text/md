@@ -134,8 +134,8 @@ viewer, and the table of contents its columns.
 | `Ctrl-L`, `:`      | Go to a source line; asks for the number (`:` outside the editor; Edit → Go to Line…) |
 | `Alt-Down`, `Alt-Up`, `]`, `[` | Jump to the next and previous heading (`]` and `[` outside the editor; Edit → Next Heading, Previous Heading) |
 | `Alt-R`            | Resize the panes from the keyboard (when View → Resizable Panes is on): `Left`/`Right` move the divider next to the pane, `Enter`/`Escape` return |
-| `Backspace`        | Outside the editor, go back to where you were before the last link or open (Edit → Back) |
-| `Alt-Left`, `Alt-Right` | Back and Forward (Edit → Back, Forward); in the editor and the viewer these move by word instead |
+| `Backspace`        | Outside the editor, go back to the file you were in before the last link or open, where you left it (File → Previous File) |
+| `Alt-Left`, `Alt-Right` | Previous File and Next File (File → Previous File, Next File); in the editor and the viewer these move by word instead |
 | `Enter`            | In the editor, on a list item: continue the list (an empty item ends it) |
 | `Ctrl-B`, `Alt-I`, `Alt-C` | Bold, italic and code around the selection or the word at the caret, or off again (Format → Bold, Italic, Code) |
 | `Alt-X`            | Tick or untick a list item's task box, or give it a ticked one (Format → Toggle Task Checkbox; Format → As a Task adds and removes the box) |
@@ -398,14 +398,16 @@ image or a PDF — is handed to the system to open with whatever handles it:
 `open` on macOS, `xdg-open` elsewhere. A link to a file that does not exist
 only gets a notice.
 
-Every link followed is a step you can retrace: `Backspace` in the viewer or
-the table of contents goes back to the file and position you came from
-(Edit → Back, `Alt-Left`, works from the menu too), and Edit → Forward
-(`Alt-Right`) undoes a Back. Opening a file from File → Open… or Open Recent
-over the one shown is a step as well, and so is a jump from the table of
-contents. Going back to another file asks about unsaved changes like any
-open. In the editor and the viewer `Alt-Left` and `Alt-Right` keep moving
-the cursor by word, so the menu and `Backspace` are the way back from there.
+Every file left is a step you can retrace: `Backspace` in the viewer or the
+table of contents goes back to the file you came from, at the position you
+left (File → Previous File, `Alt-Left`, works from the menu too), and File →
+Next File (`Alt-Right`) undoes a Previous File. Opening a file from File →
+Open… or Open Recent over the one shown is a step as well; a jump within the
+document — a `#heading` link, the table of contents — is not, since the
+entries lead to files. Going back to another file asks about unsaved changes
+like any open. In the editor and the viewer `Alt-Left` and `Alt-Right` keep
+moving the cursor by word, so the menu and `Backspace` are the way back from
+there.
 
 ### Exporting
 
@@ -656,7 +658,7 @@ src/md/app_status.cr  the status bar fields, the mouse modes
 src/md/app_menu.cr    the menu bar
 src/md/app_search.cr  search, go to line, heading jumps
 src/md/app_file.cr    open, reload, watch; the unsaved-changes guard; recent files
-src/md/app_links.cr   following links; Back and Forward
+src/md/app_links.cr   following links; Previous File and Next File
 src/md/app_theme.cr   the theme: Crysterm's built-in themes, switched at runtime
 src/md/app_autosave.cr auto-save to a recovery file; the backup file
 src/md/app_view.cr    soft wrap, text width and centering

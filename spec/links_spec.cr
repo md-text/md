@@ -1,10 +1,10 @@
 require "./spec_helper"
 require "file_utils"
 
-# The Edit menu's Back and Forward entries.
+# The File menu's Previous File and Next File entries.
 private def navigation(app)
-  actions = app.main.menu_bar.menus[1].actions
-  {actions.find! { |a| a.text == "&Back" }, actions.find! { |a| a.text == "For&ward" }}
+  actions = app.main.menu_bar.menus[0].actions
+  {actions.find! { |a| a.text == "&Previous File" }, actions.find! { |a| a.text == "&Next File" }}
 end
 
 # A directory with two linked documents; yields their paths.
@@ -65,7 +65,7 @@ describe "Md::App links" do
         app.visible_panes.should eq [Md::App::Pane::Editor, Md::App::Pane::Viewer]
         back.enabled?.should be_true
         forward.enabled?.should be_false
-        app.back_available?.should be_true
+        app.previous_file_available?.should be_true
 
         press window, Tput::Key::Backspace
         app.source.path.should eq source
@@ -74,12 +74,12 @@ describe "Md::App links" do
         back.enabled?.should be_false
         forward.enabled?.should be_true
 
-        app.go_forward.should be_true
+        app.next_file.should be_true
         app.source.path.should eq target
         forward.enabled?.should be_false
         back.enabled?.should be_true
-        app.go_forward.should be_false
-        notice(app).should contain "Nothing to go forward to"
+        app.next_file.should be_false
+        notice(app).should contain "No next file"
       end
     end
   end
@@ -93,7 +93,7 @@ describe "Md::App links" do
         app.source.path.should eq target
         app.viewer.document.plain_text[app.viewer.cursor_position, 4].should eq "Deep"
         app.editor.text_cursor.block_number.should eq 4
-        app.go_back.should be_true
+        app.previous_file.should be_true
         app.source.path.should eq source
       end
     end
@@ -109,7 +109,7 @@ describe "Md::App links" do
         app.source.path.should eq source
         app.markdown.should eq SOURCE_DOC
         notice(app).should contain "Opening https://example.com/page"
-        app.back_available?.should be_false
+        app.previous_file_available?.should be_false
 
         app.follow_link "mailto:someone@example.com"
         opened.last.should eq "mailto:someone@example.com"
@@ -131,29 +131,32 @@ describe "Md::App links" do
         app.follow_link "nowhere.md"
         notice(app).should contain "No such file: #{File.join(File.dirname(source), "nowhere.md")}"
         app.source.path.should eq source
-        app.back_available?.should be_false
+        app.previous_file_available?.should be_false
       end
     end
   end
 
-  it "treats a heading jump as a step, and Backspace in the table of contents goes back too" do
-    with_docs do |_dir, source, _target|
+  it "does not count a heading jump as a step, and Backspace in the table of contents goes to the previous file" do
+    with_docs do |_dir, source, target|
       with_app Md::Source.new(path: source), text: SOURCE_DOC, view: true do |app, window|
         app.show_pane(Md::App::Pane::Toc).focus
         app.jump_to "#the-end"
         app.viewer.document.plain_text[app.viewer.cursor_position, 7].should eq "The end"
-        app.back_available?.should be_true
+        app.previous_file_available?.should be_false
         press window, Tput::Key::Backspace
-        app.viewer.cursor_position.should eq 0
-        app.back_available?.should be_false
-        press window, Tput::Key::Backspace
-        notice(app).should contain "Nothing to go back to"
+        notice(app).should contain "No previous file"
+        app.viewer.document.plain_text[app.viewer.cursor_position, 7].should eq "The end"
 
+        app.follow_link "docs/target.md"
+        app.source.path.should eq target
+        press window, Tput::Key::Backspace
+        app.source.path.should eq source
+        app.viewer.document.plain_text[app.viewer.cursor_position, 7].should eq "The end" # where it was left
         # The menu entries' shortcuts, live wherever the focused pane leaves the keys alone.
         press window, Tput::Key::AltRight
-        app.viewer.document.plain_text[app.viewer.cursor_position, 7].should eq "The end"
+        app.source.path.should eq target
         press window, Tput::Key::AltLeft
-        app.viewer.cursor_position.should eq 0
+        app.source.path.should eq source
       end
     end
   end
@@ -173,8 +176,8 @@ describe "Md::App links" do
 
         # File → Open over a file is a step as well.
         app.open_file source
-        app.back_available?.should be_true
-        app.go_back
+        app.previous_file_available?.should be_true
+        app.previous_file
         app.source.path.should eq target
       end
     end

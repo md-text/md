@@ -356,8 +356,8 @@ module Md
 
     # Jumps to the heading *url* names (`"#anchor"`, as the table of contents
     # emits): the viewer goes to the heading, and the editor to the source
-    # line it was rendered from, on the same viewport row — a link followed,
-    # which Back undoes (`app_links.cr`).
+    # line it was rendered from, on the same viewport row — a link followed
+    # (`app_links.cr`).
     def jump_to(url : String) : Nil
       follow_link url
     end

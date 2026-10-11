@@ -65,9 +65,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   heading its `#fragment` names), a `#heading` link jumps to the heading,
   and `http:`, `mailto:` and other external links — and existing files that
   are not Markdown — open with the system's `open` (macOS) or `xdg-open`.
-  Edit → Back (`Alt-Left`; `Backspace` in the viewer and the table of
-  contents) retraces the links followed and the files opened, to the file
-  and position left; Edit → Forward (`Alt-Right`) undoes a Back.
+  File → Previous File (`Alt-Left`; `Backspace` in the viewer and the table
+  of contents) retraces the files left — through a link or an open — to the
+  file and the position left; File → Next File (`Alt-Right`) undoes a
+  Previous File. A jump within the document is not a step.
 - Settings kept across runs: View → Sync Cursor and Highlight Line,
   Options → Ask Before Discarding Changes and the mouse mode are restored at
   start and written at exit to `$XDG_CONFIG_HOME/md/settings.json`

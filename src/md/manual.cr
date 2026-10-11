@@ -35,7 +35,7 @@ module Md
       {"Ctrl-G, Alt-G, n, N", "Next and previous match (n and N outside the editor)."},
       {"Ctrl-L, :", "Go to a source line (`:' outside the editor)."},
       {"Alt-Down, Alt-Up, ], [", "Jump to the next and the previous heading (] and [ outside the editor)."},
-      {"Backspace, Alt-Left, Alt-Right", "Back to where you were before the last link or open (Backspace outside the editor), and Forward again."},
+      {"Backspace, Alt-Left, Alt-Right", "Back to the file you were in before the last link or open, where you left it (Backspace outside the editor; File -> Previous File), and on to the next again (File -> Next File)."},
       {"Alt-R", "Resize the panes from the keyboard (when View -> Resizable Panes is on): Left and Right move the divider next to the pane, Enter or Escape return."},
       {"Alt-W", "Soft Wrap in the editor on and off."},
       {"Enter", "In the editor, on a list item: continue the list; on an empty item, end it."},

@@ -278,7 +278,7 @@ module Md
 
     # Where the reader is, as a 1-based source line and column: the editor's
     # caret while editing, the source of the viewer's while reading — what
-    # the history and the Back stack (`app_links.cr`) record, and
+    # the history and the Previous File stack (`app_links.cr`) record, and
     # `#go_to_line` takes back.
     private def source_position : {Int32, Int32}
       pos = @editor.focused? ? @editor.cursor_position : editor_position(@viewer.cursor_position)

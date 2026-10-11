@@ -1,8 +1,9 @@
 module Md
   class App
-    # The menu bar: File (open, the recent files, reload, save, quit), Edit
-    # (copy, paste and paste from a named source, find, repeat the find,
-    # replace, go to a line, jump between headings, go back), Format (the Markdown markup, `app_edit.cr`), View (which panes
+    # The menu bar: File (open, the recent files, reload, the previous and
+    # the next file, save, quit), Edit (copy, paste and paste from a named
+    # source, find, repeat the find, replace, go to a line, jump between
+    # headings), Format (the Markdown markup, `app_edit.cr`), View (which panes
     # are shown and whether they resize, whether the editor's and the viewer's
     # carets are kept in sync, whether the caret's line is highlighted,
     # whether the editor numbers its lines, the text's layout — soft wrap,
@@ -55,6 +56,9 @@ module Md
       @recent_action = recent
       file.add_action("&Reload", shortcut: "Ctrl+R") { reload }
       file.add_separator
+      # The files left, retraced (`app_links.cr`).
+      add_navigation_actions file
+      file.add_separator
       file.add_action("&Save", shortcut: "Ctrl+S") { save }
       file.add_action("Save &As…") { save_as_prompt }
       file.add_separator
@@ -81,7 +85,6 @@ module Md
       edit.add_action("&Go to Line…", shortcut: "Ctrl+L") { go_to_line_prompt }
       edit.add_action("Nex&t Heading", shortcut: "Alt+Down") { jump_heading 1 }
       edit.add_action("Pre&vious Heading", shortcut: "Alt+Up") { jump_heading -1 }
-      add_navigation_actions edit
 
       build_format_menu bar
 
