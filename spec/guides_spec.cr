@@ -92,6 +92,30 @@ describe "Md::App guides" do
     end
   end
 
+  it "sets the text width to the last guide of the focused pane from View → Text Width" do
+    with_app Md::Source.new(path: "doc.md"), text: GUIDES_DOC, view: true do |app|
+      entry = menu(app, 3).actions.find!(&.text.==("Te&xt Width")).menu.not_nil!.last
+      entry.text.should eq "To &Last Guide"
+      app.viewer.focus
+      entry.trigger
+      app.text_width.should eq 0
+      notice(app).should contain "Guides are hidden"
+      app.guides = true
+      entry.trigger
+      app.text_width.should eq 0
+      notice(app).should contain "No guide"
+      app.viewer.add_guide 30
+      app.viewer.add_guide 52
+      app.editor.add_guide 40
+      app.text_width_to_last_guide.should be_true
+      app.text_width.should eq 52 # the viewer's rightmost
+      app.viewer.line_wrap_column.should eq 52
+      app.show_pane(Md::App::Pane::Editor).focus
+      entry.trigger
+      app.text_width.should eq 40 # the editor's, while editing
+    end
+  end
+
   it "keeps the choice across runs" do
     with_config "md:\n  guides: true\n" do |path|
       with_app Md::Source.new(path: "doc.md"), text: GUIDES_DOC, view: true, config: true do |app|

@@ -153,7 +153,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - View → Soft Wrap (`Alt-W`) folds long lines in the editor at the pane's
   edge or lets them run past it with sideways scrolling; View → Text Width
   caps the text at 72, 80, 100 or 120 columns for a wide terminal, in both
-  panes, and View → Center Text puts the capped column in the middle of the
+  panes — or, with To Last Guide, at the rightmost guide pulled onto the
+  focused pane — and View → Center Text puts the capped column in the middle of the
   pane. All three are kept across runs. (Crysterm: `line_wrap_column` and
   `line_wrap_column_alignment` on `AbstractScrollArea`, Qt's
   `lineWrapColumnOrWidth` and `QScrollArea::alignment`; the scroll bars

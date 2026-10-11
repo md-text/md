@@ -55,7 +55,7 @@ describe "Md::App text layout" do
       widths = menu(app, 3).actions.find!(&.text.==("Te&xt Width"))
       widths.text.should eq "Te&xt Width"
       entries = widths.menu.should_not be_nil
-      entries.map(&.text).should eq ["&Unlimited", "&72 Columns", "&80 Columns", "&100 Columns", "1&20 Columns"]
+      entries.map(&.text).should eq ["&Unlimited", "&72 Columns", "&80 Columns", "&100 Columns", "1&20 Columns", "", "To &Last Guide"]
       entries[0].checked?.should be_true
       entries[1].trigger
       app.text_width.should eq 72

@@ -109,7 +109,10 @@ module Md
       view.add_separator
       add_toggle(view, "&Soft Wrap", @soft_wrap).shortcut = "Alt+W"
       add_toggle view, "H&ard Wrap", @hard_wrap
-      add_choices(view, "Te&xt Width", TEXT_WIDTHS, @text_width) { |width| text_width_label width }
+      # To Last Guide sets the width by a guide (`app_view.cr`).
+      last_guide = Crysterm::Action.new "To &Last Guide"
+      last_guide.on(Crysterm::Event::Triggered) { text_width_to_last_guide }
+      add_choices(view, "Te&xt Width", TEXT_WIDTHS, @text_width, [last_guide]) { |width| text_width_label width }
       add_toggle view, "&Center Text", @center_text
       # `u` and `g`: Resizable Panes takes `z`, so `r` is free, but `u` stays.
       view.add_submenu "R&ulers", [toggle_action("&Horizontal", @horizontal_ruler), toggle_action("&Vertical", @vertical_ruler)]

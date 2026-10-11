@@ -194,6 +194,28 @@ module Md
       refresh_status
     end
 
+    # View → Text Width → To Last Guide: the width set to the column of the
+    # rightmost guide pulled onto the focused pane (the editor while
+    # editing, the viewer otherwise) — where the text is to end — so a guide
+    # dragged to a good place becomes the width, as a design tool's margin
+    # guide does. The two bound guides are not candidates: they are the
+    # width. A notice without a guide to go by, or with the guides hidden.
+    # Returns whether the width was set.
+    def text_width_to_last_guide : Bool
+      pane = @editor.focused? ? @editor : @viewer
+      unless @guides.value
+        notice "Guides are hidden (View → Guides)"
+        return false
+      end
+      unless column = pane.guides.max?
+        notice "No guide to set the width by: pull one off the column ruler"
+        return false
+      end
+      self.text_width = column
+      notice "Text width #{column}, to the last guide"
+      true
+    end
+
     # The Text Width entry's label for *width*: the count, or Unlimited.
     private def text_width_label(width : Int32) : String
       case width
