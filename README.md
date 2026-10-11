@@ -71,6 +71,8 @@ md --edit README.md   # open the editor rather than the viewer on a file
 md --view new.md      # or the viewer on a document that does not exist yet
 md - < README.md      # read the document from standard input
 some-command | md     # follow output as it arrives (`-` is optional here)
+md --export html README.md > README.html   # render to standard output and exit
+some-command | md --to text                # ...as plain text; `--to` is `--export`
 md --help             # list the options
 md --version          # print the version
 ```
@@ -200,6 +202,20 @@ over the one shown is a step as well, and so is a jump from the table of
 contents. Going back to another file asks about unsaved changes like any
 open. In the editor and the viewer `Alt-Left` and `Alt-Right` keep moving
 the cursor by word, so the menu and `Backspace` are the way back from there.
+
+### Exporting
+
+`md --export html FILE` (or `--to html`, pandoc's spelling) prints the
+rendered document on standard output and exits without opening a window, so
+md works as a filter in a pipeline: `md --export html notes.md > notes.html`,
+`curl -s …/README.md | md --to text | less`. With no FILE, standard input is
+read whether or not it is a terminal, as any filter does. The document goes
+through the same rendering the viewer uses: `html` is an HTML body fragment
+(no `<html>`/`<head>` wrapper, as pandoc without `--standalone`), `text` is
+the viewer's text without its styling — paragraphs spaced as on screen, list
+items with their markers, quotes and nested items indented, tables drawn
+with box characters. Nothing else happens in this mode: no history, no log
+file.
 
 ### Unsaved changes
 

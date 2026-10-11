@@ -67,8 +67,9 @@ jobs:
       - name: Build
         run: shards build
 
-      # The binary starts and exits without a terminal.
+      # The binary starts and exits without a terminal, and renders without one.
       - name: Smoke test
         run: |
           bin/md --version
           bin/md --help
+          bin/md --export html README.md | grep -q '<h1>md</h1>'

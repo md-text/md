@@ -1,6 +1,7 @@
 require "crysterm"
 require "option_parser"
 require "./source"
+require "./export"
 
 module Md
   # Command-line front end: parses arguments and starts the application.
@@ -20,6 +21,9 @@ module Md
       # `--view` (true) or `--edit` (false); without either, the `Source`
       # decides the pane.
       property view : Bool?
+      # `--export FORMAT`: render to standard output instead of opening a
+      # window (`Export`).
+      property export : String?
     end
 
     # The flags md itself owns. Crysterm reads its toolkit options
@@ -29,11 +33,12 @@ module Md
     # for a file, keeping these, which take precedence over a toolkit flag
     # of the same name.
     OWN_FLAGS = Set{"-V", "--version", "-h", "--help", "-v", "--verbose", "-w", "--watch",
-                    "-l", "--line", "--view", "--edit"}
+                    "-l", "--line", "--view", "--edit", "--export", "--to"}
 
     # Runs the program with the given arguments and returns the process exit
-    # status. `stdout`/`stderr` are injectable so that specs can capture them.
-    def self.run(args : Array(String), stdout : IO = STDOUT, stderr : IO = STDERR) : Int32
+    # status. `stdout`/`stderr`/`stdin` are injectable so that specs can
+    # capture and feed them.
+    def self.run(args : Array(String), stdout : IO = STDOUT, stderr : IO = STDERR, stdin : IO = STDIN) : Int32
       options = parse(args)
       stdout.puts "md #{VERSION}" if options.version?
       if options.help?
@@ -44,10 +49,13 @@ module Md
         end
       end
       return 0 if options.help? || options.version?
+      if format = options.export
+        return export(options.positional, format, stdin, stdout)
+      end
 
-      source = Source.resolve(options.positional, STDIN.tty?)
+      source = Source.resolve(options.positional, stdin.tty?)
       log_to_file
-      launch(source, options).run
+      launch(source, options, stdin).run
     rescue ex : ArgumentError | OptionParser::Exception
       stderr.puts "md: #{ex.message}"
       stderr.puts help
@@ -105,6 +113,8 @@ module Md
       end
       parser.on("--view", "Open the viewer, even on a new FILE") { options.view = pane_choice(options, true) }
       parser.on("--edit", "Open the editor, even on an existing FILE") { options.view = pane_choice(options, false) }
+      parser.on("--export FORMAT", "Print FILE (or standard input) rendered as html\nor text, and exit") { |value| options.export = Export.format(value) }
+      parser.on("--to FORMAT", "The same as --export (pandoc's spelling)") { |value| options.export = Export.format(value) }
       parser.invalid_option { |flag| raise ArgumentError.new("unknown option: #{flag}") }
       parser.unknown_args do |rest, after_dashes|
         # What remains are the positional arguments (`-` included) and the
@@ -136,6 +146,24 @@ module Md
       value.to_i? || raise ArgumentError.new("not a line number: #{value}")
     end
 
+    # Prints the document rendered as *format* (`Export`) on *stdout* and
+    # returns the exit status. No FILE means standard input, terminal or
+    # not, as it does for any filter; nothing of the window's — the log
+    # file, the history — is touched.
+    private def self.export(positional : Array(String), format : String, stdin : IO, stdout : IO) : Int32
+      source = Source.resolve(positional, false)
+      text = (path = source.path) ? read_file(path) : stdin.gets_to_end
+      stdout << Export.render(text, format)
+      0
+    end
+
+    # The contents of *path*, or an `Error` naming it.
+    private def self.read_file(path : String) : String
+      File.read path
+    rescue ex : IO::Error
+      raise Error.new("cannot read #{path}: #{ex.message}")
+    end
+
     # Where Crysterm's log goes while md runs: `$XDG_CACHE_HOME/md/md.log`
     # (`~/.cache/md/md.log`), unless the user set Crysterm's `log.file`
     # (`CRYSTERM_LOG_FILE`) or the directory cannot be created. Standard
@@ -151,20 +179,15 @@ module Md
     # said which pane. The history of recent files and positions comes
     # along with the settings; `--watch` follows the file from the start, `--line` opens on
     # that line.
-    private def self.launch(source : Source, options : Options) : App
+    private def self.launch(source : Source, options : Options, stdin : IO) : App
       history = History.load
       settings = Settings.load
       view = options.view
       line = options.line
       if source.stdin?
-        App.new source, stream: STDIN, view: view.nil? ? true : view, history: history, settings: settings, line: line
+        App.new source, stream: stdin, view: view.nil? ? true : view, history: history, settings: settings, line: line
       elsif (path = source.path) && File.exists?(path)
-        text = begin
-          File.read path
-        rescue ex : IO::Error
-          raise Error.new("cannot read #{path}: #{ex.message}")
-        end
-        App.new source, text: text, view: view.nil? ? true : view, history: history, settings: settings, watch: options.watch?, line: line
+        App.new source, text: read_file(path), view: view.nil? ? true : view, history: history, settings: settings, watch: options.watch?, line: line
       else
         App.new source, view: view || false, history: history, settings: settings, watch: options.watch?, line: line
       end

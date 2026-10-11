@@ -93,6 +93,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `--edit` choose the pane whatever the file is, so `md --edit README.md`
   opens the editor on it and `md --view new.md` the viewer on an empty
   document. Giving both is a usage error.
+- `md --export html FILE` and `--export text` (`--to FORMAT` as well, after
+  pandoc) print the document rendered on standard output and exit without
+  opening a window — md as a filter. With no FILE, standard input is read,
+  terminal or not. The HTML is a body fragment from Crysterm's exporter, the
+  text is the viewer's text without styling: block margins as blank lines,
+  list markers, indented quotes, box-drawn tables.
 
 [Unreleased]: https://github.com/crystallabs/md/commits/main
 

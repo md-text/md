@@ -94,11 +94,49 @@ describe Md::CLI do
     error.to_s.should contain "--view and --edit cannot be combined"
   end
 
+  it "exports a file as HTML or text and exits, without a window" do
+    path = File.tempname("md-spec", ".md")
+    File.write path, "# Title\n\nSome *text*.\n\n- one\n- two\n\n> quoted\n"
+    begin
+      output = IO::Memory.new
+      Md::CLI.run(["--export", "html", path], stdout: output).should eq 0
+      html = output.to_s
+      html.should contain "<h1>Title</h1>"
+      html.should contain "<li>two</li>"
+      html.should end_with "\n"
+
+      output = IO::Memory.new
+      Md::CLI.run(["--to", "text", path], stdout: output).should eq 0
+      text = output.to_s
+      text.should eq "Title\n\nSome text.\n\n• one\n• two\n\n  quoted\n"
+    ensure
+      File.delete? path
+    end
+  end
+
+  it "exports standard input when no file is named, whether or not it is a terminal" do
+    output = IO::Memory.new
+    Md::CLI.run(["--export", "html"], stdout: output, stdin: IO::Memory.new("## Piped\n")).should eq 0
+    output.to_s.should eq "<h2>Piped</h2>\n"
+    output = IO::Memory.new
+    Md::CLI.run(["--export", "text", "-"], stdout: output, stdin: IO::Memory.new("plain")).should eq 0
+    output.to_s.should eq "plain\n"
+  end
+
+  it "rejects an unknown export format, and reports an unreadable file" do
+    error = IO::Memory.new
+    Md::CLI.run(["--export", "pdf", "a.md"], stdout: IO::Memory.new, stderr: error).should eq 2
+    error.to_s.should contain "unknown export format: pdf (html, text)"
+    error = IO::Memory.new
+    Md::CLI.run(["--export", "text", "/nonexistent/doc.md"], stdout: IO::Memory.new, stderr: error).should eq 1
+    error.to_s.should contain "cannot read /nonexistent/doc.md"
+  end
+
   it "lists the new options in help" do
     output = IO::Memory.new
     Md::CLI.run(["--help"], stdout: output).should eq 0
     help = output.to_s
     help.should contain "[+N]"
-    {"-l N, --line N", "--view", "--edit"}.each { |flag| help.should contain flag }
+    {"-l N, --line N", "--view", "--edit", "--export FORMAT", "--to FORMAT"}.each { |flag| help.should contain flag }
   end
 end
