@@ -84,6 +84,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   a palette drawn from its window colors, so the whole window takes the
   look. `F6` cycles through all eight, `--colors-theme breeze-dark` names
   one for a run, and the choice is kept in the settings like the others.
+- View → Media Backend: how Crysterm draws images, from the backends
+  `--media-backend` names — Auto-detect, the default, or one of the cell
+  grid, the terminal's own graphics (Sixel, ReGIS, Kitty, iTerm2,
+  Tektronix) and the external overlays (w3mimgdisplay, Überzug), those the
+  terminal cannot drive disabled. A pick takes effect at once: Crysterm
+  rebuilds the images it drew under the old backend (its CSS
+  `background-image` layers, in every window) and the status bar says
+  which is on. Change for 5s, a check entry above Auto-detect, makes a pick
+  a trial: five seconds of the backend, then back to the one before, the
+  checks following; another pick restarts the time, picking the original
+  ends the trial, and unchecking during one keeps the tried backend.
 - The menus show their entries' keys: File → Open…, Reload, Save and Quit
   and Edit → Find…, Find Next, Find Previous and Go to Line… carry their
   shortcuts (Crysterm's action shortcuts, spelled `Ctrl+O` as Qt does),

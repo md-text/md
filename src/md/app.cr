@@ -209,6 +209,7 @@ module Md
         refresh_status
       end
       wire_theme
+      wire_media
       wire_view
       wire_resizable
 

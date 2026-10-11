@@ -242,6 +242,30 @@ so the next plain run is back to the stored theme. A stylesheet of your own
 (`--colors-stylesheet FILE`, CSS or Qt's QSS) layers over whichever theme
 is on, so your rules stay in force when the theme changes under them.
 
+View → Media Backend picks how Crysterm draws images, from the backends its
+`--media-backend` option names. Auto-detect, the default, leaves the choice
+to Crysterm, which takes the best one your terminal drives — Kitty graphics
+on Kitty, Sixel on an xterm, sub-cell glyphs or one cell per pixel anywhere
+else; the other entries name one and hold it: the cell grid (ANSI in true
+color, 256, 16 or 8 colors; Unicode half blocks, quadrants, sextants,
+octants, braille dots; ASCII contours), the terminal's own graphics (Sixel,
+ReGIS, Kitty, iTerm2, Tektronix 4014) and the external overlays
+(w3mimgdisplay, Überzug). The entries your terminal cannot drive are
+disabled — ReGIS and Tektronix always, since nothing detects them, the
+overlays without their helper program. A pick takes effect at once: Crysterm
+drops the images it drew under the old backend and draws them again with the
+new one, and the status bar says which is on. Check Change for 5s, above
+Auto-detect, to try a backend instead of keeping it: the pick switches for
+five seconds and then goes back to the backend in force before, the check
+marks following; another pick during the five seconds starts them over and
+still returns to the original, picking the original ends the trial, and
+unchecking Change for 5s during one keeps the tried backend and cancels the
+return. md's viewer draws no inline images yet (an image in the Markdown
+shows as a placeholder), so for now the backend shows on background images a
+stylesheet sets (`background-image` in a `--colors-stylesheet`) and on
+whatever media Crysterm adds later. The backend is kept with the other
+settings; Change for 5s is not, like Overwrite Mode.
+
 ### Editing Markdown
 
 The editor knows the syntax it holds. `Enter` at the end of a list item —
