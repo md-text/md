@@ -123,6 +123,13 @@ describe Md::CLI do
     output.to_s.should eq "plain\n"
   end
 
+  it "renders a paragraph's runs of spaces as one, as Markdown does, and keeps code as typed" do
+    source = "a    b\t\tc\nd\n\n`x    y`\n\n```\ncode    here\n```\n"
+    output = IO::Memory.new
+    Md::CLI.run(["--export", "text", "-"], stdout: output, stdin: IO::Memory.new(source)).should eq 0
+    output.to_s.should eq "a b c d\n\nx    y\n\ncode    here\n"
+  end
+
   it "rejects an unknown export format, and reports an unreadable file" do
     error = IO::Memory.new
     Md::CLI.run(["--export", "pdf", "a.md"], stdout: IO::Memory.new, stderr: error).should eq 2
