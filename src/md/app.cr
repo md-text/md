@@ -45,7 +45,8 @@ module Md
   # Keys: `F2`/`F3`/`F4` show and focus the editor/viewer/table of contents,
   # or hide it when it is already focused; `Tab` cycles focus between the
   # shown panes; `Insert` toggles overwrite mode in the editor; `F5` cycles
-  # the mouse mode. The File and Edit entries' keys — `Ctrl-S` saves,
+  # the mouse mode; `Ctrl-Z` outside the editor suspends md as the shell's
+  # `Ctrl-Z` would (in the editor it is undo). The File and Edit entries' keys — `Ctrl-S` saves,
   # `Ctrl-O` opens, `Ctrl-R` reloads, `Ctrl-F` searches, `Ctrl-G`/`Alt-G`
   # repeat the search, `Ctrl-L` goes to a line, `Alt-Up`/`Alt-Down` jump
   # between headings, `Ctrl-Q` quits — are the entries' shortcuts
@@ -537,16 +538,29 @@ module Md
     end
 
     # The application's special keys — the panes and the mouse mode, whose
-    # gestures no menu entry has; returns whether *key* was one.
+    # gestures no menu entry has, and `Ctrl-Z`; returns whether *key* was
+    # one.
     private def app_key(key : Tput::Key) : Bool
       case key
-      when .f2? then toggle_pane Pane::Editor
-      when .f3? then toggle_pane Pane::Viewer
-      when .f4? then toggle_pane Pane::Toc
-      when .f5? then cycle_mouse_mode
-      else           return navigation_key(key)
+      when .f2?     then toggle_pane Pane::Editor
+      when .f3?     then toggle_pane Pane::Viewer
+      when .f4?     then toggle_pane Pane::Toc
+      when .f5?     then cycle_mouse_mode
+      when .ctrl_z? then suspend
+      else               return navigation_key(key)
       end
       true
+    end
+
+    # What `Ctrl-Z` does outside the editor: the shell's suspend
+    # (`Crysterm.suspend`, which hands the terminal back and stops the
+    # process until `fg`). Raw mode keeps the key from the shell, so the app
+    # does it for it; the editor's `Ctrl-Z` is its undo and never gets here.
+    # Replaceable, so a spec can see the key without stopping the process.
+    property suspender : Proc(Nil) = -> { Crysterm.suspend }
+
+    private def suspend : Nil
+      @suspender.call
     end
 
     # The pager keys of the viewer: `/` and `?` search, `n` and `N` repeat

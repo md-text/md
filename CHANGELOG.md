@@ -81,6 +81,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   its turn, so the editor keeps `Ctrl-Z`, `Ctrl-K` and the like, and wait
   while a prompt is open (a Crysterm fix: a prompt now owns the keyboard).
   The menu bar's hint spells its keys the same way (`Alt+F`).
+- `Ctrl-Z` outside the editor suspends md to the shell, as it would in a
+  program that left the key to the terminal; `fg` brings it back with the
+  screen repainted (Crysterm's new `Crysterm.suspend`).
 - View → Line numbers: a gutter with the source line numbers on the
   editor's left (Crysterm's new `PlainTextEdit#line_numbers`), kept across
   runs with the other View choices.

@@ -141,6 +141,8 @@ describe "Md::App shortcuts" do
     with_app do |app, window|
       # A probe on two of the editor's keys, in the same menu as md's entries.
       probe = Crysterm::Action.new "Probe", shortcuts: [[Tput::Key::CtrlZ], [Tput::Key::CtrlK]]
+      suspended = 0
+      app.suspender = -> { suspended += 1 } # outside the editor Ctrl-Z is md's suspend
       fired = 0
       probe.on(Crysterm::Event::Triggered) { fired += 1 }
       menu(app, 1) << probe
@@ -157,7 +159,8 @@ describe "Md::App shortcuts" do
       app.show_pane(Md::App::Pane::Viewer).focus
       press window, Tput::Key::CtrlZ
       press window, Tput::Key::CtrlK
-      fired.should eq 2
+      fired.should eq 1 # Ctrl-K; Ctrl-Z was md's own key first
+      suspended.should eq 1
     end
   end
 
@@ -174,6 +177,28 @@ describe "Md::App shortcuts" do
       e.accepted?.should be_true
       Crysterm::Application.quit_gesture?(window, e).should be_false
       choice(window, "Cancel").try &.click
+    end
+  end
+end
+
+describe "Md::App suspend" do
+  it "suspends on Ctrl-Z outside the editor, and leaves the editor its undo" do
+    with_app Md::Source.new, text: SHORTCUT_DOC, view: true do |app, window|
+      suspended = 0
+      app.suspender = -> { suspended += 1 }
+      press(window, Tput::Key::CtrlZ).accepted?.should be_true
+      suspended.should eq 1
+      app.show_pane(Md::App::Pane::Toc).focus
+      press window, Tput::Key::CtrlZ
+      suspended.should eq 2
+
+      app.show_pane(Md::App::Pane::Editor).focus
+      app.editor.cursor_position = app.editor.document.size
+      press window, 'x'
+      app.editor.value.should contain "x"
+      press window, Tput::Key::CtrlZ
+      app.editor.value.should_not contain "x"
+      suspended.should eq 2
     end
   end
 end

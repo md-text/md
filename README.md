@@ -88,6 +88,7 @@ until you scroll up.
 | `Space`, `Enter`   | In the viewer, read on by a page or by a line (arrows, `PageUp`/`PageDown`, `Home`/`End` as usual) |
 | `Insert`           | Toggle the editor between inserting and overwriting (the `INS`/`OVR` field) |
 | `F5`               | Cycle the mouse mode (the `🖱=` field)                                    |
+| `Ctrl-Z`           | Outside the editor, suspend md to the shell (`fg` resumes); in the editor, undo |
 | `Alt-F`, `Alt-E`, `Alt-V`, `Alt-O` | Open the File, Edit, View and Options menus (`F10` too)   |
 | `Ctrl-O`           | Open a file; asks for the name (File → Open…)                             |
 | `Ctrl-R`           | Reload the file from disk (File → Reload)                                 |
