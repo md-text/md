@@ -92,7 +92,9 @@ editor shown; a file or a stream starts with only the viewer (`--edit` and
 line `N`, as `less +N` and `vim +N` do — past the end lands on the last line,
 and a bare `+` is the end — instead of the position md remembers for the
 file. Show any combination you like; the viewer re-renders as you type, and the table of
-contents follows the document's headings. A document arriving on standard
+contents follows the document's headings and keeps the heading you are
+under highlighted as you move through either pane — or its nearest shown
+parent while that branch is folded. A document arriving on standard
 input is rendered as it comes in, and the viewer keeps scrolling to the end
 until you scroll up.
 

@@ -196,18 +196,33 @@ describe "Md::App go to line and headings" do
     end
   end
 
-  it "expands a collapsed table of contents branch to select the heading jumped to" do
+  it "keeps the table of contents on the heading the caret is under, in either pane" do
     with_app Md::Source.new, text: SEARCH_DOC, view: false do |app, window|
       app.show_pane Md::App::Pane::Viewer
-      app.viewer.focus
       window.repaint
+      plain = app.viewer.document.plain_text
+      # The editor leads while it has the focus: its caret's source line,
+      # mapped to the viewer's document.
+      app.editor.focus
+      app.editor.text_cursor = Crysterm::TextCursor.new(app.editor.document, app.markdown.index!("No match"))
+      app.toc.selected_node.try(&.text).should eq "Beta"
+      app.editor.text_cursor = Crysterm::TextCursor.new(app.editor.document, app.markdown.index!("A last"))
+      app.toc.selected_node.try(&.text).should eq "Gamma"
+      # The viewer leads otherwise.
+      app.viewer.focus
+      app.viewer.text_cursor = Crysterm::TextCursor.new(app.viewer.document, plain.index!("Needle"))
+      app.toc.selected_node.try(&.text).should eq "Alpha"
+      # A collapsed branch keeps the highlight on its shown ancestor, and
+      # stays collapsed.
       alpha = app.toc.nodes[0]
-      alpha.text.should eq "Alpha"
       app.toc.collapse alpha
       app.toc.nodes.map(&.text).should eq ["Alpha"]
-      app.jump_heading(1).should be_true
-      alpha.expanded?.should be_true
-      app.toc.selected_node.try(&.text).should eq "Beta"
+      app.viewer.text_cursor = Crysterm::TextCursor.new(app.viewer.document, plain.index!("No match"))
+      alpha.expanded?.should be_false
+      app.toc.selected_node.try(&.text).should eq "Alpha"
+      app.jump_heading(1).should be_true # to Gamma: still under the collapsed Alpha
+      alpha.expanded?.should be_false
+      app.toc.selected_node.try(&.text).should eq "Alpha"
     end
   end
 end

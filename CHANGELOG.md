@@ -182,6 +182,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   panes away, to resize its panes in proportion and with stretch factors, to
   save and restore its state, to keep its dividers off the Tab chain, and to
   lock them, `Splitter#resizable`.)
+- The table of contents follows the reading position: the entry of the
+  heading the caret is under — the editor's caret while editing, the
+  viewer's otherwise — is selected as you move, or its nearest shown parent
+  while the branch is collapsed; a heading jump no longer selects its entry
+  specially. (Crysterm's `TocView` learnt `track`.)
 - The pane keys are `F1`, `F2` and `F3` (editor, viewer, table of contents),
   and `F4` hides the menu bar and the status bar together and brings them
   back (View → Menu and Status Bars, kept in the settings as `bars`): the

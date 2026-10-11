@@ -418,8 +418,8 @@ module Md
 
     # Jumps to the heading after the caret (`dir` 1) or before it (-1), in
     # both panes: the viewer lands with the heading on its top row as a
-    # table of contents jump does, the editor on the heading's source line,
-    # and the table of contents selects the heading's entry (`#select_toc_entry`).
+    # table of contents jump does, the editor on the heading's source line;
+    # the table of contents follows as it does any move (`#track_toc`).
     # Returns whether there was one.
     def jump_heading(dir : Int32) : Bool
       vdoc = @viewer.document
@@ -442,26 +442,7 @@ module Md
         @editor.text_cursor = Crysterm::TextCursor.new(@editor.document, editor_position(@viewer.cursor_position))
         align_rows @viewer, @editor if @viewer.visible?
       end
-      select_toc_entry entry.anchor
       true
-    end
-
-    # Selects the table of contents entry for the heading at *anchor*, as
-    # picking it there would leave it, with any collapsed parent expanded
-    # so the entry is a row; the selection fires no jump (only activating an
-    # entry does). Nothing happens for an anchor the outline lacks.
-    private def select_toc_entry(anchor : String) : Nil
-      found = nil.as(Crysterm::Widget::Tree::Node?)
-      @toc.each_node { |n| found ||= n if n.data == anchor }
-      return unless node = found
-      parent = node.parent
-      while parent
-        @toc.expand parent unless parent.expanded?
-        parent = parent.parent
-      end
-      if row = @toc.nodes.index(node)
-        @toc.current_index = row
-      end
     end
 
     # The search's overlay on *pane*, remade from the current text — after

@@ -241,8 +241,14 @@ module Md
       @editor.on(Crysterm::Event::TextChanged) { edited unless @loading }
       # The focused pane leads; the other pane's caret, set programmatically
       # to follow, reports a move too, which this guard keeps from bouncing.
-      @editor.on(Crysterm::Event::CursorPositionChanged) { sync_to_editor if @editor.focused? }
-      @viewer.on(Crysterm::Event::CursorPositionChanged) { sync_to_viewer if @viewer.focused? }
+      @editor.on(Crysterm::Event::CursorPositionChanged) do
+        sync_to_editor if @editor.focused?
+        track_toc
+      end
+      @viewer.on(Crysterm::Event::CursorPositionChanged) do
+        sync_to_viewer if @viewer.focused?
+        track_toc
+      end
       @toc.on(Crysterm::Event::AnchorClick) { |e| jump_to e.url }
       wire_links
       wire_editing
@@ -459,6 +465,18 @@ module Md
       pos = editor_position(@viewer.cursor_position)
       @editor.text_cursor = Crysterm::TextCursor.new(@editor.document, pos)
       align_rows @viewer, @editor
+    end
+
+    # Keeps the table of contents on the heading the reader is under
+    # (`TocView#track`, an outline view's "synchronize with editor"): the
+    # section the editor's caret is in while editing — its source position
+    # mapped to the viewer's — and the viewer's caret otherwise, so the entry
+    # of the heading above the caret is selected, or its nearest shown
+    # ancestor while the branch is collapsed. From the panes' caret handlers;
+    # a selection, not a jump, so nothing moves but the highlight.
+    private def track_toc : Nil
+      pos = @editor.focused? ? viewer_position(@editor.cursor_position) : @viewer.cursor_position
+      @toc.track pos
     end
 
     # Scrolls *follower* so its caret sits on the same viewport row as
