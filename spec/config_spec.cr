@@ -69,8 +69,8 @@ describe Md::Config do
         text.should start_with "# md's settings"
         file = config_file(path)
         file["md"]["vertical_ruler"].as_bool.should be_true # the file's own entry
-        file["md"]["sync_cursor"].as_bool.should be_true # the pick
-        file["md"]["guides"]?.should be_nil              # a default
+        file["md"]["sync_cursor"].as_bool.should be_true    # the pick
+        file["md"]["guides"]?.should be_nil                 # a default
         file["colors"]?.should be_nil
       end
     end
