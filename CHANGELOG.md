@@ -60,6 +60,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - File → Open Recent lists the recently opened files, and the position in
   each is remembered and restored when it is opened again, in
   `$XDG_STATE_HOME/md/history.json` (`~/.local/state/md/history.json`).
+- Links go somewhere: a relative or `file:` link to a Markdown file opens
+  it in the same window (through the unsaved-changes guard, landing on the
+  heading its `#fragment` names), a `#heading` link jumps to the heading,
+  and `http:`, `mailto:` and other external links — and existing files that
+  are not Markdown — open with the system's `open` (macOS) or `xdg-open`.
+  Edit → Back (`Alt-Left`; `Backspace` in the viewer and the table of
+  contents) retraces the links followed and the files opened, to the file
+  and position left; Edit → Forward (`Alt-Right`) undoes a Back.
 - Settings kept across runs: View → Follow cursor and Highlight line,
   Options → Ask before discarding changes and the mouse mode are restored at
   start and written at exit to `$XDG_CONFIG_HOME/md/settings.json`

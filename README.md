@@ -96,6 +96,8 @@ until you scroll up.
 | `Ctrl-G`, `Alt-G`, `n`, `N` | Next and previous match (`n` and `N` outside the editor)         |
 | `Ctrl-L`, `:`      | Go to a source line; asks for the number (`:` outside the editor)         |
 | `Alt-Down`, `Alt-Up`, `]`, `[` | Jump to the next and previous heading (`]` and `[` outside the editor) |
+| `Backspace`        | Outside the editor, go back to where you were before the last link or open (Edit → Back) |
+| `Alt-Left`, `Alt-Right` | Back and Forward (Edit → Back, Forward); in the editor and the viewer these move by word instead |
 | `Ctrl-Q`           | Quit (`q` too, anywhere but in the editor); asks first when changes are unsaved |
 
 The editor has the usual editing keys: arrows and `Home`/`End`, `Shift` +
@@ -160,6 +162,30 @@ you: the file is polled once a second and reloaded when another program
 changed it, so md beside an editor shows each save as it happens. While the
 editor holds unsaved changes the reload is skipped and a notice says the
 file changed on disk. The status bar shows `(watching)` after the name.
+
+### Following links
+
+In the viewer, `Tab` moves between the document's links and `Enter` follows
+the focused one (a mouse click does too). Where a link leads depends on what
+it names. A `#heading` scrolls to that heading, as the table of contents
+does. A relative path, or a `file:` URL, counts from the document's
+directory (the working directory for a document without a file); when it
+names a Markdown file — by extension: `.md`, `.markdown`, `.mdown`, `.mkd`,
+`.mkdn`, `.mdwn` — the file opens in the same window, landing on the
+heading a `#fragment` after the name points at. Any other link — `http:`,
+`https:`, `mailto:`, or an existing file that is not Markdown, such as an
+image or a PDF — is handed to the system to open with whatever handles it:
+`open` on macOS, `xdg-open` elsewhere. A link to a file that does not exist
+only gets a notice.
+
+Every link followed is a step you can retrace: `Backspace` in the viewer or
+the table of contents goes back to the file and position you came from
+(Edit → Back, `Alt-Left`, works from the menu too), and Edit → Forward
+(`Alt-Right`) undoes a Back. Opening a file from File → Open… or Open Recent
+over the one shown is a step as well, and so is a jump from the table of
+contents. Going back to another file asks about unsaved changes like any
+open. In the editor and the viewer `Alt-Left` and `Alt-Right` keep moving
+the cursor by word, so the menu and `Backspace` are the way back from there.
 
 ### Unsaved changes
 
@@ -252,6 +278,9 @@ src/md/source.cr      where the document comes from (file, stdin, nothing)
 src/md/app.cr         the Crysterm application: window, panes, keys, streaming
 src/md/app_status.cr  the status bar fields, the mouse modes
 src/md/app_menu.cr    the menu bar
+src/md/app_search.cr  search, go to line, heading jumps
+src/md/app_file.cr    open, reload, watch; the unsaved-changes guard; recent files
+src/md/app_links.cr   following links; Back and Forward
 src/md/app_settings.cr the View and Options choices kept across runs
 src/md/settings.cr    the settings store (~/.config/md/settings.json)
 src/md/history.cr     the recent files and positions (~/.local/state/md/history.json)

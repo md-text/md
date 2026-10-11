@@ -39,6 +39,7 @@ module Md
       edit.add_action("Clear &Highlight") { clear_search_highlight }
       edit.add_separator
       edit.add_action("&Go to Line…") { go_to_line_prompt }
+      add_navigation_actions edit
 
       view = bar.add_menu "&View"
       Pane.each do |pane|

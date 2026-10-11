@@ -202,6 +202,7 @@ module Md
       @editor.on(Crysterm::Event::CursorPositionChanged) { follow_editor if @editor.focused? }
       @viewer.on(Crysterm::Event::CursorPositionChanged) { follow_viewer if @viewer.focused? }
       @toc.on(Crysterm::Event::AnchorClick) { |e| jump_to e.url }
+      wire_links
       # A followed link may replace the viewer's document; keep the outline on
       # the document actually shown.
       @viewer.on(Crysterm::Event::SourceChanged) do
@@ -280,16 +281,10 @@ module Md
 
     # Jumps to the heading *url* names (`"#anchor"`, as the table of contents
     # emits): the viewer goes to the heading, and the editor to the source
-    # line it was rendered from, on the same viewport row. Both panes move
-    # whether or not they follow each other: a jump is an explicit move, not
-    # a caret drifting along. A hidden editor is left alone, like a hidden
-    # pane when following.
+    # line it was rendered from, on the same viewport row — a link followed,
+    # which Back undoes (`app_links.cr`).
     def jump_to(url : String) : Nil
-      @viewer.activate_link url
-      return unless @editor.visible?
-      pos = editor_position(@viewer.cursor_position)
-      @editor.text_cursor = Crysterm::TextCursor.new(@editor.document, pos)
-      align_rows @viewer, @editor if @viewer.visible?
+      follow_link url
     end
 
     def follow_cursor? : Bool
@@ -548,7 +543,7 @@ module Md
       when .ctrl_s? then save
       when .ctrl_o? then open_prompt
       when .ctrl_r? then reload
-      else               return search_key key
+      else               return navigation_key(key) || search_key(key)
       end
       true
     end

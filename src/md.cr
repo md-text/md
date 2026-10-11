@@ -13,6 +13,7 @@ require "./md/app_menu"
 require "./md/app_search"
 require "./md/app_file"
 require "./md/app_settings"
+require "./md/app_links"
 
 module Md
 end

@@ -1,0 +1,221 @@
+require "./spec_helper"
+require "file_utils"
+
+private def headless_window
+  Crysterm::Window.new input: IO::Memory.new, output: IO::Memory.new, width: 100, height: 30
+end
+
+private def with_app(source = Md::Source.new, text = "", view = !text.empty?, &)
+  window = headless_window
+  begin
+    yield Md::App.new(source, text: text, view: view, window: window), window
+  ensure
+    window.destroy
+  end
+end
+
+private def press(window, key : Tput::Key)
+  window.emit Crysterm::Event::KeyPress, Crysterm::Event::KeyPress.new('\0', key)
+end
+
+private def notice(app)
+  app.main.status_bar.message
+end
+
+# The unsaved-changes dialog's button labelled *text*, if the dialog is up.
+private def choice(window, text)
+  window.descendants.select(Crysterm::Widget::Button).find { |b| b.text == text && b.visible? }
+end
+
+private def choose(window, text)
+  (choice(window, text) || fail("no #{text} button is up")).click
+end
+
+private def settle(timeout = 2.seconds, &)
+  deadline = Time.instant + timeout
+  until yield
+    raise "the condition was not met within #{timeout}" if Time.instant > deadline
+    sleep 10.milliseconds
+  end
+end
+
+# The Edit menu's Back and Forward entries.
+private def navigation(app)
+  actions = app.main.menu_bar.menus[1].actions
+  {actions.find! { |a| a.text == "&Back" }, actions.find! { |a| a.text == "For&ward" }}
+end
+
+# A directory with two linked documents; yields their paths.
+private def with_docs(&)
+  dir = File.tempname("md-spec-links")
+  Dir.mkdir_p dir
+  source = File.join(dir, "source.md")
+  target = File.join(dir, "docs", "target.md")
+  Dir.mkdir_p File.dirname(target)
+  File.write source, SOURCE_DOC
+  File.write target, TARGET_DOC
+  File.write File.join(dir, "picture.png"), "not really a picture"
+  yield dir, source, target
+ensure
+  FileUtils.rm_rf dir if dir
+end
+
+SOURCE_DOC = <<-MD
+  # Source
+
+  See [the target](docs/target.md), [its section](docs/target.md#deep),
+  [the site](https://example.com/page), [a picture](picture.png),
+  [a missing one](nowhere.md) and [the end](#the-end).
+
+  Padding.
+
+  ## The end
+
+  Done.
+
+  MD
+
+TARGET_DOC = <<-MD
+  # Target
+
+  Intro.
+
+  ## Deep
+
+  Down here.
+
+  MD
+
+describe "Md::App links" do
+  it "opens a relative Markdown link in the same window, and Backspace returns to the place left" do
+    with_docs do |_dir, source, target|
+      with_app Md::Source.new(path: source), text: SOURCE_DOC, view: true do |app, window|
+        app.show_pane Md::App::Pane::Editor
+        app.viewer.focus
+        window.repaint
+        back, forward = navigation(app)
+        back.enabled?.should be_false
+        app.go_to_line 7
+        app.viewer.activate_link "docs/target.md" # Enter on the link, with the viewer's event
+        app.source.path.should eq target
+        app.markdown.should eq TARGET_DOC
+        app.title.should eq "md - #{target}"
+        app.visible_panes.should eq [Md::App::Pane::Editor, Md::App::Pane::Viewer]
+        back.enabled?.should be_true
+        forward.enabled?.should be_false
+        app.back_available?.should be_true
+
+        press window, Tput::Key::Backspace
+        app.source.path.should eq source
+        app.editor.text_cursor.block_number.should eq 6
+        app.viewer.document.plain_text[app.viewer.cursor_position, 7].should eq "Padding"
+        back.enabled?.should be_false
+        forward.enabled?.should be_true
+
+        app.go_forward.should be_true
+        app.source.path.should eq target
+        forward.enabled?.should be_false
+        back.enabled?.should be_true
+        app.go_forward.should be_false
+        notice(app).should contain "Nothing to go forward to"
+      end
+    end
+  end
+
+  it "lands on the heading a relative link's fragment names" do
+    with_docs do |_dir, source, target|
+      with_app Md::Source.new(path: source), text: SOURCE_DOC, view: true do |app|
+        app.show_pane Md::App::Pane::Editor
+        app.viewer.focus
+        app.follow_link "docs/target.md#deep"
+        app.source.path.should eq target
+        app.viewer.document.plain_text[app.viewer.cursor_position, 4].should eq "Deep"
+        app.editor.text_cursor.block_number.should eq 4
+        app.go_back.should be_true
+        app.source.path.should eq source
+      end
+    end
+  end
+
+  it "hands an external link to the opener and keeps the document" do
+    with_docs do |_dir, source, _target|
+      with_app Md::Source.new(path: source), text: SOURCE_DOC, view: true do |app|
+        opened = [] of String
+        app.url_opener = ->(url : String) { opened << url; nil }
+        app.viewer.activate_link "https://example.com/page"
+        opened.should eq ["https://example.com/page"]
+        app.source.path.should eq source
+        app.markdown.should eq SOURCE_DOC
+        notice(app).should contain "Opening https://example.com/page"
+        app.back_available?.should be_false
+
+        app.follow_link "mailto:someone@example.com"
+        opened.last.should eq "mailto:someone@example.com"
+
+        # An existing file that is not Markdown goes the same way, by path.
+        app.follow_link "picture.png"
+        opened.last.should eq File.join(File.dirname(source), "picture.png")
+
+        app.url_opener = ->(url : String) { raise File::NotFoundError.new("no opener", file: url) }
+        app.follow_link "https://example.com/other"
+        notice(app).should contain "Cannot open URL: no opener"
+      end
+    end
+  end
+
+  it "notices a link to a file that does not exist" do
+    with_docs do |_dir, source, _target|
+      with_app Md::Source.new(path: source), text: SOURCE_DOC, view: true do |app|
+        app.follow_link "nowhere.md"
+        notice(app).should contain "No such file: #{File.join(File.dirname(source), "nowhere.md")}"
+        app.source.path.should eq source
+        app.back_available?.should be_false
+      end
+    end
+  end
+
+  it "treats a heading jump as a step, and Backspace in the table of contents goes back too" do
+    with_docs do |_dir, source, _target|
+      with_app Md::Source.new(path: source), text: SOURCE_DOC, view: true do |app, window|
+        app.show_pane(Md::App::Pane::Toc).focus
+        app.jump_to "#the-end"
+        app.viewer.document.plain_text[app.viewer.cursor_position, 7].should eq "The end"
+        app.back_available?.should be_true
+        press window, Tput::Key::Backspace
+        app.viewer.cursor_position.should eq 0
+        app.back_available?.should be_false
+        press window, Tput::Key::Backspace
+        notice(app).should contain "Nothing to go back to"
+
+        # The menu entries' shortcuts, live wherever the focused pane leaves the keys alone.
+        press window, Tput::Key::AltRight
+        app.viewer.document.plain_text[app.viewer.cursor_position, 7].should eq "The end"
+        press window, Tput::Key::AltLeft
+        app.viewer.cursor_position.should eq 0
+      end
+    end
+  end
+
+  it "asks about unsaved changes before leaving for a linked file, and records opens" do
+    with_docs do |_dir, source, target|
+      with_app Md::Source.new(path: source), text: SOURCE_DOC, view: true do |app, window|
+        app.show_pane(Md::App::Pane::Editor).focus
+        app.editor.cursor_position = 0
+        app.editor.insert_text "typed "
+        app.follow_link "docs/target.md"
+        choose window, "Cancel"
+        sleep 50.milliseconds
+        app.source.path.should eq source
+        app.follow_link "docs/target.md"
+        choose window, "Don't save"
+        settle { app.source.path == target }
+
+        # File → Open over a file is a step as well.
+        app.open_file source
+        app.back_available?.should be_true
+        app.go_back
+        app.source.path.should eq target
+      end
+    end
+  end
+end

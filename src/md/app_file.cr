@@ -90,6 +90,7 @@ module Md
       path = File.expand_path path
       text = File.exists?(path) ? File.read(path) : nil
       remember_position
+      leave_document
       abandon_stream
       @source = Source.new path: path
       @window.title = title
