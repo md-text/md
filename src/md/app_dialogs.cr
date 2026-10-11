@@ -113,10 +113,12 @@ module Md
     # The prompt in place of the status bar. With the bars hidden (`F4`,
     # `#bars?`) the status bar is shown for the question and hidden again
     # once it is answered or given up (`#wire_prompt_bar`), the way an
-    # editor's command line appears over a full-screen view.
+    # editor's command line appears over a full-screen view. The bar is
+    # shown after the prompt opens: opening cancels a question still up,
+    # whose end would hide the bar again.
     private def status_prompt(label : String, value : String, &callback : String? ->) : Nil
-      @main.status_bar.show unless @bars.value
       @main.status_bar.prompt(label, value, &callback)
+      @main.status_bar.show unless @bars.value
     end
 
     # Hides the status bar again after a prompt that showed it (from

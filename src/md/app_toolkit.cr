@@ -123,7 +123,7 @@ module Md
       case policy
       in .auto? then "&When the Terminal Supports Them"
       in .on?   then "&Always"
-      in .off?  then "&Never (No Links)"
+      in .off?  then "&Never"
       end
     end
   end

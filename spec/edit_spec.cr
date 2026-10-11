@@ -241,6 +241,9 @@ describe "Md::App editing" do
       place app, 2, 0
       format.emit Crysterm::Event::AboutToShow
       task.checked?.should be_false # no item
+      task.trigger
+      task.checked?.should be_false # nothing to flip: the check stays off
+      notice(app).should contain "Not a list item"
     end
   end
 

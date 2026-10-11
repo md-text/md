@@ -486,7 +486,9 @@ module Md
       # The check is the caret's item's, read as the menu opens; picking the
       # entry flips it and the box with it.
       task = Crysterm::Action.new "&Task", checkable: true
-      task.on(Crysterm::Event::Triggered) { toggle_task_box }
+      # Off a list item nothing changes, and the check flipped by the pick
+      # is put back.
+      task.on(Crysterm::Event::Triggered) { refresh_task_entry unless toggle_task_box }
       format.add_action task
       @task_action = task
       format.on(Crysterm::Event::AboutToShow) { refresh_task_entry }

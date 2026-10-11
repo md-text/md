@@ -241,13 +241,17 @@ module Md
       @editor.on(Crysterm::Event::TextChanged) { edited unless @loading }
       # The focused pane leads; the other pane's caret, set programmatically
       # to follow, reports a move too, which this guard keeps from bouncing.
+      # The table of contents follows the leading pane's caret too: the
+      # editor's while it has the focus, the viewer's otherwise.
       @editor.on(Crysterm::Event::CursorPositionChanged) do
-        sync_to_editor if @editor.focused?
-        track_toc
+        if @editor.focused?
+          sync_to_editor
+          track_toc
+        end
       end
       @viewer.on(Crysterm::Event::CursorPositionChanged) do
         sync_to_viewer if @viewer.focused?
-        track_toc
+        track_toc unless @editor.focused?
       end
       @toc.on(Crysterm::Event::AnchorClick) { |e| jump_to e.url }
       wire_links
@@ -357,7 +361,6 @@ module Md
     private def apply_bars : Nil
       shown = @bars.value
       {@main.menu_bar, @main.status_bar}.each { |bar| shown ? bar.show : bar.hide }
-      @window.update
     end
 
     # Jumps to the heading *url* names (`"#anchor"`, as the table of contents

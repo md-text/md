@@ -60,6 +60,9 @@ describe "Md::App menu and status bars" do
 
       app.go_to_line_prompt
       app.main.status_bar.visible?.should be_true
+      app.open_prompt # a question over a question: the bar stays
+      app.main.status_bar.visible?.should be_true
+      question(app).should eq "Open: "
       app.main.status_bar.line_prompt.cancel
       app.main.status_bar.visible?.should be_false
 
