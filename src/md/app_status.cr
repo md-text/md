@@ -154,10 +154,17 @@ module Md
       @main.glyph_str Crysterm::Glyphs::Role::IconMouse
     end
 
-    # The document's name as the status bar shows it, with its state.
+    # The document's name as the status bar shows it, with its state:
+    # streaming in, or watched on disk.
     private def name_text : String
       name = @source.name || "[No Name]"
-      streaming? ? "#{name} (streaming)" : name
+      if streaming?
+        "#{name} (streaming)"
+      elsif @watcher
+        "#{name} (watching)"
+      else
+        name
+      end
     end
 
     # The caret's line and column while editing; while reading, the

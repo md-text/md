@@ -14,6 +14,7 @@ module Md
       positional = [] of String
       help = false
       verbose = false
+      watch = false
       # md's own usage text, captured before the Crysterm toolkit flags are
       # registered below so that they never appear in help or usage errors.
       help_text : String? = nil
@@ -28,7 +29,8 @@ module Md
         document as it streams in.
 
         Keys: F2 editor, F3 viewer, F4 table of contents (show/focus, or hide
-        when focused), Tab next pane, Ctrl-S save, Ctrl-Q quit.
+        when focused), Tab next pane, Ctrl-O open, Ctrl-S save, Ctrl-F find,
+        Ctrl-L go to line, Ctrl-Q quit; F10 or Alt-F for the menus.
 
         Options:
         BANNER
@@ -43,6 +45,9 @@ module Md
       end
       parser.on("-v", "--verbose", "Be more verbose (with --help: also list the\nCrysterm toolkit options)") do
         verbose = true
+      end
+      parser.on("-w", "--watch", "Reload FILE as it changes on disk (View → Watch file)") do
+        watch = true
       end
       parser.invalid_option do |flag|
         stderr.puts "md: unknown option: #{flag}"
@@ -62,7 +67,7 @@ module Md
       # them; this parser gets the arguments with them taken out, so they are
       # neither reported as unknown nor mistaken for a file. md's own flags
       # take precedence over a toolkit flag of the same name.
-      own_flags = Set{"-V", "--version", "-h", "--help", "-v", "--verbose"}
+      own_flags = Set{"-V", "--version", "-h", "--help", "-v", "--verbose", "-w", "--watch"}
       parser.parse Crysterm.strip_toolkit_args(args, except: own_flags)
 
       if help
@@ -79,7 +84,7 @@ module Md
 
       source = Source.resolve(positional, STDIN.tty?)
       log_to_file
-      launch(source).run
+      launch(source, watch).run
     rescue ex : ArgumentError
       stderr.puts "md: #{ex.message}"
       stderr.puts(help_text || parser)
@@ -105,19 +110,21 @@ module Md
 
     # Builds the application for *source*: a stream from standard input, an
     # existing file in view mode, or an empty editor (named after a file
-    # that does not exist yet, or unnamed).
-    private def self.launch(source : Source) : App
+    # that does not exist yet, or unnamed). The history of recent files and
+    # positions comes along; *watch* follows the file from the start.
+    private def self.launch(source : Source, watch : Bool = false) : App
+      history = History.load
       if source.stdin?
-        App.new source, stream: STDIN
+        App.new source, stream: STDIN, history: history
       elsif (path = source.path) && File.exists?(path)
         text = begin
           File.read path
         rescue ex : IO::Error
           raise Error.new("cannot read #{path}: #{ex.message}")
         end
-        App.new source, text: text, view: true
+        App.new source, text: text, view: true, history: history, watch: watch
       else
-        App.new source
+        App.new source, history: history, watch: watch
       end
     end
   end

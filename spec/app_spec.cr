@@ -317,12 +317,14 @@ private def menu(app, index)
 end
 
 describe "Md::App menus" do
-  it "has File, View and Options menus" do
+  it "has File, Edit, View and Options menus" do
     with_app do |app|
-      app.main.menu_bar.menus.size.should eq 3
-      menu(app, 0).actions.map(&.text).should eq ["&Save", "Save &As…", "", "&Quit"]
-      menu(app, 1).actions.map(&.text).should eq ["&Editor", "&Viewer", "&Table of contents", "", "&Follow cursor", "&Highlight line"]
-      menu(app, 2).actions.map(&.text).should eq ["&Overwrite mode", "&Mouse"]
+      app.main.menu_bar.menus.size.should eq 4
+      menu(app, 0).actions.map(&.text).should eq ["&Open…", "Open &Recent", "&Reload", "", "&Save", "Save &As…", "", "&Quit"]
+      menu(app, 0).actions[1].enabled?.should be_false # no history, nothing recent
+      menu(app, 1).actions.map(&.text).should eq ["&Find…", "Find &Next", "Find &Previous", "Clear &Highlight", "", "&Go to Line…"]
+      menu(app, 2).actions.map(&.text).should eq ["&Editor", "&Viewer", "&Table of contents", "", "&Follow cursor", "&Highlight line", "", "&Watch file"]
+      menu(app, 3).actions.map(&.text).should eq ["&Overwrite mode", "&Ask before discarding changes", "&Mouse"]
     end
   end
 
@@ -330,13 +332,13 @@ describe "Md::App menus" do
     with_app do |_, window|
       window.repaint
       row = window.dump.to_s.lines[2]
-      row.should match /\| File  View  Options +Menu = F10 \/ Alt-F \|$/
+      row.should match /\| File  Edit  View  Options +Menu = F10 \/ Alt-F \|$/
     end
   end
 
   it "shows and hides panes from the View menu, mirroring their state" do
     with_app do |app|
-      editor, viewer, toc = menu(app, 1).actions[0, 3]
+      editor, viewer, toc = menu(app, 2).actions[0, 3]
       editor.checked?.should be_true
       viewer.checked?.should be_false
       viewer.trigger
@@ -353,7 +355,10 @@ describe "Md::App menus" do
 
   it "sets the overwrite and mouse modes from the Options menu, in step with the status bar" do
     with_app do |app|
-      overwrite, mouse = menu(app, 2).actions
+      overwrite, confirm, mouse = menu(app, 3).actions
+      confirm.checked?.should be_true
+      confirm.trigger
+      app.confirm_discard?.should be_false
       overwrite.trigger
       app.editor.overwrite_mode?.should be_true
       app.editor.overwrite_mode = false

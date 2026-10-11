@@ -36,7 +36,7 @@ describe "Md::App highlight line" do
       plain = row_bg(window, app.editor, 0)
       row_bg(window, app.editor, 2).should eq plain
 
-      highlight = menu(app, 1).actions.last
+      highlight = menu(app, 2).actions[5]
       highlight.text.should eq "&Highlight line"
       highlight.checked?.should be_false
       highlight.trigger

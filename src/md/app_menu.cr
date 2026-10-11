@@ -1,25 +1,44 @@
 module Md
   class App
-    # The menu bar: File (save, quit), View (which panes are shown, whether
-    # the editor's and the viewer's carets follow each other, and whether
-    # the caret's line is highlighted) and
-    # Options (the two modes the status bar toggles — overwrite mode and the
-    # mouse mode — so every setting is reachable from the keyboard through
-    # the menus as well, `Alt-F`/`Alt-V`/`Alt-O` opening them). The checked
-    # states are bound to what they stand for (`Action#bind_checked`): the
-    # View settings and the mouse mode are reactive properties, the pane
+    # The menu bar: File (open, the recent files, reload, save, quit), Edit
+    # (find, repeat the find, go to a line), View (which panes are shown,
+    # whether the editor's and the viewer's carets follow each other,
+    # whether the caret's line is highlighted, and whether the file is
+    # watched) and Options (the two modes the status bar toggles — overwrite
+    # mode and the mouse mode — and the unsaved-changes guard, so every
+    # setting is reachable from the keyboard through the menus as well,
+    # `Alt-F`/`Alt-E`/`Alt-V`/`Alt-O` opening them). The checked states are
+    # bound to what they stand for (`Action#bind_checked`): the View and
+    # Options settings and the mouse mode are reactive properties, the pane
     # entries follow the panes, and the overwrite entry follows the editor.
-    # Only the pane entries' enabled state is re-synced by `#refresh_menus`.
+    # Only the pane entries' enabled state is re-synced by `#refresh_menus`;
+    # the recent files are remade by `#refresh_recent_menu`.
     @view_actions = {} of Pane => Crysterm::Action
 
     private def build_menus : Nil
       bar = @main.menu_bar
 
       file = bar.add_menu "&File"
+      file.add_action("&Open…") { open_prompt }
+      # Filled from the history (`#refresh_recent_menu`); without one, an
+      # empty, disabled entry says the feature exists.
+      recent = file.add_submenu "Open &Recent"
+      recent.enabled = false
+      @recent_action = recent
+      file.add_action("&Reload") { reload }
+      file.add_separator
       file.add_action("&Save") { save }
       file.add_action("Save &As…") { save_as_prompt }
       file.add_separator
-      file.add_action("&Quit") { @window.quit }
+      file.add_action("&Quit") { quit }
+
+      edit = bar.add_menu "&Edit"
+      edit.add_action("&Find…") { search_prompt }
+      edit.add_action("Find &Next") { find_next }
+      edit.add_action("Find &Previous") { find_next reverse: true }
+      edit.add_action("Clear &Highlight") { clear_search_highlight }
+      edit.add_separator
+      edit.add_action("&Go to Line…") { go_to_line_prompt }
 
       view = bar.add_menu "&View"
       Pane.each do |pane|
@@ -39,12 +58,19 @@ module Md
       highlight = Crysterm::Action.new "&Highlight line", checkable: true
       highlight.bind_checked @highlight_line
       view.add_action highlight
+      view.add_separator
+      watch = Crysterm::Action.new "&Watch file", checkable: true
+      watch.bind_checked @watch_file
+      view.add_action watch
 
       options = bar.add_menu "&Options"
       overwrite = Crysterm::Action.new "&Overwrite mode", checkable: true
       overwrite.bind_checked(@editor, Crysterm::Event::OverwriteModeChanged) { @editor.overwrite_mode? }
       overwrite.on(Crysterm::Event::Triggered) { |e| @editor.overwrite_mode = e.checked }
       options.add_action overwrite
+      confirm = Crysterm::Action.new "&Ask before discarding changes", checkable: true
+      confirm.bind_checked @confirm_discard
+      options.add_action confirm
 
       # A radio group: exactly one mode is checked, and re-picking the checked
       # one keeps it.

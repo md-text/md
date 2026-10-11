@@ -37,12 +37,21 @@ module Md
   # in both panes (Crysterm's `highlight_current_line`) — with Follow
   # cursor, the two tinted rows are the same place in the document.
   #
+  # Searching, going to a line and jumping between headings are in
+  # `app_search.cr`; opening, reloading and watching the file, the guard
+  # against losing unsaved changes and the history of recent files in
+  # `app_file.cr`.
+  #
   # Keys: `F2`/`F3`/`F4` show and focus the editor/viewer/table of contents,
   # or hide it when it is already focused; `Tab` cycles focus between the
   # shown panes; `Insert` toggles overwrite mode in the editor; `F5` cycles
-  # the mouse mode; `Ctrl-S` saves; `Ctrl-Q` quits, and so does `q` outside
-  # the editor — Crysterm's default quit keys, with `q` kept live while a
-  # pane reads input (the editor consumes the `q` it inserts).
+  # the mouse mode; `Ctrl-S` saves, `Ctrl-O` opens, `Ctrl-R` reloads;
+  # `Ctrl-F` searches, `Ctrl-G`/`Alt-G` repeat the search, `Ctrl-L` goes to
+  # a line, `Alt-Up`/`Alt-Down` jump between headings, and outside the
+  # editor the pager keys `/`, `?`, `n`, `N`, `:`, `[` and `]` do the same;
+  # `Ctrl-Q` quits, and so does `q` outside the editor — Crysterm's default
+  # quit keys, with `q` kept live while a pane reads input (the editor
+  # consumes the `q` it inserts) — after the unsaved-changes guard.
   class App
     # The three panes of the central area, in layout order.
     enum Pane
@@ -98,9 +107,12 @@ module Md
     # Markdown; *stream* is an IO the document is read from instead, as it
     # arrives; *view* chooses the initially shown pane (viewer, else editor).
     # A *window* can be supplied (e.g. a headless one in specs); by default one
-    # is opened on the terminal.
+    # is opened on the terminal. With a *history*, the file's remembered
+    # position is restored and the recent files are offered and kept; with
+    # *watch*, the file is followed from the start (`--watch`).
     def initialize(@source : Source, text : String = "", stream : IO? = nil,
-                   view : Bool = !stream.nil? || !text.empty?, window : Crysterm::Window? = nil)
+                   view : Bool = !stream.nil? || !text.empty?, window : Crysterm::Window? = nil,
+                   @history : History? = nil, watch : Bool = false)
       @window = window || Crysterm::Window.new(title: title)
       @window.always_propagated_chars << 'q'
 
@@ -126,19 +138,15 @@ module Md
       layout.add_widget @viewer, stretch: 1
       layout.add_widget @toc
 
-      @editor.on(Crysterm::Event::TextChanged) { edited unless @loading }
-      # The focused pane leads; the other pane's caret, set programmatically
-      # to follow, reports a move too, which this guard keeps from bouncing.
-      @editor.on(Crysterm::Event::CursorPositionChanged) { follow_editor if @editor.focused? }
-      @viewer.on(Crysterm::Event::CursorPositionChanged) { follow_viewer if @viewer.focused? }
-      @toc.on(Crysterm::Event::AnchorClick) { |e| jump_to e.url }
-      # A followed link may replace the viewer's document; keep the outline on
-      # the document actually shown.
-      @viewer.on(Crysterm::Event::SourceChanged) do
-        doc = @viewer.document
-        @toc.document = doc unless @toc.document.same? doc
-      end
+      wire_panes
       @window.on(Crysterm::Event::KeyPress) { |e| key_pressed e }
+      # The default quit keys ask the window first; with unsaved changes the
+      # guard refuses and asks the user, quitting on their answer.
+      @window.on(Crysterm::Event::CloseRequest) do |e|
+        next unless @confirm_discard.value && @editor.document.modified?
+        e.ignore
+        confirm_discard { @window.quit }
+      end
       # A pane coming on screen is brought up to date first — the editor from
       # a stream it missed, the viewer and table of contents from edits made
       # while they were hidden — then the panes are aligned and the status
@@ -166,6 +174,10 @@ module Md
         @viewer.highlight_current_line = @highlight_line.value
         refresh_status
       end
+      @watch_file.on_change do
+        setup_file
+        refresh_status
+      end
 
       Pane.each { |pane| widget(pane).hide }
       load text unless text.empty?
@@ -173,6 +185,26 @@ module Md
       show_pane(view ? Pane::Viewer : Pane::Editor).focus
       build_menus
       build_status
+      restore_position
+      refresh_recent_menu
+      self.watch_file = watch
+    end
+
+    # The panes' own events: edits re-render, carets follow, the outline
+    # jumps and tracks the viewer's document.
+    private def wire_panes : Nil
+      @editor.on(Crysterm::Event::TextChanged) { edited unless @loading }
+      # The focused pane leads; the other pane's caret, set programmatically
+      # to follow, reports a move too, which this guard keeps from bouncing.
+      @editor.on(Crysterm::Event::CursorPositionChanged) { follow_editor if @editor.focused? }
+      @viewer.on(Crysterm::Event::CursorPositionChanged) { follow_viewer if @viewer.focused? }
+      @toc.on(Crysterm::Event::AnchorClick) { |e| jump_to e.url }
+      # A followed link may replace the viewer's document; keep the outline on
+      # the document actually shown.
+      @viewer.on(Crysterm::Event::SourceChanged) do
+        doc = @viewer.document
+        @toc.document = doc unless @toc.document.same? doc
+      end
     end
 
     # Runs the event loop until the user quits; returns the exit status.
@@ -180,7 +212,9 @@ module Md
       # A handler of md's that raises must not take the app down with unsaved
       # text in the editor: opt into Crysterm continuing, with a notice.
       @main.report_handler_errors(NOTICE_TIMEOUT) { |error| error_notice error }
-      @window.exec
+      status = @window.exec
+      save_history
+      status
     end
 
     # The window title: the program name and the document's, when it has one.
@@ -372,12 +406,17 @@ module Md
 
     # Asks for a file name in place of the status bar, the current name
     # filled in, and saves under the answer (`#save_as`); a cancelled or
-    # empty answer saves nothing.
-    def save_as_prompt : Nil
+    # empty answer saves nothing. *done* hears whether a save happened.
+    def save_as_prompt(&done : Bool ->) : Nil
       @main.status_bar.prompt("Save as: ", @source.path || "") do |answer|
         path = answer.try &.strip
-        save_as path if path && !path.empty?
+        done.call(path && !path.empty? ? save_as(path) : false)
       end
+    end
+
+    # :ditto:
+    def save_as_prompt : Nil
+      save_as_prompt { }
     end
 
     # Makes *path* the document's file and saves to it.
@@ -406,6 +445,7 @@ module Md
     # editor's text when the editor is shown. Must run on the render fiber
     # (see `Crysterm::Window#post`).
     def receive(chunk : String) : Nil
+      return if @stream_abandoned
       @streamed << chunk
       @viewer.append_markdown chunk
       append_to_editor chunk unless @editor_stale
@@ -429,9 +469,11 @@ module Md
 
     # Flushes whatever the stream left incomplete; the end-of-stream signal.
     def finish_stream : Nil
+      return if @stream_abandoned
       @viewer.flush_markdown
       @viewer.document.refresh_tocs
       @streaming = false
+      highlight_matches Pane::Viewer
       refresh_status
     end
 
@@ -441,6 +483,8 @@ module Md
       @loading = true
       @editor.plain_text = text
       @loading = false
+      @editor_stale = false
+      @streamed.clear
       @viewer.set_markdown text
       @viewer_stale = false
       text_changed
@@ -459,6 +503,7 @@ module Md
     private def edited : Nil
       @editor_stale = false
       text_changed
+      highlight_matches Pane::Editor
       if @viewer.visible? || @toc.visible?
         render_viewer
       else
@@ -472,6 +517,7 @@ module Md
     private def render_viewer : Nil
       @viewer.set_markdown markdown, keep_view: true
       @viewer_stale = false
+      highlight_matches Pane::Viewer
       # The viewer's caret kept its offset, not its place in the changed
       # text; an edit that left the editor's caret in place (a Delete)
       # reports no move to re-place it.
@@ -481,15 +527,57 @@ module Md
     # Application-level keys, after the focused widget had its turn.
     private def key_pressed(e : Crysterm::Event::KeyPress) : Nil
       return if e.accepted? || @main.status_bar.prompting?
-      case e.key
-      when Tput::Key::F2    then toggle_pane Pane::Editor
-      when Tput::Key::F3    then toggle_pane Pane::Viewer
-      when Tput::Key::F4    then toggle_pane Pane::Toc
-      when Tput::Key::F5    then cycle_mouse_mode
-      when Tput::Key::CtrlS then save
-      else                       return
+      # The pager's keys are letters the editor would have typed, so they
+      # reach here only from the viewer or the table of contents.
+      handled = (key = e.key) ? app_key(key) : pager_key(e.char)
+      e.accept if handled
+    end
+
+    # The application's special keys: the panes, the modes and the file;
+    # returns whether *key* was one, after the search keys had their turn.
+    private def app_key(key : Tput::Key) : Bool
+      case key
+      when .f2?     then toggle_pane Pane::Editor
+      when .f3?     then toggle_pane Pane::Viewer
+      when .f4?     then toggle_pane Pane::Toc
+      when .f5?     then cycle_mouse_mode
+      when .ctrl_s? then save
+      when .ctrl_o? then open_prompt
+      when .ctrl_r? then reload
+      else               return search_key key
       end
-      e.accept
+      true
+    end
+
+    # The search and jump keys (`app_search.cr`); returns whether *key* was one.
+    private def search_key(key : Tput::Key) : Bool
+      case key
+      when .ctrl_f?   then search_prompt
+      when .ctrl_g?   then find_next
+      when .alt_g?    then find_next reverse: true
+      when .ctrl_l?   then go_to_line_prompt
+      when .alt_up?   then jump_heading -1
+      when .alt_down? then jump_heading 1
+      else                 return false
+      end
+      true
+    end
+
+    # The pager keys of the viewer: `/` and `?` search, `n` and `N` repeat
+    # the search, `:` goes to a line, `[` and `]` jump between headings.
+    # Returns whether *char* was one.
+    private def pager_key(char : Char) : Bool
+      case char
+      when '/' then search_prompt
+      when '?' then search_prompt backward: true
+      when 'n' then find_next
+      when 'N' then find_next reverse: true
+      when ':' then go_to_line_prompt
+      when '[' then jump_heading -1
+      when ']' then jump_heading 1
+      else          return false
+      end
+      true
     end
   end
 end

@@ -65,6 +65,7 @@ See [Building from source](#building-from-source) below.
 md                    # open an empty editor
 md README.md          # open a file for viewing
 md notes.md           # a file that does not exist yet opens in the editor
+md --watch notes.md   # ...and reload it whenever it changes on disk
 md - < README.md      # read the document from standard input
 some-command | md     # follow output as it arrives (`-` is optional here)
 md --help             # list the options
@@ -87,9 +88,15 @@ until you scroll up.
 | `Space`, `Enter`   | In the viewer, read on by a page or by a line (arrows, `PageUp`/`PageDown`, `Home`/`End` as usual) |
 | `Insert`           | Toggle the editor between inserting and overwriting (the `INS`/`OVR` field) |
 | `F5`               | Cycle the mouse mode (the `🖱=` field)                                    |
-| `Alt-F`, `Alt-V`, `Alt-O` | Open the File, View and Options menus (`F10` too)                  |
+| `Alt-F`, `Alt-E`, `Alt-V`, `Alt-O` | Open the File, Edit, View and Options menus (`F10` too)   |
+| `Ctrl-O`           | Open a file; asks for the name (File → Open…)                             |
+| `Ctrl-R`           | Reload the file from disk (File → Reload)                                 |
 | `Ctrl-S`           | Save; without a file name yet, asks for one (File → Save As… always asks) |
-| `Ctrl-Q`           | Quit (`q` too, anywhere but in the editor)                                |
+| `Ctrl-F`, `/`, `?` | Search; asks for the pattern (`/` and `?` outside the editor, `?` backward) |
+| `Ctrl-G`, `Alt-G`, `n`, `N` | Next and previous match (`n` and `N` outside the editor)         |
+| `Ctrl-L`, `:`      | Go to a source line; asks for the number (`:` outside the editor)         |
+| `Alt-Down`, `Alt-Up`, `]`, `[` | Jump to the next and previous heading (`]` and `[` outside the editor) |
+| `Ctrl-Q`           | Quit (`q` too, anywhere but in the editor); asks first when changes are unsaved |
 
 The editor has the usual editing keys: arrows and `Home`/`End`, `Shift` +
 arrows to select, `Ctrl-Z`/`Alt-Z` to undo and redo, `Ctrl-K`/`Ctrl-Y` to kill
@@ -114,8 +121,52 @@ cycles the mouse modes, named after vi's `set mouse=` values:
 While the mouse does not work for md, the terminal's own text selection and
 copy work instead. With the mouse off you cannot click the field, so `F5`
 cycles the modes from the keyboard too, and the Options menu offers them as
-well, next to the overwrite mode. The File menu saves, saves as and quits;
-the View menu shows and hides the panes.
+well, next to the overwrite mode. The File menu opens, reloads, saves, saves
+as and quits, and lists the recently opened files; the Edit menu searches
+and goes to a line; the View menu shows and hides the panes.
+
+### Searching and jumping
+
+Searching works like a pager's: `/` asks for a pattern and finds it forward
+from the cursor, `?` backward, `n` repeats the search and `N` goes the other
+way (in the editor, where those are letters to type, use `Ctrl-F`, `Ctrl-G`
+and `Alt-G` instead; they work everywhere). The pane you are in is searched:
+the Markdown source in the editor, the rendered text in the viewer (or from
+the table of contents). The pattern is a regular expression when it is a
+valid one and plain text otherwise, and it ignores case unless it contains
+an uppercase letter, as vi's `smartcase` does. The search wraps around the
+end of the document with a notice. Every match is underlined in both panes
+and the current one is selected; Edit → Clear Highlight takes the underlines
+off, and `n` still knows the pattern.
+
+`:` (or `Ctrl-L`) asks for a source line number and puts both panes there;
+`0` and negative numbers count from the end. `]` and `[` (or `Alt-Down` and
+`Alt-Up`) jump to the next and previous heading, in both panes, with the
+heading on the viewer's top row as a table of contents jump lands.
+
+### Opening, reloading and watching
+
+File → Open… (`Ctrl-O`) asks for a file name the way Save As does, with
+`Tab` completion, and opens it: an existing file in the viewer, a new name as
+an empty document in the editor. A document streaming in from standard input
+is left behind. File → Open Recent lists the files you opened before, most
+recent first; md also remembers where you were in each and lands there when
+you open it again. The list lives in `$XDG_STATE_HOME/md/history.json`
+(`~/.local/state/md/history.json`).
+
+File → Reload (`Ctrl-R`) re-reads the file from disk, keeping the viewer's
+place. View → Watch file (or `--watch` on the command line) does that for
+you: the file is polled once a second and reloaded when another program
+changed it, so md beside an editor shows each save as it happens. While the
+editor holds unsaved changes the reload is skipped and a notice says the
+file changed on disk. The status bar shows `(watching)` after the name.
+
+### Unsaved changes
+
+Quitting, opening another file or reloading with unsaved changes asks first:
+*Save*, *Don't save* or *Cancel*. Saving a document without a name asks for
+one, and the action goes ahead once the save is done. Options → Ask before
+discarding changes turns the question off.
 
 The View menu also has *Follow cursor*: with it on, moving the cursor in the
 editor puts the viewer's cursor on the same place in the rendered document,

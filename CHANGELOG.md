@@ -40,6 +40,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   source line, so inside formatted text the spot is approximate.
 - View → Highlight line: tints the cursor's row in each pane; with Follow
   cursor on, the two tinted rows show the same place in the document.
+- Search, as in a pager: `/` and `?` (`Ctrl-F` in the editor) ask for a
+  pattern — a regular expression when it is one, literal text otherwise,
+  case-insensitive unless it has an uppercase letter — and `n`/`N`
+  (`Ctrl-G`/`Alt-G`) repeat it either way, wrapping around with a notice.
+  Matches are underlined in both panes and the current one is selected;
+  Edit → Clear Highlight takes the underlines off. `:` (`Ctrl-L`) goes to a
+  source line in both panes, `]` and `[` (`Alt-Down`/`Alt-Up`) to the next
+  and previous heading.
+- File → Open… (`Ctrl-O`) opens another file, asked for in place of the
+  status bar with completion like Save As; File → Reload (`Ctrl-R`) re-reads
+  the file keeping the viewer's place; View → Watch file (and `--watch`)
+  reloads it whenever it changes on disk, unless the editor holds unsaved
+  changes, which are kept with a notice.
+- A guard against losing unsaved changes: quitting, opening and reloading
+  ask — Save, Don't save or Cancel — when the document is modified, through
+  Crysterm's new close request, so the default `q`/`Ctrl-Q` keys ask too.
+  Options → Ask before discarding changes turns it off.
+- File → Open Recent lists the recently opened files, and the position in
+  each is remembered and restored when it is opened again, in
+  `$XDG_STATE_HOME/md/history.json` (`~/.local/state/md/history.json`).
 
 [Unreleased]: https://github.com/crystallabs/md/commits/main
 
