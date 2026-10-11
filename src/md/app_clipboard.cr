@@ -11,7 +11,7 @@ module Md
     # as Markdown copies the source instead: the lines of the editor's text
     # the selected or current block was rendered from, fences included (the
     # importer stamps each block with its source line, `TextBlock#source_line`,
-    # as Follow Cursor relies on); in the editor the text is the source
+    # as Sync Cursor relies on); in the editor the text is the source
     # already, so it copies what Copy does. `Ctrl+C` is Copy's key: a pane
     # with a selection copies it itself (Crysterm's clipboard keys), and
     # with nothing selected the key reaches the entry.

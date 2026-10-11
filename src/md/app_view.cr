@@ -13,7 +13,7 @@ module Md
     # View → Text Width (`#text_width`) caps the width the text is laid
     # out in — 72, 80, 100 or 120 columns, or no cap — for a wide terminal,
     # where a line that runs the whole width is hard to read. It applies to
-    # both panes (Crysterm's `line_wrap_column`), so with Follow Cursor the
+    # both panes (Crysterm's `line_wrap_column`), so with Sync Cursor the
     # two keep the same measure. View → Center Text (`#center_text?`)
     # places the column in the middle of a wider pane rather than at its
     # left edge (`line_wrap_column_alignment`).

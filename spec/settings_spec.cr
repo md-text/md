@@ -51,7 +51,7 @@ describe Md::Settings do
         settings.keys.should be_empty
         settings.dirty?.should be_false
         settings.path.should eq File.join(dir, "settings.json")
-        settings.follow_cursor?.should be_nil
+        settings.sync_cursor?.should be_nil
         settings.mouse_mode.should be_nil
       end
     end
@@ -59,7 +59,7 @@ describe Md::Settings do
     it "is empty for a malformed file" do
       with_tempdir do |dir|
         path = File.join(dir, "settings.json")
-        File.write(path, "{\"version\": 1, \"settings\": {\"follow_cursor\": tr")
+        File.write(path, "{\"version\": 1, \"settings\": {\"sync_cursor\": tr")
         Md::Settings.load(path).keys.should be_empty
         File.write(path, "[1, 2, 3]")
         Md::Settings.load(path).keys.should be_empty
@@ -71,8 +71,8 @@ describe Md::Settings do
     it "is empty for another version" do
       with_tempdir do |dir|
         path = File.join(dir, "settings.json")
-        File.write(path, "{\"version\": 2, \"settings\": {\"follow_cursor\": true}}")
-        Md::Settings.load(path).follow_cursor?.should be_nil
+        File.write(path, "{\"version\": 2, \"settings\": {\"sync_cursor\": true}}")
+        Md::Settings.load(path).sync_cursor?.should be_nil
       end
     end
   end
@@ -109,15 +109,15 @@ describe Md::Settings do
   describe "#set" do
     it "marks the settings dirty only for a change" do
       settings = Md::Settings.new("unused.json")
-      settings.set "follow_cursor", true
+      settings.set "sync_cursor", true
       settings.dirty?.should be_true
-      settings.has_key?("follow_cursor").should be_true
+      settings.has_key?("sync_cursor").should be_true
       settings.has_key?("highlight_line").should be_false
 
-      fresh = Md::Settings.new("unused.json", {"follow_cursor" => JSON::Any.new(true)})
-      fresh.set "follow_cursor", true
+      fresh = Md::Settings.new("unused.json", {"sync_cursor" => JSON::Any.new(true)})
+      fresh.set "sync_cursor", true
       fresh.dirty?.should be_false
-      fresh.set "follow_cursor", false
+      fresh.set "sync_cursor", false
       fresh.dirty?.should be_true
     end
   end
@@ -137,7 +137,7 @@ describe Md::Settings do
       with_tempdir do |dir|
         path = File.join(dir, "config", "md", "settings.json")
         settings = Md::Settings.new(path)
-        settings.follow_cursor = true
+        settings.sync_cursor = true
         settings.highlight_line = true
         settings.confirm_discard = false
         settings.mouse_mode = Md::App::MouseMode::Normal
@@ -145,7 +145,7 @@ describe Md::Settings do
         settings.dirty?.should be_false
 
         loaded = Md::Settings.load(path)
-        loaded.follow_cursor?.should be_true
+        loaded.sync_cursor?.should be_true
         loaded.highlight_line?.should be_true
         loaded.confirm_discard?.should be_false
         loaded.mouse_mode.should eq Md::App::MouseMode::Normal
@@ -163,14 +163,14 @@ describe Md::Settings do
     it "keeps keys it does not know" do
       with_tempdir do |dir|
         path = File.join(dir, "settings.json")
-        File.write(path, "{\"version\": 1, \"settings\": {\"follow_cursor\": false, \"pane_sizes\": [40, 60], \"theme\": {\"name\": \"dusk\"}}}")
+        File.write(path, "{\"version\": 1, \"settings\": {\"sync_cursor\": false, \"pane_sizes\": [40, 60], \"theme\": {\"name\": \"dusk\"}}}")
         settings = Md::Settings.load(path)
-        settings.keys.sort!.should eq ["follow_cursor", "pane_sizes", "theme"]
-        settings.follow_cursor = true
+        settings.keys.sort!.should eq ["pane_sizes", "sync_cursor", "theme"]
+        settings.sync_cursor = true
         settings.save.should be_true
 
         json = JSON.parse(File.read(path))
-        json["settings"]["follow_cursor"].should be_true
+        json["settings"]["sync_cursor"].should be_true
         json["settings"]["pane_sizes"].should eq [40, 60]
         json["settings"]["theme"]["name"].should eq "dusk"
       end
@@ -181,7 +181,7 @@ describe Md::Settings do
         file = File.join(dir, "not-a-dir")
         File.write(file, "")
         settings = Md::Settings.new(File.join(file, "md", "settings.json"))
-        settings.follow_cursor = true
+        settings.sync_cursor = true
         settings.save.should be_false
         settings.dirty?.should be_true
       end

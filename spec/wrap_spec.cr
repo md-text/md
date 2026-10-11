@@ -95,11 +95,11 @@ describe "Md::App text layout" do
     end
   end
 
-  it "keeps the panes aligned under Follow Cursor with a text width set" do
+  it "keeps the panes aligned under Sync Cursor with a text width set" do
     with_app Md::Source.new, text: LONG_DOC, view: false do |app, window|
       app.show_pane Md::App::Pane::Viewer
       app.editor.focus
-      app.follow_cursor = true
+      app.sync_cursor = true
       app.text_width = 40
       window.repaint
       app.editor.cursor_position = app.editor.document.block_position(2)

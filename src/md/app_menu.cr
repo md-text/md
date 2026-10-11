@@ -4,7 +4,7 @@ module Md
     # (copy, find, repeat the find, replace, go to a line, jump between headings, go
     # back), Format (the Markdown markup, `app_edit.cr`), View (which panes
     # are shown and resizing them, whether the editor's and the viewer's
-    # carets follow each other, whether the caret's line is highlighted,
+    # carets are kept in sync, whether the caret's line is highlighted,
     # whether the editor numbers its lines, the text's layout — soft wrap, a
     # text width and its centering — and whether the file is watched) and
     # Options (the two modes the status bar toggles — overwrite mode and the
@@ -88,7 +88,7 @@ module Md
       end
       view.add_action("&Resize Panes", shortcut: "Alt+R") { resize_panes }
       view.add_separator
-      add_toggle view, "&Follow Cursor", @follow_cursor
+      add_toggle view, "S&ync Cursor", @sync_cursor
       add_toggle view, "&Highlight Line", @highlight_line
       # The editor's own state, like overwrite mode: the gutter is Crysterm's
       # (`PlainTextEdit#line_numbers`), the entry follows its event.

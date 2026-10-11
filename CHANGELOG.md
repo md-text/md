@@ -34,7 +34,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Save As: a vi-style prompt in place of the status bar, the current name
   filled in, with file-name completion and history. `Ctrl-S` on a document
   without a name asks the same way.
-- View → Follow Cursor: the editor's and the viewer's cursors follow each
+- View → Sync Cursor: the editor's and the viewer's cursors follow each
   other — a move in the pane you are in puts the other pane's cursor on the
   corresponding place, scrolled to the same row of its pane. Matched by
   source line, so inside formatted text the spot is approximate.
@@ -68,7 +68,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   Edit → Back (`Alt-Left`; `Backspace` in the viewer and the table of
   contents) retraces the links followed and the files opened, to the file
   and position left; Edit → Forward (`Alt-Right`) undoes a Back.
-- Settings kept across runs: View → Follow Cursor and Highlight Line,
+- Settings kept across runs: View → Sync Cursor and Highlight Line,
   Options → Ask Before Discarding Changes and the mouse mode are restored at
   start and written at exit to `$XDG_CONFIG_HOME/md/settings.json`
   (`~/.config/md/settings.json`), a store in the manner of Qt's `QSettings`

@@ -307,7 +307,7 @@ describe "Md::App menus" do
       menu(app, 0).actions[1].enabled?.should be_false # no history, nothing recent
       menu(app, 1).actions.map(&.text).should eq ["&Copy", "Copy as &Markdown", "", "&Find…", "Find &Next", "Find &Previous", "&Replace…", "Clear &Highlight", "", "&Go to Line…", "Nex&t Heading", "Pre&vious Heading", "", "&Back", "For&ward"]
       menu(app, 2).actions.map(&.text).should eq ["&Bold", "&Italic", "&Code", "", "&Toggle Task", "I&ndent", "&Outdent", "", "&Promote Heading", "&Demote Heading"]
-      menu(app, 3).actions.map(&.text).should eq ["&Editor", "&Viewer", "&Table of Contents", "&Resize Panes", "", "&Follow Cursor", "&Highlight Line", "Line &Numbers", "", "&Soft Wrap", "Te&xt Width", "&Center Text", "", "&Watch File"]
+      menu(app, 3).actions.map(&.text).should eq ["&Editor", "&Viewer", "&Table of Contents", "&Resize Panes", "", "S&ync Cursor", "&Highlight Line", "Line &Numbers", "", "&Soft Wrap", "Te&xt Width", "&Center Text", "", "&Watch File"]
       menu(app, 4).actions.map(&.text).should eq ["&Overwrite Mode", "&Ask Before Discarding Changes", "A&uto-Save", "&Keep a Backup File", "&Mouse", "&Theme", "&Clipboard"]
     end
   end
@@ -371,14 +371,14 @@ describe "Md::App settings" do
     path = File.join(dir, "settings.json")
     begin
       File.write path, <<-JSON
-        {"version": 1, "settings": {"follow_cursor": true, "highlight_line": true,
+        {"version": 1, "settings": {"sync_cursor": true, "highlight_line": true,
          "confirm_discard": false, "mouse_mode": "insert", "line_numbers": true,
          "pane_sizes": [40, 60, 20]}}
         JSON
       settings = Md::Settings.load(path)
       with_app Md::Source.new(path: "doc.md"), text: DOC, view: true, settings: settings do |app, window|
         app.settings.should be settings
-        app.follow_cursor?.should be_true
+        app.sync_cursor?.should be_true
         app.highlight_line?.should be_true
         app.editor.highlight_current_line?.should be_true
         app.viewer.highlight_current_line?.should be_true
@@ -392,7 +392,7 @@ describe "Md::App settings" do
         settings.dirty?.should be_false # applying is not a change
 
         follow.trigger
-        app.follow_cursor?.should be_false
+        app.sync_cursor?.should be_false
         app.cycle_mouse_mode.should eq Md::App::MouseMode::Off
         app.confirm_discard = true
         app.editor.line_numbers = false
@@ -402,7 +402,7 @@ describe "Md::App settings" do
       end
 
       reloaded = Md::Settings.load(path)
-      reloaded.follow_cursor?.should be_false
+      reloaded.sync_cursor?.should be_false
       reloaded.highlight_line?.should be_true
       reloaded.confirm_discard?.should be_true
       reloaded.mouse_mode.should eq Md::App::MouseMode::Off
@@ -415,7 +415,7 @@ describe "Md::App settings" do
 
   it "keeps the defaults for choices never made, and runs without a store" do
     with_app settings: Md::Settings.new("unused.json") do |app|
-      app.follow_cursor?.should be_false
+      app.sync_cursor?.should be_false
       app.highlight_line?.should be_false
       app.confirm_discard?.should be_true
       app.mouse_mode.should eq Md::App::MouseMode::All
@@ -423,7 +423,7 @@ describe "Md::App settings" do
     end
     with_app do |app|
       app.settings.should be_nil
-      app.follow_cursor = true
+      app.sync_cursor = true
       app.save_settings
     end
   end

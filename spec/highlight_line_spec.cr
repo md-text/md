@@ -48,11 +48,11 @@ describe "Md::App highlight line" do
     end
   end
 
-  it "shows the same place tinted in both panes with Follow Cursor" do
+  it "shows the same place tinted in both panes with Sync Cursor" do
     with_app Md::Source.new, text: HL_DOC, view: false do |app, window|
       app.show_pane Md::App::Pane::Viewer
       app.editor.focus
-      app.follow_cursor = true
+      app.sync_cursor = true
       app.highlight_line = true
       window.repaint
       viewer_plain = row_bg(window, app.viewer, 1)

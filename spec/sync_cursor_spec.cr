@@ -1,9 +1,9 @@
 require "./spec_helper"
 
-# View → Follow Cursor: the editor's and the viewer's carets follow each
+# View → Sync Cursor: the editor's and the viewer's carets follow each
 # other, matched by source line (`TextBlock#source_line`).
 
-FOLLOW_DOC = "# Title\n\nSome *text*\nwraps here.\n\n```\ncode\n```\n\n## Section\n\nMore.\n"
+SYNC_DOC = "# Title\n\nSome *text*\nwraps here.\n\n```\ncode\n```\n\n## Section\n\nMore.\n"
 
 # Editor position of (1-based) *line*, plus *col*.
 private def at(app, line, col = 0)
@@ -17,9 +17,9 @@ private def shown(app, text, col = 0)
   doc.block_position(i) + col
 end
 
-describe "Md::App follow cursor" do
+describe "Md::App sync cursor" do
   it "maps editor positions to the rendered block and back" do
-    with_app Md::Source.new, text: FOLLOW_DOC, view: false do |app|
+    with_app Md::Source.new, text: SYNC_DOC, view: false do |app|
       app.show_pane Md::App::Pane::Viewer
       app.viewer_position(at(app, 1)).should eq shown(app, "Title")
       app.viewer_position(at(app, 1, 2)).should eq shown(app, "Title", 2)
@@ -40,14 +40,14 @@ describe "Md::App follow cursor" do
   end
 
   it "keeps the other pane's caret on the focused pane's place, when following" do
-    with_app Md::Source.new, text: FOLLOW_DOC, view: false do |app|
+    with_app Md::Source.new, text: SYNC_DOC, view: false do |app|
       app.show_pane Md::App::Pane::Viewer
       app.editor.focus
-      app.follow_cursor?.should be_false
+      app.sync_cursor?.should be_false
       app.editor.cursor_position = at(app, 12)
       app.viewer.cursor_position.should eq 0 # off: nothing follows
 
-      app.follow_cursor = true # on: aligned at once, from the focused pane
+      app.sync_cursor = true # on: aligned at once, from the focused pane
       app.viewer.cursor_position.should eq shown(app, "More.")
       app.editor.cursor_position = at(app, 7, 1)
       app.viewer.cursor_position.should eq shown(app, "code", 1)
@@ -56,17 +56,17 @@ describe "Md::App follow cursor" do
       app.viewer.cursor_position = shown(app, "Title", 3)
       app.editor.cursor_position.should eq at(app, 1, 3)
 
-      app.follow_cursor = false
+      app.sync_cursor = false
       app.viewer.cursor_position = shown(app, "More.")
       app.editor.cursor_position.should eq at(app, 1, 3)
     end
   end
 
   it "re-places the viewer's caret after an edit re-rendered it" do
-    with_app Md::Source.new, text: FOLLOW_DOC, view: false do |app|
+    with_app Md::Source.new, text: SYNC_DOC, view: false do |app|
       app.show_pane Md::App::Pane::Viewer
       app.editor.focus
-      app.follow_cursor = true
+      app.sync_cursor = true
       app.editor.cursor_position = at(app, 12, 5)
       app.editor.insert_text "!"
       app.viewer.document.plain_text.should contain "More.!"
@@ -81,15 +81,15 @@ describe "Md::App follow cursor" do
       app.editor.focus
       window.repaint
       follow = menu(app, 3).actions[5]
-      follow.text.should eq "&Follow Cursor"
+      follow.text.should eq "S&ync Cursor"
       follow.checked?.should be_false
       follow.trigger
-      app.follow_cursor?.should be_true
+      app.sync_cursor?.should be_true
       app.editor.cursor_position = at(app, 99)
       window.repaint
       app.viewer.scroll_position.should be > 0
       window.dump.to_s.should contain "Paragraph 50"
-      app.follow_cursor = false
+      app.sync_cursor = false
       follow.checked?.should be_false
     end
   end
@@ -99,7 +99,7 @@ describe "Md::App follow cursor" do
     with_app Md::Source.new, text: long, view: false do |app, window|
       app.show_pane Md::App::Pane::Viewer
       app.editor.focus
-      app.follow_cursor = true
+      app.sync_cursor = true
       window.repaint
       # Scroll the editor so its caret sits mid-viewport, then move within
       # the viewport: the viewer's caret row follows the editor's, not just
@@ -133,7 +133,7 @@ describe "Md::App table of contents" do
       app.show_pane Md::App::Pane::Viewer
       app.show_pane(Md::App::Pane::Toc).focus
       window.repaint
-      app.follow_cursor?.should be_false
+      app.sync_cursor?.should be_false
       app.toc.nodes.map(&.text).should eq ["Late heading"]
       app.toc.current_index = 0
       app.toc.activate_current

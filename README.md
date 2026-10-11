@@ -345,7 +345,7 @@ Quitting, opening another file or reloading with unsaved changes asks first:
 one, and the action goes ahead once the save is done. Options → Ask Before
 Discarding Changes turns the question off.
 
-The View menu also has *Follow Cursor*: with it on, moving the cursor in the
+The View menu also has *Sync Cursor*: with it on, moving the cursor in the
 editor puts the viewer's cursor on the same place in the rendered document,
 scrolled to the same row of its pane, and moving it in the viewer does the
 same in the editor.
@@ -353,7 +353,7 @@ The pane you are in leads. The match is by source line, so inside formatted
 text the other cursor lands near rather than exactly on the spot, and a line
 that renders nothing (a blank line, a code fence) maps to the rendered block
 just above it. *Highlight Line*, also in the View menu, tints the row the
-cursor is on in each pane; together with *Follow Cursor* the two tinted rows
+cursor is on in each pane; together with *Sync Cursor* the two tinted rows
 are the same place in the document, which makes the pairing easy to see.
 *Line Numbers* puts a gutter with the source line numbers on the editor's
 left, the way code editors do; the choice is kept across runs.
@@ -363,7 +363,7 @@ editor's: on, a long line folds at the pane's edge; off, it runs past the
 edge and the pane scrolls sideways. *Text Width* caps the width the text is
 laid out in — 72, 80, 100 or 120 columns, or *Unlimited* — so a line does
 not run the whole width of a wide terminal; it applies to both panes, which
-keeps them reading side by side under Follow Cursor. *Center Text* puts the
+keeps them reading side by side under Sync Cursor. *Center Text* puts the
 capped column in the middle of a wider pane rather than at its left edge.
 
 Save As asks for the name in place of the status bar, the way vi's command
@@ -393,7 +393,7 @@ back. A new document is told of unnamed copies left behind.
 
 ### Settings
 
-The choices made in the View and Options menus — Follow Cursor, Highlight
+The choices made in the View and Options menus — Sync Cursor, Highlight
 Line, Line Numbers, Soft Wrap, Text Width, Center Text, Ask Before Discarding
 Changes, Auto-Save, Keep a Backup File, the mouse mode, the clipboard mode and
 the theme — and the pane sizes are kept across runs in

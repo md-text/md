@@ -105,7 +105,7 @@ module Md
     end
 
     # The settings md keeps today, each a typed pair of accessors over its
-    # key — `follow_cursor?`/`follow_cursor=` for a `Bool`, `theme`/`theme=`
+    # key — `sync_cursor?`/`sync_cursor=` for a `Bool`, `theme`/`theme=`
     # for anything else — so a caller reads a choice by name and type. A
     # setting without a stored value reads as nil, so the caller's own
     # default stands and is not spelled twice. An enum is stored by its
@@ -121,9 +121,9 @@ module Md
       end
     end
 
-    # View → Follow Cursor, Highlight Line, Line Numbers, Soft Wrap, Text
+    # View → Sync Cursor, Highlight Line, Line Numbers, Soft Wrap, Text
     # Width (in columns; 0 is no cap) and Center Text.
-    setting follow_cursor, Bool
+    setting sync_cursor, Bool
     setting highlight_line, Bool
     setting line_numbers, Bool
     setting soft_wrap, Bool

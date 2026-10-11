@@ -22,7 +22,7 @@ module Md
   # `set mouse=`). The menu bar (`app_menu.cr`) puts every command and
   # setting within the keyboard's reach, each entry naming its key.
   #
-  # View → Follow Cursor (`#follow_cursor`) keeps the editor's and the
+  # View → Sync Cursor (`#sync_cursor`) keeps the editor's and the
   # viewer's carets on the same place in the document. The focused pane
   # leads: a caret move there puts the other pane's caret on the
   # corresponding position and scrolls it to the same row of the viewport,
@@ -99,10 +99,10 @@ module Md
     # resulting `TextChanged` is not mistaken for a user edit.
     @loading = false
     getter? streaming : Bool = false
-    # View → Follow Cursor; see the class comment. A reactive property, so
-    # the menu entry binds to it (`#build_menus`); `#follow_cursor?` and
-    # `#follow_cursor=` are its plain face.
-    @follow_cursor : Crysterm::Reactive::Property(Bool) = Crysterm::Reactive::Property.new(false)
+    # View → Sync Cursor; see the class comment. A reactive property, so
+    # the menu entry binds to it (`#build_menus`); `#sync_cursor?` and
+    # `#sync_cursor=` are its plain face.
+    @sync_cursor : Crysterm::Reactive::Property(Bool) = Crysterm::Reactive::Property.new(false)
     # View → Highlight Line; see the class comment. Likewise.
     @highlight_line : Crysterm::Reactive::Property(Bool) = Crysterm::Reactive::Property.new(false)
 
@@ -180,9 +180,9 @@ module Md
       end
       Pane.each { |pane| widget(pane).on(Crysterm::Event::Hide) { refresh_status } }
       # The View settings take effect when they change, whoever changed them
-      # (the menu entry bound to the property, or `#follow_cursor=`).
-      @follow_cursor.on_change do
-        sync_follow
+      # (the menu entry bound to the property, or `#sync_cursor=`).
+      @sync_cursor.on_change do
+        sync_carets
         refresh_status
       end
       @highlight_line.on_change do
@@ -221,8 +221,8 @@ module Md
       @editor.on(Crysterm::Event::TextChanged) { edited unless @loading }
       # The focused pane leads; the other pane's caret, set programmatically
       # to follow, reports a move too, which this guard keeps from bouncing.
-      @editor.on(Crysterm::Event::CursorPositionChanged) { follow_editor if @editor.focused? }
-      @viewer.on(Crysterm::Event::CursorPositionChanged) { follow_viewer if @viewer.focused? }
+      @editor.on(Crysterm::Event::CursorPositionChanged) { sync_to_editor if @editor.focused? }
+      @viewer.on(Crysterm::Event::CursorPositionChanged) { sync_to_viewer if @viewer.focused? }
       @toc.on(Crysterm::Event::AnchorClick) { |e| jump_to e.url }
       wire_links
       wire_editing
@@ -311,15 +311,15 @@ module Md
       follow_link url
     end
 
-    def follow_cursor? : Bool
-      @follow_cursor.value
+    def sync_cursor? : Bool
+      @sync_cursor.value
     end
 
-    # Turns following on or off (View → Follow Cursor). Turning it on
+    # Turns the syncing on or off (View → Sync Cursor). Turning it on
     # aligns the panes at once, from the focused one (the property's change
     # handler, in `#initialize`).
-    def follow_cursor=(value : Bool) : Bool
-      @follow_cursor.value = value
+    def sync_cursor=(value : Bool) : Bool
+      @sync_cursor.value = value
     end
 
     def highlight_line? : Bool
@@ -369,24 +369,24 @@ module Md
     # After a pane was shown: the panes aligned, the status (and the View
     # menu's entries) refreshed.
     private def pane_shown : Nil
-      sync_follow
+      sync_carets
       refresh_status
     end
 
-    # Aligns the panes from the focused one, when following.
-    private def sync_follow : Nil
+    # Aligns the panes from the focused one, when syncing.
+    private def sync_carets : Nil
       if @editor.focused?
-        follow_editor
+        sync_to_editor
       elsif @viewer.focused?
-        follow_viewer
+        sync_to_viewer
       end
     end
 
     # Puts the viewer's caret where the editor's is rendered, on the same
     # viewport row. The viewer's own move reports back through its handler,
     # which ignores it (the viewer is not the focused pane).
-    private def follow_editor : Nil
-      return unless @follow_cursor.value && @viewer.visible? && @editor.visible?
+    private def sync_to_editor : Nil
+      return unless @sync_cursor.value && @viewer.visible? && @editor.visible?
       pos = viewer_position(@editor.cursor_position)
       @viewer.text_cursor = Crysterm::TextCursor.new(@viewer.document, pos)
       align_rows @editor, @viewer
@@ -394,8 +394,8 @@ module Md
 
     # Puts the editor's caret on the source of the viewer's, on the same
     # viewport row.
-    private def follow_viewer : Nil
-      return unless @follow_cursor.value && @editor.visible? && @viewer.visible?
+    private def sync_to_viewer : Nil
+      return unless @sync_cursor.value && @editor.visible? && @viewer.visible?
       pos = editor_position(@viewer.cursor_position)
       @editor.text_cursor = Crysterm::TextCursor.new(@editor.document, pos)
       align_rows @viewer, @editor
@@ -547,7 +547,7 @@ module Md
       # The viewer's caret kept its offset, not its place in the changed
       # text; an edit that left the editor's caret in place (a Delete)
       # reports no move to re-place it.
-      follow_editor if @editor.focused?
+      sync_to_editor if @editor.focused?
     end
 
     # Application-level keys, after the focused widget had its turn. The
