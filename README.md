@@ -274,6 +274,16 @@ changed it, so md beside an editor shows each save as it happens. While the
 editor holds unsaved changes the reload is skipped and a notice says the
 file changed on disk. The status bar shows `(watching)` after the name.
 
+### Dropping a file
+
+A file dragged from a file manager onto the window opens, as if by File →
+Open…: a terminal has no drop of its own, so what arrives is the file's
+path pasted as the shell would take it (spaces escaped, or quoted, or as a
+`file:` URL, depending on the terminal), and md opens a paste that names
+one existing file. In the editor a paste is text to insert, so drop on the
+viewer or the table of contents; unsaved changes are asked about as with
+any open.
+
 ### Following links
 
 In the viewer, `Tab` moves between the document's links and `Enter` follows

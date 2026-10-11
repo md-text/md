@@ -115,6 +115,33 @@ module Md
       false
     end
 
+    # Opens a file dropped on the window. A terminal has no drop of its
+    # own: dropping a file pastes its path, as the shell would want it —
+    # with spaces backslash-escaped (Terminal.app, iTerm2, kitty), quoted
+    # (VTE terminals), or as a `file:` URL (some others) — so a paste that
+    # names one existing file, outside the editor (which pastes into its
+    # text), opens it, through the unsaved-changes guard. Anything else is
+    # not a drop and is let be. Returns whether a file was opened.
+    def open_dropped(pasted : String) : Bool
+      return false unless path = dropped_path(pasted)
+      confirm_discard { open_file path }
+      true
+    end
+
+    # The one file path *pasted* spells, or nil when it does not.
+    private def dropped_path(pasted : String) : String?
+      text = pasted.strip
+      return if text.empty? || text.includes?('\n')
+      if text.starts_with?("file://")
+        text = URI.decode(URI.parse(text).path)
+      elsif (text.starts_with?('\'') && text.ends_with?('\'')) || (text.starts_with?('"') && text.ends_with?('"'))
+        text = text[1...-1]
+      else
+        text = text.gsub("\\ ", " ")
+      end
+      text if File.file?(text)
+    end
+
     # Re-reads the document's file from disk, keeping the reader's place;
     # unsaved changes are settled first (File → Reload, `Ctrl-R`). A document
     # without a file (new, or streamed) has nothing to reload.

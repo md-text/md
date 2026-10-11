@@ -153,6 +153,9 @@ module Md
 
       wire_panes
       @window.on(Crysterm::Event::KeyPress) { |e| key_pressed e }
+      # A paste no pane took (the editor takes its own): a file dropped on
+      # the window arrives as its path (`#open_dropped`).
+      @window.on(Crysterm::Event::Paste) { |e| open_dropped e.content }
       # The default quit keys ask the window first; with unsaved changes the
       # guard refuses and asks the user, quitting on their answer.
       @window.on(Crysterm::Event::CloseRequest) do |e|

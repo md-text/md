@@ -153,6 +153,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   columns. (Crysterm's splitter learnt to fold hidden panes away, to resize
   its panes in proportion and with stretch factors, to save and restore its
   state, and to keep its dividers off the Tab chain.)
+- A file dropped on the window opens: the terminal pastes its path, and a
+  paste that names one existing file, outside the editor, opens it through
+  the unsaved-changes guard.
 - Markdown-aware editing, and a Format menu (`Alt-M`) between Edit and
   View. `Enter` on a list item — bullets, numbers, tasks, indented or in a
   blockquote — continues the list with the same marker (the number raised,

@@ -219,3 +219,34 @@ describe "Md::App links" do
     end
   end
 end
+
+describe "Md::App drop" do
+  it "opens a file whose path is pasted outside the editor, however the terminal spells it" do
+    with_docs do |dir, source, target|
+      with_app Md::Source.new(path: source), text: SOURCE_DOC, view: true do |app, window|
+        app.viewer.focus
+        window.emit Crysterm::Event::Paste, Crysterm::Event::Paste.new("#{target} \n")
+        app.source.path.should eq target
+        spaced = File.join(dir, "with space.md")
+        File.write spaced, "# Spaced\n"
+        window.emit Crysterm::Event::Paste, Crysterm::Event::Paste.new(spaced.gsub(" ", "\\ "))
+        app.source.path.should eq spaced
+        window.emit Crysterm::Event::Paste, Crysterm::Event::Paste.new("'#{source}'")
+        app.source.path.should eq source
+        window.emit Crysterm::Event::Paste, Crysterm::Event::Paste.new("file://#{URI.encode_path(spaced)}")
+        app.source.path.should eq spaced
+
+        window.emit Crysterm::Event::Paste, Crysterm::Event::Paste.new("just some words")
+        app.source.path.should eq spaced
+        window.emit Crysterm::Event::Paste, Crysterm::Event::Paste.new(File.join(dir, "missing.md"))
+        app.source.path.should eq spaced
+
+        # A paste the editor takes is text, not a drop.
+        app.show_pane(Md::App::Pane::Editor).focus
+        app.editor.emit Crysterm::Event::Paste, Crysterm::Event::Paste.new(source)
+        app.source.path.should eq spaced
+        app.markdown.should contain source
+      end
+    end
+  end
+end
