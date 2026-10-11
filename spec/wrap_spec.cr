@@ -6,23 +6,6 @@ require "file_utils"
 # Crysterm's `wrap_content`, `line_wrap_column` and
 # `line_wrap_column_alignment`.
 
-private def headless_window
-  Crysterm::Window.new input: IO::Memory.new, output: IO::Memory.new, width: 100, height: 30
-end
-
-private def with_app(source = Md::Source.new, text = "", view = !text.empty?, settings = nil, &)
-  window = headless_window
-  begin
-    yield Md::App.new(source, text: text, view: view, window: window, settings: settings), window
-  ensure
-    window.destroy
-  end
-end
-
-private def menu(app, i)
-  app.main.menu_bar.menus[i]
-end
-
 # One paragraph some 270 columns long on one source line, then a short one.
 LONG_DOC = (1..40).map { |i| "word#{i}" }.join(" ") + "\n\nshort\n"
 

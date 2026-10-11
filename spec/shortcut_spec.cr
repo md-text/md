@@ -1,57 +1,10 @@
 require "./spec_helper"
 
-private def headless_window
-  Crysterm::Window.new input: IO::Memory.new, output: IO::Memory.new, width: 100, height: 30
-end
-
-private def with_app(source = Md::Source.new, text = "", view = !text.empty?, &)
-  window = headless_window
-  begin
-    yield Md::App.new(source, text: text, view: view, window: window), window
-  ensure
-    window.destroy
-  end
-end
-
-# Presses a key the way the terminal delivers it, and returns the event so
-# a spec can see who took it.
-private def press(window, key : Tput::Key) : Crysterm::Event::KeyPress
-  e = Crysterm::Event::KeyPress.new('\0', key)
-  window.emit Crysterm::Event::KeyPress, e
-  e
-end
-
-private def press(window, char : Char) : Crysterm::Event::KeyPress
-  e = Crysterm::Event::KeyPress.new(char)
-  window.emit Crysterm::Event::KeyPress, e
-  e
-end
-
-private def answer(app, text)
-  field = app.main.status_bar.line_prompt.field
-  field.value = text
-  field.emit Crysterm::Event::KeyPress, Crysterm::Event::KeyPress.new('\0', Tput::Key::Enter)
-end
-
-private def notice(app)
-  app.main.status_bar.message
-end
-
 # The status bar's row as painted: the prompt's label and field while a
 # question is open.
 private def status_row(window)
   window.repaint
   window.dump.to_s.lines[31][1..-2]
-end
-
-# The bar's menus in add order: File, Edit, View, Options.
-private def menu(app, index)
-  app.main.menu_bar.menus[index]
-end
-
-# The dialog's button labelled *text*, if the dialog is up.
-private def choice(window, text)
-  window.descendants.select(Crysterm::Widget::Button).find { |b| b.text == text && b.visible? }
 end
 
 SHORTCUT_DOC = <<-MD

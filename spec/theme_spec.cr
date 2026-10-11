@@ -1,23 +1,17 @@
 require "./spec_helper"
 require "file_utils"
 
-# A headless window: in-memory IO, fixed size, no terminal involved. Its
-# creation installs Crysterm's config theme (`terminal`, with nothing probed
-# here); the theme is one global for every window, so each spec puts back
-# the one it found.
-private def headless_window
-  Crysterm::Window.new input: IO::Memory.new, output: IO::Memory.new, width: 100, height: 30
-end
-
-private def with_app(settings = nil, &)
-  window = headless_window
+# An App on a document the viewer shows, so a pane's background is on
+# screen to read; the theme is one global for every window (creating one
+# installs Crysterm's config theme), so each spec puts back the one it
+# found.
+private def with_theme_app(settings = nil, &)
   saved = Crysterm::CSS.theme
-  begin
-    yield Md::App.new(Md::Source.new(path: "doc.md"), text: "# Title\n\nSome text.\n", view: true, window: window, settings: settings), window
-  ensure
-    Crysterm::CSS.theme = saved
-    window.destroy
+  with_app Md::Source.new(path: "doc.md"), text: "# Title\n\nSome text.\n", view: true, settings: settings do |app, window|
+    yield app, window
   end
+ensure
+  Crysterm::CSS.theme = saved
 end
 
 # The Options → Theme entries.
@@ -36,7 +30,7 @@ end
 
 describe "Md::App theme" do
   it "offers Crysterm's built-in themes in the Options menu, the current one checked" do
-    with_app do |app|
+    with_theme_app do |app|
       app.theme.should eq Md::App::Theme::Terminal
       entries = theme_entries(app)
       entries.map(&.text).should eq ["&Terminal (its own colors)", "&Dark", "&Light"]
@@ -51,7 +45,7 @@ describe "Md::App theme" do
   end
 
   it "repaints the window in the picked theme" do
-    with_app do |app, window|
+    with_theme_app do |app, window|
       theme_entries(app)[1].trigger
       dark = viewer_bg(app, window)
       dark.should eq Crysterm::CSS::Theme.dark.primaries["surface"]
@@ -63,7 +57,7 @@ describe "Md::App theme" do
   end
 
   it "keeps an author stylesheet over whichever theme is picked" do
-    with_app do |app, window|
+    with_theme_app do |app, window|
       window.stylesheet = "TextBrowser { background-color: #123456; }"
       viewer_bg(app, window).should eq 0x123456
       theme_entries(app)[1].trigger
@@ -73,7 +67,7 @@ describe "Md::App theme" do
   end
 
   it "cycles the themes from the keyboard" do
-    with_app do |app|
+    with_theme_app do |app|
       app.cycle_theme.should eq Md::App::Theme::Dark
       app.cycle_theme.should eq Md::App::Theme::Light
       app.cycle_theme.should eq Md::App::Theme::Terminal
@@ -88,7 +82,7 @@ describe "Md::App theme" do
     begin
       File.write path, %({"version": 1, "settings": {"theme": "light"}})
       settings = Md::Settings.load(path)
-      with_app settings do |app, window|
+      with_theme_app settings do |app, window|
         app.theme.should eq Md::App::Theme::Light
         Crysterm::CSS.theme.try(&.name).should eq "light"
         theme_entries(app).map(&.checked?).should eq [false, false, true]
@@ -108,7 +102,7 @@ describe "Md::App theme" do
   it "lets --colors-theme win for the run without recording it" do
     Crysterm::Config.colors_theme = Md::App::Theme::Dark
     settings = Md::Settings.new("unused.json", {"theme" => JSON::Any.new("light")})
-    with_app settings do |app|
+    with_theme_app settings do |app|
       app.theme.should eq Md::App::Theme::Dark
       settings.dirty?.should be_false
       theme_entries(app).map(&.checked?).should eq [false, true, false]

@@ -1,36 +1,5 @@
 require "./spec_helper"
 
-private def headless_window
-  Crysterm::Window.new input: IO::Memory.new, output: IO::Memory.new, width: 100, height: 30
-end
-
-private def with_app(source = Md::Source.new, text = "", view = !text.empty?, &)
-  window = headless_window
-  begin
-    yield Md::App.new(source, text: text, view: view, window: window), window
-  ensure
-    window.destroy
-  end
-end
-
-private def press(window, char : Char)
-  window.emit Crysterm::Event::KeyPress, Crysterm::Event::KeyPress.new(char)
-end
-
-private def press(window, key : Tput::Key)
-  window.emit Crysterm::Event::KeyPress, Crysterm::Event::KeyPress.new('\0', key)
-end
-
-private def answer(app, text)
-  field = app.main.status_bar.line_prompt.field
-  field.value = text
-  field.emit Crysterm::Event::KeyPress, Crysterm::Event::KeyPress.new('\0', Tput::Key::Enter)
-end
-
-private def notice(app)
-  app.main.status_bar.message
-end
-
 SEARCH_DOC = <<-MD
   # Alpha
 

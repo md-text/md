@@ -1,44 +1,6 @@
 require "./spec_helper"
 require "file_utils"
 
-private def headless_window
-  Crysterm::Window.new input: IO::Memory.new, output: IO::Memory.new, width: 100, height: 30
-end
-
-private def with_app(source = Md::Source.new, text = "", view = !text.empty?, &)
-  window = headless_window
-  begin
-    yield Md::App.new(source, text: text, view: view, window: window), window
-  ensure
-    window.destroy
-  end
-end
-
-private def press(window, key : Tput::Key)
-  window.emit Crysterm::Event::KeyPress, Crysterm::Event::KeyPress.new('\0', key)
-end
-
-private def notice(app)
-  app.main.status_bar.message
-end
-
-# The unsaved-changes dialog's button labelled *text*, if the dialog is up.
-private def choice(window, text)
-  window.descendants.select(Crysterm::Widget::Button).find { |b| b.text == text && b.visible? }
-end
-
-private def choose(window, text)
-  (choice(window, text) || fail("no #{text} button is up")).click
-end
-
-private def settle(timeout = 2.seconds, &)
-  deadline = Time.instant + timeout
-  until yield
-    raise "the condition was not met within #{timeout}" if Time.instant > deadline
-    sleep 10.milliseconds
-  end
-end
-
 # The Edit menu's Back and Forward entries.
 private def navigation(app)
   actions = app.main.menu_bar.menus[1].actions

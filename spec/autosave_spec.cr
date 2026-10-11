@@ -1,38 +1,6 @@
 require "./spec_helper"
 require "file_utils"
 
-private def headless_window
-  Crysterm::Window.new input: IO::Memory.new, output: IO::Memory.new, width: 100, height: 30
-end
-
-private def with_app(source = Md::Source.new, text = "", view = !text.empty?, settings = nil, &)
-  window = headless_window
-  begin
-    yield Md::App.new(source, text: text, view: view, window: window, settings: settings), window
-  ensure
-    window.destroy
-  end
-end
-
-# Lets the window's render fiber run posted jobs until the condition holds.
-private def settle(timeout = 2.seconds, &)
-  deadline = Time.instant + timeout
-  until yield
-    raise "the condition was not met within #{timeout}" if Time.instant > deadline
-    sleep 10.milliseconds
-  end
-end
-
-private def notice(app)
-  app.main.status_bar.message
-end
-
-private def tempfile(content : String?) : String
-  path = File.tempname("md-spec", ".md")
-  File.write path, content if content
-  path
-end
-
 # Runs the block with `XDG_STATE_HOME` pointing at a fresh directory, so the
 # recovery files land there, and removes the directory afterwards.
 private def with_state_home(&)

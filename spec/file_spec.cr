@@ -1,54 +1,6 @@
 require "./spec_helper"
 require "file_utils"
 
-private def headless_window
-  Crysterm::Window.new input: IO::Memory.new, output: IO::Memory.new, width: 100, height: 30
-end
-
-private def with_app(source = Md::Source.new, text = "", view = !text.empty?, history = nil, watch = false, line = nil, &)
-  window = headless_window
-  begin
-    yield Md::App.new(source, text: text, view: view, window: window, history: history, watch: watch, line: line), window
-  ensure
-    window.destroy
-  end
-end
-
-# Lets the window's render fiber run posted jobs until the condition holds.
-private def settle(timeout = 2.seconds, &)
-  deadline = Time.instant + timeout
-  until yield
-    raise "the condition was not met within #{timeout}" if Time.instant > deadline
-    sleep 10.milliseconds
-  end
-end
-
-private def answer(app, text)
-  field = app.main.status_bar.line_prompt.field
-  field.value = text
-  field.emit Crysterm::Event::KeyPress, Crysterm::Event::KeyPress.new('\0', Tput::Key::Enter)
-end
-
-private def notice(app)
-  app.main.status_bar.message
-end
-
-# The unsaved-changes dialog's button labelled *text*, if the dialog is up.
-private def choice(window, text)
-  window.descendants.select(Crysterm::Widget::Button).find { |b| b.text == text && b.visible? }
-end
-
-# Clicks that button, which must be up.
-private def choose(window, text)
-  (choice(window, text) || fail("no #{text} button is up")).click
-end
-
-private def tempfile(content : String?) : String
-  path = File.tempname("md-spec", ".md")
-  File.write path, content if content
-  path
-end
-
 describe "Md::App open" do
   it "opens a file into the viewer, and a new name into the editor" do
     path = tempfile "# Opened\n\nBody.\n"

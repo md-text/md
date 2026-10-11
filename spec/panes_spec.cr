@@ -4,19 +4,6 @@ require "file_utils"
 # The panes in their splitter (`app_panes.cr`): dividers between the shown
 # panes, resizing by divider and by key, and the sizes kept in the settings.
 
-private def headless_window
-  Crysterm::Window.new input: IO::Memory.new, output: IO::Memory.new, width: 100, height: 30
-end
-
-private def with_app(source = Md::Source.new, text = "", view = !text.empty?, settings = nil, &)
-  window = headless_window
-  begin
-    yield Md::App.new(source, text: text, view: view, window: window, settings: settings), window
-  ensure
-    window.destroy
-  end
-end
-
 private def key(window, key : Tput::Key)
   window.emit Crysterm::Event::KeyPress, Crysterm::Event::KeyPress.new('\0', key)
 end

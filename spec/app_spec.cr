@@ -1,20 +1,6 @@
 require "./spec_helper"
 require "file_utils"
 
-# A headless window: in-memory IO, fixed size, no terminal involved.
-private def headless_window
-  Crysterm::Window.new input: IO::Memory.new, output: IO::Memory.new, width: 100, height: 30
-end
-
-private def with_app(source = Md::Source.new, text = "", view = !text.empty?, settings = nil, &)
-  window = headless_window
-  begin
-    yield Md::App.new(source, text: text, view: view, window: window, settings: settings), window
-  ensure
-    window.destroy
-  end
-end
-
 DOC = "# Title\n\nSome *text*.\n\n## Section\n\nMore.\n"
 
 describe Md::App do
@@ -311,11 +297,6 @@ describe "Md::App status bar" do
       app.main.status_bar.prompting?.should be_true
     end
   end
-end
-
-# The bar's menus in add order: File, View, Options.
-private def menu(app, index)
-  app.main.menu_bar.menus[index]
 end
 
 describe "Md::App menus" do

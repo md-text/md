@@ -1,19 +1,6 @@
 require "./spec_helper"
 require "base64"
 
-private def headless_window
-  Crysterm::Window.new input: IO::Memory.new, output: IO::Memory.new, width: 100, height: 30
-end
-
-private def with_app(source = Md::Source.new, text = "", view = !text.empty?, settings = nil, &)
-  window = headless_window
-  begin
-    yield Md::App.new(source, text: text, view: view, window: window, settings: settings), window
-  ensure
-    window.destroy
-  end
-end
-
 # The clipboard is the process's, shared by every app built in the specs:
 # the block gets it with a recording runner and test commands in place of
 # whatever the machine has, and leaves it as it was found.
@@ -48,10 +35,6 @@ private class Recorder
   end
 end
 
-private def notice(app)
-  app.main.status_bar.message
-end
-
 # What the terminal was sent since *output* was last cleared.
 private def sent(window)
   window.output.as(IO::Memory).to_s
@@ -64,16 +47,6 @@ private def caret_on(app, text)
   block = doc.blocks.find(&.text.starts_with?(text)) || fail("no block starts with #{text.inspect}")
   app.viewer.text_cursor = Crysterm::TextCursor.new(doc, block.position)
   block
-end
-
-private def press(window, key : Tput::Key) : Crysterm::Event::KeyPress
-  e = Crysterm::Event::KeyPress.new('\0', key)
-  window.emit Crysterm::Event::KeyPress, e
-  e
-end
-
-private def menu(app, index)
-  app.main.menu_bar.menus[index]
 end
 
 CLIP_DOC = <<-MD

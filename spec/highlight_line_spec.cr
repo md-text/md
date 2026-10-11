@@ -3,23 +3,6 @@ require "./spec_helper"
 # View → Highlight line: Crysterm's `highlight_current_line` on both panes,
 # tinting the caret's row as it moves.
 
-private def headless_window
-  Crysterm::Window.new input: IO::Memory.new, output: IO::Memory.new, width: 100, height: 30
-end
-
-private def with_app(source = Md::Source.new, text = "", view = !text.empty?, &)
-  window = headless_window
-  begin
-    yield Md::App.new(source, text: text, view: view, window: window), window
-  ensure
-    window.destroy
-  end
-end
-
-private def menu(app, i)
-  app.main.menu_bar.menus[i]
-end
-
 # Background of the cell at the top-left of *pane*'s row *row*.
 private def row_bg(window, pane, row)
   Crysterm::Attr.bg(window.cell_rows[pane.atop + row][pane.aleft].attr)

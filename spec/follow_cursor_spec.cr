@@ -3,23 +3,6 @@ require "./spec_helper"
 # View → Follow cursor: the editor's and the viewer's carets follow each
 # other, matched by source line (`TextBlock#source_line`).
 
-private def headless_window
-  Crysterm::Window.new input: IO::Memory.new, output: IO::Memory.new, width: 100, height: 30
-end
-
-private def with_app(source = Md::Source.new, text = "", view = !text.empty?, &)
-  window = headless_window
-  begin
-    yield Md::App.new(source, text: text, view: view, window: window), window
-  ensure
-    window.destroy
-  end
-end
-
-private def menu(app, i)
-  app.main.menu_bar.menus[i]
-end
-
 FOLLOW_DOC = "# Title\n\nSome *text*\nwraps here.\n\n```\ncode\n```\n\n## Section\n\nMore.\n"
 
 # Editor position of (1-based) *line*, plus *col*.
