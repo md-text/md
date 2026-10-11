@@ -56,8 +56,10 @@ module Md
   # md asks, in place of the status bar or in a dialog (View → Dialog
   # Style), in `app_dialogs.cr`.
   #
-  # Keys: `F2`/`F3`/`F4` show and focus the editor/viewer/table of contents,
-  # or hide it when it is already focused; `Tab` cycles focus between the
+  # Keys: `F1`/`F2`/`F3` show and focus the editor/viewer/table of contents,
+  # or hide it when it is already focused; `F4` hides the menu bar and the
+  # status bar together, and brings them back (View → Menu and Status Bars,
+  # `#bars?`); `Tab` cycles focus between the
   # shown panes, except in the editor, where it indents (`app_edit.cr`);
   # `Insert` toggles overwrite mode in the editor; `F5` cycles
   # the mouse mode; `F6` the theme (`app_theme.cr`); `Ctrl-Z` outside the
@@ -203,6 +205,7 @@ module Md
         refresh_status
       end
       @line_numbers.on_change { @editor.line_numbers = @line_numbers.value }
+      @bars.on_change { apply_bars }
       @editor.on(Crysterm::Event::LineNumbersChanged) { |e| @line_numbers.value = e.visible }
       @watch_file.on_change do
         setup_file
@@ -318,6 +321,37 @@ module Md
       else
         show_pane(pane).focus
       end
+    end
+
+    # View → Menu and Status Bars (`F4`): whether the two bars are shown. A
+    # reactive property, so the menu entry binds to it (`#build_menus`) and
+    # the config keeps it (`app_config.cr`); `#bars?` and `#bars=` are its
+    # plain face. Hidden, the panes take the whole terminal, as a text
+    # editor's distraction-free view does; the entries' keys (`Ctrl-O`,
+    # `Ctrl-S`…) keep working, where the bar's own `F10` and `Alt` letters
+    # do not, and a question asked in place of the status bar shows the bar
+    # for as long as it is open (`app_dialogs.cr`).
+    @bars : Crysterm::Reactive::Property(Bool) = Crysterm::Reactive::Property.new(true)
+
+    def bars? : Bool
+      @bars.value
+    end
+
+    # Shows or hides the menu bar and the status bar together.
+    def bars=(value : Bool) : Bool
+      @bars.value = value
+    end
+
+    # The key gesture of `F4`: the bars hidden when shown, shown when hidden.
+    def toggle_bars : Nil
+      self.bars = !bars?
+    end
+
+    # Puts the property on the two bars (from `#initialize`, on change).
+    private def apply_bars : Nil
+      shown = @bars.value
+      {@main.menu_bar, @main.status_bar}.each { |bar| shown ? bar.show : bar.hide }
+      @window.update
     end
 
     # Jumps to the heading *url* names (`"#anchor"`, as the table of contents
@@ -593,9 +627,10 @@ module Md
     # back; returns whether *key* was one.
     private def app_key(key : Tput::Key) : Bool
       case key
-      when .f2?              then toggle_pane Pane::Editor
-      when .f3?              then toggle_pane Pane::Viewer
-      when .f4?              then toggle_pane Pane::Toc
+      when .f1?              then toggle_pane Pane::Editor
+      when .f2?              then toggle_pane Pane::Viewer
+      when .f3?              then toggle_pane Pane::Toc
+      when .f4?              then toggle_bars
       when .f5?              then cycle_mouse_mode
       when .f6?              then cycle_theme
       when .ctrl_z?          then suspend

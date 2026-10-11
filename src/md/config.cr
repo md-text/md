@@ -38,6 +38,8 @@ module Superconf
     description: "View → Guides: guide lines at the text's edges, and wherever one is pulled off the column ruler"
   option "md.resizable_panes", true, env: "MD_RESIZABLE_PANES",
     description: "View → Resizable Panes: let the dividers between the panes move"
+  option "md.bars", true, env: "MD_BARS",
+    description: "View → Menu and Status Bars: show the menu bar and the status bar (F4 hides and shows them together)"
   option "md.dialog_style", Md::App::DialogStyle::LinePrompt, env: "MD_DIALOG_STYLE",
     description: "View → Dialog Style: how a question is asked, in place of the status bar (line_prompt) or in a dialog (modal)"
   # Options.

@@ -178,9 +178,10 @@ module Md
         With `-`, or with no FILE and content on standard input, views the
         document as it streams in.
 
-        Keys: F2 editor, F3 viewer, F4 table of contents (show/focus, or hide
-        when focused), Tab next pane (outside the editor), Ctrl-O open, Ctrl-S save, Ctrl-F find,
-        Ctrl-L go to line, Ctrl-Q quit; F10 or Alt-F for the menus.
+        Keys: F1 editor, F2 viewer, F3 table of contents (show/focus, or hide
+        when focused), F4 menu and status bars, Tab next pane (outside the
+        editor), Ctrl-O open, Ctrl-S save, Ctrl-F find, Ctrl-L go to line,
+        Ctrl-Q quit; F10 or Alt-F for the menus.
 
         Options:
         BANNER

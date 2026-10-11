@@ -100,6 +100,7 @@ module Md
 
       # The Save As prompt completes file names with Tab, as a shell does.
       bar.line_prompt.completer = Crysterm::Widget::LinePrompt.path_completer
+      wire_prompt_bar
 
       @editor.on(Crysterm::Event::CursorPositionChanged) { refresh_status }
       @editor.on(Crysterm::Event::OverwriteModeChanged) { refresh_status }

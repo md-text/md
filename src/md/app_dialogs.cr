@@ -65,7 +65,7 @@ module Md
     # The field starts at *value*.
     def ask_text(label : String, value : String = "", question : String? = nil, &callback : String? ->) : Nil
       case @dialog_style.value
-      in .line_prompt? then @main.status_bar.prompt(label, value, &callback)
+      in .line_prompt? then status_prompt(label, value, &callback)
       in .modal?       then read_in_dialog(question || label.strip, value, &callback)
       end
     end
@@ -110,6 +110,24 @@ module Md
       end
     end
 
+    # The prompt in place of the status bar. With the bars hidden (`F4`,
+    # `#bars?`) the status bar is shown for the question and hidden again
+    # once it is answered or given up (`#wire_prompt_bar`), the way an
+    # editor's command line appears over a full-screen view.
+    private def status_prompt(label : String, value : String, &callback : String? ->) : Nil
+      @main.status_bar.show unless @bars.value
+      @main.status_bar.prompt(label, value, &callback)
+    end
+
+    # Hides the status bar again after a prompt that showed it (from
+    # `#build_status`): the prompt's end comes before its callback, so a
+    # question that asks another shows the bar again at once.
+    private def wire_prompt_bar : Nil
+      prompt = @main.status_bar.line_prompt
+      prompt.on(Crysterm::Event::Submitted) { @main.status_bar.hide unless @bars.value }
+      prompt.on(Crysterm::Event::Cancelled) { @main.status_bar.hide unless @bars.value }
+    end
+
     # The choice question in place of the status bar, answered by one key:
     # the prompt's field takes the key as text, and a handler registered
     # after the prompt's own listener — so it runs once the key is in —
@@ -119,7 +137,7 @@ module Md
     private def choose_in_prompt(question : String, forms : Array(String), &callback : Int32? ->) : Nil
       keys = forms.map { |form| form[form.index!('(') + 1].downcase }
       prompt = @main.status_bar.line_prompt
-      prompt.prompt("#{question} #{forms.join(", ")}: ", "") do |text|
+      status_prompt("#{question} #{forms.join(", ")}: ", "") do |text|
         @choice_key.try &.off
         @choice_key = nil
         answer = @choice_answer

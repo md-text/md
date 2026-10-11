@@ -58,7 +58,7 @@ module Md
     # lines included. Any other line moves by Markdown's indent unit, four
     # spaces (`INDENT`); outdenting takes up to four spaces, or a tab, off
     # its front. So `Tab` never leaves the editor, as it does not leave a
-    # `QPlainTextEdit` (`tabChangesFocus` is off by default): `F2`–`F4` and
+    # `QPlainTextEdit` (`tabChangesFocus` is off by default): `F1`–`F3` and
     # the mouse put the focus elsewhere.
     #
     # Format → As a Task gives a list item a task box, or takes off the one

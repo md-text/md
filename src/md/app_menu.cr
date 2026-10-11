@@ -35,9 +35,10 @@ module Md
     # after the focused pane had its turn, so the editor keeps the keys it
     # uses, and not while a prompt is open. Of the View entries only Soft
     # Wrap (`Alt+W`, free in the editor, where `Alt+Z` is redo) has one: the
-    # pane keys (`F2`–`F4`, `#app_key`) show and focus a pane or hide the
+    # pane keys (`F1`–`F3`, `#app_key`) show and focus a pane or hide the
     # focused one, a different gesture from the entries' show-and-hide, so
-    # they stay application keys, with `F5`, `Alt+R` (which moves a divider,
+    # they stay application keys, with `F4` (the bars, whose entry would
+    # vanish with them), `F5`, `Alt+R` (which moves a divider,
     # where the Resizable Panes entry locks and unlocks them) and the pager
     # letters (`#pager_key`).
     @view_actions = {} of Pane => Crysterm::Action
@@ -96,6 +97,8 @@ module Md
         @view_actions[pane] = action
       end
       add_toggle view, "Resi&zable Panes", @resizable_panes
+      # `F4` is the key, and the way back once the bars are gone.
+      add_toggle view, "Menu and Status &Bars", @bars
       view.add_separator
       add_toggle view, "S&ync Cursor", @sync_cursor
       add_toggle view, "&Highlight Line", @highlight_line

@@ -28,6 +28,7 @@ module Md
     # the configuration, links each property to its option (see above).
     private def apply_config : Nil
       link @resizable_panes, "md.resizable_panes"
+      link @bars, "md.bars"
       link @sync_cursor, "md.sync_cursor"
       link @highlight_line, "md.highlight_line"
       link @line_numbers, "md.line_numbers"

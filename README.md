@@ -111,7 +111,8 @@ viewer, and the table of contents its columns.
 
 | Key                | Action                                                                    |
 | ------------------ | ------------------------------------------------------------------------- |
-| `F2`, `F3`, `F4`   | Show and focus the editor, viewer or table of contents; hide it if it is already focused (the last pane stays) |
+| `F1`, `F2`, `F3`   | Show and focus the editor, viewer or table of contents; hide it if it is already focused (the last pane stays) |
+| `F4`               | Hide the menu bar and the status bar, or show them again (View → Menu and Status Bars); the entries' keys keep working meanwhile |
 | `Tab`, `Shift-Tab` | Outside the editor, move focus to the next or previous shown pane (in the viewer, `Tab` first cycles links); in the editor, indent and outdent the caret's line or the selected lines (Format → Indent, Outdent) |
 | `Enter`            | In the table of contents, jump the viewer to the selected heading; in the viewer, follow the focused link |
 | `Space`, `Enter`   | In the viewer, read on by a page or by a line (arrows, `PageUp`/`PageDown`, `Home`/`End` as usual) |
@@ -297,7 +298,7 @@ for `1. `, as CommonMark wants a child list, and outdents back to the
 indentation of the nearest shallower item — and any other line by
 Markdown's unit of four spaces, `Shift-Tab` taking up to four spaces, or a
 tab, off its front. `Tab` therefore never leaves the editor, as it does not
-leave a text field in Qt; `F2`, `F3`, `F4` and the mouse do, and there is
+leave a text field in Qt; `F1`, `F2`, `F3` and the mouse do, and there is
 no other focus key a terminal could tell from `Tab` (`Ctrl-Tab` arrives as
 `Tab`). Outside the editor `Tab` cycles the panes as before.
 

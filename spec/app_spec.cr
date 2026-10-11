@@ -207,10 +207,10 @@ describe Md::App do
   it "keeps the application keys quiet while a prompt is open" do
     with_app do |app, window|
       app.save_as_prompt
-      window.emit Crysterm::Event::KeyPress, Crysterm::Event::KeyPress.new('\0', Tput::Key::F3)
+      window.emit Crysterm::Event::KeyPress, Crysterm::Event::KeyPress.new('\0', Tput::Key::F2)
       app.visible_panes.should eq [Md::App::Pane::Editor]
       app.main.status_bar.line_prompt.cancel
-      window.emit Crysterm::Event::KeyPress, Crysterm::Event::KeyPress.new('\0', Tput::Key::F3)
+      window.emit Crysterm::Event::KeyPress, Crysterm::Event::KeyPress.new('\0', Tput::Key::F2)
       app.visible_panes.should eq [Md::App::Pane::Editor, Md::App::Pane::Viewer]
     end
   end
@@ -385,7 +385,7 @@ describe "Md::App config" do
         window.mouse_enabled?.should be_false # reading in the viewer: not in `i`
         app.editor.line_numbers?.should be_true
         app.pane_sizes.should eq [40, 60, 20]
-        follow, highlight = menu(app, 3).actions[5, 2]
+        follow, highlight = menu(app, 3).actions[6, 2]
         follow.checked?.should be_true
         highlight.checked?.should be_true
         Md::Config.dirty?.should be_false # applying is not a change

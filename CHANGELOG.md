@@ -15,7 +15,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - The application: a main window (menu bar and status bar, empty for now) with
   three side-by-side panes — Markdown source editor, rendered viewer and a
   navigable table of contents. A new document opens in the editor, a file in
-  the viewer; any combination of panes can be shown (`F2`/`F3`/`F4`), the
+  the viewer; any combination of panes can be shown (`F1`/`F2`/`F3`), the
   viewer re-renders live as the source is edited, and `Ctrl-S` saves.
 - Standard input is streamed into the viewer as it arrives, following the tail
   (`md -`, or `cmd | md`), with keyboard input taken from the terminal.
@@ -181,6 +181,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   panes away, to resize its panes in proportion and with stretch factors, to
   save and restore its state, to keep its dividers off the Tab chain, and to
   lock them, `Splitter#resizable`.)
+- The pane keys are `F1`, `F2` and `F3` (editor, viewer, table of contents),
+  and `F4` hides the menu bar and the status bar together and brings them
+  back (View → Menu and Status Bars, kept in the settings as `bars`): the
+  panes take the whole terminal, the entries' keys (`Ctrl-O`, `Ctrl-S`…)
+  keep working, and a question asked in place of the status bar shows the
+  bar while it is open. (A hidden Crysterm menu bar no longer answers its
+  `F10` and `Alt` letters.)
 - A file dropped on the window opens: the terminal pastes its path, and a
   paste that names one existing file, outside the editor, opens it through
   the unsaved-changes guard.
@@ -191,7 +198,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   indent and outdent the caret's line or the selected lines (Format →
   Indent, Outdent, whose shortcuts they are in the editor): a list item by
   the item above's content offset, any other line by four spaces. `Tab` no
-  longer leaves the editor; `F2`–`F4` and the mouse do. Format → Bold, Italic and Code
+  longer leaves the editor; `F1`–`F3` and the mouse do. Format → Bold, Italic and Code
   (`Ctrl-B`, `Alt-I`, `Alt-C`) wrap the selection or the word at the caret
   in `**`, `*` or backticks, or unwrap it; As a Task adds a `[ ]` box to a
   list item and takes it off, Toggle Task Checkbox (`Alt-X`) ticks and unticks it (an

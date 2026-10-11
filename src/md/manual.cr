@@ -16,8 +16,9 @@ module Md
 
     # The keys, as the man page lists them (the README's table, in short).
     KEYS = [
-      {"F2, F3, F4", "Show and focus the editor, the viewer or the table of contents; hide it when it is already focused (the last pane stays)."},
-      {"Tab, Shift-Tab", "Outside the editor, focus the next or the previous shown pane (in the viewer, Tab first cycles the links); in the editor, indent and outdent the caret's line or the selected lines (Format -> Indent, Outdent): a list item by the list's rules, any other line by four spaces. F2, F3 and F4 or the mouse leave the editor."},
+      {"F1, F2, F3", "Show and focus the editor, the viewer or the table of contents; hide it when it is already focused (the last pane stays)."},
+      {"F4", "Hide the menu bar and the status bar, or show them again (View -> Menu and Status Bars); the entries' keys keep working while they are hidden."},
+      {"Tab, Shift-Tab", "Outside the editor, focus the next or the previous shown pane (in the viewer, Tab first cycles the links); in the editor, indent and outdent the caret's line or the selected lines (Format -> Indent, Outdent): a list item by the list's rules, any other line by four spaces. F1, F2 and F3 or the mouse leave the editor."},
       {"Enter", "In the table of contents, jump the viewer to the selected heading; in the viewer, follow the focused link."},
       {"Space, Enter", "In the viewer, read on by a page or by a line."},
       {"Insert", "Toggle the editor between inserting and overwriting."},
