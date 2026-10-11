@@ -114,7 +114,7 @@ of the editor and the viewer, and the table of contents its columns.
 | `Space`, `Enter`   | In the viewer, read on by a page or by a line (arrows, `PageUp`/`PageDown`, `Home`/`End` as usual) |
 | `Insert`           | Toggle the editor between inserting and overwriting (the `INS`/`OVR` field) |
 | `F5`               | Cycle the mouse mode (the `🖱=` field)                                    |
-| `F6`               | Cycle the theme: terminal, dark, light (Options → Theme)                  |
+| `F6`               | Cycle the theme: terminal, dark, light (View → Theme)                     |
 | `Ctrl-Z`           | Outside the editor, suspend md to the shell (`fg` resumes); in the editor, undo |
 | `Alt-F`, `Alt-E`, `Alt-M`, `Alt-V`, `Alt-O` | Open the File, Edit, Format, View and Options menus (`F10` too) |
 | `Alt-W`            | Soft Wrap in the editor on and off (View → Soft Wrap)                     |
@@ -224,7 +224,7 @@ the way editors' "Paste from…" menus do:
 | From Internal Buffer     | what md itself last copied, or last received from the terminal, without asking anything outside |
 | From Kill Ring           | an entry of the editor's kill ring — what `Ctrl-K`, `Ctrl-U` and `Alt-D` killed — from a submenu remade each time the Edit menu opens, most recent first, numbered `1`–`9` and `0` for the tenth, each shown as its first forty columns with line breaks as `⏎`; `1` is what `Ctrl-Y` yanks, so an older kill is a pick away, emacs' `yank-pop` without the cycling |
 
-Options → Theme picks the colors the whole window is drawn in, from the
+View → Theme picks the colors the whole window is drawn in, from the
 themes built into Crysterm — the same ones its `--colors-theme` option
 names: `terminal` derives a palette from your terminal's own colors, so md
 blends in, and `dark` and `light` are fixed palettes. The window switches at

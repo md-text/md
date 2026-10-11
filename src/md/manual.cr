@@ -22,7 +22,7 @@ module Md
       {"Space, Enter", "In the viewer, read on by a page or by a line."},
       {"Insert", "Toggle the editor between inserting and overwriting."},
       {"F5", "Cycle the mouse mode (a: always, n: while reading, i: while editing, off), after vi's 'set mouse='."},
-      {"F6", "Cycle the theme: terminal, dark, light (Options -> Theme)."},
+      {"F6", "Cycle the theme: terminal, dark, light (View -> Theme)."},
       {"Ctrl-Z", "Outside the editor, suspend md to the shell (fg resumes); in the editor, undo."},
       {"F10, Alt-F, Alt-E, Alt-M, Alt-V, Alt-O", "Open the menu bar, or the File, Edit, Format, View and Options menus."},
       {"Ctrl-O", "Open a file (asks for the name, with completion)."},

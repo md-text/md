@@ -1,6 +1,6 @@
 module Md
   class App
-    # Options → Theme: which of Crysterm's built-in color themes the window
+    # View → Theme: which of Crysterm's built-in color themes the window
     # is drawn in — the choices `--colors-theme` takes, `none` aside, as
     # `QStyleFactory::keys` lists the styles `QApplication::setStyle` can
     # switch to at runtime. The themes are generated in code (`CSS::Theme`),
@@ -21,7 +21,7 @@ module Md
     # it is Crysterm's default.
     THEMES = [Theme::Terminal, Theme::Dark, Theme::Light]
 
-    # A reactive property, so the Options → Theme entries bind to it
+    # A reactive property, so the View → Theme entries bind to it
     # (`#build_menus`); `#theme` and `#theme=` are its plain face. Starts
     # as the theme Crysterm installed when the window was created, which is
     # its config's.

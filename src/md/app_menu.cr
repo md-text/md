@@ -6,16 +6,16 @@ module Md
     # are shown and resizing them, whether the editor's and the viewer's
     # carets are kept in sync, whether the caret's line is highlighted,
     # whether the editor numbers its lines, the text's layout — soft wrap,
-    # hard wrap, a text width and its centering, rulers and guides — how
-    # questions are asked (Dialog Style, `app_dialogs.cr`) and whether the
-    # file is watched) and
-    # Options (the two modes the status bar toggles — overwrite mode and the
-    # mouse mode — the unsaved-changes guard, auto-save and the backup file
-    # (`app_autosave.cr`), the theme and the clipboard mode, and Clear
-    # Caches…, `app_caches.cr`), so every
-    # setting is reachable from the keyboard through the menus as well,
-    # `Alt+F`/`Alt+E`/`Alt+M`/`Alt+V`/`Alt+O` opening them (Format's letter
-    # is `m`, since Options has `o` and Resize Panes `Alt+R`).
+    # hard wrap, a text width and its centering, rulers and guides — the
+    # theme the window is drawn in, how questions are asked (Dialog Style,
+    # `app_dialogs.cr`) and whether the file is watched) and Options (the two
+    # modes the status bar toggles — overwrite mode and the mouse mode — the
+    # unsaved-changes guard, auto-save and the backup file
+    # (`app_autosave.cr`), the clipboard mode, and Clear Caches…,
+    # `app_caches.cr`), so every setting is reachable from the keyboard
+    # through the menus as well, `Alt+F`/`Alt+E`/`Alt+M`/`Alt+V`/`Alt+O`
+    # opening them (Format's letter is `m`, since Options has `o` and Resize
+    # Panes `Alt+R`).
     #
     # The checked states are bound to what they stand for
     # (`Action#bind_checked`): a setting that is a reactive property gets a
@@ -110,6 +110,10 @@ module Md
       add_toggle view, "R&ulers", @rulers
       add_toggle view, "&Guides", @guides
       view.add_separator
+      # The colors the window is drawn in, with the other appearance choices;
+      # `F6` cycles them (`app_theme.cr`).
+      add_choices(view, "The&me", THEMES, @theme) { |theme| theme_label theme }
+      view.add_separator
       add_choices(view, "&Dialog Style", DialogStyle.values, @dialog_style) { |style| dialog_style_label style }
       add_toggle view, "&Watch File", @watch_file
 
@@ -122,7 +126,6 @@ module Md
       add_toggle options, "A&uto-Save", @autosave
       add_toggle options, "&Keep a Backup File", @backup_file
       add_choices(options, "&Mouse", MouseMode.values, @mouse_mode) { |mode| mouse_label mode }
-      add_choices(options, "&Theme", THEMES, @theme) { |theme| theme_label theme }
       # The Command entry names the command found, and cannot be picked when
       # there is none.
       clipboard = add_choices(options, "&Clipboard", ClipboardMode.values, @clipboard_mode) { |mode| clipboard_label mode }

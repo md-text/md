@@ -14,10 +14,10 @@ ensure
   Crysterm::CSS.theme = saved
 end
 
-# The Options → Theme entries.
+# The View → Theme entries.
 private def theme_entries(app) : Array(Crysterm::Action)
-  options = app.main.menu_bar.menus[4]
-  submenu = options.actions.find! { |action| action.text == "&Theme" }
+  view = app.main.menu_bar.menus[3]
+  submenu = view.actions.find! { |action| action.text == "The&me" }
   submenu.menu || [] of Crysterm::Action
 end
 
@@ -36,7 +36,7 @@ private def editor_bg(app, window) : Int32
 end
 
 describe "Md::App theme" do
-  it "offers Crysterm's built-in themes in the Options menu, the current one checked" do
+  it "offers Crysterm's built-in themes in the View menu, the current one checked" do
     with_theme_app do |app|
       app.theme.should eq Md::App::Theme::Terminal
       entries = theme_entries(app)
