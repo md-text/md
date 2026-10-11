@@ -60,6 +60,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - File → Open Recent lists the recently opened files, and the position in
   each is remembered and restored when it is opened again, in
   `$XDG_STATE_HOME/md/history.json` (`~/.local/state/md/history.json`).
+- Settings kept across runs: View → Follow cursor and Highlight line,
+  Options → Ask before discarding changes and the mouse mode are restored at
+  start and written at exit to `$XDG_CONFIG_HOME/md/settings.json`
+  (`~/.config/md/settings.json`), a store in the manner of Qt's `QSettings`
+  that later settings (pane sizes, a theme) join as new keys.
 
 [Unreleased]: https://github.com/crystallabs/md/commits/main
 

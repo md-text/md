@@ -111,20 +111,22 @@ module Md
     # Builds the application for *source*: a stream from standard input, an
     # existing file in view mode, or an empty editor (named after a file
     # that does not exist yet, or unnamed). The history of recent files and
-    # positions comes along; *watch* follows the file from the start.
+    # positions and the settings come along; *watch* follows the file from
+    # the start.
     private def self.launch(source : Source, watch : Bool = false) : App
       history = History.load
+      settings = Settings.load
       if source.stdin?
-        App.new source, stream: STDIN, history: history
+        App.new source, stream: STDIN, history: history, settings: settings
       elsif (path = source.path) && File.exists?(path)
         text = begin
           File.read path
         rescue ex : IO::Error
           raise Error.new("cannot read #{path}: #{ex.message}")
         end
-        App.new source, text: text, view: true, history: history, watch: watch
+        App.new source, text: text, view: true, history: history, settings: settings, watch: watch
       else
-        App.new source, history: history, watch: watch
+        App.new source, history: history, settings: settings, watch: watch
       end
     end
   end

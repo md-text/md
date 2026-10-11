@@ -5,12 +5,14 @@
 require "./md/version"
 require "./md/source"
 require "./md/history"
+require "./md/settings"
 require "./md/cli"
 require "./md/app"
 require "./md/app_status"
 require "./md/app_menu"
 require "./md/app_search"
 require "./md/app_file"
+require "./md/app_settings"
 
 module Md
 end

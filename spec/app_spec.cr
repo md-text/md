@@ -1,14 +1,15 @@
 require "./spec_helper"
+require "file_utils"
 
 # A headless window: in-memory IO, fixed size, no terminal involved.
 private def headless_window
   Crysterm::Window.new input: IO::Memory.new, output: IO::Memory.new, width: 100, height: 30
 end
 
-private def with_app(source = Md::Source.new, text = "", view = !text.empty?, &)
+private def with_app(source = Md::Source.new, text = "", view = !text.empty?, settings = nil, &)
   window = headless_window
   begin
-    yield Md::App.new(source, text: text, view: view, window: window), window
+    yield Md::App.new(source, text: text, view: view, window: window, settings: settings), window
   ensure
     window.destroy
   end
@@ -375,6 +376,67 @@ describe "Md::App menus" do
       modes.map(&.checked?).should eq [false, false, false, true]
       modes[3].trigger # re-picking the checked mode keeps it
       modes.map(&.checked?).should eq [false, false, false, true]
+    end
+  end
+end
+
+describe "Md::App settings" do
+  it "applies the stored choices and records changes, saving them at exit" do
+    dir = File.tempname("md-spec-settings")
+    Dir.mkdir_p dir
+    path = File.join(dir, "settings.json")
+    begin
+      File.write path, <<-JSON
+        {"version": 1, "settings": {"follow_cursor": true, "highlight_line": true,
+         "confirm_discard": false, "mouse_mode": "insert", "pane_sizes": [40, 60]}}
+        JSON
+      settings = Md::Settings.load(path)
+      with_app Md::Source.new(path: "doc.md"), text: DOC, view: true, settings: settings do |app, window|
+        app.settings.should be settings
+        app.follow_cursor?.should be_true
+        app.highlight_line?.should be_true
+        app.editor.highlight_current_line?.should be_true
+        app.viewer.highlight_current_line?.should be_true
+        app.confirm_discard?.should be_false
+        app.mouse_mode.should eq Md::App::MouseMode::Insert
+        window.mouse_enabled?.should be_false # reading in the viewer: not in `i`
+        follow, highlight = menu(app, 2).actions[4, 2]
+        follow.checked?.should be_true
+        highlight.checked?.should be_true
+        settings.dirty?.should be_false # applying is not a change
+
+        follow.trigger
+        app.follow_cursor?.should be_false
+        app.cycle_mouse_mode.should eq Md::App::MouseMode::Off
+        app.confirm_discard = true
+        settings.dirty?.should be_true
+        app.save_settings
+        settings.dirty?.should be_false
+      end
+
+      reloaded = Md::Settings.load(path)
+      reloaded.follow_cursor?.should be_false
+      reloaded.highlight_line?.should be_true
+      reloaded.confirm_discard?.should be_true
+      reloaded.mouse_mode.should eq Md::App::MouseMode::Off
+      reloaded.get("pane_sizes", [] of Int32).should eq [40, 60]
+    ensure
+      FileUtils.rm_rf dir
+    end
+  end
+
+  it "keeps the defaults for choices never made, and runs without a store" do
+    with_app settings: Md::Settings.new("unused.json") do |app|
+      app.follow_cursor?.should be_false
+      app.highlight_line?.should be_false
+      app.confirm_discard?.should be_true
+      app.mouse_mode.should eq Md::App::MouseMode::All
+      app.settings.try(&.dirty?).should be_false
+    end
+    with_app do |app|
+      app.settings.should be_nil
+      app.follow_cursor = true
+      app.save_settings
     end
   end
 end
