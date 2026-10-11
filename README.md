@@ -275,7 +275,12 @@ colors the window is drawn with — Auto-detect, the default, takes the
 terminal's word, and Monochrome, 8, 16, 256 Colors or True Color force a
 depth, for a terminal that reports fewer colors than it shows, or to see a
 theme as a plainer terminal would; the whole window is redrawn at the new
-depth at once (`--colors-depth`). View → Terminal Links is whether the
+depth at once (`--colors-depth`). Monochrome sends no colors at all, so a
+cell can only be the terminal's own foreground on its background or the
+two swapped: Crysterm draws a light-backed cell on a dark terminal (or a
+dark one on a light terminal, by the background the terminal reports) in
+reverse video, which is how a light theme comes out black on white rather
+than in the terminal's defaults. View → Terminal Links is whether the
 links in the viewer are also the terminal's own hyperlinks, to click or
 hover where the terminal does that: When the Terminal Supports Them turns
 them on where the terminal is known to support them, Always trusts the

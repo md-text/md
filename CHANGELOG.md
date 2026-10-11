@@ -98,7 +98,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ends the trial, and unchecking during one keeps the tried backend. The
   backend is kept with the other settings, as Crysterm's `media.backend`.
 - View → Color Depth (Crysterm's `colors.depth`: Auto-detect, Monochrome, 8,
-  16, 256 Colors, True Color; the whole window is redrawn at the new depth),
+  16, 256 Colors, True Color; the whole window is redrawn at the new depth;
+  at Monochrome a light theme reads black on white, Crysterm drawing a cell
+  whose polarity is the opposite of the terminal's in reverse video),
   View → Terminal Links (`render.hyperlinks`: whether the viewer's links are
   the terminal's own hyperlinks — When the Terminal Supports Them, Always,
   and Never, which turns the viewer's links off altogether: plain text, not
