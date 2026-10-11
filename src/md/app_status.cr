@@ -102,11 +102,8 @@ module Md
       @overwrite_button.on_clicked { @editor.overwrite_mode = !@editor.overwrite_mode? }
       @mouse_button.on_clicked { cycle_mouse_mode }
 
-      # The Save As prompt completes file names with Tab, directories with a
-      # trailing slash so the next Tab descends into them.
-      bar.line_prompt.completer = ->(text : String) do
-        Dir.glob("#{text}*").sort.map { |path| File.directory?(path) ? "#{path}/" : path }
-      end
+      # The Save As prompt completes file names with Tab, as a shell does.
+      bar.line_prompt.completer = Crysterm::Widget::LinePrompt.path_completer
 
       @editor.on(Crysterm::Event::CursorPositionChanged) { refresh_status }
       @editor.on(Crysterm::Event::OverwriteModeChanged) { refresh_status }
