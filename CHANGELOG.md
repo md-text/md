@@ -204,6 +204,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   document's is written again at the next auto-save) and md's cache
   directory, `$XDG_CACHE_HOME/md` (the log file, emptied), with a notice
   of what went. The settings stay.
+- View → Rulers: a column ruler along the top row of the editor and the
+  viewer and a row ruler down their left, counted in the text's columns —
+  a capped, centered column's tape starts where the text does, and both
+  slide with the text when it scrolls — the row ruler outside the editor's
+  line-number gutter. Kept across runs. (Crysterm's `AbstractScrollArea`
+  learnt `rulers`, reserved as viewport margins and styled by `::ruler`.)
 
 [Unreleased]: https://github.com/crystallabs/md/commits/main
 

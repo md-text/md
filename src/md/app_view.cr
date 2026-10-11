@@ -18,6 +18,13 @@ module Md
     # places the column in the middle of a wider pane rather than at its
     # left edge (`line_wrap_column_alignment`).
     #
+    # View → Rulers (`#rulers?`) puts a column ruler along the top row of
+    # each pane and a row ruler down its left — Crysterm's
+    # `AbstractScrollArea#rulers`, counted in the text's columns, so with a
+    # text width set and centered the tape starts where the text does, and
+    # in the editor the row ruler sits outside the line-number gutter, which
+    # keeps numbering source lines while the ruler numbers rows.
+    #
     # The widths offered; 0 is no cap.
     TEXT_WIDTHS = [0, 72, 80, 100, 120]
 
@@ -26,6 +33,7 @@ module Md
     @soft_wrap : Crysterm::Reactive::Property(Bool) = Crysterm::Reactive::Property.new(true)
     @text_width : Crysterm::Reactive::Property(Int32) = Crysterm::Reactive::Property.new(0)
     @center_text : Crysterm::Reactive::Property(Bool) = Crysterm::Reactive::Property.new(true)
+    @rulers : Crysterm::Reactive::Property(Bool) = Crysterm::Reactive::Property.new(false)
 
     def soft_wrap? : Bool
       @soft_wrap.value
@@ -57,6 +65,15 @@ module Md
       @center_text.value = value
     end
 
+    def rulers? : Bool
+      @rulers.value
+    end
+
+    # Shows or hides the rulers on both panes (View → Rulers).
+    def rulers=(value : Bool) : Bool
+      @rulers.value = value
+    end
+
     # The choices take effect when they change, whoever changed them (a
     # menu entry bound to the property, a setter, the settings restored at
     # start). The defaults are the panes' own, so nothing is applied until
@@ -68,6 +85,11 @@ module Md
       end
       @text_width.on_change { apply_text_width }
       @center_text.on_change { apply_text_width }
+      @rulers.on_change do
+        @editor.rulers = @rulers.value
+        @viewer.rulers = @rulers.value
+        refresh_status
+      end
     end
 
     # Puts the width and its placement on both panes.
