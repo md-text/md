@@ -122,7 +122,8 @@ module Md
     end
 
     # View → Sync Cursor, Highlight Line, Line Numbers, Soft Wrap, Text
-    # Width (in columns; 0 is no cap), Center Text, Rulers and Dialog Style.
+    # Width (in columns; 0 is no cap), Center Text, Rulers, Guides and Dialog
+    # Style.
     setting sync_cursor, Bool
     setting highlight_line, Bool
     setting line_numbers, Bool
@@ -130,6 +131,7 @@ module Md
     setting text_width, Int32
     setting center_text, Bool
     setting rulers, Bool
+    setting guides, Bool
     setting dialog_style, App::DialogStyle
     # Options → Ask Before Discarding Changes, Auto-Save, Keep a Backup File,
     # Mouse, Theme (as `--colors-theme` spells it) and Clipboard.

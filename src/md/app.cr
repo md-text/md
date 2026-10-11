@@ -41,7 +41,9 @@ module Md
   # View → Soft Wrap, Text Width and Center Text (`app_view.cr`) lay the
   # text out: the editor's wrap mode, a cap on the text's width for a wide
   # terminal, and whether the capped column is centered in the pane. View →
-  # Rulers (there too) measures it: a column and a row ruler on each pane.
+  # Rulers and Guides (there too) measure it: a column and a row ruler on
+  # each pane, and guide lines at the text's edges and wherever one is
+  # pulled off the ruler.
   #
   # Searching, going to a line and jumping between headings are in
   # `app_search.cr`; opening, reloading and watching the file, the guard

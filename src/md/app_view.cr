@@ -23,7 +23,13 @@ module Md
     # `AbstractScrollArea#rulers`, counted in the text's columns, so with a
     # text width set and centered the tape starts where the text does, and
     # in the editor the row ruler sits outside the line-number gutter, which
-    # keeps numbering source lines while the ruler numbers rows.
+    # keeps numbering source lines while the ruler numbers rows. View →
+    # Guides (`#guides?`) draws a vertical line in the column just before the
+    # text and the one just after it (`AbstractScrollArea#guides_enabled`):
+    # with a text width set in a wider pane, the capped column's edges; with
+    # the rulers shown, more guides are pulled off the column ruler with the
+    # mouse, dragged by their ruler end, and dropped on another guide, or
+    # back on the ruler, to be rid of them. The two edge guides stay.
     #
     # The widths offered; 0 is no cap.
     TEXT_WIDTHS = [0, 72, 80, 100, 120]
@@ -34,6 +40,7 @@ module Md
     @text_width : Crysterm::Reactive::Property(Int32) = Crysterm::Reactive::Property.new(0)
     @center_text : Crysterm::Reactive::Property(Bool) = Crysterm::Reactive::Property.new(true)
     @rulers : Crysterm::Reactive::Property(Bool) = Crysterm::Reactive::Property.new(false)
+    @guides : Crysterm::Reactive::Property(Bool) = Crysterm::Reactive::Property.new(false)
 
     def soft_wrap? : Bool
       @soft_wrap.value
@@ -74,6 +81,15 @@ module Md
       @rulers.value = value
     end
 
+    def guides? : Bool
+      @guides.value
+    end
+
+    # Shows or hides the guides on both panes (View → Guides).
+    def guides=(value : Bool) : Bool
+      @guides.value = value
+    end
+
     # The choices take effect when they change, whoever changed them (a
     # menu entry bound to the property, a setter, the settings restored at
     # start). The defaults are the panes' own, so nothing is applied until
@@ -88,6 +104,11 @@ module Md
       @rulers.on_change do
         @editor.rulers = @rulers.value
         @viewer.rulers = @rulers.value
+        refresh_status
+      end
+      @guides.on_change do
+        @editor.guides_enabled = @guides.value
+        @viewer.guides_enabled = @guides.value
         refresh_status
       end
     end

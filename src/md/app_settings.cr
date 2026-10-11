@@ -3,9 +3,9 @@ module Md
     # The settings kept across runs (`Settings`), when the app keeps them
     # (the CLI does; specs pass none, or one on a temporary file). The View
     # and Options choices that are reactive properties — Sync Cursor,
-    # Highlight Line, Soft Wrap, Text Width, Center Text, Rulers, Dialog
-    # Style, Ask Before Discarding Changes, Auto-Save, Keep a Backup File,
-    # the mouse and clipboard modes, the theme — and the editor's line
+    # Highlight Line, Soft Wrap, Text Width, Center Text, Rulers, Guides,
+    # Dialog Style, Ask Before Discarding Changes, Auto-Save, Keep a Backup
+    # File, the mouse and clipboard modes, the theme — and the editor's line
     # numbers are restored from the store on
     # construction and recorded in it as they change, whoever changes them
     # (a menu entry, a key, a setter), and the store is written at exit
@@ -30,6 +30,7 @@ module Md
       keep settings, @text_width, "text_width"
       keep settings, @center_text, "center_text"
       keep settings, @rulers, "rulers"
+      keep settings, @guides, "guides"
       keep settings, @dialog_style, "dialog_style"
       keep settings, @confirm_discard, "confirm_discard"
       keep settings, @autosave, "autosave"

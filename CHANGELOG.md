@@ -210,6 +210,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   slide with the text when it scrolls — the row ruler outside the editor's
   line-number gutter. Kept across runs. (Crysterm's `AbstractScrollArea`
   learnt `rulers`, reserved as viewport margins and styled by `::ruler`.)
+- View → Guides: a thin vertical line in the column just before the text
+  and the one just after it, drawn in blank cells only, which with a Text
+  Width set in a wider pane marks the capped column's edges. With the
+  rulers shown, more guides are pulled off the column ruler with the mouse,
+  moved by their ruler end, and dropped on another guide or back on the
+  ruler to be removed; the two edge guides always stay. Kept across runs.
+  (Crysterm's `AbstractScrollArea` learnt `guides_enabled`, `guides` and
+  the `::guide` color, with the drag.)
 
 [Unreleased]: https://github.com/crystallabs/md/commits/main
 

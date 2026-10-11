@@ -387,13 +387,20 @@ not run the whole width of a wide terminal; it applies to both panes, which
 keeps them reading side by side under Sync Cursor. *Center Text* puts the
 capped column in the middle of a wider pane rather than at its left edge.
 
-One more measures it. *Rulers* puts a column ruler along the top row of each
+Two more measure it. *Rulers* puts a column ruler along the top row of each
 pane and a row ruler down its left: a tape of `─` with a `┼` every fifth
 column and the number on every tenth, counted in the text's own columns — a
 capped, centered column's tape starts where the text does, and both slide
 with the text when it scrolls. In the editor the row ruler sits outside the
 line-number gutter and numbers rows where the gutter numbers source lines.
-The choice is kept across runs.
+*Guides* draws a thin vertical line in the column just before the text and
+the one just after it, in the blank cells only, so with a Text Width set in
+a wider pane the capped column's edges are marked. With the rulers shown,
+more guides are pulled off the column ruler with the mouse: press on the
+ruler and drag down into the pane to make one where it is dropped, drag a
+guide by its `┬` on the ruler to move it, and drop it on another guide, or
+back on the ruler, to be rid of it. The two edge guides always stay. Both
+choices are kept across runs.
 
 Save As asks for the name in place of the status bar, the way vi's command
 line replaces its status line: the current name is filled in, `Tab` and
@@ -447,9 +454,10 @@ choices, not a cache, and stay.
 ### Settings
 
 The choices made in the View and Options menus — Sync Cursor, Highlight
-Line, Line Numbers, Soft Wrap, Text Width, Center Text, Rulers, Dialog Style,
-Ask Before Discarding Changes, Auto-Save, Keep a Backup File, the mouse mode,
-the clipboard mode and the theme — and the pane sizes are kept across runs in
+Line, Line Numbers, Soft Wrap, Text Width, Center Text, Rulers, Guides, Dialog
+Style, Ask Before Discarding Changes, Auto-Save, Keep a Backup File, the mouse
+mode, the clipboard mode and the theme — and the pane sizes are kept across
+runs in
 `$XDG_CONFIG_HOME/md/settings.json` (`~/.config/md/settings.json`), written
 when md quits. Watch File is not kept: like `--watch`, it is for the run at
 hand. The file is plain JSON and can be edited by hand; a missing or broken
