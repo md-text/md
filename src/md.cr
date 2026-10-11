@@ -23,6 +23,7 @@ require "./md/app_view"
 require "./md/app_clipboard"
 require "./md/app_edit"
 require "./md/app_dialogs"
+require "./md/app_caches"
 
 module Md
 end

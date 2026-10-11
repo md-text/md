@@ -198,6 +198,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   the window (Modal Dialogs: Crysterm's `InputDialog` and `MessageBox`).
   The Replace question stays at the prompt in both styles. Kept in the
   settings as `dialog_style`.
+- Options → Clear Caches… empties, after asking, what md keeps for itself
+  between runs: the recent files and positions (`History#clear`, File →
+  Open Recent goes empty), the auto-save recovery files (the current
+  document's is written again at the next auto-save) and md's cache
+  directory, `$XDG_CACHE_HOME/md` (the log file, emptied), with a notice
+  of what went. The settings stay.
 
 [Unreleased]: https://github.com/crystallabs/md/commits/main
 

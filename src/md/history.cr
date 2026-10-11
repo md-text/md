@@ -96,6 +96,16 @@ module Md
       entry
     end
 
+    # Forgets every file (Options → Clear Caches…). Returns how many there
+    # were; forgetting none changes nothing.
+    def clear : Int32
+      count = @entries.size
+      return 0 if count == 0
+      @entries.clear
+      @dirty = true
+      count
+    end
+
     # Drops *path* from the list, for a file that is gone or that the user
     # removed from the menu. Returns whether it was there.
     def forget(path : String) : Bool

@@ -425,6 +425,17 @@ recovery file is newer than the file, a notice names the copy; open it
 (File → Open… takes the path) or copy it over the file to get the edits
 back. A new document is told of unnamed copies left behind.
 
+### Clearing the caches
+
+Options → Clear Caches… forgets, after asking, everything md keeps for
+itself between runs: the recent files and the positions remembered in them
+(File → Open Recent goes empty), the auto-save recovery files — the
+current document's too, which is written again at the next auto-save while
+the document is modified — and the contents of `$XDG_CACHE_HOME/md`
+(`~/.cache/md`), where Crysterm's log goes while md runs. A notice says
+how many recent files and recovery files went. The settings are your
+choices, not a cache, and stay.
+
 ### Settings
 
 The choices made in the View and Options menus — Sync Cursor, Highlight

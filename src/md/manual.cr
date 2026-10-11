@@ -145,7 +145,8 @@ module Md
           .TP
           .I $XDG_STATE_HOME/md/history.json
           The recently opened files and the position in each
-          (\fI~/.local/state/md/history.json\fR by default).
+          (\fI~/.local/state/md/history.json\fR by default); Options \-> Clear
+          Caches empties it, the recovery files and the cache directory.
           .TP
           .I $XDG_STATE_HOME/md/autosave/
           The recovery files auto-save writes, removed on a save or a clean exit.

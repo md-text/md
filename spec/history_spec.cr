@@ -123,6 +123,19 @@ describe Md::History do
     end
   end
 
+  describe "#clear" do
+    it "forgets every file and says how many there were" do
+      history = Md::History.new("unused.json")
+      history.clear.should eq 0
+      history.dirty?.should be_false
+      history.touch("a.md", 1, 1, viewing: true)
+      history.touch("b.md", 1, 1, viewing: true)
+      history.clear.should eq 2
+      history.recent.should be_empty
+      history.dirty?.should be_true
+    end
+  end
+
   describe "#forget" do
     it "drops the file and says whether it was there" do
       history = Md::History.new("unused.json")

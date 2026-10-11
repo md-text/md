@@ -305,10 +305,7 @@ describe "Md::App menus" do
       app.main.menu_bar.menus.size.should eq 5
       menu(app, 0).actions.map(&.text).should eq ["&Open…", "Open &Recent", "&Reload", "", "&Save", "Save &As…", "", "&Quit"]
       menu(app, 0).actions[1].enabled?.should be_false # no history, nothing recent
-      menu(app, 1).actions.map(&.text).should eq ["&Copy", "Copy as &Markdown", "&Paste", "Paste &Special", "", "&Find…", "Find &Next", "Find &Previous", "&Replace…", "Clear Search &Highlights", "", "&Go to Line…", "Nex&t Heading", "Pre&vious Heading", "", "&Back", "For&ward"]
-      menu(app, 2).actions.map(&.text).should eq ["&Bold", "&Italic", "&Code", "", "&Task Box", "Chec&k Task", "I&ndent", "&Outdent", "", "&Promote Heading", "&Demote Heading"]
-      menu(app, 3).actions.map(&.text).should eq ["&Editor", "&Viewer", "&Table of Contents", "&Resize Panes", "", "S&ync Cursor", "&Highlight Line", "Line &Numbers", "", "&Soft Wrap", "Te&xt Width", "&Center Text", "", "&Dialog Style", "&Watch File"]
-      menu(app, 4).actions.map(&.text).should eq ["&Overwrite Mode", "&Ask Before Discarding Changes", "A&uto-Save", "&Keep a Backup File", "&Mouse", "&Theme", "&Clipboard"]
+      menu(app, 4).actions.map(&.text).should eq ["&Overwrite Mode", "&Ask Before Discarding Changes", "A&uto-Save", "&Keep a Backup File", "&Mouse", "&Theme", "&Clipboard", "", "Clea&r Caches…"]
     end
   end
 

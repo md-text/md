@@ -10,7 +10,8 @@ module Md
     # `app_dialogs.cr`) and whether the file is watched) and
     # Options (the two modes the status bar toggles — overwrite mode and the
     # mouse mode — the unsaved-changes guard, auto-save and the backup file
-    # (`app_autosave.cr`), the theme and the clipboard mode), so every
+    # (`app_autosave.cr`), the theme and the clipboard mode, and Clear
+    # Caches…, `app_caches.cr`), so every
     # setting is reachable from the keyboard through the menus as well,
     # `Alt+F`/`Alt+E`/`Alt+M`/`Alt+V`/`Alt+O` opening them (Format's letter
     # is `m`, since Options has `o` and Resize Panes `Alt+R`).
@@ -121,6 +122,9 @@ module Md
       # there is none.
       clipboard = add_choices(options, "&Clipboard", ClipboardMode.values, @clipboard_mode) { |mode| clipboard_label mode }
       clipboard[ClipboardMode::Command.value].enabled = !self.clipboard.copy_command.nil?
+      options.add_separator
+      # `C` is the clipboard's; the ellipsis says it asks first.
+      options.add_action("Clea&r Caches…") { clear_caches_prompt }
 
       # The bar's right end names the keys that reach it, since the bar is
       # off the Tab chain and nothing else on screen says so: `F10` (the
