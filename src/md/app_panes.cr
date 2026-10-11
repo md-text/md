@@ -9,14 +9,19 @@ module Md
     # takes no width and shows no divider, and shown again it gets back the
     # width it had.
     #
-    # A divider moves with the mouse, and from the keyboard through View →
-    # Resize Panes (`Alt+R`, `#resize_panes`): it focuses the divider at the
+    # A divider moves with the mouse, and from the keyboard through `Alt+R`
+    # (`#resize_panes`, an application key): it focuses the divider at the
     # focused pane's right — its left for the last pane — so the arrow keys
     # move it a column at a time, and `Enter` or `Escape` (`#leave_divider`)
     # returns to the pane. The dividers are off the Tab chain, so `Tab` keeps
     # cycling the panes, and leaves a divider too. Qt has no keyboard for its
     # handles; a focused divider is the smallest addition that makes the
     # mouse optional, as it is everywhere else in md.
+    #
+    # View → Resizable Panes (`#resizable_panes?`, a setting) is whether the
+    # dividers move at all: unchecked, the panes stay locked as they are —
+    # the splitter's `resizable` (Qt disables the handles) refuses the mouse
+    # and the keys, and `Alt+R` says so — until it is checked again.
     #
     # The sizes are kept across runs as the splitter's state (`#pane_sizes`,
     # Qt's `saveState`): the width each pane wants, in cells — `[editor,
@@ -27,6 +32,23 @@ module Md
     # at hand in proportion anyway, so a wider or narrower terminal next time
     # keeps the split the user set.
     getter splitter : Crysterm::Widget::Splitter
+
+    # View → Resizable Panes; see the class comment. A reactive property, so
+    # the menu entry binds to it (`#build_menus`) and the settings keep it
+    # (`app_settings.cr`); `#resizable_panes?` and `#resizable_panes=` are
+    # its plain face.
+    @resizable_panes : Crysterm::Reactive::Property(Bool) = Crysterm::Reactive::Property.new(true)
+
+    def resizable_panes? : Bool
+      @resizable_panes.value
+    end
+
+    # Lets the dividers move, or locks the panes as they are (View →
+    # Resizable Panes), through the property's change handler
+    # (`#wire_resizable`).
+    def resizable_panes=(value : Bool) : Bool
+      @resizable_panes.value = value
+    end
 
     # Fills the central splitter with the panes (from `#initialize`).
     private def build_central : Nil
@@ -48,9 +70,25 @@ module Md
       @splitter.restore_state sizes
     end
 
-    # View → Resize Panes: focuses the divider beside the focused pane, for
-    # the arrow keys to move. Nothing to resize with one pane shown.
+    # The choice takes effect when it changes, whoever changed it (the menu
+    # entry, the setter, the settings restored at start); locking while a
+    # divider has the keys sends them back to the pane (from `#initialize`).
+    private def wire_resizable : Nil
+      @resizable_panes.on_change do
+        @splitter.resizable = @resizable_panes.value
+        leave_divider unless @resizable_panes.value
+        refresh_status
+      end
+    end
+
+    # `Alt+R`: focuses the divider beside the focused pane, for the arrow
+    # keys to move. Nothing to resize with one pane shown, and a notice
+    # instead while the panes are locked.
     def resize_panes : Nil
+      unless @resizable_panes.value
+        notice "Panes are locked (View → Resizable Panes)"
+        return
+      end
       shown = visible_panes
       return if shown.size < 2
       current = shown.find { |pane| widget(pane).focused? } || shown.first

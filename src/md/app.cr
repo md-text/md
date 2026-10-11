@@ -61,11 +61,12 @@ module Md
   # shown panes; `Insert` toggles overwrite mode in the editor; `F5` cycles
   # the mouse mode; `F6` the theme (`app_theme.cr`); `Ctrl-Z` outside the
   # editor suspends md as the shell's `Ctrl-Z` would (in the editor it is
-  # undo); `Enter` and `Escape` leave a divider being moved. The File, Edit
+  # undo); `Alt-R` hands the keys to a divider (`app_panes.cr`), and `Enter`
+  # and `Escape` take them back. The File, Edit
   # and View entries' keys — `Ctrl-S` saves, `Ctrl-O` opens, `Ctrl-R`
   # reloads, `Ctrl-F` searches, `Ctrl-G`/`Alt-G` repeat the search, `Alt-H`
-  # replaces, `Ctrl-L` goes to a line, `Alt-Up`/`Alt-Down` jump between headings, `Alt-R`
-  # resizes the panes, `Ctrl-Q` quits — are the entries' shortcuts
+  # replaces, `Ctrl-L` goes to a line, `Alt-Up`/`Alt-Down` jump between headings,
+  # `Ctrl-Q` quits — are the entries' shortcuts
   # (`app_menu.cr`), shown in the menus, and outside the editor the pager
   # keys `/`, `?`, `n`, `N`, `:`, `[` and `]` do the same. `q` quits too
   # outside the editor — Crysterm's default quit key, kept live while a pane
@@ -201,6 +202,7 @@ module Md
       end
       wire_theme
       wire_view
+      wire_resizable
 
       Pane.each { |pane| widget(pane).hide }
       load text unless text.empty?
@@ -568,8 +570,8 @@ module Md
     end
 
     # The application's special keys — the panes and the mouse mode, whose
-    # gestures no menu entry has, `Ctrl-Z`, and the way back from a divider;
-    # returns whether *key* was one.
+    # gestures no menu entry has, `Ctrl-Z`, and the way to a divider and
+    # back; returns whether *key* was one.
     private def app_key(key : Tput::Key) : Bool
       case key
       when .f2?              then toggle_pane Pane::Editor
@@ -578,6 +580,7 @@ module Md
       when .f5?              then cycle_mouse_mode
       when .f6?              then cycle_theme
       when .ctrl_z?          then suspend
+      when .alt_r?           then resize_panes
       when .enter?, .escape? then return leave_divider
       else                        return navigation_key(key)
       end

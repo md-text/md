@@ -24,8 +24,8 @@ describe "Md::App shortcuts" do
       menu(app, 1).actions.map(&.shortcut_text).should eq ["Ctrl+C", "", "Ctrl+V", "", "", "Ctrl+F", "Ctrl+G", "Alt+G", "Alt+H", "", "", "Ctrl+L", "Alt+Down", "Alt+Up", "", "Alt+Left", "Alt+Right"]
       menu(app, 2).actions.map(&.shortcut_text).should eq ["Ctrl+B", "Alt+I", "Alt+C", "", "", "Alt+X", "", "", "", "Ctrl+Up", "Ctrl+Down", "", "Alt+Q"]
       # The pane entries' gesture is not the F-keys', so they name no key;
-      # resizing and Soft Wrap have one.
-      menu(app, 3).actions.map(&.shortcut_text).should eq ["", "", "", "Alt+R", "", "", "", "", "", "Alt+W", "", "", "", "", "", "", "", "", "", ""]
+      # only Soft Wrap has one.
+      menu(app, 3).actions.map(&.shortcut_text).should eq ["", "", "", "", "", "", "", "", "", "Alt+W", "", "", "", "", "", "", "", "", "", ""]
       app.main.menu_bar.open_menu 0
       window.repaint
       rows = window.dump.to_s.lines

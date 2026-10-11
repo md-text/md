@@ -99,12 +99,15 @@ until you scroll up.
 The shown panes share the width with a divider between each two: the editor
 and the viewer equally, the table of contents as a 30-column list. Drag a
 divider with the mouse to resize the panes beside it, or, without a mouse,
-pick View → Resize Panes (`Alt-R`): the divider next to the pane you are in
-takes the keys, `Left` and `Right` move it a column at a time, and `Enter`,
-`Escape` or `Tab` go back to the panes. A hidden pane gives its width to the
-others and gets it back when shown. The sizes are kept across runs with the
-other settings; a wider or narrower terminal next time keeps the proportions
-of the editor and the viewer, and the table of contents its columns.
+press `Alt-R`: the divider next to the pane you are in takes the keys,
+`Left` and `Right` move it a column at a time, and `Enter`, `Escape` or
+`Tab` go back to the panes. Uncheck View → Resizable Panes to lock the panes
+as they are — the dividers then refuse the mouse and the keys, and `Alt-R`
+says so — and check it again to resize them. A hidden pane gives its width
+to the others and gets it back when shown. The sizes, and whether the panes
+are resizable, are kept across runs with the other settings; a wider or
+narrower terminal next time keeps the proportions of the editor and the
+viewer, and the table of contents its columns.
 
 | Key                | Action                                                                    |
 | ------------------ | ------------------------------------------------------------------------- |
@@ -129,7 +132,7 @@ of the editor and the viewer, and the table of contents its columns.
 | `Alt-H`            | Replace; asks for the pattern and the replacement, then about each match (Edit → Replace…) |
 | `Ctrl-L`, `:`      | Go to a source line; asks for the number (`:` outside the editor; Edit → Go to Line…) |
 | `Alt-Down`, `Alt-Up`, `]`, `[` | Jump to the next and previous heading (`]` and `[` outside the editor; Edit → Next Heading, Previous Heading) |
-| `Alt-R`            | Resize the panes from the keyboard: `Left`/`Right` move the divider next to the pane, `Enter`/`Escape` return (View → Resize Panes) |
+| `Alt-R`            | Resize the panes from the keyboard (when View → Resizable Panes is on): `Left`/`Right` move the divider next to the pane, `Enter`/`Escape` return |
 | `Backspace`        | Outside the editor, go back to where you were before the last link or open (Edit → Back) |
 | `Alt-Left`, `Alt-Right` | Back and Forward (Edit → Back, Forward); in the editor and the viewer these move by word instead |
 | `Enter`, `Tab`, `Shift-Tab` | In the editor, on a list item: continue the list (an empty item ends it), indent and outdent the item or the selected lines (Format → Indent, Outdent) |
@@ -477,8 +480,8 @@ choices, not a cache, and stay.
 
 ### Settings
 
-The choices made in the View and Options menus — Sync Cursor, Highlight
-Line, Line Numbers, Soft Wrap, Hard Wrap, Text Width, Center Text, Rulers,
+The choices made in the View and Options menus — Resizable Panes, Sync
+Cursor, Highlight Line, Line Numbers, Soft Wrap, Hard Wrap, Text Width, Center Text, Rulers,
 Guides, Dialog Style, Ask Before Discarding Changes, Auto-Save, Keep a Backup
 File, the mouse mode, the clipboard mode and the theme — and the pane sizes are
 kept across runs in

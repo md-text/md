@@ -3,7 +3,7 @@ module Md
     # The menu bar: File (open, the recent files, reload, save, quit), Edit
     # (copy, paste and paste from a named source, find, repeat the find,
     # replace, go to a line, jump between headings, go back), Format (the Markdown markup, `app_edit.cr`), View (which panes
-    # are shown and resizing them, whether the editor's and the viewer's
+    # are shown and whether they resize, whether the editor's and the viewer's
     # carets are kept in sync, whether the caret's line is highlighted,
     # whether the editor numbers its lines, the text's layout — soft wrap,
     # hard wrap, a text width and its centering, rulers and guides — the
@@ -14,8 +14,8 @@ module Md
     # (`app_autosave.cr`), the clipboard mode, and Clear Caches…,
     # `app_caches.cr`), so every setting is reachable from the keyboard
     # through the menus as well, `Alt+F`/`Alt+E`/`Alt+M`/`Alt+V`/`Alt+O`
-    # opening them (Format's letter is `m`, since Options has `o` and Resize
-    # Panes `Alt+R`).
+    # opening them (Format's letter is `m`, since Options has `o` and `Alt+R`
+    # resizes the panes).
     #
     # The checked states are bound to what they stand for
     # (`Action#bind_checked`): a setting that is a reactive property gets a
@@ -30,12 +30,13 @@ module Md
     # Qt's spelling, `Ctrl+O`): the menu shows it in its right-hand column,
     # and Crysterm fires the entry on the key from anywhere in the window —
     # after the focused pane had its turn, so the editor keeps the keys it
-    # uses, and not while a prompt is open. Of the View entries only Resize
-    # Panes (`Alt+R`) and Soft Wrap (`Alt+W`, free in the editor, where
-    # `Alt+Z` is redo) have one: the pane keys (`F2`–`F4`, `#app_key`) show
-    # and focus a pane or hide the focused one, a different gesture from the
-    # entries' show-and-hide, so they stay application keys, with `F5` and
-    # the pager letters (`#pager_key`).
+    # uses, and not while a prompt is open. Of the View entries only Soft
+    # Wrap (`Alt+W`, free in the editor, where `Alt+Z` is redo) has one: the
+    # pane keys (`F2`–`F4`, `#app_key`) show and focus a pane or hide the
+    # focused one, a different gesture from the entries' show-and-hide, so
+    # they stay application keys, with `F5`, `Alt+R` (which moves a divider,
+    # where the Resizable Panes entry locks and unlocks them) and the pager
+    # letters (`#pager_key`).
     @view_actions = {} of Pane => Crysterm::Action
 
     private def build_menus : Nil
@@ -91,7 +92,7 @@ module Md
         view.add_action action
         @view_actions[pane] = action
       end
-      view.add_action("&Resize Panes", shortcut: "Alt+R") { resize_panes }
+      add_toggle view, "Resi&zable Panes", @resizable_panes
       view.add_separator
       add_toggle view, "S&ync Cursor", @sync_cursor
       add_toggle view, "&Highlight Line", @highlight_line
@@ -106,7 +107,7 @@ module Md
       add_toggle view, "H&ard Wrap", @hard_wrap
       add_choices(view, "Te&xt Width", TEXT_WIDTHS, @text_width) { |width| text_width_label width }
       add_toggle view, "&Center Text", @center_text
-      # `u` and `g`: Resize Panes has the `r`.
+      # `u` and `g`: Resizable Panes takes `z`, so `r` is free, but `u` stays.
       add_toggle view, "R&ulers", @rulers
       add_toggle view, "&Guides", @guides
       view.add_separator

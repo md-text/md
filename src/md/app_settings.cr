@@ -2,7 +2,7 @@ module Md
   class App
     # The settings kept across runs (`Settings`), when the app keeps them
     # (the CLI does; specs pass none, or one on a temporary file). The View
-    # and Options choices that are reactive properties — Sync Cursor,
+    # and Options choices that are reactive properties — Resizable Panes, Sync Cursor,
     # Highlight Line, Soft Wrap, Hard Wrap, Text Width, Center Text, Rulers,
     # Guides, Dialog Style, Ask Before Discarding Changes, Auto-Save, Keep a
     # Backup File, the mouse and clipboard modes, the theme — and the
@@ -24,6 +24,7 @@ module Md
     # (`app_theme.cr`).
     private def apply_settings : Nil
       return unless settings = @settings
+      keep settings, @resizable_panes, "resizable_panes"
       keep settings, @sync_cursor, "sync_cursor"
       keep settings, @highlight_line, "highlight_line"
       keep settings, @soft_wrap, "soft_wrap"

@@ -2,7 +2,8 @@ require "./spec_helper"
 require "file_utils"
 
 # The panes in their splitter (`app_panes.cr`): dividers between the shown
-# panes, resizing by divider and by key, and the sizes kept in the settings.
+# panes, resizing by divider and by key, View → Resizable Panes locking
+# them, and the sizes kept in the settings.
 
 private def key(window, key : Tput::Key)
   window.emit Crysterm::Event::KeyPress, Crysterm::Event::KeyPress.new('\0', key)
@@ -71,14 +72,11 @@ describe "Md::App panes" do
     end
   end
 
-  it "moves a divider from the keyboard through View → Resize Panes" do
+  it "moves a divider from the keyboard after Alt+R" do
     with_app text: PANES_DOC do |app, window|
       show_all app
       app.editor.focus
-      resize = menu_actions(app)[3]
-      resize.text.should eq "&Resize Panes"
-      resize.shortcut_text.should eq "Alt+R"
-      resize.trigger
+      press(window, Tput::Key::AltR).accepted?.should be_true
       divider = app.splitter.dividers[0]
       divider.focused?.should be_true
       divider.position.should eq 34
@@ -108,6 +106,64 @@ describe "Md::App panes" do
       app.hide_pane Md::App::Pane::Editor
       app.resize_panes
       app.viewer.focused?.should be_true
+    end
+  end
+
+  it "locks the panes as they are when View → Resizable Panes is unchecked" do
+    with_app text: PANES_DOC do |app, window|
+      show_all app
+      resizable = menu_actions(app)[3]
+      resizable.text.should eq "Resi&zable Panes"
+      resizable.checkable?.should be_true
+      resizable.checked?.should be_true
+      app.resizable_panes?.should be_true
+      app.splitter.resizable?.should be_true
+
+      # Locked while a divider has the keys: they go back to the pane.
+      app.editor.focus
+      app.resize_panes
+      divider = app.splitter.dividers[0]
+      divider.focused?.should be_true
+      resizable.trigger
+      resizable.checked?.should be_false
+      app.resizable_panes?.should be_false
+      app.splitter.resizable?.should be_false
+      app.editor.focused?.should be_true
+      app.splitter.sizes.should eq [34, 34, Md::App::TOC_WIDTH]
+
+      # Alt+R says so instead of handing over the keys; a key on the divider
+      # does nothing.
+      press(window, Tput::Key::AltR).accepted?.should be_true
+      divider.focused?.should be_false
+      notice(app).should contain "Panes are locked"
+      divider.emit Crysterm::Event::KeyPress, Crysterm::Event::KeyPress.new('\0', Tput::Key::Right)
+      app.splitter.sizes.should eq [34, 34, Md::App::TOC_WIDTH]
+
+      # Checked again, the dividers move.
+      app.resizable_panes = true
+      resizable.checked?.should be_true
+      app.resize_panes
+      divider.focused?.should be_true
+      divider.emit Crysterm::Event::KeyPress, Crysterm::Event::KeyPress.new('\0', Tput::Key::Right)
+      app.splitter.sizes.should eq [35, 33, Md::App::TOC_WIDTH]
+    end
+  end
+
+  it "keeps Resizable Panes in the settings" do
+    dir = File.tempname("md-spec-resizable")
+    Dir.mkdir_p dir
+    path = File.join(dir, "settings.json")
+    begin
+      File.write path, %({"version": 1, "settings": {"resizable_panes": false}})
+      settings = Md::Settings.load(path)
+      with_app text: PANES_DOC, settings: settings do |app|
+        app.resizable_panes?.should be_false
+        app.splitter.resizable?.should be_false
+        app.resizable_panes = true
+        settings.resizable_panes?.should be_true
+      end
+    ensure
+      FileUtils.rm_rf dir
     end
   end
 
