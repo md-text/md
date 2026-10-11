@@ -23,31 +23,28 @@ module Md
     # (`app_theme.cr`).
     private def apply_settings : Nil
       return unless settings = @settings
-      settings.follow_cursor?.try { |value| @follow_cursor.value = value }
-      settings.highlight_line?.try { |value| @highlight_line.value = value }
-      settings.confirm_discard?.try { |value| @confirm_discard.value = value }
-      settings.mouse_mode.try { |mode| @mouse_mode.value = mode }
+      keep settings, @follow_cursor, "follow_cursor"
+      keep settings, @highlight_line, "highlight_line"
+      keep settings, @soft_wrap, "soft_wrap"
+      keep settings, @text_width, "text_width"
+      keep settings, @center_text, "center_text"
+      keep settings, @confirm_discard, "confirm_discard"
+      keep settings, @autosave, "autosave"
+      keep settings, @backup_file, "backup_file"
+      keep settings, @mouse_mode, "mouse_mode"
+      keep settings, @clipboard_mode, "clipboard_mode"
+      keep settings, @theme, "theme", apply: !theme_configured?
+      # The editor's own state, not a property: applied and heard directly.
       settings.line_numbers?.try { |value| @editor.line_numbers = value }
-      settings.theme.try { |theme| @theme.value = theme } unless theme_configured?
-      settings.autosave?.try { |value| @autosave.value = value }
-      settings.backup_file?.try { |value| @backup_file.value = value }
-      settings.soft_wrap?.try { |value| @soft_wrap.value = value }
-      settings.text_width.try { |value| @text_width.value = value }
-      settings.center_text?.try { |value| @center_text.value = value }
-      settings.clipboard_mode.try { |mode| @clipboard_mode.value = mode }
-      settings.pane_sizes.try { |sizes| self.pane_sizes = sizes }
-      @follow_cursor.on_change { settings.follow_cursor = @follow_cursor.value }
-      @highlight_line.on_change { settings.highlight_line = @highlight_line.value }
-      @confirm_discard.on_change { settings.confirm_discard = @confirm_discard.value }
-      @mouse_mode.on_change { settings.mouse_mode = @mouse_mode.value }
       @editor.on(Crysterm::Event::LineNumbersChanged) { |e| settings.line_numbers = e.visible }
-      @theme.on_change { settings.theme = @theme.value }
-      @autosave.on_change { settings.autosave = @autosave.value }
-      @backup_file.on_change { settings.backup_file = @backup_file.value }
-      @soft_wrap.on_change { settings.soft_wrap = @soft_wrap.value }
-      @text_width.on_change { settings.text_width = @text_width.value }
-      @center_text.on_change { settings.center_text = @center_text.value }
-      @clipboard_mode.on_change { settings.clipboard_mode = @clipboard_mode.value }
+      settings.pane_sizes.try { |sizes| self.pane_sizes = sizes }
+    end
+
+    # Puts *settings*' value under *key* into *property* (when *apply*) and
+    # records the property's every change under it: one line per choice.
+    private def keep(settings : Settings, property : Crysterm::Reactive::Property(T), key : String, apply : Bool = true) forall T
+      settings.get?(key, T).try { |value| property.value = value } if apply
+      property.on_change { settings.set key, property.value }
     end
 
     # Writes the settings, when any changed — the pane sizes recorded first,

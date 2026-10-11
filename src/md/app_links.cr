@@ -239,16 +239,13 @@ module Md
       MARKDOWN_EXTENSIONS.includes? File.extname(path).downcase
     end
 
-    # Where the reader is: the caret's source position, as `#remember_position`
-    # records it — the editor's caret while editing, the source of the
-    # viewer's while reading. Nil while the editor has yet to receive a
-    # streamed document, which has no source positions to speak of.
+    # Where the reader is (`#source_position`, as the history records it).
+    # Nil while the editor has yet to receive a streamed document, which has
+    # no source positions to speak of.
     private def place : Place?
       return if @editor_stale
-      viewing = !@editor.focused?
-      pos = viewing ? editor_position(@viewer.cursor_position) : @editor.cursor_position
-      cursor = Crysterm::TextCursor.new(@editor.document, pos)
-      Place.new @source.path, cursor.block_number + 1, cursor.column_number + 1
+      line, column = source_position
+      Place.new @source.path, line, column
     end
 
     # Puts *here* on the Back stack — once, when it is already on top — and

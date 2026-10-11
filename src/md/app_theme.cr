@@ -22,7 +22,7 @@ module Md
     THEMES = [Theme::Terminal, Theme::Dark, Theme::Light]
 
     # A reactive property, so the Options → Theme entries bind to it
-    # (`#add_theme_menu`); `#theme` and `#theme=` are its plain face. Starts
+    # (`#build_menus`); `#theme` and `#theme=` are its plain face. Starts
     # as the theme Crysterm installed when the window was created, which is
     # its config's.
     @theme : Crysterm::Reactive::Property(Theme) = Crysterm::Reactive::Property.new(Crysterm::Config.colors_theme)
@@ -69,20 +69,6 @@ module Md
       in .light?    then Crysterm::CSS::Theme.light
       in .none?     then nil
       end
-    end
-
-    # The Options → Theme radio submenu: exactly one theme is checked, and
-    # re-picking the checked one keeps it (as Mouse does).
-    private def add_theme_menu(options : Crysterm::Widget::Menu) : Nil
-      group = Crysterm::ActionGroup.new
-      themes = THEMES.map do |theme|
-        action = Crysterm::Action.new theme_label(theme), checkable: true
-        action.bind_checked(@theme) { @theme.value == theme }
-        group.add_action action
-        action.on(Crysterm::Event::Triggered) { self.theme = theme }
-        action
-      end
-      options.add_submenu "&Theme", themes
     end
 
     private def theme_label(theme : Theme) : String

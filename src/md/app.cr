@@ -19,8 +19,8 @@ module Md
   # The status bar (`app_status.cr`) shows the document's name, position,
   # size, encoding and modified state, and holds two toggles: the editor's
   # insert/overwrite mode and the mouse mode (`MouseMode`, after vi's
-  # `set mouse=`). The menu bar (`app_menu.cr`) offers saving and quitting,
-  # the panes, and the same two modes.
+  # `set mouse=`). The menu bar (`app_menu.cr`) puts every command and
+  # setting within the keyboard's reach, each entry naming its key.
   #
   # View → Follow cursor (`#follow_cursor`) keeps the editor's and the
   # viewer's carets on the same place in the document. The focused pane

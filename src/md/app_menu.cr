@@ -1,24 +1,27 @@
 module Md
   class App
     # The menu bar: File (open, the recent files, reload, save, quit), Edit
-    # (copy, find, repeat the find, go to a line, jump between headings), Format
-    # (the Markdown markup, `app_edit.cr`), View
-    # (which panes are shown and resizing them, whether the editor's and the viewer's carets
-    # follow each other, whether the caret's line is highlighted, whether
-    # the editor numbers its lines, the text's layout — soft wrap, a text
-    # width and its centering — and whether the file is watched) and
+    # (copy, find, repeat the find, go to a line, jump between headings, go
+    # back), Format (the Markdown markup, `app_edit.cr`), View (which panes
+    # are shown and resizing them, whether the editor's and the viewer's
+    # carets follow each other, whether the caret's line is highlighted,
+    # whether the editor numbers its lines, the text's layout — soft wrap, a
+    # text width and its centering — and whether the file is watched) and
     # Options (the two modes the status bar toggles — overwrite mode and the
     # mouse mode — the unsaved-changes guard, auto-save and the backup file
-    # (`app_autosave.cr`), the theme and the clipboard mode, so every setting is reachable from
-    # the keyboard through the menus as well, `Alt+F`/`Alt+E`/`Alt+M`/`Alt+V`/`Alt+O`
-    # opening them; Format's letter is `m` since Options has `o` and Resize
-    # panes `Alt+R`). The checked states are bound to what they stand for
-    # (`Action#bind_checked`): the View and Options settings, the mouse and
-    # clipboard modes and the theme are reactive properties, the pane entries follow the
-    # panes, and the overwrite and line-number entries follow the editor.
-    # Only the pane entries' enabled
-    # state is re-synced by `#refresh_menus`; the recent files are remade by
-    # `#refresh_recent_menu`.
+    # (`app_autosave.cr`), the theme and the clipboard mode), so every
+    # setting is reachable from the keyboard through the menus as well,
+    # `Alt+F`/`Alt+E`/`Alt+M`/`Alt+V`/`Alt+O` opening them (Format's letter
+    # is `m`, since Options has `o` and Resize panes `Alt+R`).
+    #
+    # The checked states are bound to what they stand for
+    # (`Action#bind_checked`): a setting that is a reactive property gets a
+    # check entry (`#add_toggle`) or, for a choice among several, a radio
+    # submenu (`#add_choices`, Qt's exclusive `QActionGroup`: exactly one
+    # entry is checked, and re-picking it keeps it); the pane entries follow
+    # the panes, and the overwrite and line-number entries follow the
+    # editor. Only the pane entries' enabled state is re-synced by
+    # `#refresh_menus`; the recent files are remade by `#refresh_recent_menu`.
     #
     # An entry with a key carries it as its shortcut (`Action#shortcut`, in
     # Qt's spelling, `Ctrl+O`): the menu shows it in its right-hand column,
@@ -26,11 +29,10 @@ module Md
     # after the focused pane had its turn, so the editor keeps the keys it
     # uses, and not while a prompt is open. Of the View entries only Resize
     # panes (`Alt+R`) and Soft wrap (`Alt+W`, free in the editor, where
-    # `Alt+Z` is redo) have one: the
-    # pane keys (`F2`–`F4`, `#app_key`) show and focus a pane or hide the
-    # focused one, a different gesture from the entries' show-and-hide, so
-    # they stay application keys, with `F5` and the pager letters
-    # (`#pager_key`).
+    # `Alt+Z` is redo) have one: the pane keys (`F2`–`F4`, `#app_key`) show
+    # and focus a pane or hide the focused one, a different gesture from the
+    # entries' show-and-hide, so they stay application keys, with `F5` and
+    # the pager letters (`#pager_key`).
     @view_actions = {} of Pane => Crysterm::Action
 
     private def build_menus : Nil
@@ -85,12 +87,8 @@ module Md
       end
       view.add_action("&Resize panes", shortcut: "Alt+R") { resize_panes }
       view.add_separator
-      follow = Crysterm::Action.new "&Follow cursor", checkable: true
-      follow.bind_checked @follow_cursor
-      view.add_action follow
-      highlight = Crysterm::Action.new "&Highlight line", checkable: true
-      highlight.bind_checked @highlight_line
-      view.add_action highlight
+      add_toggle view, "&Follow cursor", @follow_cursor
+      add_toggle view, "&Highlight line", @highlight_line
       # The editor's own state, like overwrite mode: the gutter is Crysterm's
       # (`PlainTextEdit#line_numbers`), the entry follows its event.
       numbers = Crysterm::Action.new "Line &numbers", checkable: true
@@ -98,68 +96,26 @@ module Md
       numbers.on(Crysterm::Event::Triggered) { |e| @editor.line_numbers = e.checked }
       view.add_action numbers
       view.add_separator
-      wrap = Crysterm::Action.new "&Soft wrap", checkable: true
-      wrap.shortcut = "Alt+W"
-      wrap.bind_checked @soft_wrap
-      view.add_action wrap
-      # A radio group, as the mouse modes are below.
-      widths_group = Crysterm::ActionGroup.new
-      widths = TEXT_WIDTHS.map do |width|
-        action = Crysterm::Action.new text_width_label(width), checkable: true
-        action.bind_checked(@text_width) { @text_width.value == width }
-        widths_group.add_action action
-        action.on(Crysterm::Event::Triggered) { self.text_width = width }
-        action
-      end
-      view.add_submenu "Te&xt width", widths
-      center = Crysterm::Action.new "&Center text", checkable: true
-      center.bind_checked @center_text
-      view.add_action center
+      add_toggle(view, "&Soft wrap", @soft_wrap).shortcut = "Alt+W"
+      add_choices(view, "Te&xt width", TEXT_WIDTHS, @text_width) { |width| text_width_label width }
+      add_toggle view, "&Center text", @center_text
       view.add_separator
-      watch = Crysterm::Action.new "&Watch file", checkable: true
-      watch.bind_checked @watch_file
-      view.add_action watch
+      add_toggle view, "&Watch file", @watch_file
 
       options = bar.add_menu "&Options"
       overwrite = Crysterm::Action.new "&Overwrite mode", checkable: true
       overwrite.bind_checked(@editor, Crysterm::Event::OverwriteModeChanged) { @editor.overwrite_mode? }
       overwrite.on(Crysterm::Event::Triggered) { |e| @editor.overwrite_mode = e.checked }
       options.add_action overwrite
-      confirm = Crysterm::Action.new "&Ask before discarding changes", checkable: true
-      confirm.bind_checked @confirm_discard
-      options.add_action confirm
-      autosave = Crysterm::Action.new "A&uto-save", checkable: true
-      autosave.bind_checked @autosave
-      options.add_action autosave
-      backup = Crysterm::Action.new "&Keep a backup file", checkable: true
-      backup.bind_checked @backup_file
-      options.add_action backup
-
-      # A radio group: exactly one mode is checked, and re-picking the checked
-      # one keeps it.
-      group = Crysterm::ActionGroup.new
-      modes = MouseMode.values.map do |mode|
-        action = Crysterm::Action.new mouse_label(mode), checkable: true
-        action.bind_checked(@mouse_mode) { @mouse_mode.value == mode }
-        group.add_action action
-        action.on(Crysterm::Event::Triggered) { self.mouse_mode = mode }
-        action
-      end
-      options.add_submenu "&Mouse", modes
-      add_theme_menu options
-
-      # Likewise for the clipboard modes; the Command entry names the command
-      # found, and cannot be picked when there is none.
-      clipboard_group = Crysterm::ActionGroup.new
-      clipboard_modes = ClipboardMode.values.map do |mode|
-        action = Crysterm::Action.new clipboard_label(mode), checkable: true
-        action.bind_checked(@clipboard_mode) { @clipboard_mode.value == mode }
-        action.enabled = false if mode.command? && clipboard.copy_command.nil?
-        clipboard_group.add_action action
-        action.on(Crysterm::Event::Triggered) { self.clipboard_mode = mode }
-        action
-      end
-      options.add_submenu "&Clipboard", clipboard_modes
+      add_toggle options, "&Ask before discarding changes", @confirm_discard
+      add_toggle options, "A&uto-save", @autosave
+      add_toggle options, "&Keep a backup file", @backup_file
+      add_choices(options, "&Mouse", MouseMode.values, @mouse_mode) { |mode| mouse_label mode }
+      add_choices(options, "&Theme", THEMES, @theme) { |theme| theme_label theme }
+      # The Command entry names the command found, and cannot be picked when
+      # there is none.
+      clipboard = add_choices(options, "&Clipboard", ClipboardMode.values, @clipboard_mode) { |mode| clipboard_label mode }
+      clipboard[ClipboardMode::Command.value].enabled = !self.clipboard.copy_command.nil?
 
       # The bar's right end names the keys that reach it, since the bar is
       # off the Tab chain and nothing else on screen says so: `F10` (the
@@ -180,6 +136,31 @@ module Md
       bar.activation_key.try { |key| keys << Crysterm::Action.key_stroke_text(key) }
       bar.mnemonics.first?.try { |letter| keys << "Alt+#{letter.upcase}" }
       "Menu = #{keys.join(" / ")}"
+    end
+
+    # A check entry for a setting that is a reactive property, its check
+    # bound to the property and the property set by the entry.
+    private def add_toggle(menu : Crysterm::Widget::Menu, text : String, property : Crysterm::Reactive::Property(Bool)) : Crysterm::Action
+      action = Crysterm::Action.new text, checkable: true
+      action.bind_checked property
+      menu.add_action action
+    end
+
+    # A radio submenu *title* for a setting that is a choice among
+    # *choices*, each entry labelled by *label*: exactly the chosen one is
+    # checked, and picking an entry sets the property. Returns the entries
+    # in *choices*' order.
+    private def add_choices(menu : Crysterm::Widget::Menu, title : String, choices : Enumerable(T), property : Crysterm::Reactive::Property(T), &label : T -> String) : Array(Crysterm::Action) forall T
+      group = Crysterm::ActionGroup.new
+      actions = choices.map do |choice|
+        action = Crysterm::Action.new label.call(choice), checkable: true
+        action.bind_checked(property) { property.value == choice }
+        group.add_action action
+        action.on(Crysterm::Event::Triggered) { property.value = choice }
+        action
+      end
+      menu.add_submenu title, actions
+      actions
     end
 
     # Keeps the last shown pane's View entry from hiding it; the other

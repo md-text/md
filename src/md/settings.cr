@@ -104,128 +104,42 @@ module Md
       @values.keys
     end
 
-    # View → Follow cursor. The named accessors are the settings md keeps
-    # today; a setting without a stored value reads as nil, so the caller's
-    # own default stands and is not spelled twice.
-    def follow_cursor? : Bool?
-      get? "follow_cursor", Bool
+    # The settings md keeps today, each a typed pair of accessors over its
+    # key — `follow_cursor?`/`follow_cursor=` for a `Bool`, `theme`/`theme=`
+    # for anything else — so a caller reads a choice by name and type. A
+    # setting without a stored value reads as nil, so the caller's own
+    # default stands and is not spelled twice. An enum is stored by its
+    # member's name (`"insert"`, `"dark"`) and reads as nil once md no longer
+    # knows the name.
+    private macro setting(name, type)
+      def {{ name.id }}{{ (type.stringify == "Bool" ? "?" : "").id }} : {{ type }}?
+        get? {{ name.id.stringify }}, {{ type }}
+      end
+
+      def {{ name.id }}=(value : {{ type }}) : Nil
+        set {{ name.id.stringify }}, value
+      end
     end
 
-    def follow_cursor=(value : Bool) : Nil
-      set "follow_cursor", value
-    end
-
-    # View → Highlight line.
-    def highlight_line? : Bool?
-      get? "highlight_line", Bool
-    end
-
-    def highlight_line=(value : Bool) : Nil
-      set "highlight_line", value
-    end
-
-    # View → Line numbers.
-    def line_numbers? : Bool?
-      get? "line_numbers", Bool
-    end
-
-    def line_numbers=(value : Bool) : Nil
-      set "line_numbers", value
-    end
-
-    # Options → Ask before discarding changes.
-    def confirm_discard? : Bool?
-      get? "confirm_discard", Bool
-    end
-
-    def confirm_discard=(value : Bool) : Nil
-      set "confirm_discard", value
-    end
-
-    # Options → Auto-save.
-    def autosave? : Bool?
-      get? "autosave", Bool
-    end
-
-    def autosave=(value : Bool) : Nil
-      set "autosave", value
-    end
-
-    # Options → Keep a backup file.
-    def backup_file? : Bool?
-      get? "backup_file", Bool
-    end
-
-    def backup_file=(value : Bool) : Nil
-      set "backup_file", value
-    end
-
-    # Options → Mouse, stored by the mode's name (`"all"`, `"normal"`,
-    # `"insert"`, `"off"`); a name md no longer knows reads as nil.
-    def mouse_mode : App::MouseMode?
-      get? "mouse_mode", App::MouseMode
-    end
-
-    def mouse_mode=(mode : App::MouseMode) : Nil
-      set "mouse_mode", mode
-    end
-
-    # Options → Theme, stored by the theme's name (`"terminal"`, `"dark"`,
-    # `"light"`), as `--colors-theme` spells it.
-    def theme : App::Theme?
-      get? "theme", App::Theme
-    end
-
-    def theme=(theme : App::Theme) : Nil
-      set "theme", theme
-    end
-
-    # View → Soft wrap.
-    def soft_wrap? : Bool?
-      get? "soft_wrap", Bool
-    end
-
-    def soft_wrap=(value : Bool) : Nil
-      set "soft_wrap", value
-    end
-
-    # View → Text width, in columns; 0 is no cap.
-    def text_width : Int32?
-      get? "text_width", Int32
-    end
-
-    def text_width=(value : Int32) : Nil
-      set "text_width", value
-    end
-
-    # View → Center text.
-    def center_text? : Bool?
-      get? "center_text", Bool
-    end
-
-    def center_text=(value : Bool) : Nil
-      set "center_text", value
-    end
-
-    # Options → Clipboard, stored by the mode's name (`"terminal"`,
-    # `"command"`, `"internal"`); likewise nil for a name md does not know.
-    def clipboard_mode : App::ClipboardMode?
-      get? "clipboard_mode", App::ClipboardMode
-    end
-
-    def clipboard_mode=(mode : App::ClipboardMode) : Nil
-      set "clipboard_mode", mode
-    end
-
-    # The panes' widths, in cells, as the splitter wants them (`App#pane_sizes`):
-    # `[editor, viewer, toc]`, 0 for a pane never resized.
-    def pane_sizes : Array(Int32)?
-      get? "pane_sizes", Array(Int32)
-    end
-
-    def pane_sizes=(sizes : Array(Int32)) : Nil
-      set "pane_sizes", sizes
-    end
+    # View → Follow cursor, Highlight line, Line numbers, Soft wrap, Text
+    # width (in columns; 0 is no cap) and Center text.
+    setting follow_cursor, Bool
+    setting highlight_line, Bool
+    setting line_numbers, Bool
+    setting soft_wrap, Bool
+    setting text_width, Int32
+    setting center_text, Bool
+    # Options → Ask before discarding changes, Auto-save, Keep a backup file,
+    # Mouse, Theme (as `--colors-theme` spells it) and Clipboard.
+    setting confirm_discard, Bool
+    setting autosave, Bool
+    setting backup_file, Bool
+    setting mouse_mode, App::MouseMode
+    setting theme, App::Theme
+    setting clipboard_mode, App::ClipboardMode
+    # The panes' widths in cells as the splitter wants them
+    # (`App#pane_sizes`): `[editor, viewer, toc]`, 0 for a pane never resized.
+    setting pane_sizes, Array(Int32)
 
     # Writes the map to `path`, creating the directory as needed
     # (`QSettings::sync`). The file is written beside its final name and

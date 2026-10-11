@@ -279,11 +279,19 @@ module Md
     # source of the viewer's while reading.
     def remember_position : Nil
       return unless (history = @history) && (path = @source.path)
-      viewing = !@editor.focused?
-      pos = viewing ? editor_position(@viewer.cursor_position) : @editor.cursor_position
-      cursor = Crysterm::TextCursor.new(@editor.document, pos)
-      history.touch path, cursor.block_number + 1, cursor.column_number + 1, viewing
+      line, column = source_position
+      history.touch path, line, column, !@editor.focused?
       refresh_recent_menu
+    end
+
+    # Where the reader is, as a 1-based source line and column: the editor's
+    # caret while editing, the source of the viewer's while reading — what
+    # the history and the Back stack (`app_links.cr`) record, and
+    # `#go_to_line` takes back.
+    private def source_position : {Int32, Int32}
+      pos = @editor.focused? ? @editor.cursor_position : editor_position(@viewer.cursor_position)
+      cursor = Crysterm::TextCursor.new(@editor.document, pos)
+      {cursor.block_number + 1, cursor.column_number + 1}
     end
 
     # Puts the panes where the history remembers the document's file, when

@@ -22,14 +22,24 @@ module Md
       {"Space, Enter", "In the viewer, read on by a page or by a line."},
       {"Insert", "Toggle the editor between inserting and overwriting."},
       {"F5", "Cycle the mouse mode (a: always, n: while reading, i: while editing, off), after vi's 'set mouse='."},
-      {"F10, Alt-F, Alt-E, Alt-V, Alt-O", "Open the menu bar, or the File, Edit, View and Options menus."},
+      {"F6", "Cycle the theme: terminal, dark, light (Options -> Theme)."},
+      {"Ctrl-Z", "Outside the editor, suspend md to the shell (fg resumes); in the editor, undo."},
+      {"F10, Alt-F, Alt-E, Alt-M, Alt-V, Alt-O", "Open the menu bar, or the File, Edit, Format, View and Options menus."},
       {"Ctrl-O", "Open a file (asks for the name, with completion)."},
       {"Ctrl-R", "Reload the file from disk."},
       {"Ctrl-S", "Save; without a file name yet, ask for one."},
+      {"Ctrl-C", "Copy the selection, or with nothing selected the current block (the line, in the editor); Edit -> Copy as Markdown copies the block's source."},
       {"Ctrl-F, /, ?", "Search; `/' and `?' outside the editor, `?' backward."},
       {"Ctrl-G, Alt-G, n, N", "Next and previous match (n and N outside the editor)."},
       {"Ctrl-L, :", "Go to a source line (`:' outside the editor)."},
       {"Alt-Down, Alt-Up, ], [", "Jump to the next and the previous heading (] and [ outside the editor)."},
+      {"Backspace, Alt-Left, Alt-Right", "Back to where you were before the last link or open (Backspace outside the editor), and Forward again."},
+      {"Alt-R", "Resize the panes from the keyboard: Left and Right move the divider next to the pane, Enter or Escape return."},
+      {"Alt-W", "Soft wrap in the editor on and off."},
+      {"Enter, Tab, Shift-Tab", "In the editor, on a list item: continue the list (an empty item ends it), indent and outdent the item or the selected lines."},
+      {"Ctrl-B, Alt-I, Alt-C", "Bold, italic and code around the selection or the word at the caret, or off again."},
+      {"Alt-X", "Add, tick or untick a list item's task box."},
+      {"Ctrl-Up, Ctrl-Down", "Promote or demote the heading on the caret's line."},
       {"Ctrl-Q, q", "Quit (q anywhere but in the editor); asks first when changes are unsaved."},
     ]
 
@@ -122,9 +132,19 @@ module Md
           has an uppercase letter, and the search wraps around with a notice.
           .SH FILES
           .TP
+          .I $XDG_CONFIG_HOME/md/settings.json
+          The View and Options choices and the pane sizes, kept across runs
+          (\fI~/.config/md/settings.json\fR by default).
+          .TP
           .I $XDG_STATE_HOME/md/history.json
           The recently opened files and the position in each
           (\fI~/.local/state/md/history.json\fR by default).
+          .TP
+          .I $XDG_STATE_HOME/md/autosave/
+          The recovery files auto-save writes, removed on a save or a clean exit.
+          .TP
+          .I FILE~
+          The backup of a file as it was before the session's first save of it.
           .TP
           .I $XDG_CACHE_HOME/md/md.log
           Crysterm's log while md runs: handler errors with their backtraces
