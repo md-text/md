@@ -260,9 +260,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   item's content indentation, a blockquote's `> `; a code block, a heading
   and a table row are never broken. The keystroke and its wrap are one undo
   step. (The wrapping is Crysterm's `hard_wrap_column`, with md supplying
-  the Markdown continuation.) Format → Rewrap Paragraph (`Alt-Q`) refills
-  the paragraph at the cursor, or the selection's paragraphs, to the same
-  column, with the same Markdown rules.
+  the Markdown continuation.) Format → Rewrap → Paragraph (`Alt-Q`) refills
+  the paragraph at the cursor, or the selection's paragraphs, and Rewrap →
+  Document every paragraph of the file, to the same column, with the same
+  Markdown rules.
 - Every View and Options choice is a configuration option as well, in
   Crysterm's registry beside the toolkit's own: `md.sync_cursor`,
   `md.text_width`, `md.mouse_mode` and the rest, each settable in the config

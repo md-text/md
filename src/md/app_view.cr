@@ -45,7 +45,7 @@ module Md
     # cannot be broken without changing their meaning (a code block's, a
     # heading, a table row) are left alone. Off by default: soft wrap shows
     # a long line folded without touching the source. Format → Rewrap
-    # Paragraph (`app_edit.cr`) refills a paragraph to the same column.
+    # (`app_edit.cr`) refills a paragraph, or the document, to the same column.
     #
     # The widths offered; 0 is no cap.
     TEXT_WIDTHS = [0, 72, 80, 100, 120]

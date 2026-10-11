@@ -73,11 +73,11 @@ module Md
     # `Ctrl-Down`) move the caret's line one heading level up or down, a
     # paragraph being the level above `#` and `######` the last.
     #
-    # Format → Rewrap Paragraph (`Alt-Q`, Emacs's `fill-paragraph`, Kate's
+    # Format → Rewrap → Paragraph (`Alt-Q`, Emacs's `fill-paragraph`, Kate's
     # Apply Word Wrap) refills the caret's paragraph — or every paragraph
-    # the selection touches — to the wrap column (`#wrap_column`,
-    # `app_view.cr`), the companion of View → Hard Wrap, which breaks lines
-    # as they are typed. A paragraph is a run of lines without a blank one,
+    # the selection touches — and Rewrap → Document every paragraph of the
+    # document, to the wrap column (`#wrap_column`, `app_view.cr`), the
+    # companion of View → Hard Wrap, which breaks lines as they are typed. A paragraph is a run of lines without a blank one,
     # in the same blockquote, that no list item, heading, fence or table
     # row starts or interrupts (`#continues?`); a list item's lines keep
     # the marker and take the item's content indentation, a quote's keep
@@ -239,18 +239,33 @@ module Md
       end
     end
 
-    # Format → Rewrap Paragraph: the caret's paragraph, or the selection's
+    # Format → Rewrap → Paragraph: the caret's paragraph, or the selection's
     # paragraphs, refilled to the wrap column (see the class comment).
     # Returns whether there was a paragraph, with a notice when there was
     # not (a blank line, a code block).
     def rewrap_paragraph : Bool
       editor = formatting_editor
-      doc = editor.document
       first, last = selected_blocks
       unless editor.selection?
         first = paragraph_start first
         last = paragraph_end first
       end
+      rewrap_blocks first, last
+    end
+
+    # Format → Rewrap → Document: every paragraph of the document refilled,
+    # as one undo step; code blocks, headings and table rows stay. Returns
+    # whether there was a paragraph, with a notice when there was none.
+    def rewrap_document : Bool
+      rewrap_blocks 0, formatting_editor.document.block_count - 1
+    end
+
+    # Lines *first* to *last* of the editor's document refilled paragraph by
+    # paragraph, the caret keeping its place; the shared body of the two
+    # Rewrap entries.
+    private def rewrap_blocks(first : Int32, last : Int32) : Bool
+      editor = formatting_editor
+      doc = editor.document
       lines = (first..last).map { |i| doc.blocks[i].text }
       filled = [] of String
       found = false
@@ -463,7 +478,12 @@ module Md
       format.add_action("&Promote Heading", shortcut: "Ctrl+Up") { promote_heading }
       format.add_action("&Demote Heading", shortcut: "Ctrl+Down") { demote_heading }
       format.add_separator
-      format.add_action("Re&wrap Paragraph", shortcut: "Alt+Q") { rewrap_paragraph }
+      paragraph = Crysterm::Action.new "&Paragraph"
+      paragraph.shortcut = "Alt+Q"
+      paragraph.on(Crysterm::Event::Triggered) { rewrap_paragraph }
+      document = Crysterm::Action.new "&Document"
+      document.on(Crysterm::Event::Triggered) { rewrap_document }
+      format.add_submenu "Re&wrap", [paragraph, document]
     end
 
     # `Enter` on a list item with the caret past the marker: the item

@@ -3,7 +3,7 @@ require "file_utils"
 
 # View → Hard Wrap: Kate's static word wrap in the editor, through Crysterm's
 # `hard_wrap_column`, with the carried line continuing the Markdown it is in
-# (`MarkdownEdit#hard_wrap_prefix`); and Format → Rewrap Paragraph, the
+# (`MarkdownEdit#hard_wrap_prefix`); and Format → Rewrap → Paragraph, the
 # refill of a paragraph to the same column.
 
 # Puts the editor's caret at *column* of *line*, both 0-based.
@@ -152,10 +152,27 @@ describe "Md::App rewrap paragraph" do
     end
   end
 
-  it "shows the Format entry with its key" do
+  it "refills every paragraph of the document as one undo step, and says so without one" do
+    with_app text: "# Title\n\naa\nbb\n\n```\ncc\ndd\n```\n\n- ee\nff\n", view: false do |app|
+      app.text_width = 20
+      place app, 0, 0
+      app.rewrap_document.should be_true
+      app.markdown.should eq "# Title\n\naa bb\n\n```\ncc\ndd\n```\n\n- ee ff\n"
+      app.editor.undo.should be_true
+      app.markdown.should eq "# Title\n\naa\nbb\n\n```\ncc\ndd\n```\n\n- ee\nff\n"
+    end
+    with_app text: "# Title\n\n```\ncc\n```\n", view: false do |app|
+      app.rewrap_document.should be_false
+      notice(app).should contain "Not a paragraph"
+    end
+  end
+
+  it "shows the Format → Rewrap entries, Paragraph with its key" do
     with_app do |app|
-      entry = menu(app, 2).actions.find! { |a| a.text.downcase == "re&wrap paragraph" }
-      entry.shortcut_text.should eq "Alt+Q"
+      rewrap = menu(app, 2).actions.find! { |a| a.text == "Re&wrap" }
+      entries = rewrap.menu.not_nil!
+      entries.map(&.text).should eq ["&Paragraph", "&Document"]
+      entries[0].shortcut_text.should eq "Alt+Q"
     end
   end
 end
