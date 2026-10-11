@@ -53,25 +53,29 @@ module Md
     ENCODING_WIDTH = "9%"
     MODIFIED_WIDTH = "10%"
 
-    getter mouse_mode : MouseMode = MouseMode::All
+    # A reactive property, so the Options → Mouse entries bind to it
+    # (`#build_menus`); `#mouse_mode` and `#mouse_mode=` are its plain face.
+    @mouse_mode : Crysterm::Reactive::Property(MouseMode) = Crysterm::Reactive::Property.new(MouseMode::All)
 
-    # Switches the mouse mode and applies it to the terminal at once.
+    def mouse_mode : MouseMode
+      @mouse_mode.value
+    end
+
+    # Switches the mouse mode; it is applied to the terminal when it changes
+    # (the property's change handler, in `#build_status`).
     def mouse_mode=(mode : MouseMode) : MouseMode
-      @mouse_mode = mode
-      @window.apply_mouse_policy
-      refresh_status
-      mode
+      @mouse_mode.value = mode
     end
 
     # Steps to the next mouse mode (the status bar button's click, `F5`).
     def cycle_mouse_mode : MouseMode
-      self.mouse_mode = @mouse_mode.next_mode
+      self.mouse_mode = @mouse_mode.value.next_mode
     end
 
     # Whether the mouse currently serves: the mode, against which pane has
     # focus.
     def mouse_active? : Bool
-      @mouse_mode.active? @editor.focused?
+      @mouse_mode.value.active? @editor.focused?
     end
 
     # Fills the status bar: the document's name, the caret or reading
@@ -107,7 +111,11 @@ module Md
       # The mode decides per focused pane whether the mouse serves; Crysterm
       # applies the answer to the terminal on every focus change, and
       # `#mouse_mode=` re-applies it when the mode changes.
-      @window.mouse_policy = ->(focused : Crysterm::Widget?) { @mouse_mode.active?(focused.same?(@editor)) }
+      @window.mouse_policy = ->(focused : Crysterm::Widget?) { @mouse_mode.value.active?(focused.same?(@editor)) }
+      @mouse_mode.on_change do
+        @window.apply_mouse_policy
+        refresh_status
+      end
       refresh_status
     end
 
@@ -120,7 +128,7 @@ module Md
       @encoding_field.text = "UTF-8 #{crlf ? "CRLF" : "LF"}"
       @modified_field.text = @editor.document.modified? ? "✎ modified" : ""
       @overwrite_button.text = @editor.overwrite_mode? ? "OVR" : "INS"
-      @mouse_button.text = "#{mouse_icon}=#{@mouse_mode.vi_value}"
+      @mouse_button.text = "#{mouse_icon}=#{@mouse_mode.value.vi_value}"
       refresh_menus
     end
 

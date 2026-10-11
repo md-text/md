@@ -76,10 +76,12 @@ module Md
     # resulting `TextChanged` is not mistaken for a user edit.
     @loading = false
     getter? streaming : Bool = false
-    # View → Follow cursor; see the class comment.
-    getter? follow_cursor : Bool = false
-    # View → Highlight line; see the class comment.
-    getter? highlight_line : Bool = false
+    # View → Follow cursor; see the class comment. A reactive property, so
+    # the menu entry binds to it (`#build_menus`); `#follow_cursor?` and
+    # `#follow_cursor=` are its plain face.
+    @follow_cursor : Crysterm::Reactive::Property(Bool) = Crysterm::Reactive::Property.new(false)
+    # View → Highlight line; see the class comment. Likewise.
+    @highlight_line : Crysterm::Reactive::Property(Bool) = Crysterm::Reactive::Property.new(false)
 
     # The status bar's fields (see `#build_status` in `app_status.cr`).
     @name_field : Crysterm::Widget::Label
@@ -153,6 +155,17 @@ module Md
         end
       end
       Pane.each { |pane| widget(pane).on(Crysterm::Event::Hide) { refresh_status } }
+      # The View settings take effect when they change, whoever changed them
+      # (the menu entry bound to the property, or `#follow_cursor=`).
+      @follow_cursor.on_change do
+        sync_follow
+        refresh_status
+      end
+      @highlight_line.on_change do
+        @editor.highlight_current_line = @highlight_line.value
+        @viewer.highlight_current_line = @highlight_line.value
+        refresh_status
+      end
 
       Pane.each { |pane| widget(pane).hide }
       load text unless text.empty?
@@ -242,14 +255,25 @@ module Md
       align_rows @viewer, @editor if @viewer.visible?
     end
 
+    def follow_cursor? : Bool
+      @follow_cursor.value
+    end
+
     # Turns following on or off (View → Follow cursor). Turning it on
-    # aligns the panes at once, from the focused one.
+    # aligns the panes at once, from the focused one (the property's change
+    # handler, in `#initialize`).
     def follow_cursor=(value : Bool) : Bool
-      return value if value == @follow_cursor
-      @follow_cursor = value
-      sync_follow
-      refresh_status
-      value
+      @follow_cursor.value = value
+    end
+
+    def highlight_line? : Bool
+      @highlight_line.value
+    end
+
+    # Turns the caret-line highlight on or off (View → Highlight line) in
+    # both panes (the property's change handler, in `#initialize`).
+    def highlight_line=(value : Bool) : Bool
+      @highlight_line.value = value
     end
 
     # The viewer position rendered from editor position *pos*: the start of
@@ -287,16 +311,6 @@ module Md
       (start + offset).clamp(start, Math.max(start, limit))
     end
 
-    # Turns the caret-line highlight on or off (View → Highlight line) in
-    # both panes.
-    def highlight_line=(value : Bool) : Bool
-      return value if value == @highlight_line
-      @highlight_line = value
-      @editor.highlight_current_line = value
-      @viewer.highlight_current_line = value
-      refresh_status
-      value
-    end
 
     # After a pane was shown: the panes aligned, the status (and the View
     # menu's entries) refreshed.
@@ -318,7 +332,7 @@ module Md
     # viewport row. The viewer's own move reports back through its handler,
     # which ignores it (the viewer is not the focused pane).
     private def follow_editor : Nil
-      return unless @follow_cursor && @viewer.visible? && @editor.visible?
+      return unless @follow_cursor.value && @viewer.visible? && @editor.visible?
       pos = viewer_position(@editor.cursor_position)
       @viewer.text_cursor = Crysterm::TextCursor.new(@viewer.document, pos)
       align_rows @editor, @viewer
@@ -327,7 +341,7 @@ module Md
     # Puts the editor's caret on the source of the viewer's, on the same
     # viewport row.
     private def follow_viewer : Nil
-      return unless @follow_cursor && @editor.visible? && @viewer.visible?
+      return unless @follow_cursor.value && @editor.visible? && @viewer.visible?
       pos = editor_position(@viewer.cursor_position)
       @editor.text_cursor = Crysterm::TextCursor.new(@editor.document, pos)
       align_rows @viewer, @editor
