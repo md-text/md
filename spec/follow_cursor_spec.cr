@@ -164,13 +164,15 @@ describe "Md::App table of contents" do
 
       # The jump moved the viewer's caret like any other move: a caret-line
       # highlight follows it to the heading.
-      app.highlight_line = true
+      heading_bg = ->{ Crysterm::Attr.bg(window.cell_rows[app.viewer.atop][app.viewer.aleft].attr) }
+      plain = heading_bg.call
       app.viewer.cursor_position = 0
-      app.viewer.extra_selections.find!(&.full_width).cursor.position.should eq 0
+      app.highlight_line = true
       app.toc.current_index = 0
       app.toc.activate_current
-      tint = app.viewer.extra_selections.find!(&.full_width)
-      tint.cursor.position.should eq shown(app, "Late heading")
+      window.repaint
+      app.viewer.cursor_viewport_row.should eq 0 # the caret, and so the tint, on the heading's row
+      heading_bg.call.should_not eq plain
       app.highlight_line = false
 
       # The same through the viewer's own link activation, with the editor hidden.

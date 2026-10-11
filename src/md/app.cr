@@ -284,10 +284,9 @@ module Md
       edoc = @editor.document
       vdoc = @viewer.document
       line = edoc.block_at(pos).index + 1
-      return 0 unless best = vdoc.block_from_source_line(line)
-      best_line = vdoc.blocks[best].source_line || line
-      offset = pos - edoc.block_position(best_line - 1)
-      vdoc.block_position(best) + offset.clamp(0, vdoc.blocks[best].size)
+      return 0 unless block = vdoc.find_block_by_source_line(line)
+      offset = pos - edoc.block_position((block.source_line || line) - 1)
+      block.position + offset.clamp(0, block.size)
     end
 
     # The editor position viewer position *pos* was rendered from: the start
