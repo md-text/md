@@ -1,7 +1,7 @@
 require "./spec_helper"
 
-# View → Highlight line: a full-width extra selection on the caret's row in
-# both panes, re-set on every caret move (Qt's current-line idiom).
+# View → Highlight line: Crysterm's `highlight_current_line` on both panes,
+# tinting the caret's row as it moves.
 
 private def headless_window
   Crysterm::Window.new input: IO::Memory.new, output: IO::Memory.new, width: 100, height: 30
@@ -41,9 +41,9 @@ describe "Md::App highlight line" do
       highlight.checked?.should be_false
       highlight.trigger
       app.highlight_line?.should be_true
-      app.editor.extra_selections.size.should eq 1
-      app.editor.extra_selections[0].full_width.should be_true
-      app.viewer.extra_selections.size.should eq 1
+      app.editor.highlight_current_line?.should be_true
+      app.viewer.highlight_current_line?.should be_true
+      app.editor.extra_selections.should be_empty
 
       app.editor.cursor_position = app.editor.document.block_position(2) # third line
       window.repaint
@@ -58,8 +58,8 @@ describe "Md::App highlight line" do
 
       app.highlight_line = false
       highlight.checked?.should be_false
-      app.editor.extra_selections.should be_empty
-      app.viewer.extra_selections.should be_empty
+      app.editor.highlight_current_line?.should be_false
+      app.viewer.highlight_current_line?.should be_false
       window.repaint
       row_bg(window, app.editor, 0).should eq plain
     end

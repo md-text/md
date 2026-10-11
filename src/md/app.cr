@@ -34,10 +34,8 @@ module Md
   # delimiter row) maps to the nearest rendered block above it.
   #
   # View → Highlight line (`#highlight_line`) tints the row the caret is on
-  # in both panes — with Follow cursor, the two tinted rows are the same
-  # place in the document. Done as in Qt's code editor example: a
-  # full-width `ExtraSelection` at the caret, set anew on every
-  # `CursorPositionChanged`.
+  # in both panes (Crysterm's `highlight_current_line`) — with Follow
+  # cursor, the two tinted rows are the same place in the document.
   #
   # Keys: `F2`/`F3`/`F4` show and focus the editor/viewer/table of contents,
   # or hide it when it is already focused; `Tab` cycles focus between the
@@ -59,9 +57,6 @@ module Md
 
     # How long a status bar notice (save result, warning) stays visible.
     NOTICE_TIMEOUT = 5.seconds
-
-    # Lightness step the caret line's tint takes off the pane's background.
-    CARET_LINE_LIFT = 0.14
 
     getter window : Crysterm::Window
     getter main : Crysterm::Widget::MainWindow
@@ -132,14 +127,8 @@ module Md
       @editor.on(Crysterm::Event::TextChanged) { edited unless @loading }
       # The focused pane leads; the other pane's caret, set programmatically
       # to follow, reports a move too, which this guard keeps from bouncing.
-      @editor.on(Crysterm::Event::CursorPositionChanged) do
-        highlight_caret_line @editor
-        follow_editor if @editor.focused?
-      end
-      @viewer.on(Crysterm::Event::CursorPositionChanged) do
-        highlight_caret_line @viewer
-        follow_viewer if @viewer.focused?
-      end
+      @editor.on(Crysterm::Event::CursorPositionChanged) { follow_editor if @editor.focused? }
+      @viewer.on(Crysterm::Event::CursorPositionChanged) { follow_viewer if @viewer.focused? }
       @toc.on(Crysterm::Event::AnchorClick) { |e| jump_to e.url }
       # A followed link may replace the viewer's document; keep the outline on
       # the document actually shown.
@@ -308,36 +297,10 @@ module Md
     def highlight_line=(value : Bool) : Bool
       return value if value == @highlight_line
       @highlight_line = value
-      highlight_caret_line @editor
-      highlight_caret_line @viewer
+      @editor.highlight_current_line = value
+      @viewer.highlight_current_line = value
       refresh_status
       value
-    end
-
-    # Sets *pane*'s extra selections to one full-width selection at its
-    # caret (none when the highlight is off), the Qt current-line idiom.
-    # The viewer's own link-focus selection, if any, is kept.
-    private def highlight_caret_line(pane : Crysterm::Widget::PlainTextEdit | Crysterm::Widget::TextBrowser) : Nil
-      kept = pane.extra_selections.reject(&.full_width)
-      if @highlight_line
-        cursor = Crysterm::TextCursor.new(pane.document, pane.cursor_position)
-        kept << Crysterm::Widget::TextEdit::ExtraSelection.new(cursor, caret_line_format(pane), full_width: true)
-      end
-      pane.extra_selections = kept
-    end
-
-    # The caret line's tint for *pane*: a step off its own background, so it
-    # reads on any stylesheet and stays distinct from the viewer's code
-    # background (a smaller step in the same direction).
-    private def caret_line_format(pane : Crysterm::Widget) : Crysterm::TextCharFormat
-      bg = pane.style.bg
-      surface = (bg.nil? || bg < 0) ? Crysterm::Colors.default_bg_rgb : bg
-      tint = if Crysterm::Colors.luminance(surface) < 0.5
-               Crysterm::Colors.lighten(surface, CARET_LINE_LIFT)
-             else
-               Crysterm::Colors.darken(surface, CARET_LINE_LIFT)
-             end
-      Crysterm::TextCharFormat.new(bg: tint)
     end
 
     # Aligns the panes from the focused one, when following.
