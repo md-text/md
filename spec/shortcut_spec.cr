@@ -68,7 +68,7 @@ describe "Md::App shortcuts" do
   it "carries the keys on the File and Edit entries and shows them in the menus" do
     with_app Md::Source.new(path: "doc.md"), text: SHORTCUT_DOC, view: true do |app, window|
       menu(app, 0).actions.map(&.shortcut_text).should eq ["Ctrl+O", "", "Ctrl+R", "", "Ctrl+S", "", "", "Ctrl+Q"]
-      menu(app, 1).actions.map(&.shortcut_text).should eq ["Ctrl+C", "", "", "Ctrl+F", "Ctrl+G", "Alt+G", "", "", "Ctrl+L", "Alt+Down", "Alt+Up", "", "Alt+Left", "Alt+Right"]
+      menu(app, 1).actions.map(&.shortcut_text).should eq ["Ctrl+C", "", "", "Ctrl+F", "Ctrl+G", "Alt+G", "Alt+H", "", "", "Ctrl+L", "Alt+Down", "Alt+Up", "", "Alt+Left", "Alt+Right"]
       menu(app, 2).actions.map(&.shortcut_text).should eq ["Ctrl+B", "Alt+I", "Alt+C", "", "Alt+X", "", "", "", "Ctrl+Up", "Ctrl+Down"]
       # The pane entries' gesture is not the F-keys', so they name no key;
       # resizing and Soft wrap have one.

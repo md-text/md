@@ -20,6 +20,21 @@ module Md
     # asks for a source line and puts both panes there; `[` and `]` in the
     # viewer (`Alt-Up` and `Alt-Down` anywhere, Edit → Previous Heading and
     # Next Heading) jump to the previous and next heading.
+    #
+    # Replace (`Alt-H` anywhere, Edit → Replace…) is vi's `:s///c` at the
+    # same prompt: it asks for the pattern (the last search's by default)
+    # and for the replacement, then steps through the matches from the
+    # caret, each selected in the editor and asked about — `y` replaces it,
+    # `n` leaves it, `a` replaces it and every other one, `q` stops — with
+    # the search's rules for the pattern and its wrap-around. It works on
+    # the Markdown source, the editor being the source of truth, so from
+    # the viewer it shows and focuses the editor first. Every replacement
+    # goes through a `TextCursor`, so `Ctrl-Z` undoes it; `a` is one undo
+    # step, as Qt's `QTextCursor::beginEditBlock` groups one. In the
+    # replacement `\1`–`\9` stand for the pattern's groups and `\0` for
+    # the whole match, as in Crystal's `String#sub`. Qt's key for Replace,
+    # `Ctrl-H`, is a byte the terminal cannot tell from Backspace (both
+    # erase in the editor), hence `Alt-H`.
 
     # The most matches highlighted at once: beyond this a search still finds
     # its way, match by match, but the overlay stops, so an edit in a long
@@ -35,6 +50,26 @@ module Md
     # The overlays this search put on each pane, so re-highlighting replaces
     # ours and leaves the pane's own (the viewer's focused link) alone.
     @match_selections = {} of Pane => Array(Crysterm::Widget::TextEdit::ExtraSelection)
+
+    # A replace in progress: what the matches become, where it started (so
+    # the wrap-around stops there), whether it has wrapped, whether it found
+    # a match at all, and how many matches it replaced.
+    private class Replacement
+      getter replacement : String
+      property origin : Int32
+      property? wrapped = false
+      property? found = false
+      property count = 0
+
+      def initialize(@replacement, @origin)
+      end
+    end
+
+    @replacing : Replacement?
+    # The single-key handler on the prompt's field while the replace
+    # question is up, and the key it took.
+    @replace_key : EventHandler::Subscription?
+    @replace_answer : String?
 
     # Asks for a pattern in place of the status bar and searches for it;
     # an empty or cancelled answer searches nothing.
@@ -88,6 +123,243 @@ module Md
       end
       w.text_cursor = found
       true
+    end
+
+    # Asks for a pattern (the last search's filled in) and a replacement in
+    # place of the status bar, one after the other, and replaces
+    # (`#replace`); an empty or cancelled pattern, or a cancelled
+    # replacement, does nothing.
+    def replace_prompt : Nil
+      @main.status_bar.prompt("Replace: ", @search_pattern || "") do |pattern|
+        next if pattern.nil? || pattern.empty?
+        @main.status_bar.prompt("With: ", "") do |replacement|
+          replace pattern, replacement if replacement
+        end
+      end
+    end
+
+    # Replaces matches of *pattern* (the search's rules) with *replacement*
+    # in the editor, shown and focused, match by match from the caret with
+    # a question at each (`#ask_replace`) — or, with *all*, every one from
+    # the caret around to it again, unasked. The pattern becomes the
+    # search's, so `n` finds what was left.
+    def replace(pattern : String, replacement : String, all : Bool = false) : Nil
+      # A question still up (a replace started over one) is answered with
+      # nothing first, so its session ends before this one begins.
+      @main.status_bar.line_prompt.cancel if @main.status_bar.prompting?
+      end_replace
+      show_pane(Pane::Editor).focus unless @editor.focused?
+      @search_pattern = pattern
+      @search_backward = false
+      @search_regex = compile_pattern pattern
+      highlight_matches_everywhere
+      # A selection (the last search's match, say) is where the first match
+      # is looked for, not past.
+      if @editor.selection?
+        @editor.text_cursor = Crysterm::TextCursor.new(@editor.document, @editor.text_cursor.selection_start)
+      end
+      @replacing = Replacement.new replacement, @editor.cursor_position
+      all ? replace_rest : replace_step
+    end
+
+    # How many matches the replace in progress has replaced.
+    def replace_count : Int32
+      @replacing.try(&.count) || 0
+    end
+
+    # Selects the next match and asks about it; without one, finishes.
+    private def replace_step : Nil
+      next_replace_match ? ask_replace : end_replace
+    end
+
+    # The question at a match, in place of the status bar, answered by one
+    # key: the prompt's field takes the key as text, and a handler
+    # registered after the prompt's own listener — so it runs once the key
+    # is in — hands it over, submitting an empty answer (which the field's
+    # Up/Down history skips). Escape and a bare Enter come as `nil` and
+    # `""`. A key typed before the question is up goes into the editor.
+    private def ask_replace : Nil
+      prompt = @main.status_bar.line_prompt
+      prompt.prompt("Replace? (y)es (n)o (a)ll (q)uit ", "") { |text| replace_answered text }
+      field = prompt.field
+      @replace_key = field.on(Crysterm::Event::KeyPress) do |e|
+        next if e.key || !e.char.in?('y', 'n', 'a', 'q')
+        @replace_answer = e.char.to_s
+        field.value = ""
+        field.submit
+      end
+    end
+
+    # The answer to the question: the key it was answered with, else the
+    # text (`nil` for Escape; anything else asks again).
+    private def replace_answered(text : String?) : Nil
+      @replace_key.try &.off
+      @replace_key = nil
+      answer = @replace_answer || text
+      @replace_answer = nil
+      return end_replace unless answer && @replacing
+      case answer
+      when "y"
+        replace_match
+        replace_step
+      when "n" then replace_step
+      when "a" then replace_rest
+      when "q" then end_replace
+      else          ask_replace
+      end
+    end
+
+    # Replaces the selected match (the one `#next_replace_match` selected):
+    # one undo step, the caret left after the new text. The editor reports
+    # its own edits (`TextChanged`), not a `TextCursor`'s, so the change is
+    # reported here (`#edited`: the viewer re-rendered, the highlight and
+    # the status refreshed).
+    private def replace_match : Nil
+      return unless (session = @replacing) && (regex = @search_regex) && @editor.selection?
+      doc = @editor.document
+      start = @editor.text_cursor.selection_start
+      return unless (match = regex.match(doc.to_plain_text, start)) && match.begin(0) == start
+      text = expand_replacement session.replacement, match
+      cursor = Crysterm::TextCursor.new(doc, start, match.end(0))
+      cursor.insert_text text
+      @editor.text_cursor = cursor
+      session.count += 1
+      # Past the wrap the start is ahead of the caret and moves with the
+      # text before it.
+      session.origin += text.size - match[0].size if session.wrapped?
+      edited
+    end
+
+    # Replaces every match left — from the caret to the end, then from the
+    # top to where the replace started — in one undo step, reported once
+    # (`#edited`, as in `#replace_match`). The matches come from one scan of
+    # the text, each one's position shifted by what the replacements before
+    # it changed, rather than from a scan per match.
+    private def replace_rest : Nil
+      return unless (session = @replacing) && (regex = @search_regex)
+      doc = @editor.document
+      ahead, behind = matches_left session, regex, doc.to_plain_text
+      notice "Search hit BOTTOM, continuing at TOP" if ahead.empty? && !behind.empty?
+      session.found = true unless ahead.empty? && behind.empty?
+      doc.edit do
+        {ahead, behind}.each do |group|
+          delta = 0
+          group.each do |match|
+            replacement = expand_replacement session.replacement, match
+            cursor = Crysterm::TextCursor.new(doc, match.begin(0) + delta, match.end(0) + delta)
+            cursor.insert_text replacement
+            @editor.text_cursor = cursor
+            delta += replacement.size - match[0].size
+            session.count += 1
+          end
+        end
+        nil
+      end
+      edited if session.found?
+      end_replace
+    end
+
+    # The matches *session* has left in *text*, in the order it visits
+    # them: those from the caret — or the selected match, the one being
+    # asked about — to the end, or up to where it started once it has
+    # wrapped, and those from the top to where it started, empty once it
+    # has wrapped.
+    private def matches_left(session : Replacement, regex : Regex, text : String) : {Array(Regex::MatchData), Array(Regex::MatchData)}
+      from = @editor.selection? ? @editor.text_cursor.selection_start : @editor.cursor_position
+      ahead = [] of Regex::MatchData
+      behind = [] of Regex::MatchData
+      each_match(regex, text) do |match|
+        start = match.begin(0)
+        if start >= from
+          ahead << match unless session.wrapped? && start >= session.origin
+        elsif start < session.origin && !session.wrapped?
+          behind << match
+        end
+      end
+      {ahead, behind}
+    end
+
+    # Selects the next match for the replace: from the caret (past a
+    # selected match) to the end, then — wrapping with the search's notice —
+    # from the top to where the replace started. Returns whether there was
+    # one; without, the replace is over.
+    private def next_replace_match : Bool
+      return false unless (session = @replacing) && (regex = @search_regex)
+      doc = @editor.document
+      text = doc.to_plain_text
+      from = @editor.selection? ? @editor.text_cursor.selection_end : @editor.cursor_position
+      match = first_match(regex, text, from)
+      match = nil if match && session.wrapped? && match.begin(0) >= session.origin
+      unless match
+        return false if session.wrapped?
+        session.wrapped = true
+        match = first_match(regex, text)
+        return false unless match && match.begin(0) < session.origin
+        notice "Search hit BOTTOM, continuing at TOP"
+      end
+      @editor.text_cursor = Crysterm::TextCursor.new(doc, match.begin(0), match.end(0))
+      session.found = true
+      true
+    end
+
+    # Ends the replace with its tally — the search's miss when it found
+    # nothing at all.
+    private def end_replace : Nil
+      @replace_key.try &.off
+      @replace_key = nil
+      @replace_answer = nil
+      return unless session = @replacing
+      @replacing = nil
+      if session.found?
+        notice "#{session.count} replacement#{"s" unless session.count == 1}"
+      else
+        notice "Pattern not found: #{@search_pattern}"
+      end
+    end
+
+    # Yields the non-empty matches of *regex* in *text* from *from* on, in
+    # order and without overlap: what the highlight shows, and what a
+    # replace steps through (an empty match would be replaced at the same
+    # spot forever).
+    private def each_match(regex : Regex, text : String, from : Int32 = 0, & : Regex::MatchData ->) : Nil
+      pos = from
+      while match = regex.match(text, pos)
+        s = match.begin(0)
+        e = match.end(0)
+        yield match if e > s
+        pos = e > s ? e : s + 1
+      end
+    end
+
+    # The first of `#each_match`'s matches, if any.
+    private def first_match(regex : Regex, text : String, from : Int32 = 0) : Regex::MatchData?
+      each_match(regex, text, from) { |match| return match }
+      nil
+    end
+
+    # What a match becomes: *replacement* with `\0`–`\9` standing for the
+    # match and its groups (nothing for a group that did not take part) and
+    # `\\` for a backslash, as `String#sub` reads them; any other `\` stays.
+    private def expand_replacement(replacement : String, match : Regex::MatchData) : String
+      return replacement unless replacement.includes? '\\'
+      chars = replacement.chars
+      String.build do |io|
+        i = 0
+        while i < chars.size
+          c = chars[i]
+          n = chars[i + 1]?
+          if c == '\\' && n && n.ascii_number?
+            io << match[n - '0']?
+            i += 2
+          elsif c == '\\' && n == '\\'
+            io << '\\'
+            i += 2
+          else
+            io << c
+            i += 1
+          end
+        end
+      end
     end
 
     # Takes the match highlight off both panes; the pattern stays for `n`.
@@ -182,12 +454,9 @@ module Md
       text = doc.to_plain_text
       format = Crysterm::TextCharFormat.new(underline: true)
       selections = [] of Crysterm::Widget::TextEdit::ExtraSelection
-      pos = 0
-      while (m = regex.match(text, pos)) && selections.size < MAX_HIGHLIGHTS
-        s = m.begin(0)
-        e = s + m[0].size
-        selections << Crysterm::Widget::TextEdit::ExtraSelection.new(Crysterm::TextCursor.new(doc, s, e), format) if e > s
-        pos = e > s ? e : s + 1
+      each_match(regex, text) do |match|
+        break if selections.size >= MAX_HIGHLIGHTS
+        selections << Crysterm::Widget::TextEdit::ExtraSelection.new(Crysterm::TextCursor.new(doc, match.begin(0), match.end(0)), format)
       end
       set_match_selections pane, selections
     end

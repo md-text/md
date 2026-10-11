@@ -167,6 +167,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ticks and unticks a `[ ]` box; Promote Heading and Demote Heading
   (`Ctrl-Up`, `Ctrl-Down`) change the line's heading level. Each change is
   one undo step.
+- Edit → Replace… (`Alt-H`, since Qt's `Ctrl-H` is Backspace in a terminal): the
+  prompt asks for the pattern (the last search's filled in) and the
+  replacement, then steps through the matches from the cursor in the
+  editor — shown and focused if need be, the source being what is replaced
+  — asking `Replace? (y)es (n)o (a)ll (q)uit`, answered by a single key.
+  The pattern follows the search's rules; the replacement may use `\1`–`\9`
+  and `\0` for the pattern's groups and the whole match, as `String#sub`
+  does. Every replacement is undoable, `a` as one step, and a notice gives
+  the count.
 
 [Unreleased]: https://github.com/crystallabs/md/commits/main
 

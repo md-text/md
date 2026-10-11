@@ -124,6 +124,7 @@ of the editor and the viewer, and the table of contents its columns.
 | `Ctrl-C`           | Copy the selection, or with nothing selected the current block (the line, in the editor) as plain text (Edit → Copy; Edit → Copy as Markdown copies the block's source) |
 | `Ctrl-F`, `/`, `?` | Search; asks for the pattern (`/` and `?` outside the editor, `?` backward; Edit → Find…) |
 | `Ctrl-G`, `Alt-G`, `n`, `N` | Next and previous match (`n` and `N` outside the editor; Edit → Find Next, Find Previous) |
+| `Alt-H`            | Replace; asks for the pattern and the replacement, then about each match (Edit → Replace…) |
 | `Ctrl-L`, `:`      | Go to a source line; asks for the number (`:` outside the editor; Edit → Go to Line…) |
 | `Alt-Down`, `Alt-Up`, `]`, `[` | Jump to the next and previous heading (`]` and `[` outside the editor; Edit → Next Heading, Previous Heading) |
 | `Alt-R`            | Resize the panes from the keyboard: `Left`/`Right` move the divider next to the pane, `Enter`/`Escape` return (View → Resize panes) |
@@ -165,7 +166,7 @@ copy work instead. With the mouse off you cannot click the field, so `F5`
 cycles the modes from the keyboard too, and the Options menu offers them as
 well, next to the overwrite mode. The File menu opens, reloads, saves, saves
 as and quits, and lists the recently opened files; the Edit menu copies,
-searches, goes to a line and jumps between headings; the Format menu marks
+searches, replaces, goes to a line and jumps between headings; the Format menu marks
 up the source (see Editing Markdown below); the View menu shows and hides
 the panes.
 
@@ -250,6 +251,21 @@ an uppercase letter, as vi's `smartcase` does. The search wraps around the
 end of the document with a notice. Every match is underlined in both panes
 and the current one is selected; Edit → Clear Highlight takes the underlines
 off, and `n` still knows the pattern.
+
+Replacing (`Alt-H`, Edit → Replace…) works like vi's `:s///c`, at the same
+prompt: it asks for the pattern — the last search's is filled in — and
+then for the replacement, and steps through the matches from the cursor,
+selecting each in the editor and asking `Replace? (y)es (n)o (a)ll (q)uit`.
+A single key answers: `y` replaces the match and moves on, `n` leaves it,
+`a` replaces it and every match after it (around the end of the document
+and back to where you started), `q` and `Esc` stop. The pattern follows the
+search's rules, and the replacement may refer to the pattern's groups,
+`\1` to `\9`, and to the whole match, `\0`, as Crystal's `String#sub`
+does (`\\` is a backslash). Replacing edits the Markdown source, so from
+the viewer it shows and focuses the editor first; every replacement can be
+undone with `Ctrl-Z`, the `a` as a single step. A notice reports how many
+matches were replaced. (Qt's key, `Ctrl-H`, is Backspace in the terminal,
+hence `Alt-H`.)
 
 `:` (or `Ctrl-L`) asks for a source line number and puts both panes there;
 `0` and negative numbers count from the end. `]` and `[` (or `Alt-Down` and

@@ -1,7 +1,7 @@
 module Md
   class App
     # The menu bar: File (open, the recent files, reload, save, quit), Edit
-    # (copy, find, repeat the find, go to a line, jump between headings, go
+    # (copy, find, repeat the find, replace, go to a line, jump between headings, go
     # back), Format (the Markdown markup, `app_edit.cr`), View (which panes
     # are shown and resizing them, whether the editor's and the viewer's
     # carets follow each other, whether the caret's line is highlighted,
@@ -65,6 +65,7 @@ module Md
       edit.add_action("&Find…", shortcut: "Ctrl+F") { search_prompt }
       edit.add_action("Find &Next", shortcut: "Ctrl+G") { find_next }
       edit.add_action("Find &Previous", shortcut: "Alt+G") { find_next reverse: true }
+      edit.add_action("&Replace…", shortcut: "Alt+H") { replace_prompt }
       edit.add_action("Clear &Highlight") { clear_search_highlight }
       edit.add_separator
       edit.add_action("&Go to Line…", shortcut: "Ctrl+L") { go_to_line_prompt }

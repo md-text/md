@@ -58,8 +58,8 @@ module Md
   # editor suspends md as the shell's `Ctrl-Z` would (in the editor it is
   # undo); `Enter` and `Escape` leave a divider being moved. The File, Edit
   # and View entries' keys — `Ctrl-S` saves, `Ctrl-O` opens, `Ctrl-R`
-  # reloads, `Ctrl-F` searches, `Ctrl-G`/`Alt-G` repeat the search, `Ctrl-L`
-  # goes to a line, `Alt-Up`/`Alt-Down` jump between headings, `Alt-R`
+  # reloads, `Ctrl-F` searches, `Ctrl-G`/`Alt-G` repeat the search, `Alt-H`
+  # replaces, `Ctrl-L` goes to a line, `Alt-Up`/`Alt-Down` jump between headings, `Alt-R`
   # resizes the panes, `Ctrl-Q` quits — are the entries' shortcuts
   # (`app_menu.cr`), shown in the menus, and outside the editor the pager
   # keys `/`, `?`, `n`, `N`, `:`, `[` and `]` do the same. `q` quits too
