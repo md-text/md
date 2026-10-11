@@ -190,6 +190,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   remade as the Edit menu opens, most recent first, emacs' `yank-pop` as a
   menu. (Crysterm's clipboard exposes its in-process mirror as
   `internal_text`.)
+- View → Dialog Style: every question md asks — Open, Save As, Find,
+  Replace, Go to Line, the unsaved-changes question — is asked either in
+  place of the status bar (Line Prompts, now the default for all of them;
+  the unsaved-changes question becomes `Save changes to NAME? (y)es, (n)o,
+  (c)ancel:` answered by one key) or in a modal dialog in the middle of
+  the window (Modal Dialogs: Crysterm's `InputDialog` and `MessageBox`).
+  The Replace question stays at the prompt in both styles. Kept in the
+  settings as `dialog_style`.
 
 [Unreleased]: https://github.com/crystallabs/md/commits/main
 

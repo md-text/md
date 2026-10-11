@@ -1,7 +1,7 @@
 module Md
   class App
-    # Searching and jumping — the pager's keys, in place of the status bar
-    # like Save As.
+    # Searching and jumping — the pager's keys, asked like Save As
+    # (`app_dialogs.cr`: in place of the status bar, or in a dialog).
     #
     # Search: `/` (forward) and `?` (backward) in the viewer or the table of
     # contents, `Ctrl-F` anywhere (Edit → Find…), ask for a pattern; `n` and
@@ -71,10 +71,10 @@ module Md
     @replace_key : EventHandler::Subscription?
     @replace_answer : String?
 
-    # Asks for a pattern in place of the status bar and searches for it;
-    # an empty or cancelled answer searches nothing.
+    # Asks for a pattern (`#ask_text`) and searches for it; an empty or
+    # cancelled answer searches nothing.
     def search_prompt(backward : Bool = false) : Nil
-      @main.status_bar.prompt(backward ? "?" : "/", "") do |answer|
+      ask_text(backward ? "?" : "/", "", question: backward ? "Find backward:" : "Find:") do |answer|
         search answer, backward if answer && !answer.empty?
       end
     end
@@ -125,14 +125,13 @@ module Md
       true
     end
 
-    # Asks for a pattern (the last search's filled in) and a replacement in
-    # place of the status bar, one after the other, and replaces
-    # (`#replace`); an empty or cancelled pattern, or a cancelled
-    # replacement, does nothing.
+    # Asks for a pattern (the last search's filled in) and a replacement
+    # (`#ask_text`), one after the other, and replaces (`#replace`); an
+    # empty or cancelled pattern, or a cancelled replacement, does nothing.
     def replace_prompt : Nil
-      @main.status_bar.prompt("Replace: ", @search_pattern || "") do |pattern|
+      ask_text("Replace: ", @search_pattern || "") do |pattern|
         next if pattern.nil? || pattern.empty?
-        @main.status_bar.prompt("With: ", "") do |replacement|
+        ask_text("With: ", "") do |replacement|
           replace pattern, replacement if replacement
         end
       end
@@ -385,9 +384,9 @@ module Md
       end
     end
 
-    # Asks for a source line in place of the status bar and goes there.
+    # Asks for a source line (`#ask_text`) and goes there.
     def go_to_line_prompt : Nil
-      @main.status_bar.prompt(":", "") do |answer|
+      ask_text(":", "", question: "Go to line:") do |answer|
         next unless answer
         text = answer.strip
         next if text.empty?

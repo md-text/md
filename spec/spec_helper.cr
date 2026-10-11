@@ -38,10 +38,35 @@ def press(window, char : Char) : Crysterm::Event::KeyPress
 end
 
 # Answers the status bar's prompt with *text*.
-def answer(app, text)
+def answer(app, text : String)
   field = app.main.status_bar.line_prompt.field
   field.value = text
   field.emit Crysterm::Event::KeyPress, Crysterm::Event::KeyPress.new('\0', Tput::Key::Enter)
+end
+
+# Answers a one-key question at the status bar's prompt — the
+# unsaved-changes question's `y`/`n`/`c`, Replace's `y`/`n`/`a`/`q` — with
+# *char*, typed into its field.
+def answer(app, char : Char)
+  app.main.status_bar.line_prompt.field.emit Crysterm::Event::KeyPress, Crysterm::Event::KeyPress.new(char)
+end
+
+# The prompt's label, while a question is up in place of the status bar.
+def question(app)
+  app.main.status_bar.line_prompt.label_box.content
+end
+
+# The modal input dialog that is up, if any (View → Dialog Style → Modal
+# Dialogs).
+def input_dialog(window)
+  window.descendants.select(Crysterm::Widget::InputDialog).find(&.visible?)
+end
+
+# Answers that dialog with *text*: typed into its field and entered.
+def answer_dialog(window, text : String)
+  dialog = input_dialog(window) || fail("no input dialog is up")
+  dialog.line_edit.value = text
+  dialog.line_edit.emit Crysterm::Event::KeyPress, Crysterm::Event::KeyPress.new('\0', Tput::Key::Enter)
 end
 
 # The status bar's notice.
@@ -63,7 +88,8 @@ def settle(timeout = 2.seconds, &)
   end
 end
 
-# The unsaved-changes dialog's button labelled *text*, if the dialog is up.
+# The unsaved-changes dialog's button labelled *text*, if the dialog is up
+# (View → Dialog Style → Modal Dialogs).
 def choice(window, text)
   window.descendants.select(Crysterm::Widget::Button).find { |b| b.text == text && b.visible? }
 end

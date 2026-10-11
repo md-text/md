@@ -156,7 +156,7 @@ describe "Md::App unsaved-changes guard" do
       window.request_close.should be_true
       app.editor.insert_text "x"
       window.request_close.should be_false
-      choose window, "Cancel"
+      answer app, 'c'
       app.confirm_discard = false
       window.request_close.should be_true
     end
@@ -172,22 +172,25 @@ describe "Md::App unsaved-changes guard" do
         ran.should eq 0
         window.repaint
         window.dump.to_s.should contain "Save changes to /"
-        choose window, "Cancel"
-        sleep 50.milliseconds
+        question(app).should end_with "? (y)es, (n)o, (c)ancel: "
+        answer app, 'c'
         ran.should eq 0
         app.editor.document.modified?.should be_true
+        app.confirm_discard { ran += 1 }
+        answer app, "" # an empty Enter is no answer: a Cancel
+        ran.should eq 0
 
         app.confirm_discard { ran += 1 }
-        choose window, "Don't save"
-        settle { ran == 1 }
+        answer app, 'n'
+        ran.should eq 1
         app.editor.document.modified?.should be_true # dropped only by what follows
 
         app.confirm_discard { ran += 1 }
-        choose window, "Save"
-        settle { ran == 2 }
+        answer app, "yes" # typed out, the first letter counts
+        ran.should eq 2
         File.read(path).should eq "unsaved"
         app.editor.document.modified?.should be_false
-        choice(window, "Save").should be_nil
+        app.main.status_bar.prompting?.should be_false
 
         app.confirm_discard { ran += 1 } # nothing to ask about now
         ran.should eq 3
@@ -200,12 +203,12 @@ describe "Md::App unsaved-changes guard" do
   it "asks for a name first when a new document is saved from the question" do
     path = File.tempname("md-spec", ".md")
     begin
-      with_app do |app, window|
+      with_app do |app, _|
         app.editor.insert_text "new text"
         ran = false
         app.confirm_discard { ran = true }
-        choose window, "Save"
-        settle { app.main.status_bar.prompting? }
+        answer app, 'y'
+        question(app).should eq "Save as: "
         answer app, path
         settle { ran }
         File.read(path).should eq "new text"
@@ -219,23 +222,22 @@ describe "Md::App unsaved-changes guard" do
   it "guards opening and reloading too" do
     path = tempfile "on disk\n"
     begin
-      with_app Md::Source.new(path: path), text: "on disk\n", view: true do |app, window|
+      with_app Md::Source.new(path: path), text: "on disk\n", view: true do |app, _|
         app.show_pane(Md::App::Pane::Editor).focus
         app.editor.cursor_position = 0
         app.editor.insert_text "typed "
         app.reload
-        choose window, "Cancel"
-        sleep 50.milliseconds
+        answer app, 'c'
         app.markdown.should eq "typed on disk\n"
         app.reload
-        choose window, "Don't save"
-        settle { app.markdown == "on disk\n" }
+        answer app, 'n'
+        app.markdown.should eq "on disk\n"
         app.editor.cursor_position = 0
         app.editor.insert_text "again "
         app.open_prompt
-        app.main.status_bar.prompting?.should be_false # the question comes first
-        choose window, "Don't save"
-        settle { app.main.status_bar.prompting? }
+        question(app).should start_with "Save changes to" # the question comes first
+        answer app, 'n'
+        question(app).should eq "Open: "
         app.main.status_bar.line_prompt.cancel
       end
     ensure

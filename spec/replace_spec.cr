@@ -2,12 +2,7 @@ require "./spec_helper"
 
 # A key typed into the prompt, as the replace question is answered.
 private def key(app, char : Char)
-  app.main.status_bar.line_prompt.field.emit Crysterm::Event::KeyPress, Crysterm::Event::KeyPress.new(char)
-end
-
-# The prompt's label, while a question is up.
-private def question(app)
-  app.main.status_bar.line_prompt.label_box.content
+  answer app, char
 end
 
 REPLACE_DOC = <<-MD

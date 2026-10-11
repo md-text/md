@@ -22,6 +22,7 @@ require "./md/app_autosave"
 require "./md/app_view"
 require "./md/app_clipboard"
 require "./md/app_edit"
+require "./md/app_dialogs"
 
 module Md
 end

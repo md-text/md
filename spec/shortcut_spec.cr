@@ -21,11 +21,11 @@ describe "Md::App shortcuts" do
   it "carries the keys on the File and Edit entries and shows them in the menus" do
     with_app Md::Source.new(path: "doc.md"), text: SHORTCUT_DOC, view: true do |app, window|
       menu(app, 0).actions.map(&.shortcut_text).should eq ["Ctrl+O", "", "Ctrl+R", "", "Ctrl+S", "", "", "Ctrl+Q"]
-      menu(app, 1).actions.map(&.shortcut_text).should eq ["Ctrl+C", "", "", "Ctrl+F", "Ctrl+G", "Alt+G", "Alt+H", "", "", "Ctrl+L", "Alt+Down", "Alt+Up", "", "Alt+Left", "Alt+Right"]
+      menu(app, 1).actions.map(&.shortcut_text).should eq ["Ctrl+C", "", "Ctrl+V", "", "", "Ctrl+F", "Ctrl+G", "Alt+G", "Alt+H", "", "", "Ctrl+L", "Alt+Down", "Alt+Up", "", "Alt+Left", "Alt+Right"]
       menu(app, 2).actions.map(&.shortcut_text).should eq ["Ctrl+B", "Alt+I", "Alt+C", "", "Alt+X", "", "", "", "Ctrl+Up", "Ctrl+Down"]
       # The pane entries' gesture is not the F-keys', so they name no key;
       # resizing and Soft Wrap have one.
-      menu(app, 3).actions.map(&.shortcut_text).should eq ["", "", "", "Alt+R", "", "", "", "", "", "Alt+W", "", "", "", ""]
+      menu(app, 3).actions.map(&.shortcut_text).should eq ["", "", "", "Alt+R", "", "", "", "", "", "Alt+W", "", "", "", "", ""]
       app.main.menu_bar.open_menu 0
       window.repaint
       rows = window.dump.to_s.lines
@@ -126,12 +126,12 @@ describe "Md::App shortcuts" do
       app.editor.insert_text "unsaved"
       e = press window, Tput::Key::CtrlQ
       asked.should eq 1
-      choice(window, "Cancel").should_not be_nil
+      question(app).should start_with "Save changes to"
       window.destroyed?.should be_false
       # The entry took the key, so Crysterm's own quit key does not ask again.
       e.accepted?.should be_true
       Crysterm::Application.quit_gesture?(window, e).should be_false
-      choice(window, "Cancel").try &.click
+      answer app, 'c'
     end
   end
 end

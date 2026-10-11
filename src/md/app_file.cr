@@ -1,8 +1,8 @@
 module Md
   class App
     # The document's file, beyond saving: opening another (File → Open…,
-    # `Ctrl-O`, asked for in place of the status bar with file-name
-    # completion, like Save As), re-reading it from disk (File → Reload,
+    # `Ctrl-O`, asked for like Save As, `app_dialogs.cr`), re-reading it
+    # from disk (File → Reload,
     # `Ctrl-R`) and following it as other programs rewrite it (View → Watch
     # File, `--watch`), the guard that asks before unsaved changes are lost,
     # and the history of recent files and positions (`History`, File → Open
@@ -70,11 +70,11 @@ module Md
       @window.quit if @window.request_close
     end
 
-    # Asks for a file to open in place of the status bar (with completion)
-    # and opens the answer; unsaved changes are settled first.
+    # Asks for a file to open (`#ask_text`; a line prompt completes the
+    # name) and opens the answer; unsaved changes are settled first.
     def open_prompt : Nil
       confirm_discard do
-        @main.status_bar.prompt("Open: ", "") do |answer|
+        ask_text("Open: ", "") do |answer|
           path = answer.try &.strip
           open_file path if path && !path.empty?
         end
@@ -182,25 +182,17 @@ module Md
       Cancel
     end
 
-    # The unsaved-changes question, as a dialog with three buttons; Escape
-    # cancels. The answer goes to *block*.
+    # The unsaved-changes question (`#ask_choice`): three buttons in a
+    # dialog, or `(y)es, (n)o, (c)ancel` at the prompt; a dismissal is a
+    # Cancel. The answer goes to *block*.
     private def ask_discard(&block : DiscardAnswer ->) : Nil
-      text = "Save changes to #{@source.name || "the new document"}?"
-      geometry = Crysterm::Mixin::OkCancelDialog.presenter_geometry(@window, text)
-      box = Crysterm::Widget::MessageBox.new(**geometry)
-      box.open(text, ["Save", "Don't save", "Cancel"]) do |index|
-        answer = case index
-                 when 0 then DiscardAnswer::Save
-                 when 1 then DiscardAnswer::Discard
-                 else        DiscardAnswer::Cancel
-                 end
-        # After the dialog has finished with itself (it repaints once the
-        # answer is delivered): the box goes, and the action — which may
-        # quit, taking the window with it — runs on a clean slate.
-        @window.post do
-          box.destroy
-          block.call answer
-        end
+      question = "Save changes to #{@source.name || "the new document"}?"
+      ask_choice(question, [{"Save", "(y)es"}, {"Don't save", "(n)o"}, {"Cancel", "(c)ancel"}]) do |index|
+        block.call(case index
+        when 0 then DiscardAnswer::Save
+        when 1 then DiscardAnswer::Discard
+        else        DiscardAnswer::Cancel
+        end)
       end
     end
 

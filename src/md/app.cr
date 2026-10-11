@@ -49,7 +49,9 @@ module Md
   # copying and pasting, and the clipboard mode (Options → Clipboard), in
   # `app_clipboard.cr`;
   # the editing that knows Markdown — lists continued on `Enter` and
-  # indented with `Tab`, the Format menu — in `app_edit.cr`.
+  # indented with `Tab`, the Format menu — in `app_edit.cr`; the questions
+  # md asks, in place of the status bar or in a dialog (View → Dialog
+  # Style), in `app_dialogs.cr`.
   #
   # Keys: `F2`/`F3`/`F4` show and focus the editor/viewer/table of contents,
   # or hide it when it is already focused; `Tab` cycles focus between the
@@ -430,11 +432,12 @@ module Md
       false
     end
 
-    # Asks for a file name in place of the status bar, the current name
-    # filled in, and saves under the answer (`#save_as`); a cancelled or
-    # empty answer saves nothing. *done* hears whether a save happened.
+    # Asks for a file name (`#ask_text`, in place of the status bar or in
+    # a dialog), the current name filled in, and saves under the answer
+    # (`#save_as`); a cancelled or empty answer saves nothing. *done* hears
+    # whether a save happened.
     def save_as_prompt(&done : Bool ->) : Nil
-      @main.status_bar.prompt("Save as: ", @source.path || "") do |answer|
+      ask_text("Save as: ", @source.path || "") do |answer|
         path = answer.try &.strip
         done.call(path && !path.empty? ? save_as(path) : false)
       end

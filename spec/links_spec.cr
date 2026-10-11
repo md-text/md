@@ -160,17 +160,16 @@ describe "Md::App links" do
 
   it "asks about unsaved changes before leaving for a linked file, and records opens" do
     with_docs do |_dir, source, target|
-      with_app Md::Source.new(path: source), text: SOURCE_DOC, view: true do |app, window|
+      with_app Md::Source.new(path: source), text: SOURCE_DOC, view: true do |app, _|
         app.show_pane(Md::App::Pane::Editor).focus
         app.editor.cursor_position = 0
         app.editor.insert_text "typed "
         app.follow_link "docs/target.md"
-        choose window, "Cancel"
-        sleep 50.milliseconds
+        answer app, 'c'
         app.source.path.should eq source
         app.follow_link "docs/target.md"
-        choose window, "Don't save"
-        settle { app.source.path == target }
+        answer app, 'n'
+        app.source.path.should eq target
 
         # File → Open over a file is a step as well.
         app.open_file source

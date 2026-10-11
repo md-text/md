@@ -131,6 +131,12 @@ module Md
           scroll. Searching is a pager's: the pattern is a regular expression
           when it is one and literal text otherwise, case\-insensitive unless it
           has an uppercase letter, and the search wraps around with a notice.
+          .PP
+          A question \- a file name, a pattern, a line number, what to do with
+          unsaved changes \- is asked in place of the status bar, the way vi's
+          command line replaces its status line (Tab completes file names, Up
+          recalls earlier answers, Escape gives up), or in a dialog in the
+          middle of the window, as View \-> Dialog Style says.
           .SH FILES
           .TP
           .I $XDG_CONFIG_HOME/md/settings.json
