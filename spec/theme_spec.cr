@@ -28,6 +28,13 @@ private def viewer_bg(app, window) : Int32
   Crysterm::Attr.unpack_color(Crysterm::Attr.bg(cell.attr))
 end
 
+# The background a cell inside the editor.s text is painted with.
+private def editor_bg(app, window) : Int32
+  window.repaint
+  cell = window.cell_rows[app.editor.atop + 1][app.editor.aleft + 2]
+  Crysterm::Attr.unpack_color(Crysterm::Attr.bg(cell.attr))
+end
+
 describe "Md::App theme" do
   it "offers Crysterm's built-in themes in the Options menu, the current one checked" do
     with_theme_app do |app|
@@ -63,6 +70,21 @@ describe "Md::App theme" do
       theme_entries(app)[1].trigger
       viewer_bg(app, window).should eq 0x123456
       Crysterm::CSS.theme.try(&.name).should eq "dark"
+    end
+  end
+
+  it "paints the editor the same whether or not it has the focus" do
+    # An editor that changed shade with the focus read as dimmed whenever
+    # the user worked in the viewer or the table of contents, which keep
+    # theirs; the theme keeps a multi-line editor one color, as Qt keeps a
+    # QPlainTextEdit's base color (its spec is Crysterm's).
+    with_theme_app do |app, window|
+      app.show_pane(Md::App::Pane::Editor).focus
+      app.editor.focused?.should be_true
+      focused = editor_bg(app, window)
+      app.viewer.focus
+      app.editor.focused?.should be_false
+      editor_bg(app, window).should eq focused
     end
   end
 

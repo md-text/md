@@ -255,3 +255,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   links, quote bars and rules take the theme's `TextEdit::heading`/`::code`/
   `::link`/`::quote`/`::rule` colors, which a stylesheet can override. (Fixed
   in Crysterm, which md builds against.)
+- The editor no longer looks dimmed while the viewer or the table of contents
+  has the focus: Crysterm's theme lightened a focused editor's background the
+  way it lightens a focused one-line field, so the editor changed shade with
+  the focus next to panes that keep theirs. The multi-line editor now keeps
+  one background in either state, as Qt keeps a `QPlainTextEdit`'s base
+  color. (Fixed in Crysterm, which md builds against.)
