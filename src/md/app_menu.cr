@@ -2,7 +2,7 @@ module Md
   class App
     # The menu bar: File (open, the recent files, reload, save, quit), Edit
     # (copy, find, repeat the find, go to a line, jump between headings), View
-    # (which panes are shown, whether the editor's and the viewer's carets
+    # (which panes are shown and resizing them, whether the editor's and the viewer's carets
     # follow each other, whether the caret's line is highlighted, whether
     # the editor numbers its lines, the text's layout — soft wrap, a text
     # width and its centering — and whether the file is watched) and
@@ -22,8 +22,9 @@ module Md
     # Qt's spelling, `Ctrl+O`): the menu shows it in its right-hand column,
     # and Crysterm fires the entry on the key from anywhere in the window —
     # after the focused pane had its turn, so the editor keeps the keys it
-    # uses, and not while a prompt is open. Of the View entries only Soft
-    # wrap has one (`Alt+W`, free in the editor, where `Alt+Z` is redo): the
+    # uses, and not while a prompt is open. Of the View entries only Resize
+    # panes (`Alt+R`) and Soft wrap (`Alt+W`, free in the editor, where
+    # `Alt+Z` is redo) have one: the
     # pane keys (`F2`–`F4`, `#app_key`) show and focus a pane or hide the
     # focused one, a different gesture from the entries' show-and-hide, so
     # they stay application keys, with `F5` and the pager letters
@@ -78,6 +79,7 @@ module Md
         view.add_action action
         @view_actions[pane] = action
       end
+      view.add_action("&Resize panes", shortcut: "Alt+R") { resize_panes }
       view.add_separator
       follow = Crysterm::Action.new "&Follow cursor", checkable: true
       follow.bind_checked @follow_cursor

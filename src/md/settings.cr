@@ -2,7 +2,7 @@ require "json"
 
 module Md
   # The user's choices kept across runs — the View and Options menu settings
-  # today, pane sizes and the like tomorrow — the way Qt's `QSettings` keeps
+  # and the pane sizes today, a theme and the like tomorrow — the way Qt's `QSettings` keeps
   # an application's: a flat map of named values behind typed accessors,
   # loaded at start, written at exit.
   #
@@ -215,6 +215,16 @@ module Md
 
     def clipboard_mode=(mode : App::ClipboardMode) : Nil
       set "clipboard_mode", mode
+    end
+
+    # The panes' widths, in cells, as the splitter wants them (`App#pane_sizes`):
+    # `[editor, viewer, toc]`, 0 for a pane never resized.
+    def pane_sizes : Array(Int32)?
+      get? "pane_sizes", Array(Int32)
+    end
+
+    def pane_sizes=(sizes : Array(Int32)) : Nil
+      set "pane_sizes", sizes
     end
 
     # Writes the map to `path`, creating the directory as needed

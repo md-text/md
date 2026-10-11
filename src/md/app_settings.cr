@@ -10,7 +10,9 @@ module Md
     # (a menu entry, a key, a setter), and the store is written at exit
     # (`#save_settings`, from `#run`). Watch file is not among them: it is
     # per run, as `--watch` is; overwrite mode is the editor's state, not a
-    # choice.
+    # choice. The pane sizes (`#pane_sizes`) are restored with them and
+    # recorded at exit, when the write is due anyway: a drag changes them
+    # many times a second.
     getter settings : Settings?
 
     # Puts the stored choices into the properties — a choice never made reads
@@ -33,6 +35,7 @@ module Md
       settings.text_width.try { |value| @text_width.value = value }
       settings.center_text?.try { |value| @center_text.value = value }
       settings.clipboard_mode.try { |mode| @clipboard_mode.value = mode }
+      settings.pane_sizes.try { |sizes| self.pane_sizes = sizes }
       @follow_cursor.on_change { settings.follow_cursor = @follow_cursor.value }
       @highlight_line.on_change { settings.highlight_line = @highlight_line.value }
       @confirm_discard.on_change { settings.confirm_discard = @confirm_discard.value }
@@ -47,11 +50,12 @@ module Md
       @clipboard_mode.on_change { settings.clipboard_mode = @clipboard_mode.value }
     end
 
-    # Writes the settings, when any changed. A write that fails is let go:
-    # at exit there is no one left to tell, and the choices are not worth
-    # an error.
+    # Writes the settings, when any changed — the pane sizes recorded first,
+    # as they are now. A write that fails is let go: at exit there is no one
+    # left to tell, and the choices are not worth an error.
     def save_settings : Nil
       return unless settings = @settings
+      settings.pane_sizes = pane_sizes
       settings.save if settings.dirty?
     end
   end

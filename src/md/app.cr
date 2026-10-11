@@ -5,7 +5,8 @@ module Md
   # The interactive terminal application: a `MainWindow` (menu bar and status
   # bar, both empty for now) whose central area holds three panes side by
   # side — the Markdown source editor, the rendered viewer and a navigable
-  # table of contents. Any combination of panes can be shown; by default only
+  # table of contents — in a splitter whose dividers resize them
+  # (`app_panes.cr`). Any combination of panes can be shown; by default only
   # one is, chosen by the `Source` (editor for a new document, viewer for a
   # file or a stream).
   #
@@ -53,15 +54,16 @@ module Md
   # shown panes; `Insert` toggles overwrite mode in the editor; `F5` cycles
   # the mouse mode; `F6` the theme (`app_theme.cr`); `Ctrl-Z` outside the
   # editor suspends md as the shell's `Ctrl-Z` would (in the editor it is
-  # undo). The File and Edit entries' keys — `Ctrl-S` saves, `Ctrl-O`
-  # opens, `Ctrl-R` reloads, `Ctrl-F` searches, `Ctrl-G`/`Alt-G` repeat the
-  # search, `Ctrl-L` goes to a line, `Alt-Up`/`Alt-Down` jump between
-  # headings, `Ctrl-Q` quits — are the entries' shortcuts (`app_menu.cr`),
-  # shown in the menus, and outside the editor the pager keys `/`, `?`,
-  # `n`, `N`, `:`, `[` and `]` do the same. `q` quits too outside the
-  # editor — Crysterm's default quit key, kept live while a pane reads input
-  # (the editor consumes the `q` it inserts) — through the same close
-  # request as `Ctrl-Q`, after the unsaved-changes guard.
+  # undo); `Enter` and `Escape` leave a divider being moved. The File, Edit
+  # and View entries' keys — `Ctrl-S` saves, `Ctrl-O` opens, `Ctrl-R`
+  # reloads, `Ctrl-F` searches, `Ctrl-G`/`Alt-G` repeat the search, `Ctrl-L`
+  # goes to a line, `Alt-Up`/`Alt-Down` jump between headings, `Alt-R`
+  # resizes the panes, `Ctrl-Q` quits — are the entries' shortcuts
+  # (`app_menu.cr`), shown in the menus, and outside the editor the pager
+  # keys `/`, `?`, `n`, `N`, `:`, `[` and `]` do the same. `q` quits too
+  # outside the editor — Crysterm's default quit key, kept live while a pane
+  # reads input (the editor consumes the `q` it inserts) — through the same
+  # close request as `Ctrl-Q`, after the unsaved-changes guard.
   class App
     # The three panes of the central area, in layout order.
     enum Pane
@@ -70,8 +72,8 @@ module Md
       Toc
     end
 
-    # Width of the table of contents column, in cells; the other panes share
-    # the rest of the width equally.
+    # Width of the table of contents column, in cells, until it is resized;
+    # the other panes share the rest of the width equally.
     TOC_WIDTH = 30
 
     # How long a status bar notice (save result, warning) stays visible.
@@ -143,15 +145,9 @@ module Md
 
       @editor = Crysterm::Widget::PlainTextEdit.new input_on_focus: true
       @viewer = Crysterm::Widget::TextBrowser.new input_on_focus: true
-      @toc = Crysterm::Widget::TocView.new document: @viewer.document, width: TOC_WIDTH
-
-      central = Crysterm::Widget::Box.new
-      @main.central_widget = central
-      layout = Crysterm::Layout::HBox.new
-      central.layout = layout
-      layout.add_widget @editor, stretch: 1
-      layout.add_widget @viewer, stretch: 1
-      layout.add_widget @toc
+      @toc = Crysterm::Widget::TocView.new document: @viewer.document
+      @splitter = Crysterm::Widget::Splitter.new
+      build_central
 
       wire_panes
       @window.on(Crysterm::Event::KeyPress) { |e| key_pressed e }
@@ -560,17 +556,18 @@ module Md
     end
 
     # The application's special keys — the panes and the mouse mode, whose
-    # gestures no menu entry has, and `Ctrl-Z`; returns whether *key* was
-    # one.
+    # gestures no menu entry has, `Ctrl-Z`, and the way back from a divider;
+    # returns whether *key* was one.
     private def app_key(key : Tput::Key) : Bool
       case key
-      when .f2?     then toggle_pane Pane::Editor
-      when .f3?     then toggle_pane Pane::Viewer
-      when .f4?     then toggle_pane Pane::Toc
-      when .f5?     then cycle_mouse_mode
-      when .f6?     then cycle_theme
-      when .ctrl_z? then suspend
-      else               return navigation_key(key)
+      when .f2?              then toggle_pane Pane::Editor
+      when .f3?              then toggle_pane Pane::Viewer
+      when .f4?              then toggle_pane Pane::Toc
+      when .f5?              then cycle_mouse_mode
+      when .f6?              then cycle_theme
+      when .ctrl_z?          then suspend
+      when .enter?, .escape? then return leave_divider
+      else                        return navigation_key(key)
       end
       true
     end

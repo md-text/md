@@ -142,6 +142,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   editor's own `Ctrl-C`, `Ctrl-X` and `Ctrl-V` follow it, a paste in
   Command mode reading the paired command; and a selection-less `Ctrl-C`
   now passes from a text pane to the application.
+- Resizable panes: the panes sit in a splitter (Crysterm's, after Qt's
+  `QSplitter`) with a divider between each two shown, dragged with the mouse
+  or moved with `Left`/`Right` after View → Resize panes (`Alt+R`) focuses
+  the divider next to the pane (`Enter`/`Escape` return). A hidden pane takes
+  no width and shows no divider, and gets its width back when shown. The
+  sizes are kept in the settings as `pane_sizes` — columns per pane, hidden
+  ones included — and restored at start; the editor and the viewer keep
+  their proportion in a terminal of another width, the table of contents its
+  columns. (Crysterm's splitter learnt to fold hidden panes away, to resize
+  its panes in proportion and with stretch factors, to save and restore its
+  state, and to keep its dividers off the Tab chain.)
 
 [Unreleased]: https://github.com/crystallabs/md/commits/main
 

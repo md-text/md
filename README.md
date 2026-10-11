@@ -96,6 +96,16 @@ contents follows the document's headings. A document arriving on standard
 input is rendered as it comes in, and the viewer keeps scrolling to the end
 until you scroll up.
 
+The shown panes share the width with a divider between each two: the editor
+and the viewer equally, the table of contents as a 30-column list. Drag a
+divider with the mouse to resize the panes beside it, or, without a mouse,
+pick View → Resize panes (`Alt-R`): the divider next to the pane you are in
+takes the keys, `Left` and `Right` move it a column at a time, and `Enter`,
+`Escape` or `Tab` go back to the panes. A hidden pane gives its width to the
+others and gets it back when shown. The sizes are kept across runs with the
+other settings; a wider or narrower terminal next time keeps the proportions
+of the editor and the viewer, and the table of contents its columns.
+
 | Key                | Action                                                                    |
 | ------------------ | ------------------------------------------------------------------------- |
 | `F2`, `F3`, `F4`   | Show and focus the editor, viewer or table of contents; hide it if it is already focused (the last pane stays) |
@@ -116,6 +126,7 @@ until you scroll up.
 | `Ctrl-G`, `Alt-G`, `n`, `N` | Next and previous match (`n` and `N` outside the editor; Edit → Find Next, Find Previous) |
 | `Ctrl-L`, `:`      | Go to a source line; asks for the number (`:` outside the editor; Edit → Go to Line…) |
 | `Alt-Down`, `Alt-Up`, `]`, `[` | Jump to the next and previous heading (`]` and `[` outside the editor; Edit → Next Heading, Previous Heading) |
+| `Alt-R`            | Resize the panes from the keyboard: `Left`/`Right` move the divider next to the pane, `Enter`/`Escape` return (View → Resize panes) |
 | `Backspace`        | Outside the editor, go back to where you were before the last link or open (Edit → Back) |
 | `Alt-Left`, `Alt-Right` | Back and Forward (Edit → Back, Forward); in the editor and the viewer these move by word instead |
 | `Ctrl-Q`           | Quit (`q` too, anywhere but in the editor; File → Quit); asks first when changes are unsaved |
@@ -324,11 +335,15 @@ back. A new document is told of unnamed copies left behind.
 The choices made in the View and Options menus — Follow cursor, Highlight
 line, Line numbers, Soft wrap, Text width, Center text, Ask before discarding
 changes, Auto-save, Keep a backup file, the mouse mode, the clipboard mode and
-the theme — are kept across runs
-in `$XDG_CONFIG_HOME/md/settings.json` (`~/.config/md/settings.json`), written
+the theme — and the pane sizes are kept across runs in
+`$XDG_CONFIG_HOME/md/settings.json` (`~/.config/md/settings.json`), written
 when md quits. Watch file is not kept: like `--watch`, it is for the run at
 hand. The file is plain JSON and can be edited by hand; a missing or broken
-one simply means the defaults.
+one simply means the defaults. The pane sizes are `pane_sizes`, the widths
+in columns of the editor, the viewer and the table of contents, hidden ones
+included (`0` for a pane never resized); the editor and the viewer are
+fitted to the terminal in that proportion, the table of contents keeps its
+columns.
 
 ## Building from source
 
@@ -392,6 +407,7 @@ src/md/source.cr      where the document comes from (file, stdin, nothing)
 src/md/export.cr      --export: the document rendered to standard output
 src/md/manual.cr      --generate: the man page and the shell completions
 src/md/app.cr         the Crysterm application: window, panes, keys, streaming
+src/md/app_panes.cr   the panes' splitter: resizing, the sizes kept
 src/md/app_status.cr  the status bar fields, the mouse modes
 src/md/app_menu.cr    the menu bar
 src/md/app_search.cr  search, go to line, heading jumps

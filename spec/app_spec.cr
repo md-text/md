@@ -325,7 +325,7 @@ describe "Md::App menus" do
       menu(app, 0).actions.map(&.text).should eq ["&Open…", "Open &Recent", "&Reload", "", "&Save", "Save &As…", "", "&Quit"]
       menu(app, 0).actions[1].enabled?.should be_false # no history, nothing recent
       menu(app, 1).actions.map(&.text).should eq ["&Copy", "Copy as &Markdown", "", "&Find…", "Find &Next", "Find &Previous", "Clear &Highlight", "", "&Go to Line…", "Nex&t Heading", "Pre&vious Heading", "", "&Back", "For&ward"]
-      menu(app, 2).actions.map(&.text).should eq ["&Editor", "&Viewer", "&Table of contents", "", "&Follow cursor", "&Highlight line", "Line &numbers", "", "&Soft wrap", "Te&xt width", "&Center text", "", "&Watch file"]
+      menu(app, 2).actions.map(&.text).should eq ["&Editor", "&Viewer", "&Table of contents", "&Resize panes", "", "&Follow cursor", "&Highlight line", "Line &numbers", "", "&Soft wrap", "Te&xt width", "&Center text", "", "&Watch file"]
       menu(app, 3).actions.map(&.text).should eq ["&Overwrite mode", "&Ask before discarding changes", "A&uto-save", "&Keep a backup file", "&Mouse", "&Theme", "&Clipboard"]
     end
   end
@@ -391,7 +391,7 @@ describe "Md::App settings" do
       File.write path, <<-JSON
         {"version": 1, "settings": {"follow_cursor": true, "highlight_line": true,
          "confirm_discard": false, "mouse_mode": "insert", "line_numbers": true,
-         "pane_sizes": [40, 60]}}
+         "pane_sizes": [40, 60, 20]}}
         JSON
       settings = Md::Settings.load(path)
       with_app Md::Source.new(path: "doc.md"), text: DOC, view: true, settings: settings do |app, window|
@@ -404,7 +404,7 @@ describe "Md::App settings" do
         app.mouse_mode.should eq Md::App::MouseMode::Insert
         window.mouse_enabled?.should be_false # reading in the viewer: not in `i`
         app.editor.line_numbers?.should be_true
-        follow, highlight = menu(app, 2).actions[4, 2]
+        follow, highlight = menu(app, 2).actions[5, 2]
         follow.checked?.should be_true
         highlight.checked?.should be_true
         settings.dirty?.should be_false # applying is not a change
@@ -425,7 +425,7 @@ describe "Md::App settings" do
       reloaded.confirm_discard?.should be_true
       reloaded.mouse_mode.should eq Md::App::MouseMode::Off
       reloaded.line_numbers?.should be_false
-      reloaded.get("pane_sizes", [] of Int32).should eq [40, 60]
+      reloaded.pane_sizes.should eq [40, 60, 20]
     ensure
       FileUtils.rm_rf dir
     end
