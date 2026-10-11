@@ -325,7 +325,7 @@ describe "Md::App menus" do
       menu(app, 0).actions[1].enabled?.should be_false # no history, nothing recent
       menu(app, 1).actions.map(&.text).should eq ["&Find…", "Find &Next", "Find &Previous", "Clear &Highlight", "", "&Go to Line…", "Nex&t Heading", "Pre&vious Heading", "", "&Back", "For&ward"]
       menu(app, 2).actions.map(&.text).should eq ["&Editor", "&Viewer", "&Table of contents", "", "&Follow cursor", "&Highlight line", "Line &numbers", "", "&Watch file"]
-      menu(app, 3).actions.map(&.text).should eq ["&Overwrite mode", "&Ask before discarding changes", "&Mouse"]
+      menu(app, 3).actions.map(&.text).should eq ["&Overwrite mode", "&Ask before discarding changes", "&Mouse", "&Theme"]
     end
   end
 

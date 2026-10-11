@@ -16,6 +16,7 @@ require "./md/app_search"
 require "./md/app_file"
 require "./md/app_settings"
 require "./md/app_links"
+require "./md/app_theme"
 
 module Md
 end

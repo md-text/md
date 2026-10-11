@@ -152,6 +152,16 @@ module Md
       set "mouse_mode", mode
     end
 
+    # Options → Theme, stored by the theme's name (`"terminal"`, `"dark"`,
+    # `"light"`), as `--colors-theme` spells it.
+    def theme : App::Theme?
+      get? "theme", App::Theme
+    end
+
+    def theme=(theme : App::Theme) : Nil
+      set "theme", theme
+    end
+
     # Writes the map to `path`, creating the directory as needed
     # (`QSettings::sync`). The file is written beside its final name and
     # renamed over it so a crash mid-write leaves the previous settings

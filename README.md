@@ -104,6 +104,7 @@ until you scroll up.
 | `Space`, `Enter`   | In the viewer, read on by a page or by a line (arrows, `PageUp`/`PageDown`, `Home`/`End` as usual) |
 | `Insert`           | Toggle the editor between inserting and overwriting (the `INS`/`OVR` field) |
 | `F5`               | Cycle the mouse mode (the `🖱=` field)                                    |
+| `F6`               | Cycle the theme: terminal, dark, light (Options → Theme)                  |
 | `Ctrl-Z`           | Outside the editor, suspend md to the shell (`fg` resumes); in the editor, undo |
 | `Alt-F`, `Alt-E`, `Alt-V`, `Alt-O` | Open the File, Edit, View and Options menus (`F10` too)   |
 | `Ctrl-O`           | Open a file; asks for the name (File → Open…)                             |
@@ -149,6 +150,17 @@ well, next to the overwrite mode. The File menu opens, reloads, saves, saves
 as and quits, and lists the recently opened files; the Edit menu searches,
 goes to a line and jumps between headings; the View menu shows and hides
 the panes.
+
+Options → Theme picks the colors the whole window is drawn in, from the
+themes built into Crysterm — the same ones its `--colors-theme` option
+names: `terminal` derives a palette from your terminal's own colors, so md
+blends in, and `dark` and `light` are fixed palettes. The window switches at
+once, and `F6` cycles through them from the keyboard. The choice is kept
+with the other settings; `--colors-theme` given on the command line (or in
+Crysterm's config file or environment) wins for that run and is not kept,
+so the next plain run is back to the stored theme. A stylesheet of your own
+(`--colors-stylesheet FILE`, CSS or Qt's QSS) layers over whichever theme
+is on, so your rules stay in force when the theme changes under them.
 
 ### Searching and jumping
 
@@ -253,7 +265,7 @@ and `Escape` (or `Backspace` on an empty line) gives up.
 ### Settings
 
 The choices made in the View and Options menus — Follow cursor, Highlight
-line, Ask before discarding changes and the mouse mode — are kept across runs
+line, Ask before discarding changes, the mouse mode and the theme — are kept across runs
 in `$XDG_CONFIG_HOME/md/settings.json` (`~/.config/md/settings.json`), written
 when md quits. Watch file is not kept: like `--watch`, it is for the run at
 hand. The file is plain JSON and can be edited by hand; a missing or broken
@@ -326,6 +338,7 @@ src/md/app_menu.cr    the menu bar
 src/md/app_search.cr  search, go to line, heading jumps
 src/md/app_file.cr    open, reload, watch; the unsaved-changes guard; recent files
 src/md/app_links.cr   following links; Back and Forward
+src/md/app_theme.cr   the theme: Crysterm's built-in themes, switched at runtime
 src/md/app_settings.cr the View and Options choices kept across runs
 src/md/settings.cr    the settings store (~/.config/md/settings.json)
 src/md/history.cr     the recent files and positions (~/.local/state/md/history.json)

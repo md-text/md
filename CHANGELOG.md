@@ -73,6 +73,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   start and written at exit to `$XDG_CONFIG_HOME/md/settings.json`
   (`~/.config/md/settings.json`), a store in the manner of Qt's `QSettings`
   that later settings (pane sizes, a theme) join as new keys.
+- Options → Theme (`F6` cycles): the themes built into Crysterm — terminal,
+  dark and light, as `--colors-theme` names them — switched at runtime, the
+  whole window restyled at once. The choice is kept in the settings;
+  `--colors-theme` wins for its run without being kept, and a
+  `--colors-stylesheet` of your own stays over whichever theme is on.
 - The menus show their entries' keys: File → Open…, Reload, Save and Quit
   and Edit → Find…, Find Next, Find Previous and Go to Line… carry their
   shortcuts (Crysterm's action shortcuts, spelled `Ctrl+O` as Qt does),

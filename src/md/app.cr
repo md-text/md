@@ -45,16 +45,17 @@ module Md
   # Keys: `F2`/`F3`/`F4` show and focus the editor/viewer/table of contents,
   # or hide it when it is already focused; `Tab` cycles focus between the
   # shown panes; `Insert` toggles overwrite mode in the editor; `F5` cycles
-  # the mouse mode; `Ctrl-Z` outside the editor suspends md as the shell's
-  # `Ctrl-Z` would (in the editor it is undo). The File and Edit entries' keys — `Ctrl-S` saves,
-  # `Ctrl-O` opens, `Ctrl-R` reloads, `Ctrl-F` searches, `Ctrl-G`/`Alt-G`
-  # repeat the search, `Ctrl-L` goes to a line, `Alt-Up`/`Alt-Down` jump
-  # between headings, `Ctrl-Q` quits — are the entries' shortcuts
-  # (`app_menu.cr`), shown in the menus, and outside the editor the pager
-  # keys `/`, `?`, `n`, `N`, `:`, `[` and `]` do the same. `q` quits too
-  # outside the editor — Crysterm's default quit key, kept live while a pane
-  # reads input (the editor consumes the `q` it inserts) — through the
-  # same close request as `Ctrl-Q`, after the unsaved-changes guard.
+  # the mouse mode; `F6` the theme (`app_theme.cr`); `Ctrl-Z` outside the
+  # editor suspends md as the shell's `Ctrl-Z` would (in the editor it is
+  # undo). The File and Edit entries' keys — `Ctrl-S` saves, `Ctrl-O`
+  # opens, `Ctrl-R` reloads, `Ctrl-F` searches, `Ctrl-G`/`Alt-G` repeat the
+  # search, `Ctrl-L` goes to a line, `Alt-Up`/`Alt-Down` jump between
+  # headings, `Ctrl-Q` quits — are the entries' shortcuts (`app_menu.cr`),
+  # shown in the menus, and outside the editor the pager keys `/`, `?`,
+  # `n`, `N`, `:`, `[` and `]` do the same. `q` quits too outside the
+  # editor — Crysterm's default quit key, kept live while a pane reads input
+  # (the editor consumes the `q` it inserts) — through the same close
+  # request as `Ctrl-Q`, after the unsaved-changes guard.
   class App
     # The three panes of the central area, in layout order.
     enum Pane
@@ -186,6 +187,7 @@ module Md
         setup_file
         refresh_status
       end
+      wire_theme
 
       Pane.each { |pane| widget(pane).hide }
       load text unless text.empty?
@@ -553,6 +555,7 @@ module Md
       when .f3?     then toggle_pane Pane::Viewer
       when .f4?     then toggle_pane Pane::Toc
       when .f5?     then cycle_mouse_mode
+      when .f6?     then cycle_theme
       when .ctrl_z? then suspend
       else               return navigation_key(key)
       end

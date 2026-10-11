@@ -4,14 +4,15 @@ module Md
     # (find, repeat the find, go to a line, jump between headings), View
     # (which panes are shown, whether the editor's and the viewer's carets
     # follow each other, whether the caret's line is highlighted, whether
-    # the editor numbers its lines, and whether the file is watched) and Options (the two modes the status bar
-    # toggles — overwrite mode and the mouse mode — and the unsaved-changes
-    # guard, so every setting is reachable from the keyboard through the
-    # menus as well, `Alt+F`/`Alt+E`/`Alt+V`/`Alt+O` opening them). The
-    # checked states are bound to what they stand for
-    # (`Action#bind_checked`): the View and Options settings and the mouse
-    # mode are reactive properties, the pane entries follow the panes, and
-    # the overwrite entry follows the editor. Only the pane entries' enabled
+    # the editor numbers its lines, and whether the file is watched) and
+    # Options (the two modes the status bar toggles — overwrite mode and the
+    # mouse mode — the unsaved-changes guard and the theme, so every setting
+    # is reachable from the keyboard through the menus as well,
+    # `Alt+F`/`Alt+E`/`Alt+V`/`Alt+O` opening them). The checked states are
+    # bound to what they stand for (`Action#bind_checked`): the View and
+    # Options settings, the mouse mode and the theme are reactive
+    # properties, the pane entries follow the panes, and the overwrite and
+    # line-number entries follow the editor. Only the pane entries' enabled
     # state is re-synced by `#refresh_menus`; the recent files are remade by
     # `#refresh_recent_menu`.
     #
@@ -107,6 +108,7 @@ module Md
         action
       end
       options.add_submenu "&Mouse", modes
+      add_theme_menu options
 
       # The bar's right end names the keys that reach it, since the bar is
       # off the Tab chain and nothing else on screen says so: `F10` (the
