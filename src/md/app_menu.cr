@@ -106,7 +106,7 @@ module Md
       add_choices(view, "Te&xt Width", TEXT_WIDTHS, @text_width) { |width| text_width_label width }
       add_toggle view, "&Center Text", @center_text
       # `u` and `g`: Resizable Panes takes `z`, so `r` is free, but `u` stays.
-      add_toggle view, "R&ulers", @rulers
+      view.add_submenu "R&ulers", [toggle_action("&Horizontal", @horizontal_ruler), toggle_action("&Vertical", @vertical_ruler)]
       add_toggle view, "&Guides", @guides
       view.add_separator
       # The colors the window is drawn in, with the other appearance choices;
@@ -171,9 +171,14 @@ module Md
     # A check entry for a setting that is a reactive property, its check
     # bound to the property and the property set by the entry.
     private def add_toggle(menu : Crysterm::Widget::Menu, text : String, property : Crysterm::Reactive::Property(Bool)) : Crysterm::Action
+      menu.add_action toggle_action(text, property)
+    end
+
+    # A checkable entry bound to *property*, for a menu or a submenu.
+    private def toggle_action(text : String, property : Crysterm::Reactive::Property(Bool)) : Crysterm::Action
       action = Crysterm::Action.new text, checkable: true
       action.bind_checked property
-      menu.add_action action
+      action
     end
 
     # A radio submenu *title* for a setting that is a choice among

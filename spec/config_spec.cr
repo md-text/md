@@ -32,9 +32,9 @@ describe Md::Config do
     end
 
     it "takes the file, then the environment and the command line over it" do
-      with_config "md:\n  text_width: 80\n  rulers: true\ncolors:\n  theme: light\n", argv: ["--md-text-width=100", "--no-md-rulers"] do
+      with_config "md:\n  text_width: 80\n  vertical_ruler: true\ncolors:\n  theme: light\n", argv: ["--md-text-width=100", "--no-md-vertical-ruler"] do
         Crysterm::Config.md_text_width.should eq 100
-        Crysterm::Config.md_rulers.should be_false
+        Crysterm::Config.md_vertical_ruler.should be_false
         Crysterm::Config.colors_theme.should eq Crysterm::CSS::Theme::Choice::Light
         Crysterm::Config["md.text_width"].source.should eq Superconf::Source::CommandLine
         Crysterm::Config["colors.theme"].source.should eq Superconf::Source::ConfigFile
@@ -60,7 +60,7 @@ describe Md::Config do
 
   describe ".save" do
     it "writes the picks of the run and the file's own entries, and nothing at its default" do
-      with_config "md:\n  rulers: true\n" do |path|
+      with_config "md:\n  vertical_ruler: true\n" do |path|
         Crysterm::Config.md_sync_cursor = true # a pick
         Md::Config.dirty?.should be_true
         Md::Config.save.should be_true
@@ -68,7 +68,7 @@ describe Md::Config do
         text = File.read(path)
         text.should start_with "# md's settings"
         file = config_file(path)
-        file["md"]["rulers"].as_bool.should be_true      # the file's own entry
+        file["md"]["vertical_ruler"].as_bool.should be_true # the file's own entry
         file["md"]["sync_cursor"].as_bool.should be_true # the pick
         file["md"]["guides"]?.should be_nil              # a default
         file["colors"]?.should be_nil
@@ -140,7 +140,7 @@ describe "Md::App config menu" do
     with_config do |path|
       with_app Md::Source.new(path: "doc.md"), text: "# T\n\ntext\n", view: true, config: true do |app|
         other = File.join(File.dirname(path), "other.yml")
-        File.write other, "md:\n  rulers: true\n  text_width: 72\n  pane_sizes: \"20,40,25\"\ncolors:\n  theme: dark\n"
+        File.write other, "md:\n  horizontal_ruler: true\n  vertical_ruler: true\n  text_width: 72\n  pane_sizes: \"20,40,25\"\ncolors:\n  theme: dark\n"
         app.load_config_prompt
         answer app, other
         notice(app).should eq " Loaded #{other}"
@@ -149,7 +149,7 @@ describe "Md::App config menu" do
         app.text_width.should eq 72
         app.pane_sizes.should eq [20, 40, 25]
         app.theme.should eq Md::App::Theme::Dark
-        menu(app, 3).actions.find!(&.text.==("R&ulers")).checked?.should be_true
+        menu(app, 3).actions.find!(&.text.==("R&ulers")).menu.not_nil!.map(&.checked?).should eq [true, true]
 
         app.load_config_prompt
         answer app, File.join(File.dirname(path), "missing.yml")

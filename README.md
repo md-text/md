@@ -449,8 +449,10 @@ keeps them reading side by side under Sync Cursor. *Center Text* puts the
 capped column in the middle of a wider pane rather than at its left edge.
 
 Two more measure it. *Rulers* puts a column ruler along the top row of each
-pane and a row ruler down its left: a tape of `─` with a `┼` every fifth
-column and the number on every tenth, counted in the text's own columns — a
+pane (Horizontal) and a row ruler down its left (Vertical), each switched
+on its own: a tape of `─` with a `┼` every fifth
+column and a `│` on every tenth with its number right after it (`│20` marks
+column 20), counted in the text's own columns — a
 capped, centered column's tape starts where the text does, and both slide
 with the text when it scrolls. In the editor the row ruler sits outside the
 line-number gutter and numbers rows where the gutter numbers source lines.
@@ -543,7 +545,7 @@ environment variable, on the command line, or in the menu while md runs.
 `md --help --verbose` lists them all, with their defaults:
 
 ```sh
-md --md-text-width 80 --md-rulers notes.md   # this run only
+md --md-text-width 80 --md-vertical-ruler notes.md   # this run only
 MD_MOUSE_MODE=off md notes.md                # likewise
 cat ~/.config/md/config.yml
 ```
@@ -551,7 +553,7 @@ cat ~/.config/md/config.yml
 ```yaml
 md:
   text_width: 80
-  rulers: true
+  vertical_ruler: true
   mouse_mode: Off
 colors:
   theme: breeze-light

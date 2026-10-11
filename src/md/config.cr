@@ -30,8 +30,10 @@ module Superconf
     validate: ->(n : Int32) { n >= 0 }
   option "md.center_text", true, env: "MD_CENTER_TEXT",
     description: "View → Center Text: center a capped text column in a wider pane rather than keep it at the left"
-  option "md.rulers", false, env: "MD_RULERS",
-    description: "View → Rulers: a column ruler along the top and a row ruler down the left of each pane"
+  option "md.horizontal_ruler", false, env: "MD_HORIZONTAL_RULER",
+    description: "View → Rulers → Horizontal: a column ruler along the top of each pane"
+  option "md.vertical_ruler", false, env: "MD_VERTICAL_RULER",
+    description: "View → Rulers → Vertical: a row ruler down the left of each pane"
   option "md.guides", false, env: "MD_GUIDES",
     description: "View → Guides: guide lines at the text's edges, and wherever one is pulled off the column ruler"
   option "md.resizable_panes", true, env: "MD_RESIZABLE_PANES",

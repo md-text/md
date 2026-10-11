@@ -18,9 +18,11 @@ module Md
     # places the column in the middle of a wider pane rather than at its
     # left edge (`line_wrap_column_alignment`).
     #
-    # View → Rulers (`#rulers?`) puts a column ruler along the top row of
-    # each pane and a row ruler down its left — Crysterm's
-    # `AbstractScrollArea#rulers`, counted in the text's columns, so with a
+    # View → Rulers → Horizontal (`#horizontal_ruler?`) puts a column ruler
+    # along the top row of each pane and Vertical (`#vertical_ruler?`) a row
+    # ruler down its left, each on its own (`#rulers?` and `#rulers=` are
+    # the pair) — Crysterm's `AbstractScrollArea#column_ruler` and
+    # `#row_ruler`, counted in the text's columns, so with a
     # text width set and centered the tape starts where the text does, and
     # in the editor the row ruler sits outside the line-number gutter, which
     # keeps numbering source lines while the ruler numbers rows. View →
@@ -56,7 +58,8 @@ module Md
     @soft_wrap : Crysterm::Reactive::Property(Bool) = Crysterm::Reactive::Property.new(true)
     @text_width : Crysterm::Reactive::Property(Int32) = Crysterm::Reactive::Property.new(0)
     @center_text : Crysterm::Reactive::Property(Bool) = Crysterm::Reactive::Property.new(true)
-    @rulers : Crysterm::Reactive::Property(Bool) = Crysterm::Reactive::Property.new(false)
+    @horizontal_ruler : Crysterm::Reactive::Property(Bool) = Crysterm::Reactive::Property.new(false)
+    @vertical_ruler : Crysterm::Reactive::Property(Bool) = Crysterm::Reactive::Property.new(false)
     @guides : Crysterm::Reactive::Property(Bool) = Crysterm::Reactive::Property.new(false)
     @hard_wrap : Crysterm::Reactive::Property(Bool) = Crysterm::Reactive::Property.new(false)
 
@@ -90,13 +93,33 @@ module Md
       @center_text.value = value
     end
 
-    def rulers? : Bool
-      @rulers.value
+    def horizontal_ruler? : Bool
+      @horizontal_ruler.value
     end
 
-    # Shows or hides the rulers on both panes (View → Rulers).
+    # Shows or hides the column ruler on both panes (View → Rulers → Horizontal).
+    def horizontal_ruler=(value : Bool) : Bool
+      @horizontal_ruler.value = value
+    end
+
+    def vertical_ruler? : Bool
+      @vertical_ruler.value
+    end
+
+    # Shows or hides the row ruler on both panes (View → Rulers → Vertical).
+    def vertical_ruler=(value : Bool) : Bool
+      @vertical_ruler.value = value
+    end
+
+    # Whether both rulers are shown.
+    def rulers? : Bool
+      horizontal_ruler? && vertical_ruler?
+    end
+
+    # Shows or hides both rulers.
     def rulers=(value : Bool) : Bool
-      @rulers.value = value
+      self.horizontal_ruler = value
+      self.vertical_ruler = value
     end
 
     def guides? : Bool
@@ -137,9 +160,14 @@ module Md
         apply_hard_wrap
       end
       @center_text.on_change { apply_text_width }
-      @rulers.on_change do
-        @editor.rulers = @rulers.value
-        @viewer.rulers = @rulers.value
+      @horizontal_ruler.on_change do
+        @editor.column_ruler = @horizontal_ruler.value
+        @viewer.column_ruler = @horizontal_ruler.value
+        refresh_status
+      end
+      @vertical_ruler.on_change do
+        @editor.row_ruler = @vertical_ruler.value
+        @viewer.row_ruler = @vertical_ruler.value
         refresh_status
       end
       @guides.on_change do

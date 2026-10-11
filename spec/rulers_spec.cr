@@ -1,9 +1,10 @@
 require "./spec_helper"
 require "file_utils"
 
-# View → Rulers: a column ruler along the top row of the editor and the
-# viewer and a row ruler down their left, through Crysterm's
-# `AbstractScrollArea#rulers`; kept across runs.
+# View → Rulers → Horizontal and Vertical: a column ruler along the top row
+# of the editor and the viewer and a row ruler down their left, each on its
+# own, through Crysterm's `AbstractScrollArea#column_ruler` and `#row_ruler`;
+# kept across runs.
 
 # One paragraph some 270 columns long on one source line, then a short one.
 RULERS_DOC = (1..40).map { |i| "word#{i}" }.join(" ") + "\n\nshort\n"
@@ -15,7 +16,7 @@ private def pane_row(window, pane, row)
 end
 
 describe "Md::App rulers" do
-  it "is off by default, and the View entry shows them on both panes" do
+  it "is off by default, and the View entries show each ruler on both panes" do
     with_app Md::Source.new(path: "doc.md"), text: RULERS_DOC, view: true do |app, window|
       app.rulers?.should be_false
       app.editor.rulers?.should be_false
@@ -23,23 +24,38 @@ describe "Md::App rulers" do
       window.repaint
       pane_row(window, app.viewer, 0)[0].should eq 'w'
 
-      entry = menu(app, 3).actions.find!(&.text.==("R&ulers"))
-      entry.checked?.should be_false
-      entry.trigger
-      app.rulers?.should be_true
-      entry.checked?.should be_true
-      app.editor.rulers?.should be_true
-      app.viewer.rulers?.should be_true
+      horizontal, vertical = menu(app, 3).actions.find!(&.text.==("R&ulers")).menu.not_nil!
+      horizontal.text.should eq "&Horizontal"
+      vertical.text.should eq "&Vertical"
+      horizontal.checked?.should be_false
+      horizontal.trigger
+      app.horizontal_ruler?.should be_true
+      app.vertical_ruler?.should be_false
+      app.rulers?.should be_false # not both
+      horizontal.checked?.should be_true
+      app.editor.column_ruler?.should be_true
+      app.viewer.column_ruler?.should be_true
       window.repaint
-      # The column ruler's tape on the pane's top row, the row ruler before
-      # the first text row, the text below and right of them.
-      pane_row(window, app.viewer, 0)[0, 20].should eq "  ────┼───10────┼───"
+      # The column ruler's tape on the pane's top row alone, the text below it.
+      pane_row(window, app.viewer, 0)[0, 18].should eq "────┼────│10──┼───"
+      pane_row(window, app.viewer, 1)[0].should eq 'w'
+      app.viewer.ileft.should eq 0
+      app.viewer.itop.should eq 1
+
+      vertical.trigger
+      app.rulers?.should be_true
+      app.editor.rulers?.should be_true
+      window.repaint
+      # Both: the tape past the row ruler, the row ruler before the first
+      # text row, the text below and right of them.
+      pane_row(window, app.viewer, 0)[0, 20].should eq "  ────┼────│10──┼───"
       pane_row(window, app.viewer, 1)[0, 3].should eq " │w"
       app.viewer.ileft.should eq 2
       app.viewer.itop.should eq 1
 
       app.rulers = false
-      entry.checked?.should be_false
+      horizontal.checked?.should be_false
+      vertical.checked?.should be_false
       app.viewer.rulers?.should be_false
       window.repaint
       pane_row(window, app.viewer, 0)[0].should eq 'w'
@@ -60,23 +76,25 @@ describe "Md::App rulers" do
       left = app.viewer.ileft
       left.should be > 2
       pane_row(window, app.viewer, 0)[left - 1].should eq ' '
-      pane_row(window, app.viewer, 0)[left, 10].should eq "────┼───10"
+      pane_row(window, app.viewer, 0)[left, 10].should eq "────┼────│"
       pane_row(window, app.viewer, 1)[left].should eq 'w'
     end
   end
 
-  it "keeps the choice across runs" do
-    with_config "md:\n  rulers: true\n" do |path|
+  it "keeps the choices across runs" do
+    with_config "md:\n  horizontal_ruler: true\n  vertical_ruler: true\n" do |path|
       with_app Md::Source.new(path: "doc.md"), text: RULERS_DOC, view: true, config: true do |app|
         app.rulers?.should be_true
         app.editor.rulers?.should be_true
         app.viewer.rulers?.should be_true
         Md::Config.dirty?.should be_false
-        app.rulers = false
+        app.vertical_ruler = false
         Md::Config.dirty?.should be_true
         app.save_config
       end
-      config_file(path)["md"]["rulers"].as_bool.should be_false
+      file = config_file(path)["md"]
+      file["horizontal_ruler"].as_bool.should be_true
+      file["vertical_ruler"].as_bool.should be_false
     end
   end
 

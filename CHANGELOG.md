@@ -233,12 +233,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   document's is written again at the next auto-save) and md's cache
   directory, `$XDG_CACHE_HOME/md` (the log file, emptied), with a notice
   of what went. The settings stay.
-- View → Rulers: a column ruler along the top row of the editor and the
-  viewer and a row ruler down their left, counted in the text's columns —
-  a capped, centered column's tape starts where the text does, and both
-  slide with the text when it scrolls — the row ruler outside the editor's
-  line-number gutter. Kept across runs. (Crysterm's `AbstractScrollArea`
-  learnt `rulers`, reserved as viewport margins and styled by `::ruler`.)
+- View → Rulers → Horizontal and Vertical: a column ruler along the top row
+  of the editor and the viewer and a row ruler down their left, each shown
+  on its own, counted in the text's columns — a `│` on every tenth column
+  with its number right after it, a capped, centered column's tape starting
+  where the text does, and both sliding with the text when it scrolls — the
+  row ruler outside the editor's line-number gutter. Kept across runs as
+  `horizontal_ruler` and `vertical_ruler`. (Crysterm's `AbstractScrollArea`
+  learnt `column_ruler` and `row_ruler`, reserved as viewport margins and
+  styled by `::ruler`.)
 - View → Guides: a thin vertical line in the column just before the text
   and the one just after it, drawn in blank cells only, which with a Text
   Width set in a wider pane marks the capped column's edges. With the
