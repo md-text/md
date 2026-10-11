@@ -529,7 +529,16 @@ Crysterm's, which it can hold as well, so a theme or a media backend meant
 for md alone goes here rather than in Crysterm's `~/.config/crysterm/config.yml`.
 Entries md does not know are kept across a rewrite, so an older md does not
 shed a newer one's settings; a broken file stops md with a message naming the
-entry. The pane sizes are `md.pane_sizes`, the widths in columns of the
+entry.
+
+The Options menu reaches the file directly: *Save Config* writes it now,
+without waiting for the exit; *Save Config As…* asks for a file name, the
+config file's filled in, and writes the settings there, for a copy or a
+variant; *Load Config…* asks for a file name and applies that file at once —
+the menu entries move, the panes follow, and its values count as picks, so
+they replace whatever the environment or the command line set for the run
+and are kept at exit. A file that cannot be read, or an entry that does not
+fit, is a notice. The pane sizes are `md.pane_sizes`, the widths in columns of the
 editor, the viewer and the table of contents, comma-separated, hidden ones
 included (`0` for a pane never resized); the editor and the viewer are
 fitted to the terminal in that proportion, the table of contents keeps its

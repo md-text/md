@@ -128,6 +128,12 @@ module Md
       clipboard = add_choices(options, "&Clipboard", ClipboardMode.values, @clipboard_mode) { |mode| clipboard_label mode }
       clipboard[ClipboardMode::Command.value].enabled = !self.clipboard.copy_command.nil?
       options.add_separator
+      # The config file (`app_config.cr`): applied from a file now, written
+      # now, or written elsewhere; `L` and `S` are free here, `A` is Ask's.
+      options.add_action("&Load Config…") { load_config_prompt }
+      options.add_action("&Save Config") { save_config_now }
+      options.add_action("Sa&ve Config As…") { save_config_prompt }
+      options.add_separator
       # `C` is the clipboard's; the ellipsis says it asks first.
       options.add_action("Clea&r Caches…") { clear_caches_prompt }
 

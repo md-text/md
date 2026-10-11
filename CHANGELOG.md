@@ -250,6 +250,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   winning, with a pick in a menu recorded in the option at once. `md --help
   --verbose` and the man page's SETTINGS section list them with their
   defaults; the shell completions know the flags.
+- Options → Load Config…, Save Config and Save Config As…: a config file
+  applied at once, with the menu entries and the panes following and its
+  values counting as picks; the config file written now; the settings written
+  to a file of your choosing.
 
 ### Changed
 

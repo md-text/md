@@ -134,3 +134,67 @@ describe Md::Config do
     end
   end
 end
+
+describe "Md::App config menu" do
+  it "links a loaded file to the menu entries and the panes" do
+    with_config do |path|
+      with_app Md::Source.new(path: "doc.md"), text: "# T\n\ntext\n", view: true, config: true do |app|
+        other = File.join(File.dirname(path), "other.yml")
+        File.write other, "md:\n  rulers: true\n  text_width: 72\n  pane_sizes: \"20,40,25\"\ncolors:\n  theme: dark\n"
+        app.load_config_prompt
+        answer app, other
+        notice(app).should eq " Loaded #{other}"
+        app.rulers?.should be_true
+        app.editor.rulers?.should be_true
+        app.text_width.should eq 72
+        app.pane_sizes.should eq [20, 40, 25]
+        app.theme.should eq Md::App::Theme::Dark
+        menu(app, 3).actions.find!(&.text.==("R&ulers")).checked?.should be_true
+
+        app.load_config_prompt
+        answer app, File.join(File.dirname(path), "missing.yml")
+        notice(app).should start_with " cannot load"
+      end
+    ensure
+      Crysterm::CSS.theme = nil
+    end
+  end
+
+  it "saves on request, to the config file or elsewhere" do
+    with_config do |path|
+      with_app config: true do |app|
+        options = menu(app, 4).actions.map(&.text)
+        options.should eq ["&Overwrite Mode", "&Ask Before Discarding Changes", "A&uto-Save", "&Keep a Backup File", "&Mouse", "&Clipboard", "", "&Load Config…", "&Save Config", "Sa&ve Config As…", "", "Clea&r Caches…"]
+        app.guides = true
+        menu(app, 4).actions.find!(&.text.==("&Save Config")).trigger
+        notice(app).should eq " Saved #{path}"
+        config_file(path)["md"]["guides"].as_bool.should be_true
+        config_file(path)["md"]["pane_sizes"].as_s.should eq "0,0,#{Md::App::TOC_WIDTH}"
+
+        other = File.join(File.dirname(path), "copy.yml")
+        menu(app, 4).actions.find!(&.text.==("Sa&ve Config As…")).trigger
+        answer app, other
+        notice(app).should eq " Saved #{other}"
+        config_file(other)["md"]["guides"].as_bool.should be_true
+
+        app.save_config_prompt
+        answer app, "" # nothing written
+        notice(app).should eq " Saved #{other}"
+      end
+    end
+  end
+
+  it "writes the file at exit only when something changed" do
+    with_config do |path|
+      with_app config: true do |app|
+        app.save_config # the pane sizes are recorded: a first write
+      end
+      File.exists?(path).should be_true
+      written = File.info(path).modification_time
+      with_app config: true do |app|
+        app.save_config
+      end
+      File.info(path).modification_time.should eq written
+    end
+  end
+end
