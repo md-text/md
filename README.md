@@ -277,10 +277,14 @@ depth, for a terminal that reports fewer colors than it shows, or to see a
 theme as a plainer terminal would; the whole window is redrawn at the new
 depth at once (`--colors-depth`). View → Terminal Links is whether the
 links in the viewer are also the terminal's own hyperlinks, to click or
-hover where the terminal does that: Auto-detect turns them on where the
-terminal is known to support them, On trusts the terminal over the
-detection, Off is for a terminal that shows the escape sequence instead
-(`--render-hyperlinks`). Options → Reduced Motion skips Crysterm's
+hover where the terminal does that: When the Terminal Supports Them turns
+them on where the terminal is known to support them, Always trusts the
+terminal over the detection, and Never turns the viewer's links off
+altogether — drawn as plain text, followed by neither a click nor `Enter`,
+skipped by `Tab` (`--render-hyperlinks`). Below the three, Double-click to
+Open makes a double click follow a link where a single one does by default,
+the choice desktops offer; a single click then only places the caret
+(`md.link_double_click`). Options → Reduced Motion skips Crysterm's
 animations — a pressed button, a fade — and shows their end state at once
 (`--render-reduced-motion`). All three are kept with the other settings.
 

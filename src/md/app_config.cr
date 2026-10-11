@@ -50,6 +50,7 @@ module Md
       link @color_depth, "colors.depth"
       link @hyperlinks, "render.hyperlinks"
       link @reduced_motion, "render.reduced_motion"
+      link @link_double_click, "md.link_double_click"
       # The pane sizes are not a property: applied from the option now and,
       # with the configuration kept, whenever it changes (a file loaded);
       # recorded at exit. The window's end unhooks the listener, as it does

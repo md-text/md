@@ -29,18 +29,42 @@ describe "Md::App toolkit options" do
   it "offers the hyperlink policies and tells the window" do
     with_app do |app, window|
       entries = submenu(app, 3, "Terminal Lin&ks")
-      entries.map(&.text).should eq ["&When the Terminal Supports Them", "&Always", "&Never"]
-      entries.map(&.checked?).should eq [true, false, false]
+      entries.map(&.text).should eq ["&When the Terminal Supports Them", "&Always", "&Never (No Links)", "", "Double-click to &Open"]
+      entries[0, 3].map(&.checked?).should eq [true, false, false]
+      app.viewer.links_enabled?.should be_true
       entries[2].trigger
       app.hyperlinks.should eq Crysterm::AutoToggle::Off
       Crysterm::Config.render_hyperlinks.should eq Crysterm::AutoToggle::Off
       window.hyperlinks.should eq Crysterm::AutoToggle::Off
       window.hyperlinks?.should be_false
+      app.viewer.links_enabled?.should be_false # Never: no links in the viewer at all
       entries[1].trigger
       window.hyperlinks?.should be_true # forced on, headless or not
+      app.viewer.links_enabled?.should be_true
     end
   ensure
     Crysterm::Config.reset "render.hyperlinks"
+  end
+
+  it "starts without links under a configured Never, and follows a link on a double click when asked" do
+    with_config %(render:\n  hyperlinks: "off"\n) do
+      with_app Md::Source.new(path: "doc.md"), text: "See [the site](https://example.com).\n", view: true, config: true do |app|
+        app.viewer.links_enabled?.should be_false
+      end
+    end
+    with_app Md::Source.new(path: "doc.md"), text: "See [the site](https://example.com).\n", view: true do |app|
+      opened = [] of String
+      app.url_opener = ->(url : String) { opened << url; nil }
+      toggle = submenu(app, 3, "Terminal Lin&ks").last
+      toggle.checked?.should be_false
+      app.viewer.link_clicks.should eq 1
+      toggle.trigger
+      app.link_double_click?.should be_true
+      app.viewer.link_clicks.should eq 2
+      app.link_double_click = false
+      toggle.checked?.should be_false
+      app.viewer.link_clicks.should eq 1
+    end
   end
 
   it "toggles reduced motion" do
@@ -69,9 +93,11 @@ describe "Md::App toolkit options" do
         Md::Config.dirty?.should be_false
         app.color_depth = Crysterm::ColorDepth::Xterm256
         app.media_backend = Crysterm::Widget::Media::Backend::Ansi
+        app.link_double_click = true
         app.save_config
       end
       file = config_file(path)
+      file["md"]["link_double_click"].as_bool.should be_true
       file["colors"]["depth"].as_s.should eq "Xterm256"
       file["render"]["hyperlinks"].as_s.should eq "Off" # as Crysterm spells it
       file["render"]["reduced_motion"].as_bool.should be_true

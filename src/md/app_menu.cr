@@ -123,7 +123,9 @@ module Md
       # Two more of Crysterm's options (`app_toolkit.cr`); `L` and `K` are
       # free here.
       add_choices(view, "Co&lor Depth", COLOR_DEPTHS, @color_depth) { |depth| color_depth_label depth }
-      add_choices(view, "Terminal Lin&ks", Hyperlinks.values, @hyperlinks) { |policy| hyperlinks_label policy }
+      # Never turns the viewer's links off altogether; Double-click to Open
+      # is how a click follows one (`app_toolkit.cr`).
+      add_choices(view, "Terminal Lin&ks", Hyperlinks.values, @hyperlinks, [toggle_action("Double-click to &Open", @link_double_click)]) { |policy| hyperlinks_label policy }
       view.add_separator
       add_choices(view, "&Dialog Style", DialogStyle.values, @dialog_style) { |style| dialog_style_label style }
       add_toggle view, "&Watch File", @watch_file
@@ -189,9 +191,10 @@ module Md
 
     # A radio submenu *title* for a setting that is a choice among
     # *choices*, each entry labelled by *label*: exactly the chosen one is
-    # checked, and picking an entry sets the property. Returns the entries
-    # in *choices*' order.
-    private def add_choices(menu : Crysterm::Widget::Menu, title : String, choices : Enumerable(T), property : Crysterm::Reactive::Property(T), &label : T -> String) : Array(Crysterm::Action) forall T
+    # checked, and picking an entry sets the property. *extra* entries, when
+    # given, follow the choices after a separator (a related toggle, a
+    # command). Returns the choice entries in *choices*' order.
+    private def add_choices(menu : Crysterm::Widget::Menu, title : String, choices : Enumerable(T), property : Crysterm::Reactive::Property(T), extra : Array(Crysterm::Action) = [] of Crysterm::Action, &label : T -> String) : Array(Crysterm::Action) forall T
       group = Crysterm::ActionGroup.new
       actions = choices.map do |choice|
         action = Crysterm::Action.new label.call(choice), checkable: true
@@ -200,7 +203,8 @@ module Md
         action.on(Crysterm::Event::Triggered) { property.value = choice }
         action
       end
-      menu.add_submenu title, actions
+      entries = extra.empty? ? actions : actions + [Crysterm::Action.separator] + extra
+      menu.add_submenu title, entries
       actions
     end
 

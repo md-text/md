@@ -20,8 +20,15 @@ module Md
     # the links in the viewer are also the terminal's own hyperlinks (OSC 8),
     # clickable or hoverable where the terminal does that — on where the
     # terminal is known to support them, the default; always, trusting the
-    # terminal over the detection; or never, for a terminal that shows the
-    # escape sequence instead.
+    # terminal over the detection; or never, which turns the viewer's links
+    # off altogether: drawn as plain text, not followed by a click, `Enter`
+    # or `Tab` (Crysterm's `TextEdit#links_enabled`, Qt's
+    # `LinksAccessibleByMouse`/`ByKeyboard` flags), as a reader who wants no
+    # links expects of Never. Below the policies, Double-click to Open
+    # (`#link_double_click?`, `md.link_double_click`) makes a double click
+    # follow a link where a single one does by default — the single- or
+    # double-click choice desktops offer — through `TextBrowser#link_clicks`;
+    # a single click then only places the caret, as on any text.
     #
     # Options → Reduced Motion (`#reduced_motion?`, `render.reduced_motion`):
     # Crysterm's animations — a button's press, a fade — are skipped and
@@ -39,6 +46,7 @@ module Md
     @color_depth : Crysterm::Reactive::Property(ColorDepth) = Crysterm::Reactive::Property.new(Crysterm::Config.colors_depth)
     @hyperlinks : Crysterm::Reactive::Property(Hyperlinks) = Crysterm::Reactive::Property.new(Crysterm::Config.render_hyperlinks)
     @reduced_motion : Crysterm::Reactive::Property(Bool) = Crysterm::Reactive::Property.new(Crysterm::Config.render_reduced_motion)
+    @link_double_click : Crysterm::Reactive::Property(Bool) = Crysterm::Reactive::Property.new(false)
 
     def color_depth : ColorDepth
       @color_depth.value
@@ -63,6 +71,16 @@ module Md
       @reduced_motion.value
     end
 
+    def link_double_click? : Bool
+      @link_double_click.value
+    end
+
+    # Makes a double click, or a single one, follow a link in the viewer
+    # (View → Terminal Links → Double-click to Open).
+    def link_double_click=(value : Bool) : Bool
+      @link_double_click.value = value
+    end
+
     # Skips Crysterm's animations, or lets them run (Options → Reduced
     # Motion).
     def reduced_motion=(value : Bool) : Bool
@@ -80,11 +98,14 @@ module Md
       @hyperlinks.on_change do
         Crysterm::Config.render_hyperlinks = @hyperlinks.value
         # The window took the option as its own policy when it was created;
-        # it is told too.
+        # it is told too. Never takes the viewer's links away as well.
         @window.hyperlinks = @hyperlinks.value
+        @viewer.links_enabled = !@hyperlinks.value.off?
         @window.update
       end
+      @viewer.links_enabled = !@hyperlinks.value.off?
       @reduced_motion.on_change { Crysterm::Config.render_reduced_motion = @reduced_motion.value }
+      @link_double_click.on_change { @viewer.link_clicks = @link_double_click.value ? 2 : 1 }
     end
 
     private def color_depth_label(depth : ColorDepth) : String
@@ -102,7 +123,7 @@ module Md
       case policy
       in .auto? then "&When the Terminal Supports Them"
       in .on?   then "&Always"
-      in .off?  then "&Never"
+      in .off?  then "&Never (No Links)"
       end
     end
   end

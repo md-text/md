@@ -101,9 +101,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   16, 256 Colors, True Color; the whole window is redrawn at the new depth),
   View → Terminal Links (`render.hyperlinks`: whether the viewer's links are
   the terminal's own hyperlinks — When the Terminal Supports Them, Always,
-  Never) and Options → Reduced
+  and Never, which turns the viewer's links off altogether: plain text, not
+  followed by a click, `Enter` or `Tab`) and Options → Reduced
   Motion (`render.reduced_motion`): three more of Crysterm's options in the
-  menus, kept with the other settings.
+  menus, kept with the other settings. Terminal Links → Double-click to
+  Open (`link_double_click`) makes a double click follow a link where a
+  single one does by default. (Crysterm's `TextEdit` learnt
+  `links_enabled`, its `TextBrowser` `link_clicks`.)
 - The menus show their entries' keys: File → Open…, Reload, Save and Quit
   and Edit → Find…, Find Next, Find Previous and Go to Line… carry their
   shortcuts (Crysterm's action shortcuts, spelled `Ctrl+O` as Qt does),

@@ -40,6 +40,8 @@ module Superconf
     description: "View → Resizable Panes: let the dividers between the panes move"
   option "md.bars", true, env: "MD_BARS",
     description: "View → Menu and Status Bars: show the menu bar and the status bar (F4 hides and shows them together)"
+  option "md.link_double_click", false, env: "MD_LINK_DOUBLE_CLICK",
+    description: "View → Terminal Links → Double-click to Open: follow a link in the viewer on a double click rather than a single one"
   option "md.dialog_style", Md::App::DialogStyle::LinePrompt, env: "MD_DIALOG_STYLE",
     description: "View → Dialog Style: how a question is asked, in place of the status bar (line_prompt) or in a dialog (modal)"
   # Options.
