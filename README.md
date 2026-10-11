@@ -118,6 +118,7 @@ of the editor and the viewer, and the table of contents its columns.
 | `Ctrl-Z`           | Outside the editor, suspend md to the shell (`fg` resumes); in the editor, undo |
 | `Alt-F`, `Alt-E`, `Alt-M`, `Alt-V`, `Alt-O` | Open the File, Edit, Format, View and Options menus (`F10` too) |
 | `Alt-W`            | Soft Wrap in the editor on and off (View → Soft Wrap)                     |
+| `Shift` + `Left`, `Right`, `Up`, `Down`, `Home`, `End`, `PageUp`, `PageDown` | Select from the cursor, in the editor and in the viewer |
 | `Ctrl-O`           | Open a file; asks for the name (File → Open…)                             |
 | `Ctrl-R`           | Reload the file from disk (File → Reload)                                 |
 | `Ctrl-S`           | Save; without a file name yet, asks for one (File → Save As… always asks) |
@@ -143,8 +144,13 @@ open the menus. The keys work from any pane, after the pane had its turn —
 the editor keeps the keys it uses — and wait while a prompt is open.
 
 The editor has the usual editing keys: arrows and `Home`/`End`, `Shift` +
-arrows to select, `Ctrl-Z`/`Alt-Z` to undo and redo, `Ctrl-K`/`Ctrl-Y` to kill
-and yank, and the mouse to position the cursor, select and scroll.
+a movement key — the arrows, `Home`/`End`, `PageUp`/`PageDown` — to select
+from the cursor, `Ctrl-Z`/`Alt-Z` to undo and redo, `Ctrl-K`/`Ctrl-Y` to kill
+and yank, and the mouse to position the cursor, select and scroll. The
+viewer has a cursor too, and the same `Shift` + movement keys select there,
+for `Ctrl-C` to copy. (Some terminals keep `Shift-PageUp`/`PageDown` and
+`Shift-Home`/`End` for their own scrollback and never send them on; the
+arrows get through everywhere.)
 
 The status bar shows the document's name (a save result or warning takes its
 place for a moment), the caret's line and column while editing or the reading

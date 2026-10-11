@@ -218,6 +218,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ruler to be removed; the two edge guides always stay. Kept across runs.
   (Crysterm's `AbstractScrollArea` learnt `guides_enabled`, `guides` and
   the `::guide` color, with the drag.)
+- `Shift` + a movement key — the arrows, `Home`/`End`, `PageUp`/`PageDown`
+  — selects from the cursor in the viewer as well as in the editor, for
+  `Ctrl-C` to copy; a spec now holds both panes to it.
 
 [Unreleased]: https://github.com/crystallabs/md/commits/main
 

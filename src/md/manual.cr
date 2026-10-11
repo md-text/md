@@ -37,6 +37,7 @@ module Md
       {"Backspace, Alt-Left, Alt-Right", "Back to where you were before the last link or open (Backspace outside the editor), and Forward again."},
       {"Alt-R", "Resize the panes from the keyboard: Left and Right move the divider next to the pane, Enter or Escape return."},
       {"Alt-W", "Soft Wrap in the editor on and off."},
+      {"Shift-Left, Shift-Right, Shift-Up, Shift-Down, Shift-Home, Shift-End, Shift-PageUp, Shift-PageDown", "Select from the cursor, in the editor and in the viewer."},
       {"Enter, Tab, Shift-Tab", "In the editor, on a list item: continue the list (an empty item ends it), indent and outdent the item or the selected lines."},
       {"Ctrl-B, Alt-I, Alt-C", "Bold, italic and code around the selection or the word at the caret, or off again."},
       {"Alt-X", "Tick or untick a list item's task box, or give it a ticked one (Format -> Check Task; Format -> Task Box adds and removes the box)."},
