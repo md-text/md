@@ -44,7 +44,9 @@ module Md
   # Searching, going to a line and jumping between headings are in
   # `app_search.cr`; opening, reloading and watching the file, the guard
   # against losing unsaved changes and the history of recent files in
-  # `app_file.cr`; auto-save and the backup file in `app_autosave.cr`.
+  # `app_file.cr`; auto-save and the backup file in `app_autosave.cr`;
+  # copying, and the clipboard mode (Options → Clipboard), in
+  # `app_clipboard.cr`.
   #
   # Keys: `F2`/`F3`/`F4` show and focus the editor/viewer/table of contents,
   # or hide it when it is already focused; `Tab` cycles focus between the
@@ -200,6 +202,7 @@ module Md
       show_pane(view ? Pane::Viewer : Pane::Editor).focus
       build_menus
       build_status
+      setup_clipboard
       apply_settings
       if line
         go_to_line line

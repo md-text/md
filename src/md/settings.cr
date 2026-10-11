@@ -207,6 +207,16 @@ module Md
       set "center_text", value
     end
 
+    # Options → Clipboard, stored by the mode's name (`"terminal"`,
+    # `"command"`, `"internal"`); likewise nil for a name md does not know.
+    def clipboard_mode : App::ClipboardMode?
+      get? "clipboard_mode", App::ClipboardMode
+    end
+
+    def clipboard_mode=(mode : App::ClipboardMode) : Nil
+      set "clipboard_mode", mode
+    end
+
     # Writes the map to `path`, creating the directory as needed
     # (`QSettings::sync`). The file is written beside its final name and
     # renamed over it so a crash mid-write leaves the previous settings

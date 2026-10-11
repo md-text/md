@@ -4,8 +4,8 @@ module Md
     # (the CLI does; specs pass none, or one on a temporary file). The View
     # and Options choices that are reactive properties — Follow cursor,
     # Highlight line, Soft wrap, Text width, Center text, Ask before
-    # discarding changes, Auto-save, Keep a backup file, the mouse mode, the
-    # theme — and the editor's line numbers are restored from the store on
+    # discarding changes, Auto-save, Keep a backup file, the mouse and
+    # clipboard modes, the theme — and the editor's line numbers are restored from the store on
     # construction and recorded in it as they change, whoever changes them
     # (a menu entry, a key, a setter), and the store is written at exit
     # (`#save_settings`, from `#run`). Watch file is not among them: it is
@@ -32,6 +32,7 @@ module Md
       settings.soft_wrap?.try { |value| @soft_wrap.value = value }
       settings.text_width.try { |value| @text_width.value = value }
       settings.center_text?.try { |value| @center_text.value = value }
+      settings.clipboard_mode.try { |mode| @clipboard_mode.value = mode }
       @follow_cursor.on_change { settings.follow_cursor = @follow_cursor.value }
       @highlight_line.on_change { settings.highlight_line = @highlight_line.value }
       @confirm_discard.on_change { settings.confirm_discard = @confirm_discard.value }
@@ -43,6 +44,7 @@ module Md
       @soft_wrap.on_change { settings.soft_wrap = @soft_wrap.value }
       @text_width.on_change { settings.text_width = @text_width.value }
       @center_text.on_change { settings.center_text = @center_text.value }
+      @clipboard_mode.on_change { settings.clipboard_mode = @clipboard_mode.value }
     end
 
     # Writes the settings, when any changed. A write that fails is let go:

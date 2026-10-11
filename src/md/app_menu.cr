@@ -1,18 +1,18 @@
 module Md
   class App
     # The menu bar: File (open, the recent files, reload, save, quit), Edit
-    # (find, repeat the find, go to a line, jump between headings), View
+    # (copy, find, repeat the find, go to a line, jump between headings), View
     # (which panes are shown, whether the editor's and the viewer's carets
     # follow each other, whether the caret's line is highlighted, whether
     # the editor numbers its lines, the text's layout — soft wrap, a text
     # width and its centering — and whether the file is watched) and
     # Options (the two modes the status bar toggles — overwrite mode and the
     # mouse mode — the unsaved-changes guard, auto-save and the backup file
-    # (`app_autosave.cr`) and the theme, so every setting is reachable from
+    # (`app_autosave.cr`), the theme and the clipboard mode, so every setting is reachable from
     # the keyboard through the menus as well, `Alt+F`/`Alt+E`/`Alt+V`/`Alt+O`
     # opening them). The checked states are bound to what they stand for
-    # (`Action#bind_checked`): the View and Options settings, the mouse mode
-    # and the theme are reactive properties, the pane entries follow the
+    # (`Action#bind_checked`): the View and Options settings, the mouse and
+    # clipboard modes and the theme are reactive properties, the pane entries follow the
     # panes, and the overwrite and line-number entries follow the editor.
     # Only the pane entries' enabled
     # state is re-synced by `#refresh_menus`; the recent files are remade by
@@ -52,6 +52,11 @@ module Md
       file.add_action("&Quit", shortcut: "Ctrl+Q") { quit }
 
       edit = bar.add_menu "&Edit"
+      # `Ctrl+C` reaches the entry when the focused pane has no selection to
+      # copy itself (`app_clipboard.cr`).
+      edit.add_action("&Copy", shortcut: "Ctrl+C") { copy }
+      edit.add_action("Copy as &Markdown") { copy_as_markdown }
+      edit.add_separator
       edit.add_action("&Find…", shortcut: "Ctrl+F") { search_prompt }
       edit.add_action("Find &Next", shortcut: "Ctrl+G") { find_next }
       edit.add_action("Find &Previous", shortcut: "Alt+G") { find_next reverse: true }
@@ -136,6 +141,19 @@ module Md
       end
       options.add_submenu "&Mouse", modes
       add_theme_menu options
+
+      # Likewise for the clipboard modes; the Command entry names the command
+      # found, and cannot be picked when there is none.
+      clipboard_group = Crysterm::ActionGroup.new
+      clipboard_modes = ClipboardMode.values.map do |mode|
+        action = Crysterm::Action.new clipboard_label(mode), checkable: true
+        action.bind_checked(@clipboard_mode) { @clipboard_mode.value == mode }
+        action.enabled = false if mode.command? && clipboard.copy_command.nil?
+        clipboard_group.add_action action
+        action.on(Crysterm::Event::Triggered) { self.clipboard_mode = mode }
+        action
+      end
+      options.add_submenu "&Clipboard", clipboard_modes
 
       # The bar's right end names the keys that reach it, since the bar is
       # off the Tab chain and nothing else on screen says so: `F10` (the

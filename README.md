@@ -111,6 +111,7 @@ until you scroll up.
 | `Ctrl-O`           | Open a file; asks for the name (File → Open…)                             |
 | `Ctrl-R`           | Reload the file from disk (File → Reload)                                 |
 | `Ctrl-S`           | Save; without a file name yet, asks for one (File → Save As… always asks) |
+| `Ctrl-C`           | Copy the selection, or with nothing selected the current block (the line, in the editor) as plain text (Edit → Copy; Edit → Copy as Markdown copies the block's source) |
 | `Ctrl-F`, `/`, `?` | Search; asks for the pattern (`/` and `?` outside the editor, `?` backward; Edit → Find…) |
 | `Ctrl-G`, `Alt-G`, `n`, `N` | Next and previous match (`n` and `N` outside the editor; Edit → Find Next, Find Previous) |
 | `Ctrl-L`, `:`      | Go to a source line; asks for the number (`:` outside the editor; Edit → Go to Line…) |
@@ -148,9 +149,36 @@ While the mouse does not work for md, the terminal's own text selection and
 copy work instead. With the mouse off you cannot click the field, so `F5`
 cycles the modes from the keyboard too, and the Options menu offers them as
 well, next to the overwrite mode. The File menu opens, reloads, saves, saves
-as and quits, and lists the recently opened files; the Edit menu searches,
-goes to a line and jumps between headings; the View menu shows and hides
-the panes.
+as and quits, and lists the recently opened files; the Edit menu copies,
+searches, goes to a line and jumps between headings; the View menu shows
+and hides the panes.
+
+### Copying
+
+Edit → Copy (`Ctrl-C`) copies the selection in the focused pane. With
+nothing selected, in the editor it copies the caret's line, and in the
+viewer or the table of contents the block the viewer's caret is in — a
+paragraph, a heading, a list item, or a fenced code block whole — as plain
+text, the way it reads. Edit → Copy as Markdown copies the block's source
+instead: the lines of the Markdown it was rendered from, fences included. A
+notice says how much was copied. In a pane with a selection, `Ctrl-C` is
+the pane's own copy, as `Ctrl-X` and `Ctrl-V` are its cut and paste.
+
+Where a copy goes is the clipboard mode, under Options → Clipboard:
+
+| Mode                  | The copy goes to…                                                       |
+| --------------------- | ----------------------------------------------------------------------- |
+| `Terminal (OSC 52)`   | the terminal, through the OSC 52 clipboard escape, which most terminals forward to the system clipboard (the default) |
+| `Command (pbcopy)`    | a system command found on the PATH — `pbcopy` on macOS, `wl-copy` on Wayland, `xclip` or `xsel` on X11, or tmux's buffer inside tmux — for where the escape does not get through: tmux or screen without passthrough, SSH, a terminal that ignores it. The entry names the command found, and cannot be picked when there is none |
+| `Internal (within md)` | nowhere outside md: pasting within md still works, and nothing is written that a terminal might garble |
+
+The mode applies to the editor's `Ctrl-C`, `Ctrl-X` and `Ctrl-V` too: in
+Command mode a paste reads the paired command (`pbpaste`, `wl-paste`,
+`xclip -o`, `xsel --output`, `tmux save-buffer`); otherwise it pastes what
+md last copied. The terminal's own paste works in every mode (md takes
+bracketed paste), and so do the terminal's own selection and copy with the
+mouse while the mouse mode leaves the mouse to the terminal (above). The
+mode is kept across runs with the other settings.
 
 Options → Theme picks the colors the whole window is drawn in, from the
 themes built into Crysterm — the same ones its `--colors-theme` option
@@ -295,8 +323,8 @@ back. A new document is told of unnamed copies left behind.
 
 The choices made in the View and Options menus — Follow cursor, Highlight
 line, Line numbers, Soft wrap, Text width, Center text, Ask before discarding
-changes, Auto-save, Keep a backup file, the mouse mode and the theme — are
-kept across runs
+changes, Auto-save, Keep a backup file, the mouse mode, the clipboard mode and
+the theme — are kept across runs
 in `$XDG_CONFIG_HOME/md/settings.json` (`~/.config/md/settings.json`), written
 when md quits. Watch file is not kept: like `--watch`, it is for the run at
 hand. The file is plain JSON and can be edited by hand; a missing or broken
@@ -372,6 +400,7 @@ src/md/app_links.cr   following links; Back and Forward
 src/md/app_theme.cr   the theme: Crysterm's built-in themes, switched at runtime
 src/md/app_autosave.cr auto-save to a recovery file; the backup file
 src/md/app_view.cr    soft wrap, text width and centering
+src/md/app_clipboard.cr copying; the clipboard modes
 src/md/app_settings.cr the View and Options choices kept across runs
 src/md/settings.cr    the settings store (~/.config/md/settings.json)
 src/md/history.cr     the recent files and positions (~/.local/state/md/history.json)
