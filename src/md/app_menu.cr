@@ -111,10 +111,10 @@ module Md
       # The bar's right end names the keys that reach it, since the bar is
       # off the Tab chain and nothing else on screen says so: `F10` (the
       # bar's `activation_key`) and the titles' `Alt-<letter>` mnemonics. A
-      # plain label floating over the bar, outside its row of titles, in the
-      # titles' style so it reads as part of the bar.
+      # plain label floating over the bar, outside its row of titles; the
+      # theme paints whatever sits on a bar in the bar's color, so it reads
+      # as part of the bar like the titles do.
       hint = Crysterm::Widget::Label.new "#{menu_keys_text} ", top: 0, right: 0, height: 1
-      hint.styles.normal = bar.style.item.dup
       bar.append hint
     end
 
