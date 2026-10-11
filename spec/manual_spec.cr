@@ -27,7 +27,7 @@ describe Md::Manual do
     end
     man.should contain "$XDG_STATE_HOME/md/history.json"
     man.should contain "$XDG_CACHE_HOME/md/md.log"
-    man.should contain "View \\(-> Watch file"
+    man.should contain "View \\(-> Watch File"
     man.should_not contain "→"
   end
 

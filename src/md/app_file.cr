@@ -4,7 +4,7 @@ module Md
     # `Ctrl-O`, asked for in place of the status bar with file-name
     # completion, like Save As), re-reading it from disk (File → Reload,
     # `Ctrl-R`) and following it as other programs rewrite it (View → Watch
-    # file, `--watch`), the guard that asks before unsaved changes are lost,
+    # File, `--watch`), the guard that asks before unsaved changes are lost,
     # and the history of recent files and positions (`History`, File → Open
     # Recent).
     #
@@ -13,7 +13,7 @@ module Md
     # and the action goes ahead only on an answer that settles the changes.
     # Quitting asks through Crysterm's close request (`Event::CloseRequest`,
     # which the default `q`/`Ctrl-Q` keys honor), so File → Quit and the
-    # keys take the same path. Options → Ask before discarding changes turns
+    # keys take the same path. Options → Ask Before Discarding Changes turns
     # the guard off for those who save by habit.
     #
     # Watching polls the file (`Crysterm::FileWatcher`) and reloads it when
@@ -28,10 +28,10 @@ module Md
     # The polling interval of the watcher started next (specs shorten it).
     property watch_interval : Time::Span = WATCH_INTERVAL
 
-    # Options → Ask before discarding changes. A reactive property, so the
+    # Options → Ask Before Discarding Changes. A reactive property, so the
     # menu entry binds to it.
     @confirm_discard : Crysterm::Reactive::Property(Bool) = Crysterm::Reactive::Property.new(true)
-    # View → Watch file. Likewise; `#watch_file=` is its plain face.
+    # View → Watch File. Likewise; `#watch_file=` is its plain face.
     @watch_file : Crysterm::Reactive::Property(Bool) = Crysterm::Reactive::Property.new(false)
     @watcher : Crysterm::FileWatcher?
     # Set once a stream is abandoned for a file opened over it, so chunks
@@ -47,8 +47,8 @@ module Md
       @confirm_discard.value
     end
 
-    # Turns the unsaved-changes guard on or off (Options → Ask before
-    # discarding changes).
+    # Turns the unsaved-changes guard on or off (Options → Ask Before
+    # Discarding Changes).
     def confirm_discard=(value : Bool) : Bool
       @confirm_discard.value = value
     end
@@ -57,7 +57,7 @@ module Md
       @watch_file.value
     end
 
-    # Starts or stops following the document's file (View → Watch file). It
+    # Starts or stops following the document's file (View → Watch File). It
     # takes effect through the property's change handler (`#setup_file`).
     def watch_file=(value : Bool) : Bool
       @watch_file.value = value

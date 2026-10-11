@@ -22,7 +22,7 @@ module Md
   # `set mouse=`). The menu bar (`app_menu.cr`) puts every command and
   # setting within the keyboard's reach, each entry naming its key.
   #
-  # View → Follow cursor (`#follow_cursor`) keeps the editor's and the
+  # View → Follow Cursor (`#follow_cursor`) keeps the editor's and the
   # viewer's carets on the same place in the document. The focused pane
   # leads: a caret move there puts the other pane's caret on the
   # corresponding position and scrolls it to the same row of the viewport,
@@ -34,11 +34,11 @@ module Md
   # source, and a line that renders nothing (a blank line, a fence, a table
   # delimiter row) maps to the nearest rendered block above it.
   #
-  # View → Highlight line (`#highlight_line`) tints the row the caret is on
+  # View → Highlight Line (`#highlight_line`) tints the row the caret is on
   # in both panes (Crysterm's `highlight_current_line`) — with Follow
-  # cursor, the two tinted rows are the same place in the document.
+  # Cursor, the two tinted rows are the same place in the document.
   #
-  # View → Soft wrap, Text width and Center text (`app_view.cr`) lay the
+  # View → Soft Wrap, Text Width and Center Text (`app_view.cr`) lay the
   # text out: the editor's wrap mode, a cap on the text's width for a wide
   # terminal, and whether the capped column is centered in the pane.
   #
@@ -99,11 +99,11 @@ module Md
     # resulting `TextChanged` is not mistaken for a user edit.
     @loading = false
     getter? streaming : Bool = false
-    # View → Follow cursor; see the class comment. A reactive property, so
+    # View → Follow Cursor; see the class comment. A reactive property, so
     # the menu entry binds to it (`#build_menus`); `#follow_cursor?` and
     # `#follow_cursor=` are its plain face.
     @follow_cursor : Crysterm::Reactive::Property(Bool) = Crysterm::Reactive::Property.new(false)
-    # View → Highlight line; see the class comment. Likewise.
+    # View → Highlight Line; see the class comment. Likewise.
     @highlight_line : Crysterm::Reactive::Property(Bool) = Crysterm::Reactive::Property.new(false)
 
     # The status bar's fields (see `#build_status` in `app_status.cr`).
@@ -315,7 +315,7 @@ module Md
       @follow_cursor.value
     end
 
-    # Turns following on or off (View → Follow cursor). Turning it on
+    # Turns following on or off (View → Follow Cursor). Turning it on
     # aligns the panes at once, from the focused one (the property's change
     # handler, in `#initialize`).
     def follow_cursor=(value : Bool) : Bool
@@ -326,7 +326,7 @@ module Md
       @highlight_line.value
     end
 
-    # Turns the caret-line highlight on or off (View → Highlight line) in
+    # Turns the caret-line highlight on or off (View → Highlight Line) in
     # both panes (the property's change handler, in `#initialize`).
     def highlight_line=(value : Bool) : Bool
       @highlight_line.value = value

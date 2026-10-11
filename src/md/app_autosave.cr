@@ -4,8 +4,8 @@ module Md
     # of the file as it was before md first wrote it in this session
     # (`make-backup-files`, the `file~` beside the file) and an auto-save of
     # the unsaved edits to a recovery file (`auto-save-mode`, the `#file#`).
-    # Both are checkable entries in the Options menu — Keep a backup file,
-    # Auto-save — on by default and kept across runs (`Settings`).
+    # Both are checkable entries in the Options menu — Keep a Backup File,
+    # Auto-Save — on by default and kept across runs (`Settings`).
     #
     # The backup is made on the first save to an existing file, once per
     # file per session, so it holds what was on disk when the session took
@@ -37,7 +37,7 @@ module Md
     # How often the editor is looked at for unsaved edits to auto-save.
     AUTOSAVE_INTERVAL = 30.seconds
 
-    # Options → Auto-save and Options → Keep a backup file. Reactive
+    # Options → Auto-Save and Options → Keep a Backup File. Reactive
     # properties, so the menu entries bind to them.
     @autosave : Crysterm::Reactive::Property(Bool) = Crysterm::Reactive::Property.new(true)
     @backup_file : Crysterm::Reactive::Property(Bool) = Crysterm::Reactive::Property.new(true)
@@ -70,7 +70,7 @@ module Md
       @autosave.value
     end
 
-    # Turns auto-saving on or off (Options → Auto-save); the timer follows
+    # Turns auto-saving on or off (Options → Auto-Save); the timer follows
     # (the property's change handler, in `#wire_autosave`).
     def autosave=(value : Bool) : Bool
       @autosave.value = value
@@ -80,7 +80,7 @@ module Md
       @backup_file.value
     end
 
-    # Turns the backup on or off (Options → Keep a backup file).
+    # Turns the backup on or off (Options → Keep a Backup File).
     def backup_file=(value : Bool) : Bool
       @backup_file.value = value
     end

@@ -1,6 +1,6 @@
 require "./spec_helper"
 
-# View → Highlight line: Crysterm's `highlight_current_line` on both panes,
+# View → Highlight Line: Crysterm's `highlight_current_line` on both panes,
 # tinting the caret's row as it moves.
 
 # Background of the cell at the top-left of *pane*'s row *row*.
@@ -20,7 +20,7 @@ describe "Md::App highlight line" do
       row_bg(window, app.editor, 2).should eq plain
 
       highlight = menu(app, 3).actions[6]
-      highlight.text.should eq "&Highlight line"
+      highlight.text.should eq "&Highlight Line"
       highlight.checked?.should be_false
       highlight.trigger
       app.highlight_line?.should be_true
@@ -48,7 +48,7 @@ describe "Md::App highlight line" do
     end
   end
 
-  it "shows the same place tinted in both panes with Follow cursor" do
+  it "shows the same place tinted in both panes with Follow Cursor" do
     with_app Md::Source.new, text: HL_DOC, view: false do |app, window|
       app.show_pane Md::App::Pane::Viewer
       app.editor.focus

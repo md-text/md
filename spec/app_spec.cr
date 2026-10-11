@@ -307,8 +307,8 @@ describe "Md::App menus" do
       menu(app, 0).actions[1].enabled?.should be_false # no history, nothing recent
       menu(app, 1).actions.map(&.text).should eq ["&Copy", "Copy as &Markdown", "", "&Find…", "Find &Next", "Find &Previous", "&Replace…", "Clear &Highlight", "", "&Go to Line…", "Nex&t Heading", "Pre&vious Heading", "", "&Back", "For&ward"]
       menu(app, 2).actions.map(&.text).should eq ["&Bold", "&Italic", "&Code", "", "&Toggle Task", "I&ndent", "&Outdent", "", "&Promote Heading", "&Demote Heading"]
-      menu(app, 3).actions.map(&.text).should eq ["&Editor", "&Viewer", "&Table of contents", "&Resize panes", "", "&Follow cursor", "&Highlight line", "Line &numbers", "", "&Soft wrap", "Te&xt width", "&Center text", "", "&Watch file"]
-      menu(app, 4).actions.map(&.text).should eq ["&Overwrite mode", "&Ask before discarding changes", "A&uto-save", "&Keep a backup file", "&Mouse", "&Theme", "&Clipboard"]
+      menu(app, 3).actions.map(&.text).should eq ["&Editor", "&Viewer", "&Table of Contents", "&Resize Panes", "", "&Follow Cursor", "&Highlight Line", "Line &Numbers", "", "&Soft Wrap", "Te&xt Width", "&Center Text", "", "&Watch File"]
+      menu(app, 4).actions.map(&.text).should eq ["&Overwrite Mode", "&Ask Before Discarding Changes", "A&uto-Save", "&Keep a Backup File", "&Mouse", "&Theme", "&Clipboard"]
     end
   end
 
@@ -333,7 +333,7 @@ describe "Md::App menus" do
       editor.trigger # the last pane stays, and so does its check
       app.visible_panes.should eq [Md::App::Pane::Editor]
       editor.checked?.should be_true
-      toc.text.should eq "&Table of contents"
+      toc.text.should eq "&Table of Contents"
     end
   end
 
@@ -350,7 +350,7 @@ describe "Md::App menus" do
       overwrite.checked?.should be_false
 
       modes = mouse.menu || [] of Crysterm::Action
-      modes.map(&.text).should eq ["M=&a (always)", "M=&n (while reading)", "M=&i (while editing)", "M= (&never)"]
+      modes.map(&.text).should eq ["M=&a (Always)", "M=&n (While Reading)", "M=&i (While Editing)", "M= (&Never)"]
       modes.map(&.checked?).should eq [true, false, false, false]
       modes[2].trigger
       app.mouse_mode.should eq Md::App::MouseMode::Insert

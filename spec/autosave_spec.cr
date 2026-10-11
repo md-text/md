@@ -199,8 +199,8 @@ describe "Md::App auto-save" do
     settings = Md::Settings.new "unused.json"
     with_app settings: settings do |app|
       options = app.main.menu_bar.menus[4]
-      autosave = options.actions.find { |a| a.text == "A&uto-save" } || fail("no Auto-save entry")
-      backup = options.actions.find { |a| a.text == "&Keep a backup file" } || fail("no backup entry")
+      autosave = options.actions.find { |a| a.text == "A&uto-Save" } || fail("no Auto-Save entry")
+      backup = options.actions.find { |a| a.text == "&Keep a Backup File" } || fail("no backup entry")
       autosave.checked?.should be_true
       backup.checked?.should be_true
       autosave.trigger

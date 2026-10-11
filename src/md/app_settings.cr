@@ -2,13 +2,13 @@ module Md
   class App
     # The settings kept across runs (`Settings`), when the app keeps them
     # (the CLI does; specs pass none, or one on a temporary file). The View
-    # and Options choices that are reactive properties — Follow cursor,
-    # Highlight line, Soft wrap, Text width, Center text, Ask before
-    # discarding changes, Auto-save, Keep a backup file, the mouse and
+    # and Options choices that are reactive properties — Follow Cursor,
+    # Highlight Line, Soft Wrap, Text Width, Center Text, Ask Before
+    # Discarding Changes, Auto-Save, Keep a Backup File, the mouse and
     # clipboard modes, the theme — and the editor's line numbers are restored from the store on
     # construction and recorded in it as they change, whoever changes them
     # (a menu entry, a key, a setter), and the store is written at exit
-    # (`#save_settings`, from `#run`). Watch file is not among them: it is
+    # (`#save_settings`, from `#run`). Watch File is not among them: it is
     # per run, as `--watch` is; overwrite mode is the editor's state, not a
     # choice. The pane sizes (`#pane_sizes`) are restored with them and
     # recorded at exit, when the write is due anyway: a drag changes them

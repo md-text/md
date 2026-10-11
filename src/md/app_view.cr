@@ -5,16 +5,16 @@ module Md
     # `QPlainTextEdit::setLineWrapMode` and `QTextEdit`'s
     # `setLineWrapColumnOrWidth` in md's clothes.
     #
-    # View → Soft wrap (`#soft_wrap?`) is the editor's line wrap mode: on,
+    # View → Soft Wrap (`#soft_wrap?`) is the editor's line wrap mode: on,
     # a long line folds at the pane's edge (`WidgetWidth`); off, it runs
     # past it and the pane scrolls sideways (`NoWrap`). The viewer always
     # wraps, as a page does.
     #
-    # View → Text width (`#text_width`) caps the width the text is laid
+    # View → Text Width (`#text_width`) caps the width the text is laid
     # out in — 72, 80, 100 or 120 columns, or no cap — for a wide terminal,
     # where a line that runs the whole width is hard to read. It applies to
-    # both panes (Crysterm's `line_wrap_column`), so with Follow cursor the
-    # two keep the same measure. View → Center text (`#center_text?`)
+    # both panes (Crysterm's `line_wrap_column`), so with Follow Cursor the
+    # two keep the same measure. View → Center Text (`#center_text?`)
     # places the column in the middle of a wider pane rather than at its
     # left edge (`line_wrap_column_alignment`).
     #
@@ -31,7 +31,7 @@ module Md
       @soft_wrap.value
     end
 
-    # Turns the editor's soft wrap on or off (View → Soft wrap).
+    # Turns the editor's soft wrap on or off (View → Soft Wrap).
     def soft_wrap=(value : Bool) : Bool
       @soft_wrap.value = value
     end
@@ -41,7 +41,7 @@ module Md
       @text_width.value
     end
 
-    # Caps the text width (View → Text width); any width goes, the menu
+    # Caps the text width (View → Text Width); any width goes, the menu
     # offers `TEXT_WIDTHS`.
     def text_width=(value : Int32) : Int32
       @text_width.value = Math.max(value, 0)
@@ -52,7 +52,7 @@ module Md
     end
 
     # Centers the text column in a wider pane, or keeps it at the left
-    # (View → Center text). Makes a difference only with a text width set.
+    # (View → Center Text). Makes a difference only with a text width set.
     def center_text=(value : Bool) : Bool
       @center_text.value = value
     end
@@ -80,12 +80,12 @@ module Md
       refresh_status
     end
 
-    # The Text width entry's label for *width*: the count, or Unlimited.
+    # The Text Width entry's label for *width*: the count, or Unlimited.
     private def text_width_label(width : Int32) : String
       case width
       when   0 then "&Unlimited"
-      when 120 then "1&20 columns"
-      else          "&#{width} columns"
+      when 120 then "1&20 Columns"
+      else          "&#{width} Columns"
       end
     end
   end

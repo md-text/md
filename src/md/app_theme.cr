@@ -73,7 +73,7 @@ module Md
 
     private def theme_label(theme : Theme) : String
       case theme
-      in .terminal? then "&Terminal (its own colors)"
+      in .terminal? then "&Terminal (Its Own Colors)"
       in .dark?     then "&Dark"
       in .light?    then "&Light"
       in .none?     then "&None"

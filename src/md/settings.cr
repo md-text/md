@@ -121,15 +121,15 @@ module Md
       end
     end
 
-    # View → Follow cursor, Highlight line, Line numbers, Soft wrap, Text
-    # width (in columns; 0 is no cap) and Center text.
+    # View → Follow Cursor, Highlight Line, Line Numbers, Soft Wrap, Text
+    # Width (in columns; 0 is no cap) and Center Text.
     setting follow_cursor, Bool
     setting highlight_line, Bool
     setting line_numbers, Bool
     setting soft_wrap, Bool
     setting text_width, Int32
     setting center_text, Bool
-    # Options → Ask before discarding changes, Auto-save, Keep a backup file,
+    # Options → Ask Before Discarding Changes, Auto-Save, Keep a Backup File,
     # Mouse, Theme (as `--colors-theme` spells it) and Clipboard.
     setting confirm_discard, Bool
     setting autosave, Bool

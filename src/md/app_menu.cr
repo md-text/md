@@ -12,7 +12,7 @@ module Md
     # (`app_autosave.cr`), the theme and the clipboard mode), so every
     # setting is reachable from the keyboard through the menus as well,
     # `Alt+F`/`Alt+E`/`Alt+M`/`Alt+V`/`Alt+O` opening them (Format's letter
-    # is `m`, since Options has `o` and Resize panes `Alt+R`).
+    # is `m`, since Options has `o` and Resize Panes `Alt+R`).
     #
     # The checked states are bound to what they stand for
     # (`Action#bind_checked`): a setting that is a reactive property gets a
@@ -28,7 +28,7 @@ module Md
     # and Crysterm fires the entry on the key from anywhere in the window —
     # after the focused pane had its turn, so the editor keeps the keys it
     # uses, and not while a prompt is open. Of the View entries only Resize
-    # panes (`Alt+R`) and Soft wrap (`Alt+W`, free in the editor, where
+    # Panes (`Alt+R`) and Soft Wrap (`Alt+W`, free in the editor, where
     # `Alt+Z` is redo) have one: the pane keys (`F2`–`F4`, `#app_key`) show
     # and focus a pane or hide the focused one, a different gesture from the
     # entries' show-and-hide, so they stay application keys, with `F5` and
@@ -86,31 +86,31 @@ module Md
         view.add_action action
         @view_actions[pane] = action
       end
-      view.add_action("&Resize panes", shortcut: "Alt+R") { resize_panes }
+      view.add_action("&Resize Panes", shortcut: "Alt+R") { resize_panes }
       view.add_separator
-      add_toggle view, "&Follow cursor", @follow_cursor
-      add_toggle view, "&Highlight line", @highlight_line
+      add_toggle view, "&Follow Cursor", @follow_cursor
+      add_toggle view, "&Highlight Line", @highlight_line
       # The editor's own state, like overwrite mode: the gutter is Crysterm's
       # (`PlainTextEdit#line_numbers`), the entry follows its event.
-      numbers = Crysterm::Action.new "Line &numbers", checkable: true
+      numbers = Crysterm::Action.new "Line &Numbers", checkable: true
       numbers.bind_checked(@editor, Crysterm::Event::LineNumbersChanged) { @editor.line_numbers? }
       numbers.on(Crysterm::Event::Triggered) { |e| @editor.line_numbers = e.checked }
       view.add_action numbers
       view.add_separator
-      add_toggle(view, "&Soft wrap", @soft_wrap).shortcut = "Alt+W"
-      add_choices(view, "Te&xt width", TEXT_WIDTHS, @text_width) { |width| text_width_label width }
-      add_toggle view, "&Center text", @center_text
+      add_toggle(view, "&Soft Wrap", @soft_wrap).shortcut = "Alt+W"
+      add_choices(view, "Te&xt Width", TEXT_WIDTHS, @text_width) { |width| text_width_label width }
+      add_toggle view, "&Center Text", @center_text
       view.add_separator
-      add_toggle view, "&Watch file", @watch_file
+      add_toggle view, "&Watch File", @watch_file
 
       options = bar.add_menu "&Options"
-      overwrite = Crysterm::Action.new "&Overwrite mode", checkable: true
+      overwrite = Crysterm::Action.new "&Overwrite Mode", checkable: true
       overwrite.bind_checked(@editor, Crysterm::Event::OverwriteModeChanged) { @editor.overwrite_mode? }
       overwrite.on(Crysterm::Event::Triggered) { |e| @editor.overwrite_mode = e.checked }
       options.add_action overwrite
-      add_toggle options, "&Ask before discarding changes", @confirm_discard
-      add_toggle options, "A&uto-save", @autosave
-      add_toggle options, "&Keep a backup file", @backup_file
+      add_toggle options, "&Ask Before Discarding Changes", @confirm_discard
+      add_toggle options, "A&uto-Save", @autosave
+      add_toggle options, "&Keep a Backup File", @backup_file
       add_choices(options, "&Mouse", MouseMode.values, @mouse_mode) { |mode| mouse_label mode }
       add_choices(options, "&Theme", THEMES, @theme) { |theme| theme_label theme }
       # The Command entry names the command found, and cannot be picked when
@@ -175,17 +175,17 @@ module Md
       case pane
       in .editor? then "&Editor"
       in .viewer? then "&Viewer"
-      in .toc?    then "&Table of contents"
+      in .toc?    then "&Table of Contents"
       end
     end
 
     private def mouse_label(mode : MouseMode) : String
       icon = mouse_icon
       case mode
-      in .all?    then "#{icon}=&a (always)"
-      in .normal? then "#{icon}=&n (while reading)"
-      in .insert? then "#{icon}=&i (while editing)"
-      in .off?    then "#{icon}= (&never)"
+      in .all?    then "#{icon}=&a (Always)"
+      in .normal? then "#{icon}=&n (While Reading)"
+      in .insert? then "#{icon}=&i (While Editing)"
+      in .off?    then "#{icon}= (&Never)"
       end
     end
   end

@@ -11,7 +11,7 @@ module Md
     # as Markdown copies the source instead: the lines of the editor's text
     # the selected or current block was rendered from, fences included (the
     # importer stamps each block with its source line, `TextBlock#source_line`,
-    # as Follow cursor relies on); in the editor the text is the source
+    # as Follow Cursor relies on); in the editor the text is the source
     # already, so it copies what Copy does. `Ctrl+C` is Copy's key: a pane
     # with a selection copies it itself (Crysterm's clipboard keys), and
     # with nothing selected the key reaches the entry.
@@ -197,8 +197,8 @@ module Md
     private def clipboard_label(mode : ClipboardMode) : String
       case mode
       in .terminal? then "&Terminal (OSC 52)"
-      in .command?  then "&Command (#{(command = clipboard.copy_command) ? command[0] : "none found"})"
-      in .internal? then "&Internal (within md)"
+      in .command?  then "&Command (#{(command = clipboard.copy_command) ? command[0] : "None Found"})"
+      in .internal? then "&Internal (Within md)"
       end
     end
   end

@@ -10,7 +10,7 @@ module Md
     # width it had.
     #
     # A divider moves with the mouse, and from the keyboard through View →
-    # Resize panes (`Alt+R`, `#resize_panes`): it focuses the divider at the
+    # Resize Panes (`Alt+R`, `#resize_panes`): it focuses the divider at the
     # focused pane's right — its left for the last pane — so the arrow keys
     # move it a column at a time, and `Enter` or `Escape` (`#leave_divider`)
     # returns to the pane. The dividers are off the Tab chain, so `Tab` keeps
@@ -48,7 +48,7 @@ module Md
       @splitter.restore_state sizes
     end
 
-    # View → Resize panes: focuses the divider beside the focused pane, for
+    # View → Resize Panes: focuses the divider beside the focused pane, for
     # the arrow keys to move. Nothing to resize with one pane shown.
     def resize_panes : Nil
       shown = visible_panes

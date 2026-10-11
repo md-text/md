@@ -1,7 +1,7 @@
 require "./spec_helper"
 require "file_utils"
 
-# View → Soft wrap, Text width and Center text: the editor's wrap mode, a
+# View → Soft Wrap, Text Width and Center Text: the editor's wrap mode, a
 # cap on the text's width and the capped column's placement, through
 # Crysterm's `wrap_content`, `line_wrap_column` and
 # `line_wrap_column_alignment`.
@@ -27,8 +27,8 @@ describe "Md::App text layout" do
       app.editor.cursor_viewport_row.should be > 0 # folded over several rows
       app.editor.show_horizontal_scrollbar?.should be_false
 
-      wrap = menu(app, 3).actions.find!(&.text.==("&Soft wrap"))
-      wrap.text.should eq "&Soft wrap"
+      wrap = menu(app, 3).actions.find!(&.text.==("&Soft Wrap"))
+      wrap.text.should eq "&Soft Wrap"
       wrap.checked?.should be_true
       wrap.shortcut_text.should eq "Alt+W"
       wrap.trigger
@@ -52,10 +52,10 @@ describe "Md::App text layout" do
       window.repaint
       pane_row(window, app.viewer, 0).rstrip.size.should be > 90
 
-      widths = menu(app, 3).actions.find!(&.text.==("Te&xt width"))
-      widths.text.should eq "Te&xt width"
+      widths = menu(app, 3).actions.find!(&.text.==("Te&xt Width"))
+      widths.text.should eq "Te&xt Width"
       entries = widths.menu.should_not be_nil
-      entries.map(&.text).should eq ["&Unlimited", "&72 columns", "&80 columns", "&100 columns", "1&20 columns"]
+      entries.map(&.text).should eq ["&Unlimited", "&72 Columns", "&80 Columns", "&100 Columns", "1&20 Columns"]
       entries[0].checked?.should be_true
       entries[1].trigger
       app.text_width.should eq 72
@@ -78,8 +78,8 @@ describe "Md::App text layout" do
       pane_row(window, app.viewer, 1)[29].should eq 'w'
       app.viewer.position_at(app.viewer.aleft + 29, app.viewer.atop).should eq 0
 
-      center = menu(app, 3).actions.find!(&.text.==("&Center text"))
-      center.text.should eq "&Center text"
+      center = menu(app, 3).actions.find!(&.text.==("&Center Text"))
+      center.text.should eq "&Center Text"
       center.checked?.should be_true
       center.trigger
       app.center_text?.should be_false
@@ -95,7 +95,7 @@ describe "Md::App text layout" do
     end
   end
 
-  it "keeps the panes aligned under Follow cursor with a text width set" do
+  it "keeps the panes aligned under Follow Cursor with a text width set" do
     with_app Md::Source.new, text: LONG_DOC, view: false do |app, window|
       app.show_pane Md::App::Pane::Viewer
       app.editor.focus

@@ -1,6 +1,6 @@
 require "./spec_helper"
 
-# View → Follow cursor: the editor's and the viewer's carets follow each
+# View → Follow Cursor: the editor's and the viewer's carets follow each
 # other, matched by source line (`TextBlock#source_line`).
 
 FOLLOW_DOC = "# Title\n\nSome *text*\nwraps here.\n\n```\ncode\n```\n\n## Section\n\nMore.\n"
@@ -81,7 +81,7 @@ describe "Md::App follow cursor" do
       app.editor.focus
       window.repaint
       follow = menu(app, 3).actions[5]
-      follow.text.should eq "&Follow cursor"
+      follow.text.should eq "&Follow Cursor"
       follow.checked?.should be_false
       follow.trigger
       app.follow_cursor?.should be_true

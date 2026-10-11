@@ -71,12 +71,12 @@ describe "Md::App panes" do
     end
   end
 
-  it "moves a divider from the keyboard through View → Resize panes" do
+  it "moves a divider from the keyboard through View → Resize Panes" do
     with_app text: PANES_DOC do |app, window|
       show_all app
       app.editor.focus
       resize = menu_actions(app)[3]
-      resize.text.should eq "&Resize panes"
+      resize.text.should eq "&Resize Panes"
       resize.shortcut_text.should eq "Alt+R"
       resize.trigger
       divider = app.splitter.dividers[0]

@@ -34,12 +34,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Save As: a vi-style prompt in place of the status bar, the current name
   filled in, with file-name completion and history. `Ctrl-S` on a document
   without a name asks the same way.
-- View → Follow cursor: the editor's and the viewer's cursors follow each
+- View → Follow Cursor: the editor's and the viewer's cursors follow each
   other — a move in the pane you are in puts the other pane's cursor on the
   corresponding place, scrolled to the same row of its pane. Matched by
   source line, so inside formatted text the spot is approximate.
-- View → Highlight line: tints the cursor's row in each pane; with Follow
-  cursor on, the two tinted rows show the same place in the document.
+- View → Highlight Line: tints the cursor's row in each pane; with Follow
+  Cursor on, the two tinted rows show the same place in the document.
 - Search, as in a pager: `/` and `?` (`Ctrl-F` in the editor) ask for a
   pattern — a regular expression when it is one, literal text otherwise,
   case-insensitive unless it has an uppercase letter — and `n`/`N`
@@ -50,13 +50,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   and previous heading.
 - File → Open… (`Ctrl-O`) opens another file, asked for in place of the
   status bar with completion like Save As; File → Reload (`Ctrl-R`) re-reads
-  the file keeping the viewer's place; View → Watch file (and `--watch`)
+  the file keeping the viewer's place; View → Watch File (and `--watch`)
   reloads it whenever it changes on disk, unless the editor holds unsaved
   changes, which are kept with a notice.
 - A guard against losing unsaved changes: quitting, opening and reloading
   ask — Save, Don't save or Cancel — when the document is modified, through
   Crysterm's new close request, so the default `q`/`Ctrl-Q` keys ask too.
-  Options → Ask before discarding changes turns it off.
+  Options → Ask Before Discarding Changes turns it off.
 - File → Open Recent lists the recently opened files, and the position in
   each is remembered and restored when it is opened again, in
   `$XDG_STATE_HOME/md/history.json` (`~/.local/state/md/history.json`).
@@ -68,8 +68,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   Edit → Back (`Alt-Left`; `Backspace` in the viewer and the table of
   contents) retraces the links followed and the files opened, to the file
   and position left; Edit → Forward (`Alt-Right`) undoes a Back.
-- Settings kept across runs: View → Follow cursor and Highlight line,
-  Options → Ask before discarding changes and the mouse mode are restored at
+- Settings kept across runs: View → Follow Cursor and Highlight Line,
+  Options → Ask Before Discarding Changes and the mouse mode are restored at
   start and written at exit to `$XDG_CONFIG_HOME/md/settings.json`
   (`~/.config/md/settings.json`), a store in the manner of Qt's `QSettings`
   that later settings (pane sizes, a theme) join as new keys.
@@ -89,7 +89,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `Ctrl-Z` outside the editor suspends md to the shell, as it would in a
   program that left the key to the terminal; `fg` brings it back with the
   screen repainted (Crysterm's new `Crysterm.suspend`).
-- View → Line numbers: a gutter with the source line numbers on the
+- View → Line Numbers: a gutter with the source line numbers on the
   editor's left (Crysterm's new `PlainTextEdit#line_numbers`), kept across
   runs with the other View choices.
 - Command line: `+N` or `--line N` (`-l N`) opens on source line `N` in
@@ -110,20 +110,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `make completions` write them under `share/`, `make install` installs
   them under `$(PREFIX)/share`, and the release archives carry them next to
   the binary.
-- Auto-save and a backup file, both Options entries on by default and kept
-  in the settings. Options → Keep a backup file copies the file to `FILE~`
+- Auto-Save and a backup file, both Options entries on by default and kept
+  in the settings. Options → Keep a Backup File copies the file to `FILE~`
   beside it before the session's first save of it (emacs' `make-backup-files`).
-  Options → Auto-save writes unsaved edits every 30 seconds to a recovery
+  Options → Auto-Save writes unsaved edits every 30 seconds to a recovery
   file under `$XDG_STATE_HOME/md/autosave/` (`~/.local/state/md/autosave/`),
   never to the file itself — named after the file's absolute path with `/`
   escaped as `%2F`, or `unnamed-<date>-<time>-<pid>.md` for a document
   without a name, standard input included — and removes it on a save or a
   normal exit, so the directory holds only what a crash lost; opening a file
   whose copy is newer than it gets a notice naming the copy.
-- View → Soft wrap (`Alt-W`) folds long lines in the editor at the pane's
-  edge or lets them run past it with sideways scrolling; View → Text width
+- View → Soft Wrap (`Alt-W`) folds long lines in the editor at the pane's
+  edge or lets them run past it with sideways scrolling; View → Text Width
   caps the text at 72, 80, 100 or 120 columns for a wide terminal, in both
-  panes, and View → Center text puts the capped column in the middle of the
+  panes, and View → Center Text puts the capped column in the middle of the
   pane. All three are kept across runs. (Crysterm: `line_wrap_column` and
   `line_wrap_column_alignment` on `AbstractScrollArea`, Qt's
   `lineWrapColumnOrWidth` and `QScrollArea::alignment`; the scroll bars
@@ -144,7 +144,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   now passes from a text pane to the application.
 - Resizable panes: the panes sit in a splitter (Crysterm's, after Qt's
   `QSplitter`) with a divider between each two shown, dragged with the mouse
-  or moved with `Left`/`Right` after View → Resize panes (`Alt+R`) focuses
+  or moved with `Left`/`Right` after View → Resize Panes (`Alt+R`) focuses
   the divider next to the pane (`Enter`/`Escape` return). A hidden pane takes
   no width and shows no divider, and gets its width back when shown. The
   sizes are kept in the settings as `pane_sizes` — columns per pane, hidden
