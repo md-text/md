@@ -181,8 +181,8 @@ module Md
         # Runs of non-whitespace, counted in one pass with nothing allocated.
         words = 0
         in_word = false
-        text.each_char do |c|
-          if c.whitespace?
+        text.each_char do |char|
+          if char.whitespace?
             in_word = false
           elsif !in_word
             in_word = true

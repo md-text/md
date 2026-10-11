@@ -326,6 +326,14 @@ describe "Md::App menus" do
     end
   end
 
+  it "names the keys that open the menu bar at its right end" do
+    with_app do |_, window|
+      window.repaint
+      row = window.dump.to_s.lines[2]
+      row.should match /\| File  View  Options +Menu = F10 \/ Alt-F \|$/
+    end
+  end
+
   it "shows and hides panes from the View menu, mirroring their state" do
     with_app do |app|
       editor, viewer, toc = menu(app, 1).actions[0, 3]

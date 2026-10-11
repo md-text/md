@@ -164,7 +164,7 @@ describe "Md::App table of contents" do
 
       # The jump moved the viewer's caret like any other move: a caret-line
       # highlight follows it to the heading.
-      heading_bg = ->{ Crysterm::Attr.bg(window.cell_rows[app.viewer.atop][app.viewer.aleft].attr) }
+      heading_bg = -> { Crysterm::Attr.bg(window.cell_rows[app.viewer.atop][app.viewer.aleft].attr) }
       plain = heading_bg.call
       app.viewer.cursor_position = 0
       app.highlight_line = true

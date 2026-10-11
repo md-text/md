@@ -148,8 +148,8 @@ module Md
         fill_editor if @editor_stale
         pane_shown
       end
-      {@viewer, @toc}.each do |w|
-        w.on(Crysterm::Event::Show) do
+      {@viewer, @toc}.each do |pane|
+        pane.on(Crysterm::Event::Show) do
           render_viewer if @viewer_stale
           pane_shown
         end
@@ -308,7 +308,6 @@ module Md
       end
       (start + offset).clamp(start, Math.max(start, limit))
     end
-
 
     # After a pane was shown: the panes aligned, the status (and the View
     # menu's entries) refreshed.
