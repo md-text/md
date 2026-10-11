@@ -221,6 +221,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `Shift` + a movement key — the arrows, `Home`/`End`, `PageUp`/`PageDown`
   — selects from the cursor in the viewer as well as in the editor, for
   `Ctrl-C` to copy; a spec now holds both panes to it.
+- View → Hard Wrap, off by default and kept with the settings: Kate's static
+  word wrap. As a line is typed past the wrap column — the Text Width, or
+  80 without one — it is broken at the last space before the column and the
+  rest carried to a new line, which keeps its place in the Markdown: a list
+  item's content indentation, a blockquote's `> `; a code block, a heading
+  and a table row are never broken. The keystroke and its wrap are one undo
+  step. (The wrapping is Crysterm's `hard_wrap_column`, with md supplying
+  the Markdown continuation.) Format → Rewrap Paragraph (`Alt-Q`) refills
+  the paragraph at the cursor, or the selection's paragraphs, to the same
+  column, with the same Markdown rules.
 
 [Unreleased]: https://github.com/crystallabs/md/commits/main
 

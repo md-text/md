@@ -121,13 +121,14 @@ module Md
       end
     end
 
-    # View → Sync Cursor, Highlight Line, Line Numbers, Soft Wrap, Text
-    # Width (in columns; 0 is no cap), Center Text, Rulers, Guides and Dialog
-    # Style.
+    # View → Sync Cursor, Highlight Line, Line Numbers, Soft Wrap, Hard
+    # Wrap, Text Width (in columns; 0 is no cap), Center Text, Rulers, Guides
+    # and Dialog Style.
     setting sync_cursor, Bool
     setting highlight_line, Bool
     setting line_numbers, Bool
     setting soft_wrap, Bool
+    setting hard_wrap, Bool
     setting text_width, Int32
     setting center_text, Bool
     setting rulers, Bool

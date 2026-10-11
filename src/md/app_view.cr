@@ -31,8 +31,25 @@ module Md
     # mouse, dragged by their ruler end, and dropped on another guide, or
     # back on the ruler, to be rid of them. The two edge guides stay.
     #
+    # View → Hard Wrap (`#hard_wrap?`) is Kate's static word wrap
+    # (Settings → Editor → Editing → Static Word Wrap) in the editor: a line
+    # that grows past the wrap column as it is typed is broken at the last
+    # space before the column and the rest carried to a new line
+    # (Crysterm's `hard_wrap_column`), the keystroke and the wrap one undo
+    # step. The column (`#wrap_column`) is the Text Width when one is set,
+    # else `HARD_WRAP_COLUMN`. The carried line keeps its place in the
+    # Markdown — a list item's content indentation, a blockquote's marker
+    # (`MarkdownEdit#hard_wrap_prefix`, `app_edit.cr`) — and the lines that
+    # cannot be broken without changing their meaning (a code block's, a
+    # heading, a table row) are left alone. Off by default: soft wrap shows
+    # a long line folded without touching the source. Format → Rewrap
+    # Paragraph (`app_edit.cr`) refills a paragraph to the same column.
+    #
     # The widths offered; 0 is no cap.
     TEXT_WIDTHS = [0, 72, 80, 100, 120]
+
+    # The hard wrap column while no Text Width is set: Kate's default too.
+    HARD_WRAP_COLUMN = 80
 
     # Reactive properties, so the menu entries bind to them
     # (`#build_menus`); the plain accessors below are their faces.
@@ -41,6 +58,7 @@ module Md
     @center_text : Crysterm::Reactive::Property(Bool) = Crysterm::Reactive::Property.new(true)
     @rulers : Crysterm::Reactive::Property(Bool) = Crysterm::Reactive::Property.new(false)
     @guides : Crysterm::Reactive::Property(Bool) = Crysterm::Reactive::Property.new(false)
+    @hard_wrap : Crysterm::Reactive::Property(Bool) = Crysterm::Reactive::Property.new(false)
 
     def soft_wrap? : Bool
       @soft_wrap.value
@@ -90,6 +108,21 @@ module Md
       @guides.value = value
     end
 
+    def hard_wrap? : Bool
+      @hard_wrap.value
+    end
+
+    # Turns the editor's hard wrap on or off (View → Hard Wrap).
+    def hard_wrap=(value : Bool) : Bool
+      @hard_wrap.value = value
+    end
+
+    # The column lines are hard wrapped and paragraphs refilled to: the
+    # Text Width, or `HARD_WRAP_COLUMN` without one.
+    def wrap_column : Int32
+      text_width > 0 ? text_width : HARD_WRAP_COLUMN
+    end
+
     # The choices take effect when they change, whoever changed them (a
     # menu entry bound to the property, a setter, the settings restored at
     # start). The defaults are the panes' own, so nothing is applied until
@@ -99,7 +132,10 @@ module Md
         @editor.wrap_content = @soft_wrap.value
         refresh_status
       end
-      @text_width.on_change { apply_text_width }
+      @text_width.on_change do
+        apply_text_width
+        apply_hard_wrap
+      end
       @center_text.on_change { apply_text_width }
       @rulers.on_change do
         @editor.rulers = @rulers.value
@@ -111,6 +147,13 @@ module Md
         @viewer.guides_enabled = @guides.value
         refresh_status
       end
+      @hard_wrap.on_change { apply_hard_wrap }
+    end
+
+    # Puts the wrap column on the editor, or takes it off.
+    private def apply_hard_wrap : Nil
+      @editor.hard_wrap_column = @hard_wrap.value ? wrap_column : nil
+      refresh_status
     end
 
     # Puts the width and its placement on both panes.

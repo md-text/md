@@ -136,6 +136,7 @@ of the editor and the viewer, and the table of contents its columns.
 | `Ctrl-B`, `Alt-I`, `Alt-C` | Bold, italic and code around the selection or the word at the caret, or off again (Format → Bold, Italic, Code) |
 | `Alt-X`            | Tick or untick a list item's task box, or give it a ticked one (Format → Check Task; Format → Task Box adds and removes the box) |
 | `Ctrl-Up`, `Ctrl-Down` | Promote or demote the heading on the caret's line (Format → Promote Heading, Demote Heading) |
+| `Alt-Q`            | Refill the paragraph at the caret, or the selected paragraphs, to the wrap column (Format → Rewrap Paragraph) |
 | `Ctrl-Q`           | Quit (`q` too, anywhere but in the editor; File → Quit); asks first when changes are unsaved |
 
 The File, Edit and Format menus show these keys next to their entries, spelled as
@@ -385,7 +386,7 @@ are the same place in the document, which makes the pairing easy to see.
 *Line Numbers* puts a gutter with the source line numbers on the editor's
 left, the way code editors do; the choice is kept across runs.
 
-Three more View entries lay the text out. *Soft Wrap* (`Alt-W`) is the
+Four more View entries lay the text out. *Soft Wrap* (`Alt-W`) is the
 editor's: on, a long line folds at the pane's edge; off, it runs past the
 edge and the pane scrolls sideways. *Text Width* caps the width the text is
 laid out in — 72, 80, 100 or 120 columns, or *Unlimited* — so a line does
@@ -407,6 +408,19 @@ ruler and drag down into the pane to make one where it is dropped, drag a
 guide by its `┬` on the ruler to move it, and drop it on another guide, or
 back on the ruler, to be rid of it. The two edge guides always stay. Both
 choices are kept across runs.
+
+*Hard Wrap*, off by default, is Kate's static word wrap: while you type, a
+line that grows past the wrap column is broken at the last space before
+the column and the rest carried to a new line, so the source itself stays
+narrow — where Soft Wrap only folds the display. The column is the Text
+Width when one is set, else 80. The carried line keeps its place in the
+Markdown: in a list item it is indented to the item's text, in a blockquote
+it gets the `> `, and a code block, a heading or a table row is never
+broken. The keystroke and the wrap it caused undo as one step. Format →
+Rewrap Paragraph (`Alt-Q`, Emacs's fill) refills the paragraph at the
+cursor, or every paragraph the selection touches, to the same column — a
+list item keeping its marker, a quote its markers, code blocks untouched —
+whether or not Hard Wrap is on.
 
 Save As asks for the name in place of the status bar, the way vi's command
 line replaces its status line: the current name is filled in, `Tab` and
@@ -460,10 +474,10 @@ choices, not a cache, and stay.
 ### Settings
 
 The choices made in the View and Options menus — Sync Cursor, Highlight
-Line, Line Numbers, Soft Wrap, Text Width, Center Text, Rulers, Guides, Dialog
-Style, Ask Before Discarding Changes, Auto-Save, Keep a Backup File, the mouse
-mode, the clipboard mode and the theme — and the pane sizes are kept across
-runs in
+Line, Line Numbers, Soft Wrap, Hard Wrap, Text Width, Center Text, Rulers,
+Guides, Dialog Style, Ask Before Discarding Changes, Auto-Save, Keep a Backup
+File, the mouse mode, the clipboard mode and the theme — and the pane sizes are
+kept across runs in
 `$XDG_CONFIG_HOME/md/settings.json` (`~/.config/md/settings.json`), written
 when md quits. Watch File is not kept: like `--watch`, it is for the run at
 hand. The file is plain JSON and can be edited by hand; a missing or broken

@@ -18,6 +18,18 @@ module Md
       end
       super
     end
+
+    # The line a hard wrap (View → Hard Wrap, Crysterm's `hard_wrap_column`)
+    # carries over from *line*, the caret's, starts as a continuation of it
+    # in the Markdown: with the item's content indentation on a list item,
+    # with the quote markers and indentation of any other line
+    # (`App.continuation_prefix`). A line that cannot be broken without
+    # changing its meaning — a fenced code block's, a fence, a heading, a
+    # table row (`App.unbreakable?`) — is left alone.
+    def hard_wrap_prefix(line : String) : String?
+      return if App.unbreakable?(document, document.block_at(cursor_position).index)
+      App.continuation_prefix(line)
+    end
   end
 
   class App
@@ -55,7 +67,19 @@ module Md
     # `Ctrl-Down`) move the caret's line one heading level up or down, a
     # paragraph being the level above `#` and `######` the last.
     #
-    # The keys: `Ctrl-B` is Qt's bold, and the editor does not use it. Qt's
+    # Format → Rewrap Paragraph (`Alt-Q`, Emacs's `fill-paragraph`, Kate's
+    # Apply Word Wrap) refills the caret's paragraph — or every paragraph
+    # the selection touches — to the wrap column (`#wrap_column`,
+    # `app_view.cr`), the companion of View → Hard Wrap, which breaks lines
+    # as they are typed. A paragraph is a run of lines without a blank one,
+    # in the same blockquote, that no list item, heading, fence or table
+    # row starts or interrupts (`#continues?`); a list item's lines keep
+    # the marker and take the item's content indentation, a quote's keep
+    # the `> `, and a code block is not a paragraph. The caret keeps its
+    # place in the text, counted in the characters that are not spaces.
+    #
+    # The keys: `Ctrl-B` is Qt's bold, and the editor does not use it;
+    # `Alt-Q` is Emacs's fill, free in the editor too. Qt's
     # `Ctrl-I` is out of reach — a terminal sends the same byte for `Ctrl-I`
     # and `Tab` — and so is `Ctrl-Shift-X`, which a terminal does not tell
     # from `Ctrl-X`, so Italic, Code and Check Task take `Alt` chords the
@@ -117,6 +141,44 @@ module Md
     # indentation), then the hashes with their spacing when there are any.
     HEADING = /\A(?<lead>(?:[ \t]*>)*[ \t]*)(?:(?<hashes>\#{1,6})(?:[ \t]+|$))?/
 
+    # The blockquote markers a line starts with and the indentation after
+    # them: what a wrapped line's continuation starts with outside a list.
+    QUOTE_LEAD = /\A(?:[ \t]*>)*[ \t]*/
+
+    # A code fence, in a quote or indented up to the three columns
+    # CommonMark allows; the lines between two are a code block.
+    FENCE = /\A(?:[ \t]*>)*[ \t]{0,3}(?:```|~~~)/
+
+    # A table row (or its delimiter row).
+    TABLE_ROW = /\A(?:[ \t]*>)*[ \t]*\|/
+
+    # Whether line *index* of *doc* must not be broken or refilled: a line of
+    # a fenced code block (an odd number of fences above it), a fence, a
+    # heading or a table row.
+    def self.unbreakable?(doc : Crysterm::TextDocument, index : Int32) : Bool
+      line = doc.blocks[index].text
+      return true if FENCE.matches?(line) || TABLE_ROW.matches?(line) || heading?(line)
+      fences = 0
+      index.times { |i| fences += 1 if FENCE.matches?(doc.blocks[i].text) }
+      fences.odd?
+    end
+
+    # Whether *line* is an ATX heading.
+    def self.heading?(line : String) : Bool
+      !HEADING.match(line).try(&.["hashes"]?).nil?
+    end
+
+    # What a line continuing *line* starts with: the quote markers and the
+    # item's content indentation for a list item, the quote markers and
+    # indentation of any other line (empty for a plain paragraph).
+    def self.continuation_prefix(line : String) : String
+      if item = ListItem.parse(line)
+        "#{item.quote}#{item.indent}#{" " * item.content_offset}"
+      else
+        QUOTE_LEAD.match(line).try(&.[0]) || ""
+      end
+    end
+
     # Format → Bold: `**` around the selection or the word at the caret, or
     # off again. Returns whether anything changed.
     def toggle_bold : Bool
@@ -158,6 +220,48 @@ module Md
           Crysterm::TextCursor.new(doc, box).insert_text(item.spacing.empty? ? " [x] " : "[x] ")
         end
       end
+    end
+
+    # Format → Rewrap Paragraph: the caret's paragraph, or the selection's
+    # paragraphs, refilled to the wrap column (see the class comment).
+    # Returns whether there was a paragraph, with a notice when there was
+    # not (a blank line, a code block).
+    def rewrap_paragraph : Bool
+      editor = formatting_editor
+      doc = editor.document
+      first, last = selected_blocks
+      unless editor.selection?
+        first = paragraph_start first
+        last = paragraph_end first
+      end
+      lines = (first..last).map { |i| doc.blocks[i].text }
+      filled = [] of String
+      found = false
+      i = 0
+      while i < lines.size
+        if lines[i].blank? || App.unbreakable?(doc, first + i)
+          filled << lines[i]
+          i += 1
+          next
+        end
+        stop = Math.min(paragraph_end(first + i), last) - first
+        filled.concat fill(lines[i..stop], wrap_column)
+        found = true
+        i = stop + 1
+      end
+      unless found
+        notice "Not a paragraph"
+        return false
+      end
+      return true if filled == lines
+      from = doc.blocks[first].position
+      to = doc.blocks[last].position + doc.blocks[last].size
+      text = filled.join('\n')
+      caret = text_caret(doc.plain_text(from, to), editor.cursor_position - from, text)
+      doc.edit { Crysterm::TextCursor.new(doc, from, to).insert_text text }
+      editor.text_cursor = Crysterm::TextCursor.new(doc, from + caret)
+      edited
+      true
     end
 
     # Format → Indent and Outdent, and `Tab`/`Shift-Tab` in the editor: the
@@ -229,6 +333,82 @@ module Md
       end
     end
 
+    # The first line of the paragraph line *index* is in: up from it while
+    # the line above continues into it (`#continues?`).
+    private def paragraph_start(index : Int32) : Int32
+      doc = @editor.document
+      while index > 0 && continues?(doc, index - 1, index)
+        index -= 1
+      end
+      index
+    end
+
+    # The last line of the paragraph line *index* is in: down from it while
+    # the next line continues it.
+    private def paragraph_end(index : Int32) : Int32
+      doc = @editor.document
+      while index + 1 < doc.block_count && continues?(doc, index, index + 1)
+        index += 1
+      end
+      index
+    end
+
+    # Whether line *below* continues the paragraph line *above* is in: both
+    # are breakable text, in the same blockquote, and *below* starts nothing
+    # of its own (a list item would).
+    private def continues?(doc : Crysterm::TextDocument, above : Int32, below : Int32) : Bool
+      a = doc.blocks[above].text
+      b = doc.blocks[below].text
+      return false if a.blank? || b.blank? || App.unbreakable?(doc, above) || App.unbreakable?(doc, below)
+      return false if ListItem.parse(b)
+      quote_depth(a) == quote_depth(b)
+    end
+
+    # How many blockquote markers *line* starts with.
+    private def quote_depth(line : String) : Int32
+      QUOTE.match(line).try(&.[0].count('>')) || 0
+    end
+
+    # *lines*, one paragraph, refilled to *column*: the first line keeps its
+    # own prefix (a list marker, the quote), the next ones take the
+    # continuation prefix, and the words flow across them, as many to a
+    # line as fit; a word longer than the line has one to itself.
+    private def fill(lines : Array(String), column : Int32) : Array(String)
+      first = lines[0]
+      head = (item = ListItem.parse(first)) ? first[0, item.prefix_size] : (QUOTE_LEAD.match(first).try(&.[0]) || "")
+      rest = App.continuation_prefix(first)
+      words = ([first[head.size..]] + lines[1..].map(&.sub(QUOTE_LEAD, ""))).join(' ').split
+      out = [] of String
+      current = head
+      empty = true
+      words.each do |word|
+        if empty
+          current += word
+          empty = false
+        elsif current.size + 1 + word.size <= column
+          current += " #{word}"
+        else
+          out << current
+          current = "#{rest}#{word}"
+        end
+      end
+      out << current
+    end
+
+    # Where the caret at *offset* of *before* lands in *after*, the same
+    # text refilled: after as many characters that are not spaces as came
+    # before it.
+    private def text_caret(before : String, offset : Int32, after : String) : Int32
+      kept = before[0, offset.clamp(0, before.size)].count { |char| !char.whitespace? }
+      return 0 if kept == 0
+      after.each_char_with_index do |char, i|
+        next if char.whitespace?
+        kept -= 1
+        return i + 1 if kept == 0
+      end
+      after.size
+    end
+
     # The Format menu, between Edit and View (from `#build_menus`).
     private def build_format_menu(bar : Crysterm::Widget::MenuBar) : Nil
       format = bar.add_menu "For&mat"
@@ -243,6 +423,8 @@ module Md
       format.add_separator
       format.add_action("&Promote Heading", shortcut: "Ctrl+Up") { promote_heading }
       format.add_action("&Demote Heading", shortcut: "Ctrl+Down") { demote_heading }
+      format.add_separator
+      format.add_action("Re&wrap Paragraph", shortcut: "Alt+Q") { rewrap_paragraph }
     end
 
     # `Enter` on a list item with the caret past the marker: the item

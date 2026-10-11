@@ -3,10 +3,10 @@ module Md
     # The settings kept across runs (`Settings`), when the app keeps them
     # (the CLI does; specs pass none, or one on a temporary file). The View
     # and Options choices that are reactive properties — Sync Cursor,
-    # Highlight Line, Soft Wrap, Text Width, Center Text, Rulers, Guides,
-    # Dialog Style, Ask Before Discarding Changes, Auto-Save, Keep a Backup
-    # File, the mouse and clipboard modes, the theme — and the editor's line
-    # numbers are restored from the store on
+    # Highlight Line, Soft Wrap, Hard Wrap, Text Width, Center Text, Rulers,
+    # Guides, Dialog Style, Ask Before Discarding Changes, Auto-Save, Keep a
+    # Backup File, the mouse and clipboard modes, the theme — and the
+    # editor's line numbers are restored from the store on
     # construction and recorded in it as they change, whoever changes them
     # (a menu entry, a key, a setter), and the store is written at exit
     # (`#save_settings`, from `#run`). Watch File is not among them: it is
@@ -27,6 +27,7 @@ module Md
       keep settings, @sync_cursor, "sync_cursor"
       keep settings, @highlight_line, "highlight_line"
       keep settings, @soft_wrap, "soft_wrap"
+      keep settings, @hard_wrap, "hard_wrap"
       keep settings, @text_width, "text_width"
       keep settings, @center_text, "center_text"
       keep settings, @rulers, "rulers"

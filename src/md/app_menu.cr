@@ -5,10 +5,10 @@ module Md
     # replace, go to a line, jump between headings, go back), Format (the Markdown markup, `app_edit.cr`), View (which panes
     # are shown and resizing them, whether the editor's and the viewer's
     # carets are kept in sync, whether the caret's line is highlighted,
-    # whether the editor numbers its lines, the text's layout — soft wrap, a
-    # text width and its centering, rulers and guides — how questions are
-    # asked (Dialog Style, `app_dialogs.cr`) and whether the file is watched)
-    # and
+    # whether the editor numbers its lines, the text's layout — soft wrap,
+    # hard wrap, a text width and its centering, rulers and guides — how
+    # questions are asked (Dialog Style, `app_dialogs.cr`) and whether the
+    # file is watched) and
     # Options (the two modes the status bar toggles — overwrite mode and the
     # mouse mode — the unsaved-changes guard, auto-save and the backup file
     # (`app_autosave.cr`), the theme and the clipboard mode, and Clear
@@ -103,6 +103,7 @@ module Md
       view.add_action numbers
       view.add_separator
       add_toggle(view, "&Soft Wrap", @soft_wrap).shortcut = "Alt+W"
+      add_toggle view, "H&ard Wrap", @hard_wrap
       add_choices(view, "Te&xt Width", TEXT_WIDTHS, @text_width) { |width| text_width_label width }
       add_toggle view, "&Center Text", @center_text
       # `u` and `g`: Resize Panes has the `r`.
