@@ -37,6 +37,10 @@ module Md
   # in both panes (Crysterm's `highlight_current_line`) — with Follow
   # cursor, the two tinted rows are the same place in the document.
   #
+  # View → Soft wrap, Text width and Center text (`app_view.cr`) lay the
+  # text out: the editor's wrap mode, a cap on the text's width for a wide
+  # terminal, and whether the capped column is centered in the pane.
+  #
   # Searching, going to a line and jumping between headings are in
   # `app_search.cr`; opening, reloading and watching the file, the guard
   # against losing unsaved changes and the history of recent files in
@@ -188,6 +192,7 @@ module Md
         refresh_status
       end
       wire_theme
+      wire_view
 
       Pane.each { |pane| widget(pane).hide }
       load text unless text.empty?

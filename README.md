@@ -107,6 +107,7 @@ until you scroll up.
 | `F6`               | Cycle the theme: terminal, dark, light (Options → Theme)                  |
 | `Ctrl-Z`           | Outside the editor, suspend md to the shell (`fg` resumes); in the editor, undo |
 | `Alt-F`, `Alt-E`, `Alt-V`, `Alt-O` | Open the File, Edit, View and Options menus (`F10` too)   |
+| `Alt-W`            | Soft wrap in the editor on and off (View → Soft wrap)                     |
 | `Ctrl-O`           | Open a file; asks for the name (File → Open…)                             |
 | `Ctrl-R`           | Reload the file from disk (File → Reload)                                 |
 | `Ctrl-S`           | Save; without a file name yet, asks for one (File → Save As… always asks) |
@@ -257,6 +258,14 @@ are the same place in the document, which makes the pairing easy to see.
 *Line numbers* puts a gutter with the source line numbers on the editor's
 left, the way code editors do; the choice is kept across runs.
 
+Three more View entries lay the text out. *Soft wrap* (`Alt-W`) is the
+editor's: on, a long line folds at the pane's edge; off, it runs past the
+edge and the pane scrolls sideways. *Text width* caps the width the text is
+laid out in — 72, 80, 100 or 120 columns, or *Unlimited* — so a line does
+not run the whole width of a wide terminal; it applies to both panes, which
+keeps them reading side by side under Follow cursor. *Center text* puts the
+capped column in the middle of a wider pane rather than at its left edge.
+
 Save As asks for the name in place of the status bar, the way vi's command
 line replaces its status line: the current name is filled in, `Tab` and
 `Shift-Tab` complete file names, `Up` recalls earlier answers, `Enter` saves,
@@ -285,8 +294,9 @@ back. A new document is told of unnamed copies left behind.
 ### Settings
 
 The choices made in the View and Options menus — Follow cursor, Highlight
-line, Ask before discarding changes, Auto-save, Keep a backup file, the
-mouse mode and the theme — are kept across runs
+line, Line numbers, Soft wrap, Text width, Center text, Ask before discarding
+changes, Auto-save, Keep a backup file, the mouse mode and the theme — are
+kept across runs
 in `$XDG_CONFIG_HOME/md/settings.json` (`~/.config/md/settings.json`), written
 when md quits. Watch file is not kept: like `--watch`, it is for the run at
 hand. The file is plain JSON and can be edited by hand; a missing or broken
@@ -361,6 +371,7 @@ src/md/app_file.cr    open, reload, watch; the unsaved-changes guard; recent fil
 src/md/app_links.cr   following links; Back and Forward
 src/md/app_theme.cr   the theme: Crysterm's built-in themes, switched at runtime
 src/md/app_autosave.cr auto-save to a recovery file; the backup file
+src/md/app_view.cr    soft wrap, text width and centering
 src/md/app_settings.cr the View and Options choices kept across runs
 src/md/settings.cr    the settings store (~/.config/md/settings.json)
 src/md/history.cr     the recent files and positions (~/.local/state/md/history.json)

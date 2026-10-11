@@ -120,6 +120,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   without a name, standard input included — and removes it on a save or a
   normal exit, so the directory holds only what a crash lost; opening a file
   whose copy is newer than it gets a notice naming the copy.
+- View → Soft wrap (`Alt-W`) folds long lines in the editor at the pane's
+  edge or lets them run past it with sideways scrolling; View → Text width
+  caps the text at 72, 80, 100 or 120 columns for a wide terminal, in both
+  panes, and View → Center text puts the capped column in the middle of the
+  pane. All three are kept across runs. (Crysterm: `line_wrap_column` and
+  `line_wrap_column_alignment` on `AbstractScrollArea`, Qt's
+  `lineWrapColumnOrWidth` and `QScrollArea::alignment`; the scroll bars
+  stay at the frame outside the viewport margins, and `TextEdit` paints
+  from the margins.)
 
 [Unreleased]: https://github.com/crystallabs/md/commits/main
 

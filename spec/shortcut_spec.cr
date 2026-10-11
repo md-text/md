@@ -69,8 +69,9 @@ describe "Md::App shortcuts" do
     with_app Md::Source.new(path: "doc.md"), text: SHORTCUT_DOC, view: true do |app, window|
       menu(app, 0).actions.map(&.shortcut_text).should eq ["Ctrl+O", "", "Ctrl+R", "", "Ctrl+S", "", "", "Ctrl+Q"]
       menu(app, 1).actions.map(&.shortcut_text).should eq ["Ctrl+F", "Ctrl+G", "Alt+G", "", "", "Ctrl+L", "Alt+Down", "Alt+Up", "", "Alt+Left", "Alt+Right"]
-      # The pane entries' gesture is not the F-keys', so they name no key.
-      menu(app, 2).actions.map(&.shortcut_text).all?(&.empty?).should be_true
+      # The pane entries' gesture is not the F-keys', so they name no key; of
+      # the rest only Soft wrap has one.
+      menu(app, 2).actions.map(&.shortcut_text).should eq ["", "", "", "", "", "", "", "Alt+W", "", "", "", ""]
       app.main.menu_bar.open_menu 0
       window.repaint
       rows = window.dump.to_s.lines

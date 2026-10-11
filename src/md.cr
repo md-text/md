@@ -18,6 +18,7 @@ require "./md/app_settings"
 require "./md/app_links"
 require "./md/app_theme"
 require "./md/app_autosave"
+require "./md/app_view"
 
 module Md
 end

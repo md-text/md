@@ -4,15 +4,17 @@ module Md
     # (find, repeat the find, go to a line, jump between headings), View
     # (which panes are shown, whether the editor's and the viewer's carets
     # follow each other, whether the caret's line is highlighted, whether
-    # the editor numbers its lines, and whether the file is watched) and
+    # the editor numbers its lines, the text's layout — soft wrap, a text
+    # width and its centering — and whether the file is watched) and
     # Options (the two modes the status bar toggles — overwrite mode and the
     # mouse mode — the unsaved-changes guard, auto-save and the backup file
-    # (`app_autosave.cr`) and the theme, so every setting is reachable from the keyboard through the menus as well,
-    # `Alt+F`/`Alt+E`/`Alt+V`/`Alt+O` opening them). The checked states are
-    # bound to what they stand for (`Action#bind_checked`): the View and
-    # Options settings, the mouse mode and the theme are reactive
-    # properties, the pane entries follow the panes, and the overwrite and
-    # line-number entries follow the editor. Only the pane entries' enabled
+    # (`app_autosave.cr`) and the theme, so every setting is reachable from
+    # the keyboard through the menus as well, `Alt+F`/`Alt+E`/`Alt+V`/`Alt+O`
+    # opening them). The checked states are bound to what they stand for
+    # (`Action#bind_checked`): the View and Options settings, the mouse mode
+    # and the theme are reactive properties, the pane entries follow the
+    # panes, and the overwrite and line-number entries follow the editor.
+    # Only the pane entries' enabled
     # state is re-synced by `#refresh_menus`; the recent files are remade by
     # `#refresh_recent_menu`.
     #
@@ -20,7 +22,8 @@ module Md
     # Qt's spelling, `Ctrl+O`): the menu shows it in its right-hand column,
     # and Crysterm fires the entry on the key from anywhere in the window —
     # after the focused pane had its turn, so the editor keeps the keys it
-    # uses, and not while a prompt is open. The View entries have none: the
+    # uses, and not while a prompt is open. Of the View entries only Soft
+    # wrap has one (`Alt+W`, free in the editor, where `Alt+Z` is redo): the
     # pane keys (`F2`–`F4`, `#app_key`) show and focus a pane or hide the
     # focused one, a different gesture from the entries' show-and-hide, so
     # they stay application keys, with `F5` and the pager letters
@@ -83,6 +86,24 @@ module Md
       numbers.bind_checked(@editor, Crysterm::Event::LineNumbersChanged) { @editor.line_numbers? }
       numbers.on(Crysterm::Event::Triggered) { |e| @editor.line_numbers = e.checked }
       view.add_action numbers
+      view.add_separator
+      wrap = Crysterm::Action.new "&Soft wrap", checkable: true
+      wrap.shortcut = "Alt+W"
+      wrap.bind_checked @soft_wrap
+      view.add_action wrap
+      # A radio group, as the mouse modes are below.
+      widths_group = Crysterm::ActionGroup.new
+      widths = TEXT_WIDTHS.map do |width|
+        action = Crysterm::Action.new text_width_label(width), checkable: true
+        action.bind_checked(@text_width) { @text_width.value == width }
+        widths_group.add_action action
+        action.on(Crysterm::Event::Triggered) { self.text_width = width }
+        action
+      end
+      view.add_submenu "Te&xt width", widths
+      center = Crysterm::Action.new "&Center text", checkable: true
+      center.bind_checked @center_text
+      view.add_action center
       view.add_separator
       watch = Crysterm::Action.new "&Watch file", checkable: true
       watch.bind_checked @watch_file

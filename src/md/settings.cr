@@ -180,6 +180,33 @@ module Md
       set "theme", theme
     end
 
+    # View → Soft wrap.
+    def soft_wrap? : Bool?
+      get? "soft_wrap", Bool
+    end
+
+    def soft_wrap=(value : Bool) : Nil
+      set "soft_wrap", value
+    end
+
+    # View → Text width, in columns; 0 is no cap.
+    def text_width : Int32?
+      get? "text_width", Int32
+    end
+
+    def text_width=(value : Int32) : Nil
+      set "text_width", value
+    end
+
+    # View → Center text.
+    def center_text? : Bool?
+      get? "center_text", Bool
+    end
+
+    def center_text=(value : Bool) : Nil
+      set "center_text", value
+    end
+
     # Writes the map to `path`, creating the directory as needed
     # (`QSettings::sync`). The file is written beside its final name and
     # renamed over it so a crash mid-write leaves the previous settings

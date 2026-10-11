@@ -3,7 +3,8 @@ module Md
     # The settings kept across runs (`Settings`), when the app keeps them
     # (the CLI does; specs pass none, or one on a temporary file). The View
     # and Options choices that are reactive properties — Follow cursor,
-    # Highlight line, Ask before discarding changes, the mouse mode, the
+    # Highlight line, Soft wrap, Text width, Center text, Ask before
+    # discarding changes, Auto-save, Keep a backup file, the mouse mode, the
     # theme — and the editor's line numbers are restored from the store on
     # construction and recorded in it as they change, whoever changes them
     # (a menu entry, a key, a setter), and the store is written at exit
@@ -28,6 +29,9 @@ module Md
       settings.theme.try { |theme| @theme.value = theme } unless theme_configured?
       settings.autosave?.try { |value| @autosave.value = value }
       settings.backup_file?.try { |value| @backup_file.value = value }
+      settings.soft_wrap?.try { |value| @soft_wrap.value = value }
+      settings.text_width.try { |value| @text_width.value = value }
+      settings.center_text?.try { |value| @center_text.value = value }
       @follow_cursor.on_change { settings.follow_cursor = @follow_cursor.value }
       @highlight_line.on_change { settings.highlight_line = @highlight_line.value }
       @confirm_discard.on_change { settings.confirm_discard = @confirm_discard.value }
@@ -36,6 +40,9 @@ module Md
       @theme.on_change { settings.theme = @theme.value }
       @autosave.on_change { settings.autosave = @autosave.value }
       @backup_file.on_change { settings.backup_file = @backup_file.value }
+      @soft_wrap.on_change { settings.soft_wrap = @soft_wrap.value }
+      @text_width.on_change { settings.text_width = @text_width.value }
+      @center_text.on_change { settings.center_text = @center_text.value }
     end
 
     # Writes the settings, when any changed. A write that fails is let go:
