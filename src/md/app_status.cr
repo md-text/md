@@ -153,23 +153,9 @@ module Md
     # percentage).
     private def position_text : String
       if @editor.focused?
-        pos = @editor.cursor_pos
-        text = @editor.value
-        before = text[0, pos]
-        line = before.count('\n') + 1
-        column = pos - ((before.rindex('\n').try &.+(1)) || 0) + 1
-        "Ln #{line}, Col #{column}"
-      elsif !@viewer.overflows_y?
-        "All"
+        Crysterm::Widget::CursorPositionLabel.text_for @editor
       else
-        percent = @viewer.scroll_percent
-        if percent <= 0.0
-          "Top"
-        elsif percent >= 1.0
-          "Bot"
-        else
-          "#{(percent * 100).round.to_i}%"
-        end
+        Crysterm::Widget::ScrollPositionLabel.text_for @viewer
       end
     end
 
