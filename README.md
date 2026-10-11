@@ -92,13 +92,18 @@ until you scroll up.
 | `Ctrl-O`           | Open a file; asks for the name (File → Open…)                             |
 | `Ctrl-R`           | Reload the file from disk (File → Reload)                                 |
 | `Ctrl-S`           | Save; without a file name yet, asks for one (File → Save As… always asks) |
-| `Ctrl-F`, `/`, `?` | Search; asks for the pattern (`/` and `?` outside the editor, `?` backward) |
-| `Ctrl-G`, `Alt-G`, `n`, `N` | Next and previous match (`n` and `N` outside the editor)         |
-| `Ctrl-L`, `:`      | Go to a source line; asks for the number (`:` outside the editor)         |
-| `Alt-Down`, `Alt-Up`, `]`, `[` | Jump to the next and previous heading (`]` and `[` outside the editor) |
+| `Ctrl-F`, `/`, `?` | Search; asks for the pattern (`/` and `?` outside the editor, `?` backward; Edit → Find…) |
+| `Ctrl-G`, `Alt-G`, `n`, `N` | Next and previous match (`n` and `N` outside the editor; Edit → Find Next, Find Previous) |
+| `Ctrl-L`, `:`      | Go to a source line; asks for the number (`:` outside the editor; Edit → Go to Line…) |
+| `Alt-Down`, `Alt-Up`, `]`, `[` | Jump to the next and previous heading (`]` and `[` outside the editor; Edit → Next Heading, Previous Heading) |
 | `Backspace`        | Outside the editor, go back to where you were before the last link or open (Edit → Back) |
 | `Alt-Left`, `Alt-Right` | Back and Forward (Edit → Back, Forward); in the editor and the viewer these move by word instead |
-| `Ctrl-Q`           | Quit (`q` too, anywhere but in the editor); asks first when changes are unsaved |
+| `Ctrl-Q`           | Quit (`q` too, anywhere but in the editor; File → Quit); asks first when changes are unsaved |
+
+The File and Edit menus show these keys next to their entries, spelled as
+Qt does (`Ctrl+O`), and the right end of the menu bar names the keys that
+open the menus. The keys work from any pane, after the pane had its turn —
+the editor keeps the keys it uses — and wait while a prompt is open.
 
 The editor has the usual editing keys: arrows and `Home`/`End`, `Shift` +
 arrows to select, `Ctrl-Z`/`Alt-Z` to undo and redo, `Ctrl-K`/`Ctrl-Y` to kill
@@ -124,8 +129,9 @@ While the mouse does not work for md, the terminal's own text selection and
 copy work instead. With the mouse off you cannot click the field, so `F5`
 cycles the modes from the keyboard too, and the Options menu offers them as
 well, next to the overwrite mode. The File menu opens, reloads, saves, saves
-as and quits, and lists the recently opened files; the Edit menu searches
-and goes to a line; the View menu shows and hides the panes.
+as and quits, and lists the recently opened files; the Edit menu searches,
+goes to a line and jumps between headings; the View menu shows and hides
+the panes.
 
 ### Searching and jumping
 
@@ -143,8 +149,9 @@ off, and `n` still knows the pattern.
 
 `:` (or `Ctrl-L`) asks for a source line number and puts both panes there;
 `0` and negative numbers count from the end. `]` and `[` (or `Alt-Down` and
-`Alt-Up`) jump to the next and previous heading, in both panes, with the
-heading on the viewer's top row as a table of contents jump lands.
+`Alt-Up`, Edit → Next Heading and Previous Heading) jump to the next and
+previous heading, in both panes, with the heading on the viewer's top row
+as a table of contents jump lands.
 
 ### Opening, reloading and watching
 

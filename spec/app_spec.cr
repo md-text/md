@@ -323,7 +323,7 @@ describe "Md::App menus" do
       app.main.menu_bar.menus.size.should eq 4
       menu(app, 0).actions.map(&.text).should eq ["&Open…", "Open &Recent", "&Reload", "", "&Save", "Save &As…", "", "&Quit"]
       menu(app, 0).actions[1].enabled?.should be_false # no history, nothing recent
-      menu(app, 1).actions.map(&.text).should eq ["&Find…", "Find &Next", "Find &Previous", "Clear &Highlight", "", "&Go to Line…", "", "&Back", "For&ward"]
+      menu(app, 1).actions.map(&.text).should eq ["&Find…", "Find &Next", "Find &Previous", "Clear &Highlight", "", "&Go to Line…", "Nex&t Heading", "Pre&vious Heading", "", "&Back", "For&ward"]
       menu(app, 2).actions.map(&.text).should eq ["&Editor", "&Viewer", "&Table of contents", "", "&Follow cursor", "&Highlight line", "", "&Watch file"]
       menu(app, 3).actions.map(&.text).should eq ["&Overwrite mode", "&Ask before discarding changes", "&Mouse"]
     end
@@ -333,7 +333,7 @@ describe "Md::App menus" do
     with_app do |_, window|
       window.repaint
       row = window.dump.to_s.lines[2]
-      row.should match /\| File  Edit  View  Options +Menu = F10 \/ Alt-F \|$/
+      row.should match /\| File  Edit  View  Options +Menu = F10 \/ Alt\+F \|$/
     end
   end
 

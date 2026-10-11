@@ -1,44 +1,61 @@
 module Md
   class App
     # The menu bar: File (open, the recent files, reload, save, quit), Edit
-    # (find, repeat the find, go to a line), View (which panes are shown,
-    # whether the editor's and the viewer's carets follow each other,
-    # whether the caret's line is highlighted, and whether the file is
-    # watched) and Options (the two modes the status bar toggles — overwrite
-    # mode and the mouse mode — and the unsaved-changes guard, so every
-    # setting is reachable from the keyboard through the menus as well,
-    # `Alt-F`/`Alt-E`/`Alt-V`/`Alt-O` opening them). The checked states are
-    # bound to what they stand for (`Action#bind_checked`): the View and
-    # Options settings and the mouse mode are reactive properties, the pane
-    # entries follow the panes, and the overwrite entry follows the editor.
-    # Only the pane entries' enabled state is re-synced by `#refresh_menus`;
-    # the recent files are remade by `#refresh_recent_menu`.
+    # (find, repeat the find, go to a line, jump between headings), View
+    # (which panes are shown, whether the editor's and the viewer's carets
+    # follow each other, whether the caret's line is highlighted, and
+    # whether the file is watched) and Options (the two modes the status bar
+    # toggles — overwrite mode and the mouse mode — and the unsaved-changes
+    # guard, so every setting is reachable from the keyboard through the
+    # menus as well, `Alt+F`/`Alt+E`/`Alt+V`/`Alt+O` opening them). The
+    # checked states are bound to what they stand for
+    # (`Action#bind_checked`): the View and Options settings and the mouse
+    # mode are reactive properties, the pane entries follow the panes, and
+    # the overwrite entry follows the editor. Only the pane entries' enabled
+    # state is re-synced by `#refresh_menus`; the recent files are remade by
+    # `#refresh_recent_menu`.
+    #
+    # An entry with a key carries it as its shortcut (`Action#shortcut`, in
+    # Qt's spelling, `Ctrl+O`): the menu shows it in its right-hand column,
+    # and Crysterm fires the entry on the key from anywhere in the window —
+    # after the focused pane had its turn, so the editor keeps the keys it
+    # uses, and not while a prompt is open. The View entries have none: the
+    # pane keys (`F2`–`F4`, `#app_key`) show and focus a pane or hide the
+    # focused one, a different gesture from the entries' show-and-hide, so
+    # they stay application keys, with `F5` and the pager letters
+    # (`#pager_key`).
     @view_actions = {} of Pane => Crysterm::Action
 
     private def build_menus : Nil
       bar = @main.menu_bar
 
       file = bar.add_menu "&File"
-      file.add_action("&Open…") { open_prompt }
+      file.add_action("&Open…", shortcut: "Ctrl+O") { open_prompt }
       # Filled from the history (`#refresh_recent_menu`); without one, an
       # empty, disabled entry says the feature exists.
       recent = file.add_submenu "Open &Recent"
       recent.enabled = false
       @recent_action = recent
-      file.add_action("&Reload") { reload }
+      file.add_action("&Reload", shortcut: "Ctrl+R") { reload }
       file.add_separator
-      file.add_action("&Save") { save }
+      file.add_action("&Save", shortcut: "Ctrl+S") { save }
       file.add_action("Save &As…") { save_as_prompt }
       file.add_separator
-      file.add_action("&Quit") { quit }
+      # The same key as Crysterm's default quit key: the entry's shortcut
+      # consumes it, so the default stands down and the one path — the
+      # window's close request, with the unsaved-changes guard on it — is
+      # taken once.
+      file.add_action("&Quit", shortcut: "Ctrl+Q") { quit }
 
       edit = bar.add_menu "&Edit"
-      edit.add_action("&Find…") { search_prompt }
-      edit.add_action("Find &Next") { find_next }
-      edit.add_action("Find &Previous") { find_next reverse: true }
+      edit.add_action("&Find…", shortcut: "Ctrl+F") { search_prompt }
+      edit.add_action("Find &Next", shortcut: "Ctrl+G") { find_next }
+      edit.add_action("Find &Previous", shortcut: "Alt+G") { find_next reverse: true }
       edit.add_action("Clear &Highlight") { clear_search_highlight }
       edit.add_separator
-      edit.add_action("&Go to Line…") { go_to_line_prompt }
+      edit.add_action("&Go to Line…", shortcut: "Ctrl+L") { go_to_line_prompt }
+      edit.add_action("Nex&t Heading", shortcut: "Alt+Down") { jump_heading 1 }
+      edit.add_action("Pre&vious Heading", shortcut: "Alt+Up") { jump_heading -1 }
       add_navigation_actions edit
 
       view = bar.add_menu "&View"
@@ -96,12 +113,13 @@ module Md
     end
 
     # What the menu bar's hint says: the activation key and the first
-    # title's mnemonic, e.g. `Menu = F10 / Alt-F`.
+    # title's mnemonic, e.g. `Menu = F10 / Alt+F`, spelled as the menus
+    # spell their shortcuts.
     private def menu_keys_text : String
       bar = @main.menu_bar
       keys = [] of String
-      bar.activation_key.try { |key| keys << key.to_s }
-      bar.mnemonics.first?.try { |letter| keys << "Alt-#{letter.upcase}" }
+      bar.activation_key.try { |key| keys << Crysterm::Action.key_stroke_text(key) }
+      bar.mnemonics.first?.try { |letter| keys << "Alt+#{letter.upcase}" }
       "Menu = #{keys.join(" / ")}"
     end
 

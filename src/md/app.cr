@@ -45,13 +45,15 @@ module Md
   # Keys: `F2`/`F3`/`F4` show and focus the editor/viewer/table of contents,
   # or hide it when it is already focused; `Tab` cycles focus between the
   # shown panes; `Insert` toggles overwrite mode in the editor; `F5` cycles
-  # the mouse mode; `Ctrl-S` saves, `Ctrl-O` opens, `Ctrl-R` reloads;
-  # `Ctrl-F` searches, `Ctrl-G`/`Alt-G` repeat the search, `Ctrl-L` goes to
-  # a line, `Alt-Up`/`Alt-Down` jump between headings, and outside the
-  # editor the pager keys `/`, `?`, `n`, `N`, `:`, `[` and `]` do the same;
-  # `Ctrl-Q` quits, and so does `q` outside the editor — Crysterm's default
-  # quit keys, with `q` kept live while a pane reads input (the editor
-  # consumes the `q` it inserts) — after the unsaved-changes guard.
+  # the mouse mode. The File and Edit entries' keys — `Ctrl-S` saves,
+  # `Ctrl-O` opens, `Ctrl-R` reloads, `Ctrl-F` searches, `Ctrl-G`/`Alt-G`
+  # repeat the search, `Ctrl-L` goes to a line, `Alt-Up`/`Alt-Down` jump
+  # between headings, `Ctrl-Q` quits — are the entries' shortcuts
+  # (`app_menu.cr`), shown in the menus, and outside the editor the pager
+  # keys `/`, `?`, `n`, `N`, `:`, `[` and `]` do the same. `q` quits too
+  # outside the editor — Crysterm's default quit key, kept live while a pane
+  # reads input (the editor consumes the `q` it inserts) — through the
+  # same close request as `Ctrl-Q`, after the unsaved-changes guard.
   class App
     # The three panes of the central area, in layout order.
     enum Pane
@@ -523,7 +525,9 @@ module Md
       follow_editor if @editor.focused?
     end
 
-    # Application-level keys, after the focused widget had its turn.
+    # Application-level keys, after the focused widget had its turn. The
+    # menu entries' keys are not here: they are the entries' shortcuts
+    # (`app_menu.cr`), which Crysterm fires on the same terms.
     private def key_pressed(e : Crysterm::Event::KeyPress) : Nil
       return if e.accepted? || @main.status_bar.prompting?
       # The pager's keys are letters the editor would have typed, so they
@@ -532,32 +536,15 @@ module Md
       e.accept if handled
     end
 
-    # The application's special keys: the panes, the modes and the file;
-    # returns whether *key* was one, after the search keys had their turn.
+    # The application's special keys — the panes and the mouse mode, whose
+    # gestures no menu entry has; returns whether *key* was one.
     private def app_key(key : Tput::Key) : Bool
       case key
-      when .f2?     then toggle_pane Pane::Editor
-      when .f3?     then toggle_pane Pane::Viewer
-      when .f4?     then toggle_pane Pane::Toc
-      when .f5?     then cycle_mouse_mode
-      when .ctrl_s? then save
-      when .ctrl_o? then open_prompt
-      when .ctrl_r? then reload
-      else               return navigation_key(key) || search_key(key)
-      end
-      true
-    end
-
-    # The search and jump keys (`app_search.cr`); returns whether *key* was one.
-    private def search_key(key : Tput::Key) : Bool
-      case key
-      when .ctrl_f?   then search_prompt
-      when .ctrl_g?   then find_next
-      when .alt_g?    then find_next reverse: true
-      when .ctrl_l?   then go_to_line_prompt
-      when .alt_up?   then jump_heading -1
-      when .alt_down? then jump_heading 1
-      else                 return false
+      when .f2? then toggle_pane Pane::Editor
+      when .f3? then toggle_pane Pane::Viewer
+      when .f4? then toggle_pane Pane::Toc
+      when .f5? then cycle_mouse_mode
+      else           return navigation_key(key)
       end
       true
     end

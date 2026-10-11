@@ -73,6 +73,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   start and written at exit to `$XDG_CONFIG_HOME/md/settings.json`
   (`~/.config/md/settings.json`), a store in the manner of Qt's `QSettings`
   that later settings (pane sizes, a theme) join as new keys.
+- The menus show their entries' keys: File → Open…, Reload, Save and Quit
+  and Edit → Find…, Find Next, Find Previous and Go to Line… carry their
+  shortcuts (Crysterm's action shortcuts, spelled `Ctrl+O` as Qt does),
+  and Edit → Next Heading and Previous Heading are new entries for
+  `Alt-Down` and `Alt-Up`. The keys fire from any pane after the pane had
+  its turn, so the editor keeps `Ctrl-Z`, `Ctrl-K` and the like, and wait
+  while a prompt is open (a Crysterm fix: a prompt now owns the keyboard).
+  The menu bar's hint spells its keys the same way (`Alt+F`).
 
 [Unreleased]: https://github.com/crystallabs/md/commits/main
 

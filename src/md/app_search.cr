@@ -4,9 +4,10 @@ module Md
     # like Save As.
     #
     # Search: `/` (forward) and `?` (backward) in the viewer or the table of
-    # contents, `Ctrl-F` anywhere, ask for a pattern; `n` and `N` (`Ctrl-G`
-    # and `Alt-G` anywhere) repeat it in the search's direction and against
-    # it. The pane in use is searched: the editor's Markdown source while
+    # contents, `Ctrl-F` anywhere (Edit → Find…), ask for a pattern; `n` and
+    # `N` (`Ctrl-G` and `Alt-G` anywhere, Edit → Find Next and Find Previous)
+    # repeat it in the search's direction and against it. The pane in use is
+    # searched: the editor's Markdown source while
     # editing, the viewer's rendered text otherwise. The pattern is a
     # regular expression when it compiles and literal text when it does not,
     # case-insensitive unless it has an uppercase letter (vi's `smartcase`).
@@ -15,9 +16,10 @@ module Md
     # current one is the pane's selection; Edit → Clear Highlight takes the
     # underlines off (vi's `:nohlsearch`).
     #
-    # Go to line (`:` in the viewer, `Ctrl-L` anywhere) asks for a source
-    # line and puts both panes there; `[` and `]` in the viewer (`Alt-Up` and
-    # `Alt-Down` anywhere) jump to the previous and next heading.
+    # Go to line (`:` in the viewer, `Ctrl-L` anywhere, Edit → Go to Line…)
+    # asks for a source line and puts both panes there; `[` and `]` in the
+    # viewer (`Alt-Up` and `Alt-Down` anywhere, Edit → Previous Heading and
+    # Next Heading) jump to the previous and next heading.
 
     # The most matches highlighted at once: beyond this a search still finds
     # its way, match by match, but the overlay stops, so an edit in a long
