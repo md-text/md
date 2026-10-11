@@ -80,16 +80,14 @@ module Md
     # there is no one left to tell, and the choices are not worth an error.
     def save_config : Nil
       return unless @config
-      Crysterm::Config.md_pane_sizes = pane_sizes.join(',')
+      record_pane_sizes
       Config.save if Config.dirty?
     end
 
     # Options → Save Config: writes the config file now, with a notice
     # saying so, or that it could not be written.
     def save_config_now : Nil
-      Crysterm::Config.md_pane_sizes = pane_sizes.join(',')
-      saved = Config.save
-      notice(saved ? "Saved #{Config.path}" : "Cannot write #{Config.path}")
+      write_config Config.path
     end
 
     # Options → Save Config As…: asks for a file name (`#ask_text`), the
@@ -98,10 +96,20 @@ module Md
     def save_config_prompt : Nil
       ask_text("Save config as: ", Config.path) do |answer|
         path = answer.try &.strip
-        next if path.nil? || path.empty?
-        Crysterm::Config.md_pane_sizes = pane_sizes.join(',')
-        notice(Config.save(path) ? "Saved #{path}" : "Cannot write #{path}")
+        write_config path if path && !path.empty?
       end
+    end
+
+    # Puts the pane sizes, as they are now, into their option, for a write.
+    private def record_pane_sizes : Nil
+      Crysterm::Config.md_pane_sizes = pane_sizes.join(',')
+    end
+
+    # Writes the settings to *path*, with a notice saying so, or that it
+    # could not be written.
+    private def write_config(path : String) : Nil
+      record_pane_sizes
+      notice(Config.save(path) ? "Saved #{path}" : "Cannot write #{path}")
     end
 
     # Options → Load Config…: asks for a file name, the config file's filled
@@ -117,7 +125,7 @@ module Md
           Config.load_file path
           notice "Loaded #{path}"
         rescue ex : Error
-          notice ex.message || "Cannot load #{path}"
+          notice "Cannot load #{path}: #{ex.message}"
         end
       end
     end

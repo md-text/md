@@ -119,8 +119,9 @@ module Md
     # loaded from its own file when it was required, before md's options
     # existed. A `--crysterm-dump-config` among *argv* prints every option,
     # md's included, and exits. A file that cannot be read or parsed, or a
-    # value that does not fit its option, is an `Error` naming it: md does
-    # not start on a broken configuration, it says what is wrong.
+    # value that does not fit its option — in the file, a variable or a flag
+    # — is an `Error` saying which (Superconf names the source): md does not
+    # start on a broken configuration, it says what is wrong.
     def self.configure(file : String = path, argv : Array(String) = ARGV) : Nil
       @@document.clear
       exists = File.exists?(file)
@@ -130,7 +131,7 @@ module Md
       watch
       @@dirty = false
     rescue ex : Superconf::Error | YAML::ParseException | IO::Error
-      raise Error.new("cannot load #{file}: #{ex.message}")
+      raise Error.new(ex.message)
     end
 
     # What Superconf stamps on a value from the file `.configure` loaded.
@@ -142,7 +143,7 @@ module Md
     def self.load_file(file : String) : Nil
       Superconf.load_file file, Superconf::Source::Runtime
     rescue ex : Superconf::Error
-      raise Error.new("cannot load #{file}: #{ex.message}")
+      raise Error.new(ex.message)
     end
 
     # Writes the settings to *file* (`.path` by default; see the module

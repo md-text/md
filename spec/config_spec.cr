@@ -44,7 +44,7 @@ describe Md::Config do
     end
 
     it "refuses a broken file, naming it" do
-      error = expect_raises(Md::Error, /cannot load/) { with_config("md: [\n") { } }
+      error = expect_raises(Md::Error, /cannot parse config file/) { with_config("md: [\n") { } }
       (error.message || "").should contain "config.yml"
     end
 
@@ -129,7 +129,7 @@ describe Md::Config do
         Crysterm::Config["md.text_width"].source.should eq Superconf::Source::Runtime
         Md::Config.save
         config_file(path)["md"]["text_width"].as_i.should eq 72
-        expect_raises(Md::Error, /cannot load/) { Md::Config.load_file File.join(File.dirname(path), "missing.yml") }
+        expect_raises(Md::Error, /cannot read config file .*missing\.yml/) { Md::Config.load_file File.join(File.dirname(path), "missing.yml") }
       end
     end
   end
@@ -153,7 +153,7 @@ describe "Md::App config menu" do
 
         app.load_config_prompt
         answer app, File.join(File.dirname(path), "missing.yml")
-        notice(app).should start_with " cannot load"
+        notice(app).should start_with " Cannot load #{File.join(File.dirname(path), "missing.yml")}: cannot read config file"
       end
     ensure
       Crysterm::CSS.theme = nil
