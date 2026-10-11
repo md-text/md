@@ -97,7 +97,7 @@ describe "Md::App follow cursor" do
       app.show_pane Md::App::Pane::Viewer
       app.editor.focus
       window.repaint
-      follow = menu(app, 2).actions[5]
+      follow = menu(app, 3).actions[5]
       follow.text.should eq "&Follow cursor"
       follow.checked?.should be_false
       follow.trigger

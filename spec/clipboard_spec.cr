@@ -250,7 +250,7 @@ describe "Md::App clipboard modes" do
   it "offers the modes under Options → Clipboard, the current one checked" do
     with_clipboard do |clip|
       with_app do |app|
-        modes = menu(app, 3).actions.find!(&.text.==("&Clipboard")).menu || [] of Crysterm::Action
+        modes = menu(app, 4).actions.find!(&.text.==("&Clipboard")).menu || [] of Crysterm::Action
         modes.map(&.text).should eq ["&Terminal (OSC 52)", "&Command (copy-cmd)", "&Internal (within md)"]
         modes.map(&.checked?).should eq [true, false, false]
         modes.all?(&.enabled?).should be_true
@@ -267,7 +267,7 @@ describe "Md::App clipboard modes" do
       # Without a command on the PATH the entry says so and cannot be picked.
       clip.copy_command = nil
       with_app do |app|
-        modes = menu(app, 3).actions.find!(&.text.==("&Clipboard")).menu || [] of Crysterm::Action
+        modes = menu(app, 4).actions.find!(&.text.==("&Clipboard")).menu || [] of Crysterm::Action
         modes[1].text.should eq "&Command (none found)"
         modes[1].enabled?.should be_false
       end

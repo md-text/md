@@ -47,7 +47,9 @@ module Md
   # against losing unsaved changes and the history of recent files in
   # `app_file.cr`; auto-save and the backup file in `app_autosave.cr`;
   # copying, and the clipboard mode (Options → Clipboard), in
-  # `app_clipboard.cr`.
+  # `app_clipboard.cr`;
+  # the editing that knows Markdown — lists continued on `Enter` and
+  # indented with `Tab`, the Format menu — in `app_edit.cr`.
   #
   # Keys: `F2`/`F3`/`F4` show and focus the editor/viewer/table of contents,
   # or hide it when it is already focused; `Tab` cycles focus between the
@@ -81,7 +83,7 @@ module Md
 
     getter window : Crysterm::Window
     getter main : Crysterm::Widget::MainWindow
-    getter editor : Crysterm::Widget::PlainTextEdit
+    getter editor : MarkdownEdit
     getter viewer : Crysterm::Widget::TextBrowser
     getter toc : Crysterm::Widget::TocView
     getter source : Source
@@ -143,7 +145,7 @@ module Md
       @overwrite_button = Crysterm::Widget::ToolButton.new text: "INS", width: 5
       @mouse_button = Crysterm::Widget::ToolButton.new text: "M=a", width: 7
 
-      @editor = Crysterm::Widget::PlainTextEdit.new input_on_focus: true
+      @editor = MarkdownEdit.new input_on_focus: true
       @viewer = Crysterm::Widget::TextBrowser.new input_on_focus: true
       @toc = Crysterm::Widget::TocView.new document: @viewer.document
       @splitter = Crysterm::Widget::Splitter.new
@@ -220,6 +222,7 @@ module Md
       @viewer.on(Crysterm::Event::CursorPositionChanged) { follow_viewer if @viewer.focused? }
       @toc.on(Crysterm::Event::AnchorClick) { |e| jump_to e.url }
       wire_links
+      wire_editing
       # A followed link may replace the viewer's document; keep the outline on
       # the document actually shown.
       @viewer.on(Crysterm::Event::SourceChanged) do

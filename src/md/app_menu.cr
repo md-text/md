@@ -1,7 +1,8 @@
 module Md
   class App
     # The menu bar: File (open, the recent files, reload, save, quit), Edit
-    # (copy, find, repeat the find, go to a line, jump between headings), View
+    # (copy, find, repeat the find, go to a line, jump between headings), Format
+    # (the Markdown markup, `app_edit.cr`), View
     # (which panes are shown and resizing them, whether the editor's and the viewer's carets
     # follow each other, whether the caret's line is highlighted, whether
     # the editor numbers its lines, the text's layout — soft wrap, a text
@@ -9,8 +10,9 @@ module Md
     # Options (the two modes the status bar toggles — overwrite mode and the
     # mouse mode — the unsaved-changes guard, auto-save and the backup file
     # (`app_autosave.cr`), the theme and the clipboard mode, so every setting is reachable from
-    # the keyboard through the menus as well, `Alt+F`/`Alt+E`/`Alt+V`/`Alt+O`
-    # opening them). The checked states are bound to what they stand for
+    # the keyboard through the menus as well, `Alt+F`/`Alt+E`/`Alt+M`/`Alt+V`/`Alt+O`
+    # opening them; Format's letter is `m` since Options has `o` and Resize
+    # panes `Alt+R`). The checked states are bound to what they stand for
     # (`Action#bind_checked`): the View and Options settings, the mouse and
     # clipboard modes and the theme are reactive properties, the pane entries follow the
     # panes, and the overwrite and line-number entries follow the editor.
@@ -67,6 +69,8 @@ module Md
       edit.add_action("Nex&t Heading", shortcut: "Alt+Down") { jump_heading 1 }
       edit.add_action("Pre&vious Heading", shortcut: "Alt+Up") { jump_heading -1 }
       add_navigation_actions edit
+
+      build_format_menu bar
 
       view = bar.add_menu "&View"
       Pane.each do |pane|

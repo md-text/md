@@ -22,7 +22,7 @@ end
 
 # The Options → Theme entries.
 private def theme_entries(app) : Array(Crysterm::Action)
-  options = app.main.menu_bar.menus[3]
+  options = app.main.menu_bar.menus[4]
   submenu = options.actions.find! { |action| action.text == "&Theme" }
   submenu.menu || [] of Crysterm::Action
 end

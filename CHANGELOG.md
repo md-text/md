@@ -153,6 +153,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   columns. (Crysterm's splitter learnt to fold hidden panes away, to resize
   its panes in proportion and with stretch factors, to save and restore its
   state, and to keep its dividers off the Tab chain.)
+- Markdown-aware editing, and a Format menu (`Alt-M`) between Edit and
+  View. `Enter` on a list item — bullets, numbers, tasks, indented or in a
+  blockquote — continues the list with the same marker (the number raised,
+  the task box emptied) and ends it on an empty item; `Tab` and `Shift-Tab`
+  indent and outdent the item, or the selected lines, by the item above's
+  content offset (Format → Indent, Outdent). Format → Bold, Italic and Code
+  (`Ctrl-B`, `Alt-I`, `Alt-C`) wrap the selection or the word at the caret
+  in `**`, `*` or backticks, or unwrap it; Toggle Task (`Alt-X`) adds,
+  ticks and unticks a `[ ]` box; Promote Heading and Demote Heading
+  (`Ctrl-Up`, `Ctrl-Down`) change the line's heading level. Each change is
+  one undo step.
 
 [Unreleased]: https://github.com/crystallabs/md/commits/main
 

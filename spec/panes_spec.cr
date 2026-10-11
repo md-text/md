@@ -161,5 +161,5 @@ end
 
 # The View menu's entries.
 private def menu_actions(app)
-  app.main.menu_bar.menus[2].actions
+  app.main.menu_bar.menus[3].actions
 end

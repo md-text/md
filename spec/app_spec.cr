@@ -321,12 +321,13 @@ end
 describe "Md::App menus" do
   it "has File, Edit, View and Options menus" do
     with_app do |app|
-      app.main.menu_bar.menus.size.should eq 4
+      app.main.menu_bar.menus.size.should eq 5
       menu(app, 0).actions.map(&.text).should eq ["&Open…", "Open &Recent", "&Reload", "", "&Save", "Save &As…", "", "&Quit"]
       menu(app, 0).actions[1].enabled?.should be_false # no history, nothing recent
       menu(app, 1).actions.map(&.text).should eq ["&Copy", "Copy as &Markdown", "", "&Find…", "Find &Next", "Find &Previous", "Clear &Highlight", "", "&Go to Line…", "Nex&t Heading", "Pre&vious Heading", "", "&Back", "For&ward"]
-      menu(app, 2).actions.map(&.text).should eq ["&Editor", "&Viewer", "&Table of contents", "&Resize panes", "", "&Follow cursor", "&Highlight line", "Line &numbers", "", "&Soft wrap", "Te&xt width", "&Center text", "", "&Watch file"]
-      menu(app, 3).actions.map(&.text).should eq ["&Overwrite mode", "&Ask before discarding changes", "A&uto-save", "&Keep a backup file", "&Mouse", "&Theme", "&Clipboard"]
+      menu(app, 2).actions.map(&.text).should eq ["&Bold", "&Italic", "&Code", "", "&Toggle Task", "I&ndent", "&Outdent", "", "&Promote Heading", "&Demote Heading"]
+      menu(app, 3).actions.map(&.text).should eq ["&Editor", "&Viewer", "&Table of contents", "&Resize panes", "", "&Follow cursor", "&Highlight line", "Line &numbers", "", "&Soft wrap", "Te&xt width", "&Center text", "", "&Watch file"]
+      menu(app, 4).actions.map(&.text).should eq ["&Overwrite mode", "&Ask before discarding changes", "A&uto-save", "&Keep a backup file", "&Mouse", "&Theme", "&Clipboard"]
     end
   end
 
@@ -334,13 +335,13 @@ describe "Md::App menus" do
     with_app do |_, window|
       window.repaint
       row = window.dump.to_s.lines[2]
-      row.should match /\| File  Edit  View  Options +Menu = F10 \/ Alt\+F \|$/
+      row.should match /\| File  Edit  Format  View  Options +Menu = F10 \/ Alt\+F \|$/
     end
   end
 
   it "shows and hides panes from the View menu, mirroring their state" do
     with_app do |app|
-      editor, viewer, toc = menu(app, 2).actions[0, 3]
+      editor, viewer, toc = menu(app, 3).actions[0, 3]
       editor.checked?.should be_true
       viewer.checked?.should be_false
       viewer.trigger
@@ -357,8 +358,8 @@ describe "Md::App menus" do
 
   it "sets the overwrite and mouse modes from the Options menu, in step with the status bar" do
     with_app do |app|
-      overwrite, confirm = menu(app, 3).actions[0, 2]
-      mouse = menu(app, 3).actions[4]
+      overwrite, confirm = menu(app, 4).actions[0, 2]
+      mouse = menu(app, 4).actions[4]
       confirm.checked?.should be_true
       confirm.trigger
       app.confirm_discard?.should be_false
@@ -404,7 +405,7 @@ describe "Md::App settings" do
         app.mouse_mode.should eq Md::App::MouseMode::Insert
         window.mouse_enabled?.should be_false # reading in the viewer: not in `i`
         app.editor.line_numbers?.should be_true
-        follow, highlight = menu(app, 2).actions[5, 2]
+        follow, highlight = menu(app, 3).actions[5, 2]
         follow.checked?.should be_true
         highlight.checked?.should be_true
         settings.dirty?.should be_false # applying is not a change

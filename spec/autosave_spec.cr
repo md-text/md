@@ -230,7 +230,7 @@ describe "Md::App auto-save" do
   it "keeps both choices in the settings, and offers them in the Options menu" do
     settings = Md::Settings.new "unused.json"
     with_app settings: settings do |app|
-      options = app.main.menu_bar.menus[3]
+      options = app.main.menu_bar.menus[4]
       autosave = options.actions.find { |a| a.text == "A&uto-save" } || fail("no Auto-save entry")
       backup = options.actions.find { |a| a.text == "&Keep a backup file" } || fail("no backup entry")
       autosave.checked?.should be_true

@@ -116,7 +116,7 @@ of the editor and the viewer, and the table of contents its columns.
 | `F5`               | Cycle the mouse mode (the `🖱=` field)                                    |
 | `F6`               | Cycle the theme: terminal, dark, light (Options → Theme)                  |
 | `Ctrl-Z`           | Outside the editor, suspend md to the shell (`fg` resumes); in the editor, undo |
-| `Alt-F`, `Alt-E`, `Alt-V`, `Alt-O` | Open the File, Edit, View and Options menus (`F10` too)   |
+| `Alt-F`, `Alt-E`, `Alt-M`, `Alt-V`, `Alt-O` | Open the File, Edit, Format, View and Options menus (`F10` too) |
 | `Alt-W`            | Soft wrap in the editor on and off (View → Soft wrap)                     |
 | `Ctrl-O`           | Open a file; asks for the name (File → Open…)                             |
 | `Ctrl-R`           | Reload the file from disk (File → Reload)                                 |
@@ -129,9 +129,13 @@ of the editor and the viewer, and the table of contents its columns.
 | `Alt-R`            | Resize the panes from the keyboard: `Left`/`Right` move the divider next to the pane, `Enter`/`Escape` return (View → Resize panes) |
 | `Backspace`        | Outside the editor, go back to where you were before the last link or open (Edit → Back) |
 | `Alt-Left`, `Alt-Right` | Back and Forward (Edit → Back, Forward); in the editor and the viewer these move by word instead |
+| `Enter`, `Tab`, `Shift-Tab` | In the editor, on a list item: continue the list (an empty item ends it), indent and outdent the item or the selected lines (Format → Indent, Outdent) |
+| `Ctrl-B`, `Alt-I`, `Alt-C` | Bold, italic and code around the selection or the word at the caret, or off again (Format → Bold, Italic, Code) |
+| `Alt-X`            | Add, tick or untick a list item's task box (Format → Toggle Task)         |
+| `Ctrl-Up`, `Ctrl-Down` | Promote or demote the heading on the caret's line (Format → Promote Heading, Demote Heading) |
 | `Ctrl-Q`           | Quit (`q` too, anywhere but in the editor; File → Quit); asks first when changes are unsaved |
 
-The File and Edit menus show these keys next to their entries, spelled as
+The File, Edit and Format menus show these keys next to their entries, spelled as
 Qt does (`Ctrl+O`), and the right end of the menu bar names the keys that
 open the menus. The keys work from any pane, after the pane had its turn —
 the editor keeps the keys it uses — and wait while a prompt is open.
@@ -161,8 +165,9 @@ copy work instead. With the mouse off you cannot click the field, so `F5`
 cycles the modes from the keyboard too, and the Options menu offers them as
 well, next to the overwrite mode. The File menu opens, reloads, saves, saves
 as and quits, and lists the recently opened files; the Edit menu copies,
-searches, goes to a line and jumps between headings; the View menu shows
-and hides the panes.
+searches, goes to a line and jumps between headings; the Format menu marks
+up the source (see Editing Markdown below); the View menu shows and hides
+the panes.
 
 ### Copying
 
@@ -201,6 +206,36 @@ Crysterm's config file or environment) wins for that run and is not kept,
 so the next plain run is back to the stored theme. A stylesheet of your own
 (`--colors-stylesheet FILE`, CSS or Qt's QSS) layers over whichever theme
 is on, so your rules stay in force when the theme changes under them.
+
+### Editing Markdown
+
+The editor knows the syntax it holds. `Enter` at the end of a list item —
+`- `, `* `, `+ `, `1. ` or `1) `, a task `- [ ] `, indented or inside a
+blockquote — starts the next item with the same marker (the number one
+higher, the task box empty), taking along any text after the caret; on an
+empty item, `Enter` ends the list instead. `Tab` and `Shift-Tab` on a list
+item indent and outdent it (Format → Indent and Outdent), and every line of
+a selection with it: an item nests under the item above by that item's
+content offset — two columns for `- `, three for `1. `, as CommonMark wants
+a child list — and outdents back to the indentation of the nearest shallower
+item. On any other line `Enter` and `Tab` keep their meanings.
+
+Format → Bold, Italic and Code (`Ctrl-B`, `Alt-I`, `Alt-C`) put `**`, `*`
+or backticks around the selection, or the word at the caret, or insert the
+pair with the caret between when there is neither; on text that already has
+them (`_` and `__` count too) they take them off, and the text stays
+selected, so a second press undoes the first. Format → Toggle Task
+(`Alt-X`) gives a list item a `[ ]` box, ticks it `[x]` and unticks it
+again; Format → Promote Heading and Demote Heading (`Ctrl-Up`, `Ctrl-Down`)
+move the caret's line one heading level up or down, a paragraph being the
+level above `#`. Each change is one undo step.
+
+The keys are not all Qt's: `Ctrl-B` is, but a terminal sends the same byte
+for `Ctrl-I` and `Tab`, and cannot tell `Ctrl-Shift-X` from `Ctrl-X`, so
+Italic, Code and Toggle Task use `Alt` chords the editor does not
+(`Alt-B` and `Alt-F` are its readline word moves). The Format menu works
+from any pane: chosen while reading, it edits the source of the viewer's
+caret, showing the editor if it is hidden.
 
 ### Searching and jumping
 
