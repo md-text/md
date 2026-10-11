@@ -40,12 +40,20 @@ module Md
 
     getter path : String
 
-    # `$XDG_STATE_HOME/md/history.json`, which by the XDG spec defaults to
-    # `~/.local/state/md/history.json`; state, not config, because it is
-    # written by the program rather than the user.
-    def self.default_path : String
+    # md's state directory, `$XDG_STATE_HOME/md`, which by the XDG spec
+    # defaults to `~/.local/state/md`: for what the program writes rather
+    # than the user — the history, and the auto-save recovery files
+    # (`App.autosave_dir`).
+    def self.state_dir : String
       state = ENV["XDG_STATE_HOME"]?.presence || Path.home.join(".local", "state").to_s
-      Path[state].join("md", "history.json").to_s
+      Path[state].join("md").to_s
+    end
+
+    # `$XDG_STATE_HOME/md/history.json` (`~/.local/state/md/history.json`);
+    # state, not config, because it is written by the program rather than
+    # the user.
+    def self.default_path : String
+      File.join state_dir, "history.json"
     end
 
     # Loads the history kept at *path*. A missing, unreadable or malformed

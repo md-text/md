@@ -92,6 +92,7 @@ module Md
       remember_position
       leave_document
       abandon_stream
+      drop_recovery
       @source = Source.new path: path
       @window.title = title
       load text || ""
@@ -107,6 +108,7 @@ module Md
       setup_file
       refresh_status
       notice(text ? "Opened #{path}" : "New file #{path}")
+      check_recovery
       true
     rescue ex : IO::Error
       notice "Cannot open #{path}: #{ex.message}"

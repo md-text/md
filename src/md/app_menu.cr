@@ -6,8 +6,8 @@ module Md
     # follow each other, whether the caret's line is highlighted, whether
     # the editor numbers its lines, and whether the file is watched) and
     # Options (the two modes the status bar toggles — overwrite mode and the
-    # mouse mode — the unsaved-changes guard and the theme, so every setting
-    # is reachable from the keyboard through the menus as well,
+    # mouse mode — the unsaved-changes guard, auto-save and the backup file
+    # (`app_autosave.cr`) and the theme, so every setting is reachable from the keyboard through the menus as well,
     # `Alt+F`/`Alt+E`/`Alt+V`/`Alt+O` opening them). The checked states are
     # bound to what they stand for (`Action#bind_checked`): the View and
     # Options settings, the mouse mode and the theme are reactive
@@ -96,6 +96,12 @@ module Md
       confirm = Crysterm::Action.new "&Ask before discarding changes", checkable: true
       confirm.bind_checked @confirm_discard
       options.add_action confirm
+      autosave = Crysterm::Action.new "A&uto-save", checkable: true
+      autosave.bind_checked @autosave
+      options.add_action autosave
+      backup = Crysterm::Action.new "&Keep a backup file", checkable: true
+      backup.bind_checked @backup_file
+      options.add_action backup
 
       # A radio group: exactly one mode is checked, and re-picking the checked
       # one keeps it.

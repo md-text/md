@@ -110,6 +110,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `make completions` write them under `share/`, `make install` installs
   them under `$(PREFIX)/share`, and the release archives carry them next to
   the binary.
+- Auto-save and a backup file, both Options entries on by default and kept
+  in the settings. Options → Keep a backup file copies the file to `FILE~`
+  beside it before the session's first save of it (emacs' `make-backup-files`).
+  Options → Auto-save writes unsaved edits every 30 seconds to a recovery
+  file under `$XDG_STATE_HOME/md/autosave/` (`~/.local/state/md/autosave/`),
+  never to the file itself — named after the file's absolute path with `/`
+  escaped as `%2F`, or `unnamed-<date>-<time>-<pid>.md` for a document
+  without a name, standard input included — and removes it on a save or a
+  normal exit, so the directory holds only what a crash lost; opening a file
+  whose copy is newer than it gets a notice naming the copy.
 
 [Unreleased]: https://github.com/crystallabs/md/commits/main
 

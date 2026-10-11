@@ -262,10 +262,31 @@ line replaces its status line: the current name is filled in, `Tab` and
 `Shift-Tab` complete file names, `Up` recalls earlier answers, `Enter` saves,
 and `Escape` (or `Backspace` on an empty line) gives up.
 
+### Auto-save and backups
+
+Two nets catch what a crash, a kill or a slip would lose, both on by default
+in the Options menu. *Keep a backup file* keeps the file as it was before
+the first save of the session, as `FILE~` beside it (emacs' convention), so
+one save too many is undone by copying the backup back; later saves in the
+same session leave it alone. *Auto-save* writes your unsaved edits every 30
+seconds to a recovery file — never to the file itself, which is written
+only when you save, the way vim's swap file and emacs' `#file#` work. The
+recovery files live in `$XDG_STATE_HOME/md/autosave/`
+(`~/.local/state/md/autosave/`), named after the file's absolute path with
+`/` escaped as `%2F` (`/home/u/notes.md` recovers from
+`%2Fhome%2Fu%2Fnotes.md`); a document without a name, such as one piped in
+on standard input and then edited, is kept as `unnamed-<date>-<time>-<pid>.md`.
+Saving or quitting normally removes the recovery file, so whatever remains
+in the directory is what some session lost. When you open a file whose
+recovery file is newer than the file, a notice names the copy; open it
+(File → Open… takes the path) or copy it over the file to get the edits
+back. A new document is told of unnamed copies left behind.
+
 ### Settings
 
 The choices made in the View and Options menus — Follow cursor, Highlight
-line, Ask before discarding changes, the mouse mode and the theme — are kept across runs
+line, Ask before discarding changes, Auto-save, Keep a backup file, the
+mouse mode and the theme — are kept across runs
 in `$XDG_CONFIG_HOME/md/settings.json` (`~/.config/md/settings.json`), written
 when md quits. Watch file is not kept: like `--watch`, it is for the run at
 hand. The file is plain JSON and can be edited by hand; a missing or broken
@@ -339,6 +360,7 @@ src/md/app_search.cr  search, go to line, heading jumps
 src/md/app_file.cr    open, reload, watch; the unsaved-changes guard; recent files
 src/md/app_links.cr   following links; Back and Forward
 src/md/app_theme.cr   the theme: Crysterm's built-in themes, switched at runtime
+src/md/app_autosave.cr auto-save to a recovery file; the backup file
 src/md/app_settings.cr the View and Options choices kept across runs
 src/md/settings.cr    the settings store (~/.config/md/settings.json)
 src/md/history.cr     the recent files and positions (~/.local/state/md/history.json)

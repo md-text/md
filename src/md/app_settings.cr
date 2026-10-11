@@ -26,12 +26,16 @@ module Md
       settings.mouse_mode.try { |mode| @mouse_mode.value = mode }
       settings.line_numbers?.try { |value| @editor.line_numbers = value }
       settings.theme.try { |theme| @theme.value = theme } unless theme_configured?
+      settings.autosave?.try { |value| @autosave.value = value }
+      settings.backup_file?.try { |value| @backup_file.value = value }
       @follow_cursor.on_change { settings.follow_cursor = @follow_cursor.value }
       @highlight_line.on_change { settings.highlight_line = @highlight_line.value }
       @confirm_discard.on_change { settings.confirm_discard = @confirm_discard.value }
       @mouse_mode.on_change { settings.mouse_mode = @mouse_mode.value }
       @editor.on(Crysterm::Event::LineNumbersChanged) { |e| settings.line_numbers = e.visible }
       @theme.on_change { settings.theme = @theme.value }
+      @autosave.on_change { settings.autosave = @autosave.value }
+      @backup_file.on_change { settings.backup_file = @backup_file.value }
     end
 
     # Writes the settings, when any changed. A write that fails is let go:

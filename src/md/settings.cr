@@ -142,6 +142,24 @@ module Md
       set "confirm_discard", value
     end
 
+    # Options → Auto-save.
+    def autosave? : Bool?
+      get? "autosave", Bool
+    end
+
+    def autosave=(value : Bool) : Nil
+      set "autosave", value
+    end
+
+    # Options → Keep a backup file.
+    def backup_file? : Bool?
+      get? "backup_file", Bool
+    end
+
+    def backup_file=(value : Bool) : Nil
+      set "backup_file", value
+    end
+
     # Options → Mouse, stored by the mode's name (`"all"`, `"normal"`,
     # `"insert"`, `"off"`); a name md no longer knows reads as nil.
     def mouse_mode : App::MouseMode?

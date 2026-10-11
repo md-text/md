@@ -40,7 +40,7 @@ module Md
   # Searching, going to a line and jumping between headings are in
   # `app_search.cr`; opening, reloading and watching the file, the guard
   # against losing unsaved changes and the history of recent files in
-  # `app_file.cr`.
+  # `app_file.cr`; auto-save and the backup file in `app_autosave.cr`.
   #
   # Keys: `F2`/`F3`/`F4` show and focus the editor/viewer/table of contents,
   # or hide it when it is already focused; `Tab` cycles focus between the
@@ -203,6 +203,7 @@ module Md
       end
       refresh_recent_menu
       self.watch_file = watch
+      wire_autosave
     end
 
     # The panes' own events: edits re-render, carets follow, the outline
@@ -229,6 +230,7 @@ module Md
       # text in the editor: opt into Crysterm continuing, with a notice.
       @main.report_handler_errors(NOTICE_TIMEOUT) { |error| error_notice error }
       status = @window.exec
+      finish_autosave
       save_history
       save_settings
       status
@@ -397,18 +399,21 @@ module Md
       follower.scroll_cursor_to_row leader.cursor_viewport_row
     end
 
-    # Writes the document to its file. Without a file name (a new or streamed
-    # document) nothing is written yet: `#save_as_prompt` asks for one, and
-    # the save follows the answer.
+    # Writes the document to its file, the file's previous contents kept as
+    # a backup the first time (`app_autosave.cr`). Without a file name (a
+    # new or streamed document) nothing is written yet: `#save_as_prompt`
+    # asks for one, and the save follows the answer.
     def save : Bool
       unless path = @source.path
         save_as_prompt
         return false
       end
+      backup_failure = backup path
       File.write path, markdown
       @editor.document.modified = false
+      autosave_settled
       refresh_status
-      notice "Saved #{path}"
+      notice(backup_failure ? "Saved #{path} (#{backup_failure})" : "Saved #{path}")
       true
     rescue ex : IO::Error
       notice "Cannot save #{path}: #{ex.message}"

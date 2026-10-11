@@ -214,6 +214,7 @@ describe Md::App do
     ensure
       File.delete? path
       File.delete? other
+      File.delete? "#{other}~" # the second save backed the first up
     end
   end
 
@@ -325,7 +326,7 @@ describe "Md::App menus" do
       menu(app, 0).actions[1].enabled?.should be_false # no history, nothing recent
       menu(app, 1).actions.map(&.text).should eq ["&Find…", "Find &Next", "Find &Previous", "Clear &Highlight", "", "&Go to Line…", "Nex&t Heading", "Pre&vious Heading", "", "&Back", "For&ward"]
       menu(app, 2).actions.map(&.text).should eq ["&Editor", "&Viewer", "&Table of contents", "", "&Follow cursor", "&Highlight line", "Line &numbers", "", "&Watch file"]
-      menu(app, 3).actions.map(&.text).should eq ["&Overwrite mode", "&Ask before discarding changes", "&Mouse", "&Theme"]
+      menu(app, 3).actions.map(&.text).should eq ["&Overwrite mode", "&Ask before discarding changes", "A&uto-save", "&Keep a backup file", "&Mouse", "&Theme"]
     end
   end
 
@@ -356,7 +357,8 @@ describe "Md::App menus" do
 
   it "sets the overwrite and mouse modes from the Options menu, in step with the status bar" do
     with_app do |app|
-      overwrite, confirm, mouse = menu(app, 3).actions
+      overwrite, confirm = menu(app, 3).actions[0, 2]
+      mouse = menu(app, 3).actions[4]
       confirm.checked?.should be_true
       confirm.trigger
       app.confirm_discard?.should be_false
