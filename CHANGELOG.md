@@ -99,6 +99,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   terminal or not. The HTML is a body fragment from Crysterm's exporter, the
   text is the viewer's text without styling: block margins as blank lines,
   list markers, indented quotes, box-drawn tables.
+- A man page and completions for bash, zsh and fish, printed by the binary
+  itself (`md --generate man|bash|zsh|fish`) from the one table its option
+  parser is built from, so they cannot drift from `--help`. `make man` and
+  `make completions` write them under `share/`, `make install` installs
+  them under `$(PREFIX)/share`, and the release archives carry them next to
+  the binary.
 
 [Unreleased]: https://github.com/crystallabs/md/commits/main
 

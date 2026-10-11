@@ -73,3 +73,4 @@ jobs:
           bin/md --version
           bin/md --help
           bin/md --export html README.md | grep -q '<h1>md</h1>'
+          bin/md --generate man | grep -q '^\.TH MD 1'

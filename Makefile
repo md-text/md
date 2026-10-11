@@ -5,22 +5,34 @@
 #   make test       run the specs
 #   make lint       run ameba and check the formatting
 #   make check      test + lint
-#   make install    install bin/md into $(PREFIX)/bin  (default /usr/local)
+#   make man        generate the man page, share/man/man1/md.1
+#   make completions
+#                   generate the bash, zsh and fish completions under share/
+#   make install    install bin/md into $(PREFIX)/bin  (default /usr/local),
+#                   the man page and the completions under $(PREFIX)/share
 #
 # Requires Crystal >= 1.21 and the unibilium library; see README.md.
 
 PREFIX   ?= /usr/local
 DESTDIR  ?=
-BINDIR    = $(DESTDIR)$(PREFIX)/bin
+ROOT      = $(DESTDIR)$(PREFIX)
+BINDIR    = $(ROOT)/bin
 
 NAME      = md
 SOURCES   = $(shell find src -type f -name '*.cr') shard.yml
 PROGRAM   = bin/$(NAME)
 
+# The binary prints its own man page and completions (`md --generate`);
+# they land under share/ in the layout they are installed in.
+MAN       = share/man/man1/$(NAME).1
+BASHCOMP  = share/bash-completion/completions/$(NAME)
+ZSHCOMP   = share/zsh/site-functions/_$(NAME)
+FISHCOMP  = share/fish/vendor_completions.d/$(NAME).fish
+
 # Extra flags for `crystal build`, e.g. `make release CRFLAGS=-Dwithout_readline`.
 CRFLAGS  ?=
 
-.PHONY: all build release test lint format check install uninstall clean distclean
+.PHONY: all build release test lint format check man completions install uninstall clean distclean
 
 all: build
 
@@ -57,15 +69,39 @@ format:
 
 check: test lint
 
-install: release
-	install -d $(BINDIR)
+man: $(MAN)
+
+completions: $(BASHCOMP) $(ZSHCOMP) $(FISHCOMP)
+
+$(MAN): $(PROGRAM)
+	@mkdir -p $(@D)
+	$(PROGRAM) --generate man > $@
+
+$(BASHCOMP): $(PROGRAM)
+	@mkdir -p $(@D)
+	$(PROGRAM) --generate bash > $@
+
+$(ZSHCOMP): $(PROGRAM)
+	@mkdir -p $(@D)
+	$(PROGRAM) --generate zsh > $@
+
+$(FISHCOMP): $(PROGRAM)
+	@mkdir -p $(@D)
+	$(PROGRAM) --generate fish > $@
+
+install: release man completions
+	install -d $(BINDIR) $(dir $(ROOT)/$(MAN) $(ROOT)/$(BASHCOMP) $(ROOT)/$(ZSHCOMP) $(ROOT)/$(FISHCOMP))
 	install -m 0755 $(PROGRAM) $(BINDIR)/$(NAME)
+	install -m 0644 $(MAN) $(ROOT)/$(MAN)
+	install -m 0644 $(BASHCOMP) $(ROOT)/$(BASHCOMP)
+	install -m 0644 $(ZSHCOMP) $(ROOT)/$(ZSHCOMP)
+	install -m 0644 $(FISHCOMP) $(ROOT)/$(FISHCOMP)
 
 uninstall:
-	rm -f $(BINDIR)/$(NAME)
+	rm -f $(BINDIR)/$(NAME) $(ROOT)/$(MAN) $(ROOT)/$(BASHCOMP) $(ROOT)/$(ZSHCOMP) $(ROOT)/$(FISHCOMP)
 
 clean:
-	rm -rf bin
+	rm -rf bin share
 
 distclean: clean
 	rm -rf lib .shards

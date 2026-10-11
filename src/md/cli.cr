@@ -2,10 +2,53 @@ require "crysterm"
 require "option_parser"
 require "./source"
 require "./export"
+require "./manual"
 
 module Md
   # Command-line front end: parses arguments and starts the application.
   module CLI
+    # One command-line option: its flags, the name of its argument if it
+    # takes one (and the values it accepts, when they are a fixed set) and
+    # its description. `OPTIONS` is the one place these live: the parser,
+    # the man page and the shell completions (`Manual`) are all built from
+    # it, so they cannot drift apart. Descriptions carry their own line
+    # breaks, which `--help` prints as they are; the generators join them.
+    record Option,
+      long : String,
+      description : String,
+      short : String? = nil,
+      argument : String? = nil,
+      values : Array(String)? = nil do
+      # The flag as `OptionParser` registers it: `--line N`.
+      def long_spec : String
+        (arg = argument) ? "#{long} #{arg}" : long
+      end
+
+      # Likewise for the short flag: `-l N`.
+      def short_spec : String?
+        return unless s = short
+        (arg = argument) ? "#{s} #{arg}" : s
+      end
+
+      # The description on one line.
+      def text : String
+        description.gsub('\n', ' ')
+      end
+    end
+
+    OPTIONS = [
+      Option.new("--version", "Print the version and exit", short: "-V"),
+      Option.new("--help", "Show this help and exit", short: "-h"),
+      Option.new("--verbose", "Be more verbose (with --help, also list the\nCrysterm toolkit options)", short: "-v"),
+      Option.new("--watch", "Reload FILE as it changes on disk (View → Watch file)", short: "-w"),
+      Option.new("--line", "Open on source line N, like +N (past the end,\nthe last line), instead of the remembered position", short: "-l", argument: "N"),
+      Option.new("--view", "Open the viewer, even on a new FILE"),
+      Option.new("--edit", "Open the editor, even on an existing FILE"),
+      Option.new("--export", "Print FILE (or standard input) rendered as html\nor text, and exit", argument: "FORMAT", values: Export::FORMATS.to_a),
+      Option.new("--to", "The same as --export (pandoc's spelling)", argument: "FORMAT", values: Export::FORMATS.to_a),
+      Option.new("--generate", "Print the man page or a shell completion\nscript (man, bash, zsh, fish) and exit", argument: "WHAT", values: Manual::KINDS.to_a),
+    ]
+
     # What the command line asked for; the option handlers fill it in
     # (`.parse`).
     class Options
@@ -24,6 +67,33 @@ module Md
       # `--export FORMAT`: render to standard output instead of opening a
       # window (`Export`).
       property export : String?
+      # `--generate WHAT`: print the man page or a completion script
+      # (`Manual`) instead of opening a window.
+      property generate : String?
+
+      # Records *option*, given with *value* (empty for a flag): what each
+      # entry of `OPTIONS` means. A value that does not fit is a usage error.
+      def take(option : Option, value : String) : Nil
+        case option.long
+        when "--version"        then @version = true
+        when "--help"           then @help = true
+        when "--verbose"        then @verbose = true
+        when "--watch"          then @watch = true
+        when "--line"           then @line = CLI.line_number(value)
+        when "--view"           then @view = pane_choice(true)
+        when "--edit"           then @view = pane_choice(false)
+        when "--export", "--to" then @export = Export.format(value)
+        when "--generate"       then @generate = Manual.kind(value)
+        else                         raise "no handler for #{option.long}"
+        end
+      end
+
+      # The pane *view* asks for, unless the other one was already asked
+      # for: `--view --edit` is a usage error, not a last-wins.
+      private def pane_choice(view : Bool) : Bool
+        raise ArgumentError.new("--view and --edit cannot be combined") if @view == !view
+        view
+      end
     end
 
     # The flags md itself owns. Crysterm reads its toolkit options
@@ -32,8 +102,7 @@ module Md
     # the arguments so they are neither reported as unknown nor mistaken
     # for a file, keeping these, which take precedence over a toolkit flag
     # of the same name.
-    OWN_FLAGS = Set{"-V", "--version", "-h", "--help", "-v", "--verbose", "-w", "--watch",
-                    "-l", "--line", "--view", "--edit", "--export", "--to"}
+    OWN_FLAGS = OPTIONS.flat_map { |option| [option.long, option.short].compact }.to_set
 
     # Runs the program with the given arguments and returns the process exit
     # status. `stdout`/`stderr`/`stdin` are injectable so that specs can
@@ -49,6 +118,10 @@ module Md
         end
       end
       return 0 if options.help? || options.version?
+      if kind = options.generate
+        stdout << Manual.generate(kind)
+        return 0
+      end
       if format = options.export
         return export(options.positional, format, stdin, stdout)
       end
@@ -86,7 +159,7 @@ module Md
       build_parser(Options.new).to_s
     end
 
-    # The option parser, its handlers writing into *options*.
+    # The option parser over `OPTIONS`, its handlers writing into *options*.
     private def self.build_parser(options : Options) : OptionParser
       parser = OptionParser.new
       parser.banner = <<-BANNER
@@ -104,17 +177,14 @@ module Md
         Options:
         BANNER
 
-      parser.on("-V", "--version", "Print the version and exit") { options.version = true }
-      parser.on("-h", "--help", "Show this help and exit") { options.help = true }
-      parser.on("-v", "--verbose", "Be more verbose (with --help: also list the\nCrysterm toolkit options)") { options.verbose = true }
-      parser.on("-w", "--watch", "Reload FILE as it changes on disk (View → Watch file)") { options.watch = true }
-      parser.on("-l N", "--line N", "Open on source line N, like +N (past the end:\nthe last line); otherwise the remembered position") do |value|
-        options.line = line_number(value)
+      OPTIONS.each do |option|
+        handler = ->(value : String) { options.take(option, value) }
+        if short = option.short_spec
+          parser.on(short, option.long_spec, option.description, &handler)
+        else
+          parser.on(option.long_spec, option.description, &handler)
+        end
       end
-      parser.on("--view", "Open the viewer, even on a new FILE") { options.view = pane_choice(options, true) }
-      parser.on("--edit", "Open the editor, even on an existing FILE") { options.view = pane_choice(options, false) }
-      parser.on("--export FORMAT", "Print FILE (or standard input) rendered as html\nor text, and exit") { |value| options.export = Export.format(value) }
-      parser.on("--to FORMAT", "The same as --export (pandoc's spelling)") { |value| options.export = Export.format(value) }
       parser.invalid_option { |flag| raise ArgumentError.new("unknown option: #{flag}") }
       parser.unknown_args do |rest, after_dashes|
         # What remains are the positional arguments (`-` included) and the
@@ -134,15 +204,8 @@ module Md
       parser
     end
 
-    # The pane *view* asks for, unless *options* already asked for the other
-    # one: `--view --edit` is a usage error, not a last-wins.
-    private def self.pane_choice(options : Options, view : Bool) : Bool
-      raise ArgumentError.new("--view and --edit cannot be combined") if options.view == !view
-      view
-    end
-
     # *value* as a line number, or a usage error.
-    private def self.line_number(value : String) : Int32
+    protected def self.line_number(value : String) : Int32
       value.to_i? || raise ArgumentError.new("not a line number: #{value}")
     end
 

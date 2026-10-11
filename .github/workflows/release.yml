@@ -122,6 +122,15 @@ jobs:
           name="md-${version}-${{ matrix.os }}-${{ matrix.arch }}"
           mkdir "$name"
           cp bin/md README.md LICENSE CHANGELOG.md "$name/"
+          # The man page and the shell completions, printed by the binary
+          # just built, in the layout they are installed in under a prefix
+          # (`cp -r share /usr/local/`).
+          share="$name/share"
+          mkdir -p "$share/man/man1" "$share/bash-completion/completions" "$share/zsh/site-functions" "$share/fish/vendor_completions.d"
+          bin/md --generate man > "$share/man/man1/md.1"
+          bin/md --generate bash > "$share/bash-completion/completions/md"
+          bin/md --generate zsh > "$share/zsh/site-functions/_md"
+          bin/md --generate fish > "$share/fish/vendor_completions.d/md.fish"
           tar czf "$name.tar.gz" "$name"
           shasum -a 256 "$name.tar.gz" > "$name.tar.gz.sha256"
           echo "name=$name" >> "$GITHUB_OUTPUT"
