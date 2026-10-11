@@ -318,8 +318,22 @@ module Md
       end
       if found
         index, item = found
-        target = direction > 0 ? nested_indent(index, item) : outdented_indent(index, item)
+        if direction > 0
+          # Markdown has no deeper level without an item to hold it: an
+          # item nests one level under the item above, and no further.
+          unless parent = nesting_parent(index, item)
+            notice "No list item above to nest under"
+            return false
+          end
+          target = parent.indent.size + parent.content_offset
+        else
+          target = outdented_indent(index, item)
+        end
         delta = target - item.indent.size
+        if delta == 0
+          notice(direction > 0 ? "Already nested under the item above" : "Not indented")
+          return false
+        end
       else
         delta = direction * INDENT
       end
@@ -543,14 +557,12 @@ module Md
       true
     end
 
-    # The indentation of a child of the nearest item above line *index* at
-    # *item*'s level or a shallower one (in the same quote): that item's
-    # indentation plus its content offset. Without one, *item* is its own
-    # measure.
-    private def nested_indent(index : Int32, item : ListItem) : Int32
-      parent = item_above(index) { |other| other.quote == item.quote && other.indent.size <= item.indent.size }
-      parent ||= item
-      parent.indent.size + parent.content_offset
+    # The nearest item above line *index* at *item*'s level or a shallower
+    # one (in the same quote), under which *item* nests when indented — by
+    # that item's content offset; nil when there is none, as for a list's
+    # first item, which no indentation would nest.
+    private def nesting_parent(index : Int32, item : ListItem) : ListItem?
+      item_above(index) { |other| other.quote == item.quote && other.indent.size <= item.indent.size }
     end
 
     # The indentation of the nearest shallower item above line *index* (in

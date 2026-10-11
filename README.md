@@ -296,8 +296,10 @@ on any other line `Enter` is a newline. `Tab` and `Shift-Tab` indent and outdent
 every line of the selection (Format → Indent and Outdent): a list item, or
 a selection with one in it, moves by the list's rules — an item nests under
 the item above by that item's content offset, two columns for `- `, three
-for `1. `, as CommonMark wants a child list, and outdents back to the
-indentation of the nearest shallower item — and any other line by
+for `1. `, as CommonMark wants a child list, and no deeper (Markdown has no
+deeper level without an item to hold it, and the first item of a list has
+nothing to nest under, so those stay, with a notice), and outdents back to
+the indentation of the nearest shallower item — and any other line by
 Markdown's unit of four spaces, `Shift-Tab` taking up to four spaces, or a
 tab, off its front. `Tab` therefore never leaves the editor, as it does not
 leave a text field in Qt; `F1`, `F2`, `F3` and the mouse do, and there is

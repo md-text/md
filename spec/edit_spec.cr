@@ -105,10 +105,18 @@ describe "Md::App editing" do
       # An item cannot nest deeper than one level under the item above.
       press(window, Tput::Key::Tab).accepted?.should be_true
       app.markdown.should eq "- a\n  - b\n1. step\n- detail\n"
+      notice(app).should contain "Already nested"
       press(window, Tput::Key::ShiftTab).accepted?.should be_true
       app.markdown.should eq "- a\n- b\n1. step\n- detail\n"
       press(window, Tput::Key::ShiftTab).accepted?.should be_true
       app.markdown.should eq "- a\n- b\n1. step\n- detail\n"
+      notice(app).should contain "Not indented"
+      # The first item has nothing above to nest under: indenting it would
+      # change nothing in the rendering, so it stays.
+      place app, 0, 2
+      press(window, Tput::Key::Tab).accepted?.should be_true
+      app.markdown.should eq "- a\n- b\n1. step\n- detail\n"
+      notice(app).should contain "No list item above"
       # A bullet under an ordered item goes under its content, three in.
       place app, 3, 0
       press window, Tput::Key::Tab
@@ -119,14 +127,14 @@ describe "Md::App editing" do
   end
 
   it "indents every line of a selection by the same amount, in one undo step" do
-    with_app text: "- a\n  continued\n\n- b\n", view: false do |app, window|
-      select_text app, 0, app.editor.document.size
+    with_app text: "- top\n- a\n  continued\n\n- b\n", view: false do |app, window|
+      select_text app, 6, app.editor.document.size
       press window, Tput::Key::Tab
-      app.markdown.should eq "  - a\n    continued\n\n  - b\n"
+      app.markdown.should eq "- top\n  - a\n    continued\n\n  - b\n"
       app.editor.undo.should be_true
-      app.markdown.should eq "- a\n  continued\n\n- b\n"
+      app.markdown.should eq "- top\n- a\n  continued\n\n- b\n"
       app.indent_lines(-1).should be_false # at the margin already: nothing to do
-      app.markdown.should eq "- a\n  continued\n\n- b\n"
+      app.markdown.should eq "- top\n- a\n  continued\n\n- b\n"
     end
   end
 
@@ -193,7 +201,7 @@ describe "Md::App editing" do
       place app, 0, 3
       app.toggle_task_box.should be_true
       app.markdown.should eq "- [ ] item\ntext\n"
-      press(window, Tput::Key::AltX).accepted?.should be_true # Toggle Task Checkbox
+      press(window, Tput::Key::AltX).accepted?.should be_true # Toggle Task
       app.markdown.should eq "- [x] item\ntext\n"
       app.viewer.document.blocks[0].block_format.checked?.should be_true # the viewer followed
       app.check_task.should be_true
