@@ -99,7 +99,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - View → Color Depth (Crysterm's `colors.depth`: Auto-detect, Monochrome, 8,
   16, 256 Colors, True Color; the whole window is redrawn at the new depth),
   View → Terminal Links (`render.hyperlinks`: whether the viewer's links are
-  the terminal's own hyperlinks — Auto-detect, On, Off) and Options → Reduced
+  the terminal's own hyperlinks — When the Terminal Supports Them, Always,
+  Never) and Options → Reduced
   Motion (`render.reduced_motion`): three more of Crysterm's options in the
   menus, kept with the other settings.
 - The menus show their entries' keys: File → Open…, Reload, Save and Quit

@@ -100,9 +100,9 @@ module Md
 
     private def hyperlinks_label(policy : Hyperlinks) : String
       case policy
-      in .auto? then "&Auto-detect"
-      in .on?   then "&On"
-      in .off?  then "O&ff"
+      in .auto? then "&When the Terminal Supports Them"
+      in .on?   then "&Always"
+      in .off?  then "&Never"
       end
     end
   end
