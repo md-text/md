@@ -251,15 +251,8 @@ module Md
       edoc = @editor.document
       vdoc = @viewer.document
       line = edoc.block_at(pos).index + 1
-      best = nil
-      best_line = 0
-      vdoc.block_count.times do |i|
-        if (l = vdoc.blocks[i].source_line) && l <= line && l > best_line
-          best = i
-          best_line = l
-        end
-      end
-      return 0 unless best
+      return 0 unless best = vdoc.block_from_source_line(line)
+      best_line = vdoc.blocks[best].source_line || line
       offset = pos - edoc.block_position(best_line - 1)
       vdoc.block_position(best) + offset.clamp(0, vdoc.blocks[best].size)
     end
@@ -273,21 +266,13 @@ module Md
       edoc = @editor.document
       vdoc = @viewer.document
       loc = vdoc.block_at(pos)
-      i = loc.index
-      line = nil
-      while i >= 0
-        break if line = vdoc.blocks[i].source_line
-        i -= 1
-      end
-      return 0 unless line
+      return 0 unless line = vdoc.source_line_at(loc.index)
       return edoc.size if line > edoc.block_count
       start = edoc.block_position(line - 1)
-      offset = i == loc.index ? loc.offset : 0
+      offset = vdoc.blocks[loc.index].source_line ? loc.offset : 0
       limit = edoc.size
-      ((loc.index + 1)...vdoc.block_count).each do |j|
-        next unless next_line = vdoc.blocks[j].source_line
-        limit = edoc.block_position(next_line - 1) - 1 if next_line - 1 < edoc.block_count
-        break
+      if (next_line = vdoc.next_source_line_after(loc.index)) && next_line - 1 < edoc.block_count
+        limit = edoc.block_position(next_line - 1) - 1
       end
       (start + offset).clamp(start, Math.max(start, limit))
     end
