@@ -82,7 +82,7 @@ describe "Md::App clear caches" do
       with_app history: history do |app|
         entry = menu(app, 4).actions.find!(&.text.==("Clea&r Caches…"))
         entry.trigger
-        question(app).should eq "Clear the recent files, positions and recovery files? (y)es, (n)o: "
+        question(app).should eq "Clear the recent files (1), positions, and recovery files (1)? (y)es, (n)o: "
         answer app, 'n'
         history.recent.size.should eq 1
         Dir.children(autosave_dir).size.should eq 1

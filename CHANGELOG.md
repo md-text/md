@@ -229,7 +229,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   settings as `dialog_style`.
 - Options → Clear Caches… empties, after asking, what md keeps for itself
   between runs: the recent files and positions (`History#clear`, File →
-  Open Recent goes empty), the auto-save recovery files (the current
+  Open Recent goes empty; the question says how many recent and recovery
+  files there are), the auto-save recovery files (the current
   document's is written again at the next auto-save) and md's cache
   directory, `$XDG_CACHE_HOME/md` (the log file, emptied), with a notice
   of what went. The settings stay.
