@@ -366,7 +366,7 @@ module Md
       refresh_status
       notice "Saved #{path}"
       true
-    rescue ex : IO::Error | File::Error
+    rescue ex : IO::Error
       notice "Cannot save #{path}: #{ex.message}"
       false
     end
@@ -403,14 +403,29 @@ module Md
       @window.pump(io, name: "md-stream", done: ended) { |line| receive line }
     end
 
-    # Appends a streamed *chunk* of Markdown to the document. Must run on the
-    # render fiber (see `Crysterm::Window#post`).
+    # Appends a streamed *chunk* of Markdown to the document — and to the
+    # editor's text when the editor is shown. Must run on the render fiber
+    # (see `Crysterm::Window#post`).
     def receive(chunk : String) : Nil
       @streamed << chunk
       @viewer.append_markdown chunk
-      fill_editor unless @editor_stale
+      append_to_editor chunk unless @editor_stale
       text_changed
       refresh_status
+    end
+
+    # Appends *chunk* to the editor's text at its end — an insertion, so a
+    # long stream costs each line its own length rather than the whole
+    # text's, and edits the user made meanwhile stay. Not a user edit: no
+    # re-render, and the document's clean state is kept (a stream is not a
+    # modification).
+    private def append_to_editor(chunk : String) : Nil
+      doc = @editor.document
+      was_modified = doc.modified?
+      @loading = true
+      Crysterm::TextCursor.new(doc, doc.size).insert_text chunk
+      @loading = false
+      doc.modified = was_modified
     end
 
     # Flushes whatever the stream left incomplete; the end-of-stream signal.

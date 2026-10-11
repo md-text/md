@@ -112,7 +112,7 @@ module Md
       elsif (path = source.path) && File.exists?(path)
         text = begin
           File.read path
-        rescue ex : IO::Error | File::Error
+        rescue ex : IO::Error
           raise Error.new("cannot read #{path}: #{ex.message}")
         end
         App.new source, text: text, view: true

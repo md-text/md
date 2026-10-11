@@ -178,7 +178,17 @@ module Md
         text = markdown
         lines = text.count('\n')
         lines += 1 unless text.empty? || text.ends_with?('\n')
-        words = text.split.size
+        # Runs of non-whitespace, counted in one pass with nothing allocated.
+        words = 0
+        in_word = false
+        text.each_char do |c|
+          if c.whitespace?
+            in_word = false
+          elsif !in_word
+            in_word = true
+            words += 1
+          end
+        end
         {lines, words, text.includes?("\r\n")}
       end
     end
