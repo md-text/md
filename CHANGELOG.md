@@ -315,6 +315,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   document's directory, a remote one is fetched in the background. Off
   (`md.images`, `MD_IMAGES`, `--no-md-images`), that row is all there is.
 
+- Window menu (`Alt-N`): New Window (`Ctrl-N`) opens another md window on the
+  document, in a new terminal window asked of the emulator md runs in
+  (Terminal.app and iTerm2 on macOS; kitty, Alacritty, WezTerm, foot, xterm,
+  Konsole and GNOME Terminal; a tmux or screen window inside one); Close
+  Window (`Ctrl-W`) closes the one you are in after its unsaved-changes
+  question, the last one quitting; the open windows are listed by title to
+  switch between. Quit closes every window, each asking about its own
+  changes. Where no window can be opened the entry is disabled and the key
+  says why.
+
 ### Changed
 
 - The settings live in `$XDG_CONFIG_HOME/md/config.yml`

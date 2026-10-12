@@ -300,9 +300,9 @@ describe "Md::App status bar" do
 end
 
 describe "Md::App menus" do
-  it "has File, Edit, View and Options menus" do
+  it "has File, Edit, Format, View, Options and Window menus" do
     with_app do |app|
-      app.main.menu_bar.menus.size.should eq 5
+      app.main.menu_bar.menus.size.should eq 6
       menu(app, 0).actions.map(&.text).should eq ["&Open…", "Open &Recent", "&Reload", "", "&Previous File", "&Next File", "", "&Save", "Save &As…", "", "&Quit"]
       menu(app, 0).actions[1].enabled?.should be_false # no history, nothing recent
       menu(app, 4).actions.map(&.text).should eq ["&Overwrite Mode", "&Ask Before Discarding Changes", "A&uto-Save", "&Keep a Backup File", "&Mouse", "&Clipboard", "Re&duced Motion", "&Tooltips", "", "&Load Config…", "&Save Config", "Sa&ve Config As…", "", "Clea&r Caches…"]
@@ -314,7 +314,7 @@ describe "Md::App menus" do
     with_app do |_, window|
       window.repaint
       row = window.dump.to_s.lines[2]
-      row.should match /\| File  Edit  Format  View  Options +Menu = F10 \/ Alt\+F \|$/
+      row.should match /\| File  Edit  Format  View  Options  Window +Menu = F10 \/ Alt\+F \|$/
     end
   end
 

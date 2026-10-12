@@ -125,7 +125,7 @@ runs too.
 | `F5`               | Cycle the mouse mode (the `🖱=` field)                                    |
 | `F6`               | Cycle the theme: terminal, dark, light and the five Qt themes (View → Theme) |
 | `Ctrl-Z`           | Outside the editor, suspend md to the shell (`fg` resumes); in the editor, undo |
-| `Alt-F`, `Alt-E`, `Alt-M`, `Alt-V`, `Alt-O` | Open the File, Edit, Format, View and Options menus (`F10` too) |
+| `Alt-F`, `Alt-E`, `Alt-M`, `Alt-V`, `Alt-O`, `Alt-N` | Open the File, Edit, Format, View, Options and Window menus (`F10` too) |
 | `Alt-W`            | Soft Wrap in the editor on and off (View → Soft Wrap)                     |
 | `Shift` + `Left`, `Right`, `Up`, `Down`, `Home`, `End`, `PageUp`, `PageDown` | Select from the cursor, in the editor and in the viewer |
 | `Ctrl-O`           | Open a file; asks for the name (File → Open…)                             |
@@ -146,7 +146,9 @@ runs too.
 | `Alt-X`            | Tick or untick a list item's task box, or give it a ticked one (Format → Toggle Task; Format → Task, a check entry, adds and removes the box) |
 | `Ctrl-Up`, `Ctrl-Down` | Promote or demote the heading on the caret's line (Format → Promote Heading, Demote Heading) |
 | `Alt-Q`            | Refill the paragraph at the caret, or the selected paragraphs, to the wrap column (Format → Rewrap → Paragraph; Rewrap → Document refills them all) |
-| `Ctrl-Q`           | Quit (`q` too, anywhere but in the editor; File → Quit); asks first when changes are unsaved |
+| `Ctrl-N`           | Open a new window on this document, in a new terminal window (Window → New Window) |
+| `Ctrl-W`           | Outside the editor, close this window, asking first when its changes are unsaved; the last window's close quits (Window → Close Window) |
+| `Ctrl-Q`           | Quit: closes every window (`q` too, anywhere but in the editor; File → Quit); each window asks first when its changes are unsaved |
 
 The menus show these keys next to their entries, spelled as
 Qt does (`Ctrl+O`), and the right end of the menu bar names the keys that
@@ -586,6 +588,34 @@ the document is modified — and the contents of `$XDG_CACHE_HOME/md`
 how many recent files and recovery files went. The settings are your
 choices, not a cache, and stay.
 
+### Windows
+
+Window → New Window (`Ctrl-N`) opens another md window on the document you
+are looking at — the same file, with the editor's text as it stands, and
+the viewer shown if it is shown here — in a new terminal window. md asks
+the terminal emulator it is running in for one: kitty, Alacritty, WezTerm,
+foot, xterm, Konsole and GNOME Terminal, Terminal.app and iTerm2 on macOS
+(`$TERMINAL` names another), or a new tmux or screen window inside a
+multiplexer, which works over SSH as well. A session that can open none —
+a console, SSH without tmux, an emulator md cannot drive — has the entry
+disabled, and `Ctrl-N` says why. The new window is the emulator's default
+size, or this window's where the emulator takes a size.
+
+The windows are independent from then on: an edit in one reaches the other
+only through a save (View → Watch File in the other picks it up), and each
+asks about its own unsaved changes. The settings and the recent files are
+shared, written by the window that ends last. Window → Close Window
+(`Ctrl-W`, outside the editor, where `Ctrl-W` kills a word) closes the
+window you are in alone, after its unsaved-changes question; in the last
+window it is Quit. File → Quit (`Ctrl-Q`, `q`) closes every window, each
+asking about its own changes first, so a window with changes stays until
+you answer. The Window menu lists the open windows by title, the one you
+are in checked; picking another makes it the active window — raised, when
+the two share a terminal; otherwise a notice says it is in another terminal
+window, since one terminal cannot raise another. Terminal.app keeps a
+closed window on screen with "[Process completed]" when its profile says
+so.
+
 ### Settings
 
 The choices made in the View and Options menus — Resizable Panes, Menu and
@@ -722,6 +752,7 @@ src/md/app_view.cr    soft wrap, text width and centering
 src/md/app_clipboard.cr copying; the clipboard modes
 src/md/app_config.cr  the View and Options choices linked to their options, the config file written
 src/md/app_tips.cr    the menu entries' descriptions; where they show (Options → Tooltips)
+src/md/app_windows.cr the Window menu: more windows on the document, in new terminal windows
 src/md/config.cr      the choices as Crysterm (Superconf) options; the config file (~/.config/md/config.yml)
 src/md/history.cr     the recent files and positions (~/.local/state/md/history.json)
 src/md/version.cr     Md::VERSION, read from shard.yml at compile time

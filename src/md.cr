@@ -27,6 +27,7 @@ require "./md/app_edit"
 require "./md/app_dialogs"
 require "./md/app_caches"
 require "./md/app_tips"
+require "./md/app_windows"
 
 module Md
 end

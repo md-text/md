@@ -105,9 +105,12 @@ module Md
       end
     end
 
-    # Puts the pane sizes, as they are now, into their option, for a write.
+    # Puts the pane sizes, as they are now, into their option, for a write —
+    # when the panes still have them: after a teardown the splitter has
+    # none, and the option keeps what it had.
     private def record_pane_sizes : Nil
-      Crysterm::Config.md_pane_sizes = pane_sizes.join(',')
+      sizes = pane_sizes
+      Crysterm::Config.md_pane_sizes = sizes.join(',') if sizes.size == Pane.values.size
     end
 
     # Writes the settings to *path*, with a notice saying so, or that it

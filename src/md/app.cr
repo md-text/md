@@ -69,12 +69,13 @@ module Md
   # and View entries' keys — `Ctrl-S` saves, `Ctrl-O` opens, `Ctrl-R`
   # reloads, `Ctrl-F` searches, `Ctrl-G`/`Alt-G` repeat the search, `Alt-H`
   # replaces, `Ctrl-L` goes to a line, `Alt-Up`/`Alt-Down` jump between headings,
-  # `Ctrl-Q` quits — are the entries' shortcuts
-  # (`app_menu.cr`), shown in the menus, and outside the editor the pager
-  # keys `/`, `?`, `n`, `N`, `:`, `[` and `]` do the same. `q` quits too
-  # outside the editor — Crysterm's default quit key, kept live while a pane
-  # reads input (the editor consumes the `q` it inserts) — through the same
-  # close request as `Ctrl-Q`, after the unsaved-changes guard.
+  # `Ctrl-Q` quits, `Ctrl-N` opens another window on the document and
+  # `Ctrl-W` closes this one (`app_windows.cr`) — are the entries'
+  # shortcuts (`app_menu.cr`), shown in the menus, and outside the editor
+  # the pager keys `/`, `?`, `n`, `N`, `:`, `[`, `]` and `q` do the same
+  # (`q` is Crysterm's default quit key as well, kept live while a pane
+  # reads input; the editor consumes the `q` it inserts). Quitting closes
+  # every window, each through its own unsaved-changes guard.
   class App
     # The three panes of the central area, in layout order.
     enum Pane
@@ -170,12 +171,14 @@ module Md
       # A paste no pane took (the editor takes its own): a file dropped on
       # the window arrives as its path (`#open_dropped`).
       @window.on(Crysterm::Event::Paste) { |e| open_dropped e.content }
-      # The default quit keys ask the window first; with unsaved changes the
-      # guard refuses and asks the user, quitting on their answer.
+      # Closing asks the window first (`Window#try_close`, which Quit and
+      # Close Window go through, and Crysterm's default quit keys); with
+      # unsaved changes the guard refuses and asks the user, closing the
+      # window on their answer — the last window's close ends the app.
       @window.on(Crysterm::Event::CloseRequest) do |e|
         next unless @confirm_discard.value && @editor.document.modified?
         e.ignore
-        confirm_discard { @window.quit }
+        confirm_discard { @window.close }
       end
       # A pane coming on screen is brought up to date first — the editor from
       # a stream it missed, the viewer and table of contents from edits made
@@ -223,6 +226,7 @@ module Md
       show_pane(view ? Pane::Viewer : Pane::Editor).focus
       build_menus
       wire_tips # where the entries' descriptions show, once the menus exist
+      register_window
       build_status
       setup_clipboard
       apply_config
@@ -266,15 +270,17 @@ module Md
       end
     end
 
-    # Runs the event loop until the user quits; returns the exit status.
+    # Runs the event loop until the user quits — from this window or from
+    # any opened from it (`app_windows.cr`): the loop runs while a window is
+    # open; returns the exit status.
     def run : Int32
       # A handler of md's that raises must not take the app down with unsaved
       # text in the editor: opt into Crysterm continuing, with a notice.
       @main.report_handler_errors(NOTICE_TIMEOUT) { |error| error_notice error }
+      watch_quit exec_application
+      @started = true
       status = @window.exec
-      finish_autosave
-      save_history
-      save_config
+      finish
       status
     end
 
@@ -650,8 +656,9 @@ module Md
     end
 
     # The application's special keys — the panes and the mouse mode, whose
-    # gestures no menu entry has, `Ctrl-Z`, and the way to a divider and
-    # back; returns whether *key* was one.
+    # gestures no menu entry has, `Ctrl-Z`, the way to a divider and back,
+    # and `Ctrl-N` while its entry is disabled (`app_windows.cr`); returns
+    # whether *key* was one.
     private def app_key(key : Tput::Key) : Bool
       case key
       when .f1?              then toggle_pane Pane::Editor
@@ -662,6 +669,7 @@ module Md
       when .f6?              then cycle_theme
       when .ctrl_z?          then suspend
       when .alt_r?           then resize_panes
+      when .ctrl_n?          then return refuse_new_window
       when .enter?, .escape? then return leave_divider
       else                        return navigation_key(key)
       end
@@ -680,8 +688,11 @@ module Md
     end
 
     # The pager keys of the viewer: `/` and `?` search, `n` and `N` repeat
-    # the search, `:` goes to a line, `[` and `]` jump between headings.
-    # Returns whether *char* was one.
+    # the search, `:` goes to a line, `[` and `]` jump between headings, `q`
+    # quits — md's quit, which closes every window through its guard, where
+    # Crysterm's default quit key (which `q` is too, kept live while a pane
+    # reads input, and which stands down once the key is taken here) asks
+    # this window alone. Returns whether *char* was one.
     private def pager_key(char : Char) : Bool
       case char
       when '/' then search_prompt
@@ -691,6 +702,7 @@ module Md
       when ':' then go_to_line_prompt
       when '[' then jump_heading -1
       when ']' then jump_heading 1
+      when 'q' then quit
       else          return false
       end
       true

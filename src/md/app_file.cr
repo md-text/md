@@ -63,11 +63,13 @@ module Md
       @watch_file.value = value
     end
 
-    # Quits, unless the guard refuses: the window asks its handlers
-    # (`Window#request_close`) and ours asks the user when changes are
-    # unsaved, quitting after their answer.
+    # Quits: closes every window (`app_windows.cr`), each through its own
+    # guard — the window asks its handlers (`Window#try_close`) and ours
+    # asks the user when changes are unsaved, closing after their answer, so
+    # a window with changes stays until its question is answered. The last
+    # window's close ends the loop. With one window, the one question.
     def quit : Nil
-      @window.quit if @window.request_close
+      App.instances.dup.each &.close_window
     end
 
     # Asks for a file to open (`#ask_text`; a line prompt completes the

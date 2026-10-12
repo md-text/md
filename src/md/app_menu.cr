@@ -20,11 +20,14 @@ module Md
     # (`app_autosave.cr`), the clipboard mode, where the entries'
     # descriptions show (Tooltips, `app_tips.cr`), the config file's entries
     # (`app_config.cr`) and Clear Caches…,
-    # `app_caches.cr`), so every setting is reachable from the keyboard
-    # through the menus as well, `Alt+F`/`Alt+E`/`Alt+M`/`Alt+V`/`Alt+O`
-    # opening them (Format's letter is `m`, since Options has `o` and `Alt+R`
-    # resizes the panes). Every entry carries a one-sentence description,
-    # shown while it is highlighted (`#tip`, `#option_tip`, `app_tips.cr`).
+    # `app_caches.cr`) and Window (another window on the document, this one
+    # closed, the open windows to switch between, `app_windows.cr`), so
+    # every setting is reachable from the keyboard through the menus as
+    # well, `Alt+F`/`Alt+E`/`Alt+M`/`Alt+V`/`Alt+O`/`Alt+N` opening them
+    # (Format's letter is `m`, since Options has `o` and `Alt+R` resizes the
+    # panes; Window's is `n`, since `Alt+W` is Soft Wrap). Every entry
+    # carries a one-sentence description, shown while it is highlighted
+    # (`#tip`, `#option_tip`, `app_tips.cr`).
     #
     # The checked states are bound to what they stand for
     # (`Action#bind_checked`): a setting that is a reactive property gets a
@@ -169,6 +172,9 @@ module Md
       options.add_separator
       # `C` is the clipboard's; the ellipsis says it asks first.
       tip options.add_action("Clea&r Caches…") { clear_caches_prompt }, "Forget the recent files, their positions and the recovery files, after asking"
+
+      # Last on the bar, as a Window menu is (`app_windows.cr`).
+      build_window_menu bar
 
       # The bar's right end names the keys that reach it, since the bar is
       # off the Tab chain and nothing else on screen says so: `F10` (the
