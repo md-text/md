@@ -118,6 +118,26 @@ describe "Md::App auto-save" do
     end
   end
 
+  it "drops the recovery file when the file is reloaded over the edits" do
+    with_state_home do |_dir|
+      path = tempfile "text\n"
+      begin
+        with_app Md::Source.new(path: path), text: "text\n", view: true do |app|
+          app.autosave_interval = 30.milliseconds
+          edit app, "edited "
+          copy = app.recovery_path
+          settle { File.exists? copy }
+          app.reload
+          answer app, 'n'
+          app.markdown.should eq "text\n"
+          File.exists?(copy).should be_false # the edits were given up, not lost
+        end
+      ensure
+        File.delete? path
+      end
+    end
+  end
+
   it "gives a document without a name a recovery file of its own" do
     with_state_home do |dir|
       with_app do |app|

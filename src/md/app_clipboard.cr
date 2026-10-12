@@ -266,8 +266,7 @@ module Md
     # to `KILL_RING_PREVIEW` columns, and its `&` kept from reading as a
     # mnemonic.
     private def kill_preview(text : String) : String
-      line = text.gsub('
-', '⏎').gsub('&', "&&")
+      line = text.gsub('\n', '⏎').gsub('&', "&&")
       line.size > KILL_RING_PREVIEW ? "#{line[0, KILL_RING_PREVIEW - 1]}…" : line
     end
 

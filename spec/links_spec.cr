@@ -125,6 +125,36 @@ describe "Md::App links" do
     end
   end
 
+  it "keeps the document when the file a link or a step leads to cannot be read" do
+    with_docs do |_dir, source, target|
+      with_app Md::Source.new(path: source), text: SOURCE_DOC, view: true do |app, window|
+        app.follow_link "docs/target.md"
+        app.source.path.should eq target
+        # The file left is a directory now: it reads as nothing.
+        File.delete source
+        Dir.mkdir source
+        press window, Tput::Key::Backspace
+        notice(app).should contain "Cannot open #{source}"
+        app.source.path.should eq target
+        app.markdown.should eq TARGET_DOC
+        app.previous_file_available?.should be_false # the step is spent
+        app.next_file_available?.should be_false
+      end
+    end
+    with_docs do |_dir, source, target|
+      File.chmod target, 0o000
+      begin
+        with_app Md::Source.new(path: source), text: SOURCE_DOC, view: true do |app|
+          app.follow_link "docs/target.md#deep"
+          notice(app).should contain "Cannot open #{target}" # not "No heading #deep"
+          app.source.path.should eq source
+        end
+      ensure
+        File.chmod target, 0o644
+      end
+    end
+  end
+
   it "notices a link to a file that does not exist" do
     with_docs do |_dir, source, _target|
       with_app Md::Source.new(path: source), text: SOURCE_DOC, view: true do |app|
@@ -195,6 +225,12 @@ describe "Md::App drop" do
         File.write spaced, "# Spaced\n"
         window.emit Crysterm::Event::Paste, Crysterm::Event::Paste.new(spaced.gsub(" ", "\\ "))
         app.source.path.should eq spaced
+        # Terminal.app escapes every character the shell would read, not
+        # only spaces.
+        odd = File.join(dir, "odd (name) & 'more'.md")
+        File.write odd, "# Odd\n"
+        window.emit Crysterm::Event::Paste, Crysterm::Event::Paste.new(odd.gsub(/[ ()&']/) { "\\#{$0}" })
+        app.source.path.should eq odd
         window.emit Crysterm::Event::Paste, Crysterm::Event::Paste.new("'#{source}'")
         app.source.path.should eq source
         window.emit Crysterm::Event::Paste, Crysterm::Event::Paste.new("file://#{URI.encode_path(spaced)}")

@@ -131,7 +131,10 @@ module Md
       true
     end
 
-    # The one file path *pasted* spells, or nil when it does not.
+    # The one file path *pasted* spells, or nil when it does not. A bare
+    # path comes shell-escaped — a backslash before each space, quote,
+    # parenthesis or other character the shell would read — and the
+    # backslashes come off.
     private def dropped_path(pasted : String) : String?
       text = pasted.strip
       return if text.empty? || text.includes?('\n')
@@ -140,7 +143,7 @@ module Md
       elsif (text.starts_with?('\'') && text.ends_with?('\'')) || (text.starts_with?('"') && text.ends_with?('"'))
         text = text[1...-1]
       else
-        text = text.gsub("\\ ", " ")
+        text = text.gsub(/\\(.)/) { $1 }
       end
       text if File.file?(text)
     end
@@ -211,7 +214,10 @@ module Md
     end
 
     # Reads *path* into the document as a reset — no undo entry, the viewer
-    # keeping its place, the editor's caret where it was (clamped).
+    # keeping its place, the editor's caret where it was (clamped). The
+    # document is then the file's, as after a save, so the recovery file
+    # of the edits given up goes too (`app_autosave.cr`): left behind, it
+    # would announce them as lost at the next open.
     private def reload_from(path : String) : Nil
       text = File.read path
       caret = @editor.cursor_position
@@ -223,6 +229,7 @@ module Md
       @viewer_stale = false
       @editor_stale = false
       @editor.document.modified = false
+      autosave_settled
       text_changed
       highlight_matches_everywhere
       refresh_status

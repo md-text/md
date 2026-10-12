@@ -98,4 +98,24 @@ describe "Md::App dialog style" do
       File.delete? path
     end
   end
+
+  it "keeps the application keys quiet while a dialog is up, as it does for a prompt" do
+    with_app Md::Source.new(path: "doc.md"), text: DIALOG_DOC, view: true do |app, window|
+      app.dialog_style = Md::App::DialogStyle::Modal
+      app.asking?.should be_false
+      app.editor.insert_text "unsaved"
+      app.confirm_discard { }
+      app.asking?.should be_true
+      # A letter the box's buttons leave to the window: `q` would quit over
+      # the question, `F1` show the editor under it.
+      press(window, 'q').accepted?.should be_false
+      window.destroyed?.should be_false
+      press window, Tput::Key::F1
+      app.visible_panes.should eq [Md::App::Pane::Viewer]
+      choose window, "Cancel"
+      settle { !app.asking? }
+      press(window, Tput::Key::F1).accepted?.should be_true
+      app.visible_panes.should eq [Md::App::Pane::Editor, Md::App::Pane::Viewer]
+    end
+  end
 end

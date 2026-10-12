@@ -38,7 +38,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   other — a move in the pane you are in puts the other pane's cursor on the
   corresponding place, scrolled to the same row of its pane. Matched by
   source line, so inside formatted text the spot is approximate.
-- View → Highlight Line: tints the cursor's row in each pane; with Follow
+- View → Highlight Line: tints the cursor's row in each pane; with Sync
   Cursor on, the two tinted rows show the same place in the document.
 - Search, as in a pager: `/` and `?` (`Ctrl-F` in the editor) ask for a
   pattern — a regular expression when it is one, literal text otherwise,
@@ -314,7 +314,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   picture glyph and the alt text; a relative source counts from the
   document's directory, a remote one is fetched in the background. Off
   (`md.images`, `MD_IMAGES`, `--no-md-images`), that row is all there is.
-
 - Window menu (`Alt-N`): New Window (`Ctrl-N`) opens another md window on the
   document, in a new terminal window asked of the emulator md runs in
   (Terminal.app and iTerm2 on macOS; kitty, Alacritty, WezTerm, foot, xterm,
@@ -345,16 +344,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   and entries md does not know are kept. A broken file stops md with a
   message naming the entry.
 
-[Unreleased]: https://github.com/crystallabs/md/commits/main
-
 ### Fixed
 
 - Quitting with the viewer focused and the outline shown no longer crashes
   and wedges the process: tearing the panes down rewound focus from the
   viewer to the outline, whose focus-in refreshed the status bar, which asked
-  the already-detached viewer for its geometry. The status bar now stops
-  refreshing once a pane has left the widget tree. (Crysterm itself now
-  survives such teardown errors, restoring the terminal and reporting them.)
+  the already-detached viewer for its geometry. Crysterm now releases the
+  focus before tearing a window down, so no pane's focus-in runs against a
+  half-gone tree, and it survives such teardown errors, restoring the
+  terminal and reporting them.
 - An error that escapes one of md's handlers no longer takes the app down
   with unsaved text: md shows "Internal error: …" in the status bar and goes
   on, with the backtrace in `$XDG_CACHE_HOME/md/md.log`
@@ -382,3 +380,5 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   resolves a transparent background to the parent's, as CSS and Qt do; only a
   widget with nothing behind it keeps the terminal default. (Fixed in
   Crysterm, which md builds against.)
+
+[Unreleased]: https://github.com/crystallabs/md/commits/main

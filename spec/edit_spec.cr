@@ -319,6 +319,15 @@ describe "Md::App editing" do
     end
   end
 
+  it "takes a marker on one end of the selection alone as text to wrap, not as wrapping to undo" do
+    with_app text: "a `code here\n", view: false do |app|
+      select_text app, 2, 7 # "`code"
+      app.toggle_code.should be_true
+      app.markdown.should eq "a ``code` here\n"
+      app.editor.selected_text.should eq "`code"
+    end
+  end
+
   it "inserts the pair with the caret between when there is nothing to wrap" do
     with_app do |app|
       app.toggle_bold.should be_true

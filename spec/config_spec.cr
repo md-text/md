@@ -97,6 +97,27 @@ describe Md::Config do
       end
     end
 
+    it "leaves what Crysterm's own file set, and a changed default, out of the file" do
+      with_config do |path|
+        # A default changed by the program (`Crysterm.default_log_file` at
+        # every start) is not a pick: nothing to write, nothing dirty.
+        Superconf.set "md.text_width", 72, Superconf::Source::Default
+        Crysterm::Config.md_text_width.should eq 72
+        Md::Config.dirty?.should be_false
+        # Crysterm's file is read before md's options exist; its values
+        # arrive at file precedence from another origin.
+        Superconf.load_yaml "colors: {theme: light}", "config file /elsewhere/crysterm/config.yml"
+        Crysterm::Config.colors_theme.should eq Crysterm::CSS::Theme::Choice::Light
+        Md::Config.save.should be_true
+
+        file = config_file(path)
+        file["colors"]?.should be_nil
+        file["md"]?.try(&.["text_width"]?).should be_nil
+        Crysterm::Config.md_guides = true # a pick still counts
+        Md::Config.dirty?.should be_true
+      end
+    end
+
     it "writes elsewhere on request, keeping the config file's own dirty state" do
       with_config do |path|
         Crysterm::Config.md_guides = true
@@ -150,7 +171,8 @@ describe "Md::App config menu" do
         app.text_width.should eq 72
         app.pane_sizes.should eq [20, 40, 25]
         app.theme.should eq Md::App::Theme::Dark
-        menu(app, 3).actions.find!(&.text.==("R&ulers")).menu.not_nil!.map(&.checked?).should eq [true, true]
+        rulers = menu(app, 3).actions.find!(&.text.==("R&ulers")).menu || fail("no Rulers submenu")
+        rulers.map(&.checked?).should eq [true, true]
 
         app.load_config_prompt
         answer app, File.join(File.dirname(path), "missing.yml")

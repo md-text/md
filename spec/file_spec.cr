@@ -148,6 +148,26 @@ describe "Md::App watch" do
       File.delete? other
     end
   end
+
+  it "follows the file saved under another name" do
+    path = tempfile "a\n"
+    other = tempfile nil
+    begin
+      with_app Md::Source.new(path: path), text: "a\n", view: true, watch: true do |app|
+        app.watch_interval = 20.milliseconds
+        app.save_as(other).should be_true
+        File.write other, "b2\n"
+        settle { app.markdown == "b2\n" }
+        File.write path, "a2\n" # the old file is no longer watched
+        sleep 100.milliseconds
+        app.markdown.should eq "b2\n"
+      end
+    ensure
+      File.delete? path
+      File.delete? other
+      File.delete? "#{other}~"
+    end
+  end
 end
 
 describe "Md::App unsaved-changes guard" do

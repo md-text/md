@@ -199,8 +199,9 @@ module Md
         return
       end
       confirm_discard do
-        open_file target
-        go_to_anchor fragment unless fragment.empty?
+        # A file that could not be read (its notice says so) has no
+        # headings to land on.
+        go_to_anchor fragment if open_file(target) && !fragment.empty?
       end
     end
 
@@ -260,34 +261,36 @@ module Md
     private def travel(from : Array(Place), onto : Array(Place)) : Bool
       target = from.last? || return false
       here = place
-      arrive(target) do
+      arrive(target) do |moved|
         from.pop
-        onto << here if here
+        onto << here if here && moved
         refresh_navigation
       end
       true
     end
 
-    # Puts the panes at *target*, then runs *arrived*: at once in the same
-    # document — which a place without a file is always in, since a document
-    # without a file is only ever left for good — after opening the file
-    # otherwise.
-    private def arrive(target : Place, &arrived : ->) : Nil
+    # Puts the panes at *target*, then runs *arrived* with whether they got
+    # there: at once in the same document — which a place without a file is
+    # always in, since a document without a file is only ever left for good
+    # — after opening the file otherwise. A file unreadable since it was
+    # left cannot be arrived at: its notice says so and the document stays
+    # as it is; the place is still spent, so the next step leads somewhere.
+    private def arrive(target : Place, &arrived : Bool ->) : Nil
       path = target.path
       if path.nil? || path == @source.path
         go_to_line target.line, target.column
-        arrived.call
+        arrived.call true
         return
       end
       confirm_discard do
         @retracing = true
-        begin
+        opened = begin
           open_file path
         ensure
           @retracing = false
         end
-        go_to_line target.line, target.column
-        arrived.call
+        go_to_line target.line, target.column if opened
+        arrived.call opened
       end
     end
 

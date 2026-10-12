@@ -35,7 +35,7 @@ module Md
   # delimiter row) maps to the nearest rendered block above it.
   #
   # View → Highlight Line (`#highlight_line`) tints the row the caret is on
-  # in both panes (Crysterm's `highlight_current_line`) — with Follow
+  # in both panes (Crysterm's `highlight_current_line`) — with Sync
   # Cursor, the two tinted rows are the same place in the document.
   #
   # View → Soft Wrap, Text Width and Center Text (`app_view.cr`) lay the
@@ -365,10 +365,13 @@ module Md
       self.bars = !bars?
     end
 
-    # Puts the property on the two bars (from `#initialize`, on change).
+    # Puts the property on the two bars (from `#initialize`, on change). A
+    # question up in place of the status bar keeps the bar until it is
+    # answered, as it shows the bar in the first place (`app_dialogs.cr`).
     private def apply_bars : Nil
       shown = @bars.value
-      {@main.menu_bar, @main.status_bar}.each &.visible = shown
+      @main.menu_bar.visible = shown
+      @main.status_bar.visible = shown || @main.status_bar.prompting?
     end
 
     # Jumps to the heading *url* names (`"#anchor"`, as the table of contents
@@ -541,6 +544,9 @@ module Md
       @source = Source.new path: path
       @window.title = title
       apply_base_url
+      # Watch File follows the document: the watcher on the old path is
+      # replaced by one on the new (`app_file.cr`).
+      setup_file
       save
     end
 
@@ -644,11 +650,13 @@ module Md
       track_toc
     end
 
-    # Application-level keys, after the focused widget had its turn. The
-    # menu entries' keys are not here: they are the entries' shortcuts
-    # (`app_menu.cr`), which Crysterm fires on the same terms.
+    # Application-level keys, after the focused widget had its turn, and not
+    # while a question is up (`#asking?`): a `q` at the unsaved-changes
+    # question must not quit over it. The menu entries' keys are not here:
+    # they are the entries' shortcuts (`app_menu.cr`), which Crysterm fires
+    # on the same terms.
     private def key_pressed(e : Crysterm::Event::KeyPress) : Nil
-      return if e.accepted? || @main.status_bar.prompting?
+      return if e.accepted? || asking?
       # The pager's keys are letters the editor would have typed, so they
       # reach here only from the viewer or the table of contents.
       handled = (key = e.key) ? app_key(key) : pager_key(e.char)

@@ -170,7 +170,7 @@ describe "Md::App rewrap paragraph" do
   it "shows the Format → Rewrap entries, Paragraph with its key" do
     with_app do |app|
       rewrap = menu(app, 2).actions.find! { |a| a.text == "Re&wrap" }
-      entries = rewrap.menu.not_nil!
+      entries = rewrap.menu || fail("Rewrap has no submenu")
       entries.map(&.text).should eq ["&Paragraph", "&Document"]
       entries[0].shortcut_text.should eq "Alt+Q"
     end

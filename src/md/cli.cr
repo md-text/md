@@ -108,39 +108,44 @@ module Md
     # status. `stdout`/`stderr`/`stdin` are injectable so that specs can
     # capture and feed them.
     def self.run(args : Array(String), stdout : IO = STDOUT, stderr : IO = STDERR, stdin : IO = STDIN) : Int32
-      options = parse(args)
-      stdout.puts "md #{VERSION}" if options.version?
-      if options.help?
-        stdout.puts help
-        if options.verbose?
-          # The settings first, as md's own, then the toolkit's without them.
-          stdout.puts
-          stdout.puts Config.help
-          stdout.puts
-          stdout.puts Crysterm.toolkit_options_help(except: OWN_FLAGS + Config.flags.to_set)
+      # A usage error is one of the command line's: once the window is built,
+      # an `ArgumentError` is the app's own and is reported as such below.
+      app = begin
+        options = parse(args)
+        stdout.puts "md #{VERSION}" if options.version?
+        if options.help?
+          stdout.puts help
+          if options.verbose?
+            # The settings first, as md's own, then the toolkit's without them.
+            stdout.puts
+            stdout.puts Config.help
+            stdout.puts
+            stdout.puts Crysterm.toolkit_options_help(except: OWN_FLAGS + Config.flags.to_set)
+          end
         end
-      end
-      return 0 if options.help? || options.version?
-      if kind = options.generate
-        stdout << Manual.generate(kind)
-        return 0
-      end
-      if format = options.export
-        return export(options.positional, format, stdin, stdout)
-      end
+        return 0 if options.help? || options.version?
+        if kind = options.generate
+          stdout << Manual.generate(kind)
+          return 0
+        end
+        if format = options.export
+          return export(options.positional, format, stdin, stdout)
+        end
 
-      source = Source.resolve(options.positional, stdin.tty?)
-      # The config file, the MD_*/CRYSTERM_* variables and the toolkit and
-      # settings flags among *args*: for the window about to open, so a
-      # `--help` or an `--export` reads none of it. A `--crysterm-dump-config`
-      # prints every option and exits here.
-      Config.configure argv: args
-      log_to_file
-      launch(source, options, stdin).run
-    rescue ex : ArgumentError | OptionParser::Exception
-      stderr.puts "md: #{ex.message}"
-      stderr.puts help
-      2
+        source = Source.resolve(options.positional, stdin.tty?)
+        # The config file, the MD_*/CRYSTERM_* variables and the toolkit and
+        # settings flags among *args*: for the window about to open, so a
+        # `--help` or an `--export` reads none of it. A `--crysterm-dump-config`
+        # prints every option and exits here.
+        Config.configure argv: args
+        log_to_file
+        launch(source, options, stdin)
+      rescue ex : ArgumentError | OptionParser::Exception
+        stderr.puts "md: #{ex.message}"
+        stderr.puts help
+        return 2
+      end
+      app.run
     rescue ex : Error
       stderr.puts "md: #{ex.message}"
       1

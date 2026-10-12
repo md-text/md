@@ -212,11 +212,12 @@ module Md
       true
     end
 
-    # The Text Width entry's label for *width*: the count, or Unlimited.
+    # The description of the Text Width entry for *width*.
     private def text_width_tip(width : Int32) : String
       width == 0 ? "Lay the text out as wide as the pane" : "Lay the text out in at most #{width} columns, in both panes"
     end
 
+    # The Text Width entry's label for *width*: the count, or Unlimited.
     private def text_width_label(width : Int32) : String
       case width
       when   0 then "&Unlimited"

@@ -176,13 +176,36 @@ module Md
 
     # Whether line *index* of *doc* must not be broken or refilled: a line of
     # a fenced code block (an odd number of fences above it), a fence, a
-    # heading or a table row.
+    # heading or a table row. One line's answer, with a scan of the lines
+    # above it; a caller that asks about many lines takes `.fenced_lines`
+    # once instead.
     def self.unbreakable?(doc : Crysterm::TextDocument, index : Int32) : Bool
-      line = doc.blocks[index].text
-      return true if FENCE.matches?(line) || TABLE_ROW.matches?(line) || heading?(line)
+      return true if unbreakable_line?(doc.blocks[index].text)
       fences = 0
       index.times { |i| fences += 1 if FENCE.matches?(doc.blocks[i].text) }
       fences.odd?
+    end
+
+    # Whether *line* is unbreakable on its own account — a fence, a heading
+    # or a table row — whatever surrounds it.
+    def self.unbreakable_line?(line : String) : Bool
+      FENCE.matches?(line) || TABLE_ROW.matches?(line) || heading?(line)
+    end
+
+    # Which lines of *doc* lie in a fenced code block (the fences themselves
+    # not counted), in one pass over the lines: a rewrap looks at every line
+    # of its range, and would otherwise scan the lines above each of them
+    # again.
+    def self.fenced_lines(doc : Crysterm::TextDocument) : Array(Bool)
+      inside = false
+      Array(Bool).new(doc.block_count) do |i|
+        if FENCE.matches?(doc.blocks[i].text)
+          inside = !inside
+          false
+        else
+          inside
+        end
+      end
     end
 
     # Whether *line* is an ATX heading.
@@ -251,24 +274,27 @@ module Md
     def rewrap_paragraph : Bool
       editor = formatting_editor
       first, last = selected_blocks
+      fenced = App.fenced_lines editor.document
       unless editor.selection?
-        first = paragraph_start first
-        last = paragraph_end first
+        first = paragraph_start first, fenced
+        last = paragraph_end first, fenced
       end
-      rewrap_blocks first, last
+      rewrap_blocks first, last, fenced
     end
 
     # Format → Rewrap → Document: every paragraph of the document refilled,
     # as one undo step; code blocks, headings and table rows stay. Returns
     # whether there was a paragraph, with a notice when there was none.
     def rewrap_document : Bool
-      rewrap_blocks 0, formatting_editor.document.block_count - 1
+      doc = formatting_editor.document
+      rewrap_blocks 0, doc.block_count - 1, App.fenced_lines(doc)
     end
 
     # Lines *first* to *last* of the editor's document refilled paragraph by
     # paragraph, the caret keeping its place; the shared body of the two
-    # Rewrap entries.
-    private def rewrap_blocks(first : Int32, last : Int32) : Bool
+    # Rewrap entries. *fenced* says which lines are a code block's
+    # (`.fenced_lines`).
+    private def rewrap_blocks(first : Int32, last : Int32, fenced : Array(Bool)) : Bool
       editor = formatting_editor
       doc = editor.document
       lines = (first..last).map { |i| doc.blocks[i].text }
@@ -276,12 +302,12 @@ module Md
       found = false
       i = 0
       while i < lines.size
-        if lines[i].blank? || App.unbreakable?(doc, first + i)
+        if lines[i].blank? || fenced[first + i] || App.unbreakable_line?(lines[i])
           filled << lines[i]
           i += 1
           next
         end
-        stop = Math.min(paragraph_end(first + i), last) - first
+        stop = Math.min(paragraph_end(first + i, fenced), last) - first
         filled.concat fill(lines[i..stop], wrap_column)
         found = true
         i = stop + 1
@@ -311,28 +337,8 @@ module Md
       editor = formatting_editor
       doc = editor.document
       first, last = selected_blocks
-      if found = first_item(doc, first, last)
-        index, item = found
-        if direction > 0
-          # Markdown has no deeper level without an item to hold it: an
-          # item nests one level under the item above, and no further.
-          unless parent = nesting_parent(index, item)
-            notice "No list item above to nest under"
-            return false
-          end
-          target = parent.indent.size + parent.content_offset
-        else
-          target = outdented_indent(index, item)
-        end
-        delta = target - item.indent.size
-        if delta == 0
-          notice(direction > 0 ? "Already nested under the item above" : "Not indented")
-          return false
-        end
-      else
-        delta = direction * INDENT
-      end
-      return false if delta == 0
+      delta = (found = first_item(doc, first, last)) ? item_delta(found[0], found[1], direction) : direction * INDENT
+      return false unless delta
       moved = false
       doc.edit do
         (first..last).each do |i|
@@ -396,10 +402,11 @@ module Md
     end
 
     # The first line of the paragraph line *index* is in: up from it while
-    # the line above continues into it (`#continues?`).
-    private def paragraph_start(index : Int32) : Int32
+    # the line above continues into it (`#continues?`). *fenced* is the
+    # document's `.fenced_lines`.
+    private def paragraph_start(index : Int32, fenced : Array(Bool)) : Int32
       doc = @editor.document
-      while index > 0 && continues?(doc, index - 1, index)
+      while index > 0 && continues?(doc, index - 1, index, fenced)
         index -= 1
       end
       index
@@ -407,9 +414,9 @@ module Md
 
     # The last line of the paragraph line *index* is in: down from it while
     # the next line continues it.
-    private def paragraph_end(index : Int32) : Int32
+    private def paragraph_end(index : Int32, fenced : Array(Bool)) : Int32
       doc = @editor.document
-      while index + 1 < doc.block_count && continues?(doc, index, index + 1)
+      while index + 1 < doc.block_count && continues?(doc, index, index + 1, fenced)
         index += 1
       end
       index
@@ -418,11 +425,11 @@ module Md
     # Whether line *below* continues the paragraph line *above* is in: both
     # are breakable text, in the same blockquote, and *below* starts nothing
     # of its own (a list item would).
-    private def continues?(doc : Crysterm::TextDocument, above : Int32, below : Int32) : Bool
+    private def continues?(doc : Crysterm::TextDocument, above : Int32, below : Int32, fenced : Array(Bool)) : Bool
       a = doc.blocks[above].text
       b = doc.blocks[below].text
-      return false if a.blank? || b.blank? || App.unbreakable?(doc, above) || App.unbreakable?(doc, below)
-      return false if ListItem.parse(b)
+      return false if a.blank? || b.blank? || fenced[above] || fenced[below]
+      return false if App.unbreakable_line?(a) || App.unbreakable_line?(b) || ListItem.parse(b)
       quote_depth(a) == quote_depth(b)
     end
 
@@ -503,11 +510,11 @@ module Md
       paragraph = Crysterm::Action.new "&Paragraph"
       paragraph.shortcut = "Alt+Q"
       paragraph.on(Crysterm::Event::Triggered) { rewrap_paragraph }
-      tip paragraph, "Refill the caret's paragraph, or the selection's, to the text width"
+      tip paragraph, "Refill the caret's paragraph, or the selection's, to the wrap column: the text width, or 80 without one"
       document = Crysterm::Action.new "&Document"
       document.on(Crysterm::Event::Triggered) { rewrap_document }
-      tip document, "Refill every paragraph of the document to the text width, as one undo step"
-      tip format.add_submenu("Re&wrap", [paragraph, document]), "Refill paragraphs to the text width, with Markdown's rules for lists and quotes"
+      tip document, "Refill every paragraph of the document to the wrap column, as one undo step"
+      tip format.add_submenu("Re&wrap", [paragraph, document]), "Refill paragraphs to the wrap column, a list item keeping its marker and a quote its markers"
     end
 
     # Puts the caret's item's state on the Task entry as the Format menu
@@ -567,6 +574,28 @@ module Md
       @editor.text_cursor = cursor
       edited
       true
+    end
+
+    # How many columns list item *item*, on line *index*, moves in
+    # *direction* — and the lines selected with it: in, to nest under the
+    # item above; out, to the indentation of the nearest shallower item or
+    # the margin. Nil, with a notice, when it cannot move.
+    private def item_delta(index : Int32, item : ListItem, direction : Int32) : Int32?
+      if direction > 0
+        # Markdown has no deeper level without an item to hold it: an item
+        # nests one level under the item above, and no further.
+        unless parent = nesting_parent(index, item)
+          notice "No list item above to nest under"
+          return
+        end
+        target = parent.indent.size + parent.content_offset
+      else
+        target = outdented_indent(index, item)
+      end
+      delta = target - item.indent.size
+      return delta unless delta == 0
+      notice(direction > 0 ? "Already nested under the item above" : "Not indented")
+      nil
     end
 
     # The nearest item above line *index* at *item*'s level or a shallower
@@ -683,7 +712,8 @@ module Md
       lead = text.each_char.take_while(&.==(first)).size
       trail = text.reverse.each_char.take_while(&.==(first)).size
       run = {lead, trail, 3}.min
-      return if text.size < 2 * run
+      # A marker on one end alone (`` `code `` selected) wraps nothing.
+      return if run == 0 || text.size < 2 * run
       case marker
       when "**" then run >= 2 ? 2 : nil
       when "*"  then run.odd? ? 1 : nil

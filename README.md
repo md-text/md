@@ -291,13 +291,12 @@ five seconds and then goes back to the backend in force before, the check
 marks following; another pick during the five seconds starts them over and
 still returns to the original, picking the original ends the trial, and
 unchecking Change for 5s during one keeps the tried backend and cancels the
-return. md's viewer draws no inline images yet (an image in the Markdown
-shows as a placeholder), so for now the backend shows on background images a
-stylesheet sets (`background-image` in a `--colors-stylesheet`) and on
-whatever media Crysterm adds later. The backend is kept with the other
-settings; Change for 5s is not, like Overwrite Mode.
+return. The backend draws the document's pictures (see Images below) and
+the background images a stylesheet sets (`background-image` in a
+`--colors-stylesheet`). The backend is kept with the other settings; Change
+for 5s is not, like Overwrite Mode.
 
-Three more of Crysterm's options sit in the menus, for a reader who would
+Four more of Crysterm's options sit in the menus, for a reader who would
 otherwise set them on the command line. View → Color Depth is how many
 colors the window is drawn with — Auto-detect, the default, takes the
 terminal's word, and Monochrome, 8, 16, 256 Colors or True Color force a
@@ -760,9 +759,14 @@ src/md/app_search.cr  search, go to line, heading jumps
 src/md/app_file.cr    open, reload, watch; the unsaved-changes guard; recent files
 src/md/app_links.cr   following links; Previous File and Next File
 src/md/app_theme.cr   the theme: Crysterm's built-in themes, switched at runtime
+src/md/app_media.cr   View → Images and Media Backend, with its Change for 5s trial
+src/md/app_toolkit.cr Crysterm's own options in the menus: color depth, terminal links, reduced motion, detachable menus
 src/md/app_autosave.cr auto-save to a recovery file; the backup file
-src/md/app_view.cr    soft wrap, text width and centering
-src/md/app_clipboard.cr copying; the clipboard modes
+src/md/app_view.cr    soft wrap, hard wrap, text width and centering, rulers and guides
+src/md/app_clipboard.cr copying and pasting; the clipboard modes
+src/md/app_edit.cr    Markdown-aware editing: lists continued and indented, the Format menu
+src/md/app_dialogs.cr the questions md asks, at the prompt or in a dialog (View → Dialog Style)
+src/md/app_caches.cr  Options → Clear Caches…
 src/md/app_config.cr  the View and Options choices linked to their options, the config file written
 src/md/app_tips.cr    the menu entries' descriptions; where they show (Options → Tooltips)
 src/md/app_windows.cr the Window menu: more windows on the document, in new terminal windows

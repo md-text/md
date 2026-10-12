@@ -71,6 +71,17 @@ describe "Md::App menu and status bars" do
     end
   end
 
+  it "keeps the status bar for a question up when the bars are hidden under it" do
+    with_app Md::Source.new(path: "doc.md"), text: "# T\n\ntext\n", view: true do |app|
+      app.go_to_line_prompt
+      app.bars = false # the View entry, clicked while the question is up
+      app.main.menu_bar.visible?.should be_false
+      app.main.status_bar.visible?.should be_true
+      answer app, "2"
+      app.main.status_bar.visible?.should be_false
+    end
+  end
+
   it "shows the status bar for the Replace question too, and closes an open menu on F4" do
     with_app Md::Source.new(path: "doc.md"), text: "aa bb aa\n", view: true do |app, window|
       app.bars = false

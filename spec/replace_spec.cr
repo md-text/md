@@ -61,6 +61,9 @@ describe "Md::App replace" do
       notice(app).should contain "3 replacements"
       app.markdown.should eq REPLACE_DOC.gsub(/needle/i, "pin")
       app.markdown.should_not contain "pinpin"
+      # The caret is left after the last replacement, the Needle of line 3.
+      app.editor.selection?.should be_false
+      app.editor.cursor_position.should eq app.markdown.index!("pin there") + 3
       app.editor.document.undo # the `a` as a whole
       app.markdown.should eq REPLACE_DOC.sub("last needle", "last pin")
       app.editor.document.undo # the `y`

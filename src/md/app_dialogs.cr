@@ -47,6 +47,15 @@ module Md
     # is up there, and the choice it took.
     @choice_key : EventHandler::Subscription?
     @choice_answer : Int32?
+    # How many dialogs are up (`#read_in_dialog`, `#choose_in_dialog`).
+    @dialogs_up = 0
+
+    # Whether a question is up, at the prompt or in a dialog: the
+    # application keys wait meanwhile (`#key_pressed`), as the prompt owns
+    # the keyboard and a dialog's buttons leave a letter to the window.
+    def asking? : Bool
+      @dialogs_up > 0 || @main.status_bar.prompting?
+    end
 
     def dialog_style : DialogStyle
       @dialog_style.value
@@ -89,9 +98,11 @@ module Md
     private def read_in_dialog(question : String, value : String, &callback : String? ->) : Nil
       geometry = Crysterm::Mixin::OkCancelDialog.presenter_geometry(@window, question)
       dialog = Crysterm::Widget::InputDialog.new(**geometry)
+      @dialogs_up += 1
       dialog.open(question, value) do |answer|
         @window.post do
           dialog.destroy
+          @dialogs_up -= 1
           callback.call answer
         end
       end
@@ -102,9 +113,11 @@ module Md
     private def choose_in_dialog(question : String, labels : Array(String), &callback : Int32? ->) : Nil
       geometry = Crysterm::Mixin::OkCancelDialog.presenter_geometry(@window, question)
       box = Crysterm::Widget::MessageBox.new(**geometry)
+      @dialogs_up += 1
       box.open(question, labels) do |index|
         @window.post do
           box.destroy
+          @dialogs_up -= 1
           callback.call index
         end
       end

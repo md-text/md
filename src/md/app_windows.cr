@@ -137,8 +137,15 @@ module Md
         return
       end
       window = @window_opener.call(title)
-      app = App.new(@source, text: markdown, view: @viewer.visible?, window: window,
-        history: @history, config: @config)
+      begin
+        app = App.new(@source, text: markdown, view: @viewer.visible?, window: window,
+          history: @history, config: @config)
+      rescue ex
+        # The terminal window is open already; an App that failed to build
+        # must not leave it behind, empty.
+        window.destroy
+        raise ex
+      end
       app.window_opener = @window_opener
       app.join exec_application
       app

@@ -26,7 +26,7 @@ describe "Md::App rulers" do
       window.repaint
       pane_row(window, app.viewer, 0)[0].should eq 'w'
 
-      horizontal, vertical = menu(app, 3).actions.find!(&.text.==("R&ulers")).menu.not_nil!
+      horizontal, vertical = menu(app, 3).actions.find!(&.text.==("R&ulers")).menu || fail("Rulers has no submenu")
       horizontal.text.should eq "&Horizontal"
       vertical.text.should eq "&Vertical"
       horizontal.checked?.should be_false

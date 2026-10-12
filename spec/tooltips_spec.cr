@@ -53,7 +53,7 @@ describe "Md::App tooltips" do
       sync.tool_tip.should eq "Keep the editor's and the viewer's carets on the same place in the document"
       tooltips = menu(app, 4).actions.find!(&.text.==("&Tooltips"))
       tooltips.tool_tip.should eq Crysterm::Config["md.tooltips"].description.split(": ", 2).last.sub(/\A./, &.upcase)
-      tooltips.menu.not_nil!.map(&.text).should eq ["In &Status Bar", "As a &Popup", "&Never"]
+      (tooltips.menu || fail("Tooltips has no submenu")).map(&.text).should eq ["In &Status Bar", "As a &Popup", "&Never"]
     end
   end
 
@@ -81,7 +81,7 @@ describe "Md::App tooltips" do
       view = open_view(app, window)
       notice(app).should eq "" # the status bar keeps the document's name
       settle { visible_tool_tip(window) }
-      tip = visible_tool_tip(window).not_nil!
+      tip = visible_tool_tip(window) || fail("no tooltip is up")
       tip.content.should eq " #{view.actions.first.tool_tip}"
       window.repaint
       (tip.aleft + tip.awidth).should be <= window.awidth # a long one is kept on screen
@@ -97,9 +97,9 @@ describe "Md::App tooltips" do
       edit = menu(app, 1)
       edit.select_last_action # Previous Heading, a short description
       settle { visible_tool_tip(window) }
-      tip = visible_tool_tip(window).not_nil!
+      tip = visible_tool_tip(window) || fail("no tooltip is up")
       window.repaint
-      lp = edit.lpos.not_nil!
+      lp = edit.lpos || fail("the Edit menu has no position")
       tip.aleft.should be >= lp.xl
       tip.atop.should eq lp.yi + edit.itop + edit.current_index
       app.main.menu_bar.close
@@ -113,9 +113,9 @@ describe "Md::App tooltips" do
         options.handle_key_press Crysterm::Event::KeyPress.new('\0', Tput::Key::Down)
       end
       options.handle_key_press Crysterm::Event::KeyPress.new('\0', Tput::Key::Right)
-      options.@submenu_open.not_nil!.tool_tips_visible?.should be_true
+      (options.@submenu_open || fail("the Mouse submenu did not open")).tool_tips_visible?.should be_true
       settle { visible_tool_tip(window) }
-      visible_tool_tip(window).not_nil!.content.should eq " The mouse serves md always"
+      (visible_tool_tip(window) || fail("no tooltip is up")).content.should eq " The mouse serves md always"
       app.main.menu_bar.close
     end
   ensure
@@ -133,7 +133,7 @@ describe "Md::App tooltips" do
       sleep 80.milliseconds
       visible_tool_tip(window).should be_nil
       press(window, Tput::Key::F1).accepted?.should be_true
-      visible_tool_tip(window).not_nil!.content.should eq " #{view.actions.first.whats_this}"
+      (visible_tool_tip(window) || fail("no tooltip is up")).content.should eq " #{view.actions.first.whats_this}"
       press window, Tput::Key::Down
       visible_tool_tip(window).should be_nil
       app.tooltips = Md::App::Tooltips::StatusBar
@@ -152,7 +152,7 @@ describe "Md::App tooltips" do
         app.tooltips.should eq Md::App::Tooltips::Popup
         app.main.status_tips?.should be_false
         app.main.menu_bar.menus.all?(&.tool_tips_visible?).should be_true
-        entries = menu(app, 4).actions.find!(&.text.==("&Tooltips")).menu.not_nil!
+        entries = menu(app, 4).actions.find!(&.text.==("&Tooltips")).menu || fail("Tooltips has no submenu")
         entries.map(&.checked?).should eq [false, true, false]
         entries[2].trigger
         app.tooltips.should eq Md::App::Tooltips::Off

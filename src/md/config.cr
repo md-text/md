@@ -41,7 +41,7 @@ module Superconf
   option "md.bars", true, env: "MD_BARS",
     description: "View → Menu and Status Bars: show the menu bar and the status bar (F4 hides and shows them together)"
   option "md.images", true, env: "MD_IMAGES",
-    description: "View → Images: draw the document's images in the viewer with the Media Backend, in place of the picture glyph and the alt text"
+    description: "View → Images: draw the document's images in the viewer with the Media Backend, above the row with the picture glyph and the alt text"
   option "md.link_double_click", false, env: "MD_LINK_DOUBLE_CLICK",
     description: "View → Terminal Links → Double-click to Open: follow a link in the viewer on a double click rather than a single one"
   option "md.dialog_style", Md::App::DialogStyle::LinePrompt, env: "MD_DIALOG_STYLE",
@@ -137,14 +137,17 @@ module Md
       exists = File.exists?(file)
       Crysterm.configure!(exists ? file : "", argv: argv)
       @@document = flatten(YAML.parse(File.read(file))) if exists
-      @@origin = "config file #{file}"
+      # Superconf stamps a file's values "config file PATH (KEY)"; with no
+      # file of md's, nothing matches, Crysterm's own file's values included.
+      @@origin = exists ? "config file #{file} (" : ""
       watch
       @@dirty = false
     rescue ex : Superconf::Error | YAML::ParseException | IO::Error
       raise Error.new(ex.message)
     end
 
-    # What Superconf stamps on a value from the file `.configure` loaded.
+    # What Superconf stamps on a value from the file `.configure` loaded, up
+    # to the key: empty when there was no file.
     @@origin = ""
 
     # Applies *file* now (Options → Load Config…), at the precedence of a
@@ -248,13 +251,15 @@ module Md
       end
     end
 
-    # Hears every option, for `dirty?`; once.
+    # Hears every option, for `dirty?`; once. A change at default precedence
+    # is a change of default (`Superconf.set_default`: Crysterm's log file at
+    # every start), not a pick, and `.save` writes no default: not dirt.
     private def self.watch : Nil
       return if @@watching
       @@watching = true
       Superconf.each do |option|
         next if option.alias_target
-        option.on_change { @@dirty = true }
+        option.on_change { @@dirty = true unless option.source.default? }
       end
     end
 

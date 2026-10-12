@@ -34,6 +34,23 @@ describe Md::Manual do
     man.should_not contain "→"
   end
 
+  it "starts no text line with a dot or a quote, which roff would read as a request" do
+    requests = /\A\.(TH|SH|TP|PP|br|B|BR|I)(\s|\z)/
+    Md::Manual.man.each_line do |line|
+      next unless line.starts_with?('.') || line.starts_with?('\'')
+      line.should match(requests), line
+    end
+    # The wrap guards every line, not only the first: a word that opens with
+    # a quote or a dot, pushed to the start of a continuation line (eight
+    # words fill a 40-column line exactly, so the ninth opens the next).
+    text = (["word"] * 8 + ["'set", "mouse='."] + ["word"] * 5 + [".B", "word"]).join(' ')
+    Md::Manual.wrap(text, 40).lines.should eq [
+      "word word word word word word word word",
+      "\\&'set mouse='. word word word word word",
+      "\\&.B word",
+    ]
+  end
+
   it "generates completions for bash, zsh and fish that mention every option" do
     bash = Md::Manual.bash
     zsh = Md::Manual.zsh

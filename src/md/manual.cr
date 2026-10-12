@@ -300,13 +300,21 @@ module Md
     # is a typographic one), the arrow of the menu paths as roff draws it,
     # and a leading dot or quote kept from being read as a request.
     private def self.roff(text : String) : String
-      out = text.gsub('\\', "\\\\").gsub('-', "\\-").gsub('→', "\\(->")
-      out.starts_with?('.') || out.starts_with?('\'') ? "\\&#{out}" : out
+      guard text.gsub('\\', "\\\\").gsub('-', "\\-").gsub('→', "\\(->")
+    end
+
+    # *line* kept from being read as a roff request: one starting with a dot
+    # or a quote gets the zero-width `\&` first.
+    private def self.guard(line : String) : String
+      line.starts_with?('.') || line.starts_with?('\'') ? "\\&#{line}" : line
     end
 
     # *text* on lines of at most *width* characters (roff joins them back
     # into a paragraph; a long source line is a style warning to `mandoc`).
-    private def self.wrap(text : String, width : Int32 = 80) : String
+    # Every line is guarded: a word such as `'set` landing first on a line
+    # would otherwise start a request and vanish with the rest of the line.
+    # Public for the spec that pins this.
+    def self.wrap(text : String, width : Int32 = 80) : String
       lines = [] of String
       line = ""
       text.split(' ') do |word|
@@ -320,7 +328,7 @@ module Md
         end
       end
       lines << line unless line.empty?
-      lines.join('\n')
+      lines.join('\n') { |wrapped| guard(wrapped) }
     end
 
     # A *flag* in bold, with its *argument* in italics: `\fB\-\-line\fR \fIN\fR`.

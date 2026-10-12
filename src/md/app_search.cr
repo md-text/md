@@ -233,13 +233,16 @@ module Md
     # top to where the replace started — in one undo step, reported once
     # (`#edited`, as in `#replace_match`). The matches come from one scan of
     # the text, each one's position shifted by what the replacements before
-    # it changed, rather than from a scan per match.
+    # it changed, rather than from a scan per match; the caret is put after
+    # the last replacement once, not moved — and the other pane with it —
+    # at every match.
     private def replace_rest : Nil
       return unless (session = @replacing) && (regex = @search_regex)
       doc = @editor.document
       ahead, behind = matches_left session, regex, doc.to_plain_text
       notice "Search hit BOTTOM, continuing at TOP" if ahead.empty? && !behind.empty?
       session.found = true unless ahead.empty? && behind.empty?
+      last = nil
       doc.edit do
         {ahead, behind}.each do |group|
           delta = 0
@@ -247,13 +250,14 @@ module Md
             replacement = expand_replacement session.replacement, match
             cursor = Crysterm::TextCursor.new(doc, match.begin(0) + delta, match.end(0) + delta)
             cursor.insert_text replacement
-            @editor.text_cursor = cursor
+            last = cursor
             delta += replacement.size - match[0].size
             session.count += 1
           end
         end
         nil
       end
+      @editor.text_cursor = last if last
       edited if session.found?
       end_replace
     end
