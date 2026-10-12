@@ -1,6 +1,6 @@
 require "./spec_helper"
 
-# Options → Tooltips: every menu entry's description, shown in the status bar
+# View → Tooltips: every menu entry's description, shown in the status bar
 # while the entry is highlighted (the default), in a popup beside the entry
 # after a moment, or nowhere; kept across runs.
 
@@ -51,7 +51,7 @@ describe "Md::App tooltips" do
       sync = view.actions.find!(&.text.==("S&ync Cursor"))
       sync.status_tip.should eq " Keep the editor's and the viewer's carets on the same place in the document"
       sync.tool_tip.should eq "Keep the editor's and the viewer's carets on the same place in the document"
-      tooltips = menu(app, 4).actions.find!(&.text.==("&Tooltips"))
+      tooltips = menu(app, 3).actions.find!(&.text.==("T&ooltips"))
       tooltips.tool_tip.should eq Crysterm::Config["md.tooltips"].description.split(": ", 2).last.sub(/\A./, &.upcase)
       (tooltips.menu || fail("Tooltips has no submenu")).map(&.text).should eq ["In &Status Bar", "As a &Popup", "&Never"]
     end
@@ -159,7 +159,7 @@ describe "Md::App tooltips" do
         app.tooltips.should eq Md::App::Tooltips::Popup
         app.main.status_tips?.should be_false
         app.main.menu_bar.menus.all?(&.tool_tips_visible?).should be_true
-        entries = menu(app, 4).actions.find!(&.text.==("&Tooltips")).menu || fail("Tooltips has no submenu")
+        entries = menu(app, 3).actions.find!(&.text.==("T&ooltips")).menu || fail("Tooltips has no submenu")
         entries.map(&.checked?).should eq [false, true, false]
         entries[2].trigger
         app.tooltips.should eq Md::App::Tooltips::Off

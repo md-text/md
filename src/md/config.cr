@@ -45,6 +45,8 @@ module Superconf
     description: "View → Terminal Links → Double-click to Open: follow a link in the viewer on a double click rather than a single one"
   option "md.dialog_style", Md::App::DialogStyle::LinePrompt, env: "MD_DIALOG_STYLE",
     description: "View → Dialog Style: how a question is asked, in place of the status bar (line_prompt) or in a dialog (modal)"
+  option "md.tooltips", Md::App::Tooltips::StatusBar, env: "MD_TOOLTIPS",
+    description: "View → Tooltips: where a menu entry's description shows while it is highlighted — in the status bar (status_bar), in a popup beside the entry after a moment (popup), or nowhere (off)"
   # Edit.
   option "md.vi_mode", false, env: "MD_VI_MODE",
     description: "Edit → Vi Mode: edit the editor's text as in Neovim, by an embedded nvim; the function keys and Alt combinations stay md's"
@@ -63,8 +65,6 @@ module Superconf
     description: "Options → Clipboard: where a copy goes and a paste comes from (terminal|command|internal)"
   option "md.resizable_panes", true, env: "MD_RESIZABLE_PANES",
     description: "Options → Resizable Panes: let the dividers between the panes move"
-  option "md.tooltips", Md::App::Tooltips::StatusBar, env: "MD_TOOLTIPS",
-    description: "Options → Tooltips: where a menu entry's description shows while it is highlighted — in the status bar (status_bar), in a popup beside the entry after a moment (popup), or nowhere (off)"
   # The panes.
   option "md.pane_sizes", "", env: "MD_PANE_SIZES",
     description: "The widths in columns of the editor, the viewer and the table of contents, comma-separated (0 for a pane never resized), as the dividers left them; recorded when md quits"

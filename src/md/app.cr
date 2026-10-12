@@ -59,7 +59,7 @@ module Md
   # Style), in `app_dialogs.cr`; the theme in `app_theme.cr`, the viewer's
   # pictures and how they are drawn (View → Images, Media Backend) in
   # `app_media.cr`, Crysterm's other options in the menus in
-  # `app_toolkit.cr`, the entries' descriptions (Options → Tooltips) in
+  # `app_toolkit.cr`, the entries' descriptions (View → Tooltips) in
   # `app_tips.cr`, the settings' link to the config file in `app_config.cr`,
   # Options → Clear Caches… in `app_caches.cr` and the other windows of the
   # process in `app_windows.cr`.

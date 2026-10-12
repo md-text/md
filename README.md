@@ -203,7 +203,7 @@ menu is open, the status bar shows the highlighted entry's in place of the
 document's name — as desktop applications show a status tip, but as wide
 as it needs, over the fields on the right when it does not fit beside them —
 and gives the bar back when the highlight moves on or the menu closes; the entries' keys
-are in the menus themselves. Options → Tooltips moves the descriptions: *In
+are in the menus themselves. View → Tooltips moves the descriptions: *In
 Status Bar* is that; *As a Popup* shows one in a small box beside the entry
 instead, after a moment, gone as soon as the highlight leaves it, for a
 terminal whose status bar is out of sight; *Never* shows none. Whatever the
@@ -875,7 +875,7 @@ src/md/app_edit.cr    Markdown-aware editing: lists continued and indented, the 
 src/md/app_dialogs.cr the questions md asks, at the prompt or in a dialog (View → Dialog Style)
 src/md/app_caches.cr  Options → Clear Caches…
 src/md/app_config.cr  the View and Options choices linked to their options, the config file written
-src/md/app_tips.cr    the menu entries' descriptions; where they show (Options → Tooltips)
+src/md/app_tips.cr    the menu entries' descriptions; where they show (View → Tooltips)
 src/md/app_windows.cr the Window menu: more windows on the document, in new terminal windows
 src/md/config.cr      the choices as Crysterm (Superconf) options; the config file (~/.config/md/config.yml)
 src/md/history.cr     the recent files and positions (~/.local/state/md/history.json)

@@ -1,6 +1,6 @@
 module Md
   class App
-    # Options → Tooltips: where a menu entry's description shows while the
+    # View → Tooltips: where a menu entry's description shows while the
     # entry is highlighted. Every entry has one sentence saying what it does
     # — an entry bound to a setting takes its option's description
     # (`#option_tip`), so the text is written once, in `config.cr`; a command
@@ -33,7 +33,7 @@ module Md
       Off
     end
 
-    # A reactive property, so the Options → Tooltips entries bind to it
+    # A reactive property, so the View → Tooltips entries bind to it
     # (`#build_menus`); `#tooltips` and `#tooltips=` are its plain face.
     @tooltips : Crysterm::Reactive::Property(Tooltips) = Crysterm::Reactive::Property.new(Tooltips::StatusBar)
 
@@ -41,7 +41,7 @@ module Md
       @tooltips.value
     end
 
-    # Picks where the descriptions show (Options → Tooltips); applied when
+    # Picks where the descriptions show (View → Tooltips); applied when
     # it changes (`#wire_tips`).
     def tooltips=(mode : Tooltips) : Tooltips
       @tooltips.value = mode

@@ -15,14 +15,14 @@ module Md
     # and Media Backend, with its Change for 5s trial, `app_media.cr`), the
     # color depth and the links
     # (Terminal Links, with Double-click to Open, `app_toolkit.cr`), how questions are asked
-    # (Dialog Style, `app_dialogs.cr`) and whether the file is watched) and
+    # (Dialog Style, `app_dialogs.cr`), where the entries' descriptions show
+    # (Tooltips, `app_tips.cr`) and whether the file is watched) and
     # Options (the two
     # modes the status bar toggles — overwrite mode and the mouse mode — the
     # unsaved-changes guard, auto-save and the backup file
     # (`app_autosave.cr`), the clipboard mode, whether the panes resize
     # (`app_panes.cr`), No Animations (reduced motion) and detachable
-    # menus (`app_toolkit.cr`), where the entries' descriptions show (Tooltips,
-    # `app_tips.cr`), the config file's entries
+    # menus (`app_toolkit.cr`), the config file's entries
     # (`app_config.cr`) and Clear Caches…,
     # `app_caches.cr`), Window (another window on the document, this one
     # closed, the open windows to switch between, `app_windows.cr`) and Help
@@ -149,6 +149,9 @@ module Md
       @hyperlinks_actions = add_choices(view, "Terminal Lin&ks", "hyperlinks", Hyperlinks.values, @hyperlinks, "Whether the viewer's links are the terminal's own hyperlinks too, to click or hover", ->hyperlinks_tip(Hyperlinks), [toggle_action("Double-click to &Open", "link-double-click", @link_double_click, option_tip("md.link_double_click"))]) { |policy| hyperlinks_label policy }
       view.add_separator
       add_choices(view, "&Dialog Style", "dialog-style", DialogStyle.values, @dialog_style, option_tip("md.dialog_style"), ->dialog_style_tip(DialogStyle)) { |style| dialog_style_label style }
+      # Where these descriptions show (`app_tips.cr`), beside how questions
+      # are asked; `o` is free, `t` being the table of contents'.
+      add_choices(view, "T&ooltips", "tooltips", Tooltips.values, @tooltips, option_tip("md.tooltips"), ->tooltips_tip(Tooltips)) { |mode| tooltips_label mode }
       add_toggle view, "&Watch File", "watch-file", @watch_file, "Reload the file whenever it changes on disk, for this run"
       # The Auto entries name what the detection says, which a probe
       # answered after the menus were built may have changed.
@@ -174,8 +177,6 @@ module Md
       add_toggle options, "No An&imations", "reduced-motion", @reduced_motion, "Show animations at their end state at once: a button's flash when pressed from the keyboard, a stylesheet's transitions"
       # Crysterm's `menu.tear_off` (`app_toolkit.cr`); `e` is free.
       add_toggle options, "D&etachable Menus", "detachable-menus", @tear_off_menus, "Give every menu a grab strip that tears off a copy to keep on screen"
-      # Where these descriptions show (`app_tips.cr`); `t` is free.
-      add_choices(options, "&Tooltips", "tooltips", Tooltips.values, @tooltips, option_tip("md.tooltips"), ->tooltips_tip(Tooltips)) { |mode| tooltips_label mode }
       # Edit → Vi Mode, last in Edit after a separator, where `i` is free,
       # and its config entry here, where `N` is (`app_vi.cr`).
       add_vi_actions edit, options

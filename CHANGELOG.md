@@ -312,7 +312,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   to a file of your choosing.
 - Every menu entry has a one-sentence description, shown while the entry is
   highlighted: in the status bar, in place of the document's name, by default
-  (a desktop application's status tip); or, by Options → Tooltips, in a
+  (a desktop application's status tip); or, by View → Tooltips, in a
   popup beside the entry after a moment, inert and gone as the highlight
   leaves; or nowhere. `F1` on a highlighted entry shows its description
   beside it either way. An entry bound to a setting describes itself with
@@ -401,6 +401,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   and setting (`md.center_text`) keep their names.
 - Options → Reduced Motion is called No Animations; its command
   (`reduced-motion`) and setting (`render.reduced_motion`) keep their names.
+- Tooltips is in the View menu, after Dialog Style, where it was in
+  Options; its mnemonic is `o` there, and its commands (`tooltips-*`) and
+  setting (`md.tooltips`) keep their names.
 - Resizable Panes is in the Options menu, where it was in View; its command
   (`resizable-panes`) and setting (`md.resizable_panes`) keep their names.
 - The settings live in `$XDG_CONFIG_HOME/md/config.yml`
