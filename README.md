@@ -440,6 +440,25 @@ like any open. In the editor and the viewer `Alt-Left` and `Alt-Right` keep
 moving the cursor by word, so the menu and `Backspace` are the way back from
 there.
 
+### Images
+
+An image on a line of its own — `![alt](picture.png)`, with or without a
+link around it — is drawn in the viewer, above a row with a picture glyph
+and the alt text, which is what stands for the image everywhere else: in
+the editor, in a copy, in `--export`. The picture is as wide as the text
+and as tall as its shape asks, up to half the pane, so a tall one never
+fills the view; it scrolls with the text, and the cursor steps over it as
+over a blank line. A relative name counts from the document's directory,
+as a relative link does (the working directory for a new or streamed
+document); an `http:` or `https:` one is fetched in the background and
+takes its rows when it arrives. A picture that cannot be read leaves the
+glyph and the alt text alone, and an image inside a sentence stays that
+way too. How the picture is drawn is View → Media Backend's choice: the
+terminal's own graphics where it has them (Kitty, Sixel, iTerm2), colored
+cells or sub-cell glyphs anywhere else. View → Images turns the pictures
+off and on (`md.images`, `MD_IMAGES`, `--no-md-images`), kept with the
+other settings.
+
 ### Exporting
 
 `md --export html FILE` (or `--to html`, pandoc's spelling) prints the
@@ -572,7 +591,7 @@ choices, not a cache, and stay.
 The choices made in the View and Options menus — Resizable Panes, Menu and
 Status Bars, Sync Cursor, Highlight Line, Line Numbers, Soft Wrap, Hard
 Wrap, Text Width, Center Text, Rulers (Horizontal and Vertical), Guides,
-Terminal Links → Double-click to Open, Dialog Style, Ask Before Discarding
+Images, Terminal Links → Double-click to Open, Dialog Style, Ask Before Discarding
 Changes, Auto-Save, Keep a Backup File, the mouse mode, the clipboard mode,
 Tooltips, the theme and Crysterm's own Color Depth, Terminal Links, Media
 Backend and Reduced Motion — and the pane sizes are kept across runs in

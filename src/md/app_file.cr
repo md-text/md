@@ -95,6 +95,7 @@ module Md
       drop_recovery
       @source = Source.new path: path
       @window.title = title
+      apply_base_url
       load text || ""
       @editor.document.modified = false
       text_changed

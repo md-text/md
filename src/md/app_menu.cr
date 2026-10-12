@@ -9,8 +9,9 @@ module Md
     # carets are kept in sync, whether the caret's line is highlighted,
     # whether the editor numbers its lines, the text's layout — soft wrap,
     # hard wrap, a text width and its centering, rulers and guides — the
-    # theme the window is drawn in, how images are drawn (Media Backend, with
-    # its Change for 5s trial, `app_media.cr`), the color depth and the links
+    # theme the window is drawn in, whether and how images are drawn (Images
+    # and Media Backend, with its Change for 5s trial, `app_media.cr`), the
+    # color depth and the links
     # (Terminal Links, with Double-click to Open, `app_toolkit.cr`), how questions are asked
     # (Dialog Style, `app_dialogs.cr`) and whether the file is watched) and
     # Options (the two
@@ -128,7 +129,9 @@ module Md
       # The colors the window is drawn in, with the other appearance choices;
       # `F6` cycles them (`app_theme.cr`).
       add_choices(view, "The&me", THEMES, @theme, "The colors the window is drawn in; F6 cycles them", ->theme_tip(Theme)) { |theme| theme_label theme }
-      # How images are drawn, with the Change for 5s trial (`app_media.cr`).
+      # Whether the viewer draws the document's images, and how, with the
+      # Change for 5s trial (`app_media.cr`); `I` is free here.
+      add_toggle view, "&Images", @images, option_tip("md.images")
       build_media_menu view
       # Two more of Crysterm's options (`app_toolkit.cr`); `L` and `K` are
       # free here.

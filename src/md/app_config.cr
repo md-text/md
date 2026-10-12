@@ -47,6 +47,7 @@ module Md
       link @clipboard_mode, "md.clipboard_mode"
       link @tooltips, "md.tooltips"
       link @theme, "colors.theme"
+      link @images, "md.images"
       link @media_backend, "media.backend"
       link @color_depth, "colors.depth"
       link @hyperlinks, "render.hyperlinks"

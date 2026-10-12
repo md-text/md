@@ -40,11 +40,11 @@ private def checked_for(backend : Backend) : Array(Bool)
 end
 
 describe "Md::App media backend" do
-  it "offers Crysterm's media backends in the View menu after Theme, Auto-detect checked" do
+  it "offers Crysterm's media backends in the View menu after Theme and Images, Auto-detect checked" do
     with_media_app do |app|
       app.media_backend.should eq Backend::Auto
       texts = menu(app, 3).actions.map(&.text)
-      texts.index!("Media &Backend").should eq texts.index!("The&me") + 1
+      texts[texts.index!("The&me") + 1, 2].should eq ["&Images", "Media &Backend"]
 
       entries = media_menu(app)
       entries[0].text.should eq "Change for &5s"

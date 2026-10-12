@@ -308,6 +308,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   beside it either way. An entry bound to a setting describes itself with
   the setting's own description, so `--help --verbose` and the menu say the
   same. Kept across runs (`md.tooltips`).
+- View → Images: the viewer draws the document's images — an `![alt](src)`
+  on a line of its own, fitted to the text width and at most half the pane
+  tall, drawn as View → Media Backend says — above the row holding the
+  picture glyph and the alt text; a relative source counts from the
+  document's directory, a remote one is fetched in the background. Off
+  (`md.images`, `MD_IMAGES`, `--no-md-images`), that row is all there is.
 
 ### Changed
 

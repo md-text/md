@@ -40,6 +40,8 @@ module Superconf
     description: "View → Resizable Panes: let the dividers between the panes move"
   option "md.bars", true, env: "MD_BARS",
     description: "View → Menu and Status Bars: show the menu bar and the status bar (F4 hides and shows them together)"
+  option "md.images", true, env: "MD_IMAGES",
+    description: "View → Images: draw the document's images in the viewer with the Media Backend, in place of the picture glyph and the alt text"
   option "md.link_double_click", false, env: "MD_LINK_DOUBLE_CLICK",
     description: "View → Terminal Links → Double-click to Open: follow a link in the viewer on a double click rather than a single one"
   option "md.dialog_style", Md::App::DialogStyle::LinePrompt, env: "MD_DIALOG_STYLE",

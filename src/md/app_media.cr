@@ -12,12 +12,23 @@ module Md
     # since nothing detects them, the overlays without their helper program —
     # and Auto-detect never. Setting the property sets Crysterm's
     # `media.backend` option, and Crysterm rebuilds the media it resolved
-    # under the old setting: every widget's CSS `background-image` layer is
-    # dropped and comes back for the new backend on the next frame, in every
-    # window. md's viewer renders no inline images today (the Markdown
-    # importer degrades them to a placeholder glyph), so in md the visible
-    # effect is on background images set by a stylesheet
-    # (`--colors-stylesheet`), and on whatever media Crysterm adds later.
+    # under the old setting: the viewer's pictures and every widget's CSS
+    # `background-image` layer are dropped and come back for the new backend
+    # on the next frame, in every window.
+    #
+    # View → Images (`#images?`, `md.images`, on by default) is whether the
+    # viewer draws the document's images at all (Crysterm's
+    # `TextEdit#images_enabled`): a paragraph that is one `![alt](src)` gets
+    # its picture above the row with the picture glyph and the alt text,
+    # fitted to the text width and at most half the pane tall, drawn with
+    # the Media Backend; off, that row is all there is, as a text-only
+    # viewer shows an image. A relative source counts from the document's
+    # directory — the working directory for a new or streamed document —
+    # as a relative link does (`app_links.cr`), through the viewer document's
+    # `base_url` (Qt's `QTextDocument::baseUrl`), kept on the document's
+    # directory as files are opened, saved under another name or followed
+    # (`#apply_base_url`); an `http(s)` source is fetched in the background,
+    # the picture taking its rows when it arrives.
     #
     # "Change for 5s", above Auto-detect, is a trial: while it is checked, a
     # pick switches for `#media_trial_span` and then goes back to the backend
@@ -51,6 +62,29 @@ module Md
     # plain face. Starts as Crysterm's config has it, which is what the
     # window was created under: `--media-backend` or the default, Auto.
     @media_backend : Crysterm::Reactive::Property(MediaBackend) = Crysterm::Reactive::Property.new(Crysterm::Config.media_backend)
+
+    # View → Images; see the class comment. A reactive property, so the menu
+    # entry binds to it and the config keeps it (`app_config.cr`); `#images?`
+    # and `#images=` are its plain face.
+    @images : Crysterm::Reactive::Property(Bool) = Crysterm::Reactive::Property.new(true)
+
+    def images? : Bool
+      @images.value
+    end
+
+    # Turns the viewer's pictures on or off (View → Images); applied when
+    # it changes (`#wire_media`).
+    def images=(value : Bool) : Bool
+      @images.value = value
+    end
+
+    # Puts the viewer document's `base_url` on the document's directory
+    # (`#link_base`, `app_links.cr`), so the images' relative sources resolve
+    # as the links do. Run when the document's file changes (`#open_file`,
+    # `#save_as`), and should the viewer ever swap its document.
+    private def apply_base_url : Nil
+      @viewer.document.base_url = link_base
+    end
 
     # "Change for 5s": whether a pick is a trial. Not kept across runs.
     @media_trial = Crysterm::Reactive::Property(Bool).new(false)
@@ -98,6 +132,8 @@ module Md
     # A pick under "Change for 5s" arms the return; the return itself, and a
     # pick of the backend the trial would return to, end the trial.
     private def wire_media : Nil
+      @images.on_change { @viewer.images_enabled = @images.value }
+      apply_base_url
       previous = @media_backend.value
       @media_backend.on_change do
         backend = @media_backend.value

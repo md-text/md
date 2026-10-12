@@ -262,6 +262,7 @@ module Md
       @viewer.on(Crysterm::Event::SourceChanged) do
         doc = @viewer.document
         @toc.document = doc unless @toc.document.same? doc
+        apply_base_url
       end
     end
 
@@ -533,6 +534,7 @@ module Md
     def save_as(path : String) : Bool
       @source = Source.new path: path
       @window.title = title
+      apply_base_url
       save
     end
 
