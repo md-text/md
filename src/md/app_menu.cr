@@ -3,7 +3,7 @@ module Md
     # The menu bar: File (open, the recent files, reload, close, the previous and
     # the next file, save, quit), Edit (copy, paste and paste from a named
     # source, find, repeat the find, replace, go to a line, jump between
-    # headings), Format (the Markdown markup, `app_edit.cr`), View (which panes
+    # headings, Vi Mode, `app_vi.cr`), Format (the Markdown markup, `app_edit.cr`), View (which panes
     # are shown and whether they resize, whether the two bars are shown,
     # whether the editor's and the viewer's
     # carets are kept in sync, whether the caret's line is highlighted,
@@ -176,6 +176,9 @@ module Md
       add_toggle options, "D&etachable Menus", "detachable-menus", @tear_off_menus, "Give every menu a grab strip that tears off a copy to keep on screen"
       # Where these descriptions show (`app_tips.cr`); `t` is free.
       add_choices(options, "&Tooltips", "tooltips", Tooltips.values, @tooltips, option_tip("md.tooltips"), ->tooltips_tip(Tooltips)) { |mode| tooltips_label mode }
+      # Edit → Vi Mode, last in Edit after a separator, where `i` is free,
+      # and its config entry here, where `N` is (`app_vi.cr`).
+      add_vi_actions edit, options
       options.add_separator
       # The config file (`app_config.cr`): applied from a file now, written
       # now, or written elsewhere; `L` and `S` are free here, `A` is Ask's.

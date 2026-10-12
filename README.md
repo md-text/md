@@ -379,6 +379,37 @@ Italic, Code and Toggle Task use `Alt` chords the editor does not
 menu works from any pane: chosen while reading, it edits the source of the
 viewer's caret, showing the editor if it is hidden.
 
+### Vi Mode
+
+Edit → Vi Mode (`md.vi_mode`) edits the editor's text as in Neovim: an
+`nvim` runs embedded, headless, and takes the editor's keys — `i`, `dd`,
+`ciw`, `.`, counts, registers, text objects, `/` and the rest are
+Neovim's own — while the editor keeps the document, so the viewer, the
+status bar, Find, Format and the other menus work on the text as before.
+The function keys and the `Alt` chords are not Neovim's: they stay md's
+(`F1`–`F6`, `F10` for the menus, `Alt-W`, `Alt-K`, the menus'
+`Alt` letters), while the `Ctrl` keys are Neovim's in the editor
+(`Ctrl-R` redoes, `Ctrl-B` pages up), so Bold is reached by the menu.
+
+The status bar shows the mode left of the position — `NORMAL`, `INSERT`,
+`VISUAL`, `V-LINE`, `REPLACE`, `COMMAND` — and the command line in
+place of the document's name while one is typed; Neovim's messages come as
+notices. Visual mode is the editor's selection, so Copy and Format act on
+it. `u` and `Ctrl-R` are Neovim's undo and redo, an insert one step; an
+edit made by md (Format, Replace, a paste with the mouse) reaches Neovim
+and is undone by `u` too. `:w` saves, `:w FILE` saves as FILE, `:q`
+closes the window as Window → Close Current does, asking about unsaved
+changes, `:q!` closes it without asking, `:qa` (`:qa!`) quits, and
+`:wq`, `:x` and `ZZ` save, then close. Neovim writes no file itself.
+
+Neovim starts with `--clean`, without your config, unless Options → Vi
+Mode Uses Your Neovim Config (`md.vi_config`) is on: then your
+`init.lua` or `init.vim` and plugins load, and a mapping of yours applies
+in the editor. Without `nvim` in `PATH` the entry is disabled, its
+description saying why; should Neovim end, Vi Mode turns off with a notice
+and the editor goes on as before. The viewer's `:` stays md's command line
+(the viewer is no text input), and the line prompts keep plain editing.
+
 ### Searching and jumping
 
 Searching works like a pager's: `/` asks for a pattern and finds it forward
@@ -673,10 +704,10 @@ command, and so is every key no entry has:
 | Commands | |
 | -------- | - |
 | `open`, `reload`, `close`, `previous-file`, `next-file`, `save`, `save-as`, `quit` | The File menu |
-| `copy`, `copy-as-markdown`, `paste`, `paste-from-terminal`, `paste-from-command`, `paste-from-internal`, `find`, `find-backward`, `find-next`, `find-previous`, `replace`, `clear-search-highlights`, `command`, `go-to-line`, `next-heading`, `previous-heading` | The Edit menu, and `?` |
+| `copy`, `copy-as-markdown`, `paste`, `paste-from-terminal`, `paste-from-command`, `paste-from-internal`, `find`, `find-backward`, `find-next`, `find-previous`, `replace`, `clear-search-highlights`, `command`, `go-to-line`, `next-heading`, `previous-heading`, `vi-mode` | The Edit menu, and `?` |
 | `bold`, `italic`, `code`, `task`, `toggle-task`, `indent`, `outdent`, `promote-heading`, `demote-heading`, `rewrap-paragraph`, `rewrap-document` | The Format menu |
 | `editor`, `viewer`, `toc`, `resizable-panes`, `bars`, `sync-cursor`, `highlight-line`, `line-numbers`, `soft-wrap`, `hard-wrap`, `center-text`, `horizontal-ruler`, `vertical-ruler`, `guides`, `images`, `media-trial`, `link-double-click`, `watch-file` | The View menu's check entries: each turns its setting on or off |
-| `overwrite-mode`, `confirm-discard`, `autosave`, `backup-file`, `reduced-motion`, `detachable-menus`, `load-config`, `save-config`, `save-config-as`, `clear-caches` | The Options menu |
+| `overwrite-mode`, `confirm-discard`, `autosave`, `backup-file`, `reduced-motion`, `detachable-menus`, `vi-config`, `load-config`, `save-config`, `save-config-as`, `clear-caches` | The Options menu |
 | `new-window`, `close-window`, `manual`, `about` | The Window and Help menus |
 | `toggle-editor`, `toggle-viewer`, `toggle-toc`, `toggle-bars`, `cycle-mouse-mode`, `cycle-theme`, `suspend`, `resize-panes` | `F1`–`F6`, `Ctrl-Z` and `Alt-R` |
 
@@ -690,13 +721,13 @@ not know.
 
 ### Settings
 
-The choices made in the View and Options menus — Resizable Panes, Menu and
+The choices made in the Edit, View and Options menus — Vi Mode, Resizable Panes, Menu and
 Status Bars, Sync Cursor, Highlight Line, Line Numbers, Soft Wrap, Hard
 Wrap, Text Width, Center Text, Rulers (Horizontal and Vertical), Guides,
 Images, Terminal Links → Double-click to Open, Dialog Style, Ask Before Discarding
 Changes, Auto-Save, Keep a Backup File, the mouse mode, the clipboard mode,
 Tooltips, the theme and Crysterm's own Color Depth, Terminal Links, Media
-Backend, Reduced Motion and Detachable Menus — and the pane sizes are kept across runs in
+Backend, Reduced Motion, Detachable Menus and Vi Mode Uses Your Neovim Config — and the pane sizes are kept across runs in
 `$XDG_CONFIG_HOME/md/config.yml` (`~/.config/md/config.yml`), written when
 md quits if anything changed. Watch File is not kept: like `--watch`, it is
 for the run at hand.

@@ -89,7 +89,7 @@ module Md
     private def build_status : Nil
       bar = @main.status_bar
       bar.add_widget @name_field
-      {@position_field, @size_field, @encoding_field, @modified_field,
+      {@vi_field, @position_field, @size_field, @encoding_field, @modified_field,
        @overwrite_button, @mouse_button}.each { |field| bar.add_permanent_widget field }
 
       # The toggles act on click without taking the keyboard focus from the
@@ -130,6 +130,8 @@ module Md
       @modified_field.text = @editor.document.modified? ? "✎ modified" : ""
       @overwrite_button.text = @editor.overwrite_mode? ? "OVR" : "INS"
       @mouse_button.text = "#{mouse_icon}=#{@mouse_mode.value.vi_value}"
+      @vi_field.text = vi_mode_text
+      @vi_field.visible = @vi.attached? unless @vi_field.visible? == @vi.attached?
       refresh_menus
     end
 
@@ -158,6 +160,10 @@ module Md
     # The document's name as the status bar shows it, with its state:
     # streaming in, or watched on disk.
     private def name_text : String
+      # Vi Mode's command line while one is typed (`app_vi.cr`).
+      if line = @vi.command_line
+        return line
+      end
       name = @source.name || "[No Name]"
       if streaming?
         "#{name} (streaming)"

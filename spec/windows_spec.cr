@@ -74,7 +74,7 @@ describe "Md::App windows" do
       begin
         other.markdown.should eq "changed A\n"
         other.editor.document.modified?.should be_true
-        other.main.status_bar.permanent_widgets[3].as(Crysterm::Widget::Label).text.should eq "✎ modified"
+        other.main.status_bar.permanent_widgets[4].as(Crysterm::Widget::Label).text.should eq "✎ modified"
         other.close_window
         question(other).should start_with "Save changes to"
         answer other, 'n'

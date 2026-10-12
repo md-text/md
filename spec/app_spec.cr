@@ -280,11 +280,11 @@ describe Md::App do
   end
 end
 
-# The texts of the bar's fields in layout order: the name, then the
-# permanent fields.
+# The texts of the bar's shown fields in layout order: the name, then the
+# permanent fields (Vi Mode's mode field only while it is on).
 private def status_texts(app)
   bar = app.main.status_bar
-  (bar.normal_widgets + bar.permanent_widgets).map { |field| field.as(Crysterm::Widget::Label | Crysterm::Widget::ToolButton).text }
+  (bar.normal_widgets + bar.permanent_widgets).select(&.visible?).map { |field| field.as(Crysterm::Widget::Label | Crysterm::Widget::ToolButton).text }
 end
 
 describe "Md::App status bar" do
@@ -295,7 +295,7 @@ describe "Md::App status bar" do
       # The name is the bar's one normal field (it gives way to a notice);
       # the rest are permanent.
       bar.normal_widgets.size.should eq 1
-      bar.permanent_widgets.size.should eq 6
+      bar.permanent_widgets.size.should eq 7
       texts = status_texts app
       texts[0].should eq " doc.md"
       texts[1].should eq "All" # the whole document fits the viewer
@@ -365,8 +365,8 @@ describe "Md::App status bar" do
   it "counts a streamed document chunk by chunk, a word or a line ending split between chunks once" do
     with_app Md::Source.new(stdin: true), view: true do |app|
       app.stream IO::Memory.new("")
-      size = app.main.status_bar.permanent_widgets[1].as(Crysterm::Widget::Label)
-      encoding = app.main.status_bar.permanent_widgets[2].as(Crysterm::Widget::Label)
+      size = app.main.status_bar.permanent_widgets[2].as(Crysterm::Widget::Label)
+      encoding = app.main.status_bar.permanent_widgets[3].as(Crysterm::Widget::Label)
       app.receive "one two\r"
       size.text.should eq "1 line, 2 words"
       encoding.text.should eq "UTF-8 LF"
@@ -392,7 +392,7 @@ describe "Md::App menus" do
       app.main.menu_bar.menus.size.should eq 7
       menu(app, 0).actions.map(&.text).should eq ["&Open…", "Open &Recent", "&Reload", "&Close", "", "&Previous File", "&Next File", "", "&Save", "Save &As…", "", "&Quit"]
       menu(app, 0).actions[1].enabled?.should be_false # no history, nothing recent
-      menu(app, 4).actions.map(&.text).should eq ["&Overwrite Mode", "&Ask Before Discarding Changes", "A&uto-Save", "&Keep a Backup File", "&Mouse", "&Clipboard", "Re&duced Motion", "D&etachable Menus", "&Tooltips", "", "&Load Config…", "&Save Config", "Sa&ve Config As…", "", "Clea&r Caches…"]
+      menu(app, 4).actions.map(&.text).should eq ["&Overwrite Mode", "&Ask Before Discarding Changes", "A&uto-Save", "&Keep a Backup File", "&Mouse", "&Clipboard", "Re&duced Motion", "D&etachable Menus", "&Tooltips", "Vi Mode Uses Your &Neovim Config", "", "&Load Config…", "&Save Config", "Sa&ve Config As…", "", "Clea&r Caches…"]
       menu(app, 3).actions.map(&.text).should contain "The&me" # with the other appearance choices
     end
   end

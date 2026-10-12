@@ -30,6 +30,7 @@ require "./md/app_tips"
 require "./md/app_windows"
 require "./md/app_help"
 require "./md/app_commands"
+require "./md/app_vi"
 
 module Md
 end

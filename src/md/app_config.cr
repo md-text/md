@@ -54,6 +54,8 @@ module Md
       link @reduced_motion, "render.reduced_motion"
       link @tear_off_menus, "menu.tear_off"
       link @link_double_click, "md.link_double_click"
+      link @vi_config, "md.vi_config"
+      link @vi_mode, "md.vi_mode"
       # The pane sizes are not a property: applied from the option now and,
       # with the configuration kept, whenever it changes (a file loaded);
       # recorded at exit. The window's end unhooks the listener, as it does

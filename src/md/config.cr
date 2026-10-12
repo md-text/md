@@ -46,7 +46,12 @@ module Superconf
     description: "View → Terminal Links → Double-click to Open: follow a link in the viewer on a double click rather than a single one"
   option "md.dialog_style", Md::App::DialogStyle::LinePrompt, env: "MD_DIALOG_STYLE",
     description: "View → Dialog Style: how a question is asked, in place of the status bar (line_prompt) or in a dialog (modal)"
+  # Edit.
+  option "md.vi_mode", false, env: "MD_VI_MODE",
+    description: "Edit → Vi Mode: edit the editor's text as in Neovim, by an embedded nvim; the function keys and Alt combinations stay md's"
   # Options.
+  option "md.vi_config", false, env: "MD_VI_CONFIG",
+    description: "Options → Vi Mode Uses Your Neovim Config: start Vi Mode's nvim with your own config and plugins rather than --clean"
   option "md.confirm_discard", true, env: "MD_CONFIRM_DISCARD",
     description: "Options → Ask Before Discarding Changes: ask what to do with unsaved changes before they would be lost"
   option "md.autosave", true, env: "MD_AUTOSAVE",

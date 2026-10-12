@@ -101,7 +101,8 @@ describe "Md::App tooltips" do
       app.main.menu_bar.open_menu 1
       window.repaint
       edit = menu(app, 1)
-      edit.select_last_action # Previous Heading, a short description
+      edit.select_last_action                     # Vi Mode, after a separator
+      edit.current_index = edit.current_index - 2 # Previous Heading, a short description
       settle { visible_tool_tip(window) }
       tip = visible_tool_tip(window) || fail("no tooltip is up")
       window.repaint

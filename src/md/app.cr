@@ -231,6 +231,7 @@ module Md
       wire_toolkit
       wire_view
       wire_resizable
+      wire_vi
 
       Pane.each { |pane| widget(pane).hide }
       load text unless text.empty?
