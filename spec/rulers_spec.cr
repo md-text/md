@@ -19,7 +19,8 @@ end
 describe "Md::App rulers" do
   it "is off by default, and the View entries show each ruler on both panes" do
     with_app Md::Source.new(path: "doc.md"), text: RULERS_DOC, view: true do |app, window|
-      app.rulers?.should be_false
+      app.horizontal_ruler?.should be_false
+      app.vertical_ruler?.should be_false
       app.editor.rulers?.should be_false
       app.viewer.rulers?.should be_false
       window.repaint
@@ -32,7 +33,6 @@ describe "Md::App rulers" do
       horizontal.trigger
       app.horizontal_ruler?.should be_true
       app.vertical_ruler?.should be_false
-      app.rulers?.should be_false # not both
       horizontal.checked?.should be_true
       app.editor.column_ruler?.should be_true
       app.viewer.column_ruler?.should be_true
@@ -44,7 +44,7 @@ describe "Md::App rulers" do
       app.viewer.itop.should eq 1
 
       vertical.trigger
-      app.rulers?.should be_true
+      app.vertical_ruler?.should be_true
       app.editor.rulers?.should be_true
       window.repaint
       # Both: the tape past the row ruler, the row ruler before the first
@@ -92,7 +92,8 @@ describe "Md::App rulers" do
   it "keeps the choices across runs" do
     with_config "md:\n  horizontal_ruler: true\n  vertical_ruler: true\n" do |path|
       with_app Md::Source.new(path: "doc.md"), text: RULERS_DOC, view: true, config: true do |app|
-        app.rulers?.should be_true
+        app.horizontal_ruler?.should be_true
+        app.vertical_ruler?.should be_true
         app.editor.rulers?.should be_true
         app.viewer.rulers?.should be_true
         Md::Config.dirty?.should be_false
@@ -109,7 +110,8 @@ describe "Md::App rulers" do
   it "has the panes' own default without a config file" do
     with_config do
       with_app config: true do |app|
-        app.rulers?.should be_false
+        app.horizontal_ruler?.should be_false
+        app.vertical_ruler?.should be_false
         Md::Config.dirty?.should be_false
       end
     end

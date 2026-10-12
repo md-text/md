@@ -520,13 +520,18 @@ module Md
     # formatting target, so the viewer's caret counts while reading.
     private def refresh_task_entry : Nil
       action = @task_action || return
-      doc = formatting_editor.document
       first, last = selected_blocks
-      item = (first..last).each do |i|
-        parsed = ListItem.parse(doc.blocks[i].text) || next
-        break parsed
+      action.checked = !first_item(formatting_editor.document, first, last).try(&.task).nil?
+    end
+
+    # The first list item among lines *first* to *last* of *doc*, or nil.
+    private def first_item(doc : Crysterm::TextDocument, first : Int32, last : Int32) : ListItem?
+      (first..last).each do |i|
+        if item = ListItem.parse(doc.blocks[i].text)
+          return item
+        end
       end
-      action.checked = !item.try(&.task).nil?
+      nil
     end
 
     # `Enter` on a list item with the caret past the marker: the item

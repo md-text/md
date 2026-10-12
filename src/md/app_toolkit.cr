@@ -27,7 +27,7 @@ module Md
     # links expects of Never. Below the policies, Double-click to Open
     # (`#link_double_click?`, `md.link_double_click`) makes a double click
     # follow a link where a single one does by default — the single- or
-    # double-click choice desktops offer — through `TextBrowser#link_clicks`;
+    # double-click choice desktops offer — through `TextBrowser#double_click_links`;
     # a single click then only places the caret, as on any text.
     #
     # Options → Reduced Motion (`#reduced_motion?`, `render.reduced_motion`):
@@ -97,15 +97,20 @@ module Md
       end
       @hyperlinks.on_change do
         Crysterm::Config.render_hyperlinks = @hyperlinks.value
-        # The window took the option as its own policy when it was created;
-        # it is told too. Never takes the viewer's links away as well.
-        @window.hyperlinks = @hyperlinks.value
-        @viewer.links_enabled = !@hyperlinks.value.off?
+        apply_hyperlinks
         @window.update
       end
-      @viewer.links_enabled = !@hyperlinks.value.off?
+      apply_hyperlinks
       @reduced_motion.on_change { Crysterm::Config.render_reduced_motion = @reduced_motion.value }
-      @link_double_click.on_change { @viewer.link_clicks = @link_double_click.value ? 2 : 1 }
+      @link_double_click.on_change { @viewer.double_click_links = @link_double_click.value }
+    end
+
+    # Puts the hyperlink policy on the window — which took the option as its
+    # own when it was created, so it is told of a change — and, for Never,
+    # takes the viewer's links away as well.
+    private def apply_hyperlinks : Nil
+      @window.hyperlinks = @hyperlinks.value
+      @viewer.links_enabled = !@hyperlinks.value.off?
     end
 
     private def color_depth_label(depth : ColorDepth) : String

@@ -126,8 +126,9 @@ module Md
     # question that asks another shows the bar again at once.
     private def wire_prompt_bar : Nil
       prompt = @main.status_bar.line_prompt
-      prompt.on(Crysterm::Event::Submitted) { @main.status_bar.hide unless @bars.value }
-      prompt.on(Crysterm::Event::Cancelled) { @main.status_bar.hide unless @bars.value }
+      conceal = -> { @main.status_bar.hide unless @bars.value }
+      prompt.on(Crysterm::Event::Submitted) { conceal.call }
+      prompt.on(Crysterm::Event::Cancelled) { conceal.call }
     end
 
     # The choice question in place of the status bar, answered by one key:

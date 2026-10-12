@@ -57,13 +57,13 @@ describe "Md::App toolkit options" do
       app.url_opener = ->(url : String) { opened << url; nil }
       toggle = submenu(app, 3, "Terminal Lin&ks").last
       toggle.checked?.should be_false
-      app.viewer.link_clicks.should eq 1
+      app.viewer.double_click_links?.should be_false
       toggle.trigger
       app.link_double_click?.should be_true
-      app.viewer.link_clicks.should eq 2
+      app.viewer.double_click_links?.should be_true
       app.link_double_click = false
       toggle.checked?.should be_false
-      app.viewer.link_clicks.should eq 1
+      app.viewer.double_click_links?.should be_false
     end
   end
 

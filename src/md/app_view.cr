@@ -20,8 +20,8 @@ module Md
     #
     # View → Rulers → Horizontal (`#horizontal_ruler?`) puts a column ruler
     # along the top row of each pane and Vertical (`#vertical_ruler?`) a row
-    # ruler down its left, each on its own (`#rulers?` and `#rulers=` are
-    # the pair) — Crysterm's `AbstractScrollArea#column_ruler` and
+    # ruler down its left, each on its own (`#rulers=` sets the pair) —
+    # Crysterm's `AbstractScrollArea#column_ruler` and
     # `#row_ruler`, counted in the text's columns, so with a
     # text width set and centered the tape starts where the text does, and
     # in the editor the row ruler stands between the line-number gutter and
@@ -111,12 +111,8 @@ module Md
       @vertical_ruler.value = value
     end
 
-    # Whether both rulers are shown.
-    def rulers? : Bool
-      horizontal_ruler? && vertical_ruler?
-    end
-
-    # Shows or hides both rulers.
+    # Shows or hides both rulers at once (there is no `rulers?`: Crysterm's
+    # means either, which a pair of entries has no use for).
     def rulers=(value : Bool) : Bool
       self.horizontal_ruler = value
       self.vertical_ruler = value

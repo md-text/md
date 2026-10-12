@@ -144,7 +144,8 @@ describe "Md::App config menu" do
         app.load_config_prompt
         answer app, other
         notice(app).should eq " Loaded #{other}"
-        app.rulers?.should be_true
+        app.horizontal_ruler?.should be_true
+        app.vertical_ruler?.should be_true
         app.editor.rulers?.should be_true
         app.text_width.should eq 72
         app.pane_sizes.should eq [20, 40, 25]

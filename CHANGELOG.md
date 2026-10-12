@@ -103,8 +103,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   whose polarity is the opposite of the terminal's in reverse video),
   View → Terminal Links (`render.hyperlinks`: whether the viewer's links are
   the terminal's own hyperlinks — When the Terminal Supports Them, Always,
-  and Never, which turns the viewer's links off altogether: plain text, not
-  followed by a click, `Enter` or `Tab`) and Options → Reduced
+  and Never, which turns the viewer's links off altogether: plain text,
+  followed by neither a click nor `Enter`, skipped by `Tab`) and Options → Reduced
   Motion (`render.reduced_motion`): three more of Crysterm's options in the
   menus, kept with the other settings. Terminal Links → Double-click to
   Open (`link_double_click`) makes a double click follow a link where a
@@ -156,7 +156,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   edge or lets them run past it with sideways scrolling; View → Text Width
   caps the text at 72, 80, 100 or 120 columns for a wide terminal, in both
   panes — or, with To Last Guide, at the rightmost guide pulled onto the
-  focused pane — and View → Center Text puts the capped column in the middle of the
+  editor while editing, the viewer otherwise — and View → Center Text puts the capped column in the middle of the
   pane. All three are kept across runs. (Crysterm: `line_wrap_column` and
   `line_wrap_column_alignment` on `AbstractScrollArea`, Qt's
   `lineWrapColumnOrWidth` and `QScrollArea::alignment`; the scroll bars

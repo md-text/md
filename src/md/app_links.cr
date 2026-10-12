@@ -46,6 +46,8 @@ module Md
     # supplies another (specs do, to see the URL without launching anything).
     property url_opener : Proc(String, Nil) = ->(url : String) { App.open_externally url }
 
+    # The places left, the browser's back and forward stacks `#travel` moves
+    # between: Previous File pops the one, Next File the other.
     @back = [] of Place
     @forward = [] of Place
     @previous_action : Crysterm::Action?

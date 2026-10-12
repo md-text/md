@@ -10,8 +10,7 @@ a single self-contained binary for Linux and macOS: download it, put it on your
 `PATH`, and run it in any terminal.
 
 > **Status:** early development. Viewing, editing, the side-by-side layout
-> and streaming from standard input work; the menu bar and status bar are
-> still empty. See [PLAN.md](PLAN.md).
+> and streaming from standard input work. See [PLAN.md](PLAN.md).
 
 [![CI](https://github.com/crystallabs/md/actions/workflows/ci.yml/badge.svg)](https://github.com/crystallabs/md/actions/workflows/ci.yml)
 [![Release](https://img.shields.io/github/v/release/crystallabs/md?sort=semver)](https://github.com/crystallabs/md/releases/latest)
@@ -145,7 +144,7 @@ viewer, and the table of contents its columns.
 | `Alt-Q`            | Refill the paragraph at the caret, or the selected paragraphs, to the wrap column (Format → Rewrap → Paragraph; Rewrap → Document refills them all) |
 | `Ctrl-Q`           | Quit (`q` too, anywhere but in the editor; File → Quit); asks first when changes are unsaved |
 
-The File, Edit and Format menus show these keys next to their entries, spelled as
+The menus show these keys next to their entries, spelled as
 Qt does (`Ctrl+O`), and the right end of the menu bar names the keys that
 open the menus. The keys work from any pane, after the pane had its turn —
 the editor keeps the keys it uses — and wait while a prompt is open.
@@ -465,8 +464,8 @@ laid out in — 72, 80, 100 or 120 columns, or *Unlimited* — so a line does
 not run the whole width of a wide terminal; it applies to both panes, which
 keeps them reading side by side under Sync Cursor. *To Last Guide*, below
 the widths, sets it to the column of the rightmost guide you pulled onto
-the pane you are in (see Guides), so a guide dragged to a good place becomes
-the width. *Center Text* puts the
+the editor while editing, the viewer otherwise (see Guides), so a guide
+dragged to a good place becomes the width. *Center Text* puts the
 capped column in the middle of a wider pane rather than at its left edge.
 
 Two more measure it. *Rulers* puts a column ruler along the top row of each
@@ -553,11 +552,13 @@ choices, not a cache, and stay.
 
 ### Settings
 
-The choices made in the View and Options menus — Resizable Panes, Sync
-Cursor, Highlight Line, Line Numbers, Soft Wrap, Hard Wrap, Text Width,
-Center Text, Rulers, Guides, Dialog Style, Ask Before Discarding Changes,
-Auto-Save, Keep a Backup File, the mouse mode, the clipboard mode and the
-theme — and the pane sizes are kept across runs in
+The choices made in the View and Options menus — Resizable Panes, Menu and
+Status Bars, Sync Cursor, Highlight Line, Line Numbers, Soft Wrap, Hard
+Wrap, Text Width, Center Text, Rulers (Horizontal and Vertical), Guides,
+Terminal Links → Double-click to Open, Dialog Style, Ask Before Discarding
+Changes, Auto-Save, Keep a Backup File, the mouse mode, the clipboard mode,
+the theme and Crysterm's own Color Depth, Terminal Links, Media Backend and
+Reduced Motion — and the pane sizes are kept across runs in
 `$XDG_CONFIG_HOME/md/config.yml` (`~/.config/md/config.yml`), written when
 md quits if anything changed. Watch File is not kept: like `--watch`, it is
 for the run at hand.

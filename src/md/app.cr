@@ -3,7 +3,7 @@ require "./source"
 
 module Md
   # The interactive terminal application: a `MainWindow` (menu bar and status
-  # bar, both empty for now) whose central area holds three panes side by
+  # bar) whose central area holds three panes side by
   # side — the Markdown source editor, the rendered viewer and a navigable
   # table of contents — in a splitter whose dividers resize them
   # (`app_panes.cr`). Any combination of panes can be shown; by default only
@@ -360,7 +360,7 @@ module Md
     # Puts the property on the two bars (from `#initialize`, on change).
     private def apply_bars : Nil
       shown = @bars.value
-      {@main.menu_bar, @main.status_bar}.each { |bar| shown ? bar.show : bar.hide }
+      {@main.menu_bar, @main.status_bar}.each &.visible = shown
     end
 
     # Jumps to the heading *url* names (`"#anchor"`, as the table of contents

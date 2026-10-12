@@ -385,7 +385,7 @@ describe "Md::App config" do
         window.mouse_enabled?.should be_false # reading in the viewer: not in `i`
         app.editor.line_numbers?.should be_true
         app.pane_sizes.should eq [40, 60, 20]
-        follow, highlight = menu(app, 3).actions[6, 2]
+        follow, highlight = menu(app, 3).actions.select { |a| a.text.in?("S&ync Cursor", "&Highlight Line") }
         follow.checked?.should be_true
         highlight.checked?.should be_true
         Md::Config.dirty?.should be_false # applying is not a change

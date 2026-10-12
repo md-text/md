@@ -4,12 +4,14 @@ module Md
     # the next file, save, quit), Edit (copy, paste and paste from a named
     # source, find, repeat the find, replace, go to a line, jump between
     # headings), Format (the Markdown markup, `app_edit.cr`), View (which panes
-    # are shown and whether they resize, whether the editor's and the viewer's
+    # are shown and whether they resize, whether the two bars are shown,
+    # whether the editor's and the viewer's
     # carets are kept in sync, whether the caret's line is highlighted,
     # whether the editor numbers its lines, the text's layout — soft wrap,
     # hard wrap, a text width and its centering, rulers and guides — the
     # theme the window is drawn in, how images are drawn (Media Backend, with
-    # its Change for 5s trial, `app_media.cr`), how questions are asked
+    # its Change for 5s trial, `app_media.cr`), the color depth and the links
+    # (Terminal Links, with Double-click to Open, `app_toolkit.cr`), how questions are asked
     # (Dialog Style, `app_dialogs.cr`) and whether the file is watched) and
     # Options (the two
     # modes the status bar toggles — overwrite mode and the mouse mode — the
