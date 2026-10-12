@@ -525,3 +525,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   coming back from a suspend; a title under tmux is sent for tmux to take,
   where it was wrapped for passthrough and dropped. (Fixed in Crysterm and
   Tput, which md builds against.)
+- A menu entry that cannot be used now looks it: File → Previous File and
+  Next File with no file to go to, and the other entries md disables, are
+  drawn in the theme's disabled color, their shortcuts too, and change as
+  they become usable while the menu is open. They still highlight under the
+  pointer, to show why they are disabled. (Fixed in Crysterm, which md
+  builds against.)
