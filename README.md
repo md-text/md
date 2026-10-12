@@ -193,8 +193,9 @@ the panes.
 
 Every menu entry has a one-sentence description of what it does. While a
 menu is open, the status bar shows the highlighted entry's in place of the
-document's name — as desktop applications show a status tip — and gives the
-name back when the highlight moves on or the menu closes; the entries' keys
+document's name — as desktop applications show a status tip, but as wide
+as it needs, over the fields on the right when it does not fit beside them —
+and gives the bar back when the highlight moves on or the menu closes; the entries' keys
 are in the menus themselves. Options → Tooltips moves the descriptions: *In
 Status Bar* is that; *As a Popup* shows one in a small box beside the entry
 instead, after a moment, gone as soon as the highlight leaves it, for a
@@ -278,7 +279,8 @@ is on, so your rules stay in force when the theme changes under them.
 
 View → Media Backend picks how Crysterm draws images, from the backends its
 `--media-backend` option names. Auto-detect, the default, leaves the choice
-to Crysterm, which takes the best one your terminal drives — Kitty graphics
+to Crysterm, which takes the best one your terminal drives (the entry names
+it in parentheses) — Kitty graphics
 on Kitty, Sixel on an xterm, sub-cell glyphs or one cell per pixel anywhere
 else; the other entries name one and hold it: the cell grid (ANSI in true
 color, 256, 16 or 8 colors; Unicode half blocks, quadrants, sextants,

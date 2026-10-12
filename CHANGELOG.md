@@ -337,6 +337,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   end, and left alone by outside clicks and `Escape`. Submenus tear off too.
   The ordinary menus are unchanged; the choice is kept with the other
   settings. (Crysterm's tear-off menus, which md builds against.)
+- A menu entry's description in the status bar takes as much of the bar as it
+  needs, covering the fields on the right while it shows when it does not fit
+  beside them (Crysterm's `MainWindow#status_tips_full_width`); View → Media
+  Backend's Auto-detect names the backend it detects in parentheses.
 - File → Close: closes the document after the unsaved-changes question, takes
   it off the trail Previous File and Next File retrace, and opens the file
   Next File would have gone to, or leaves a blank new document.

@@ -57,6 +57,12 @@ describe "Md::App tooltips" do
     end
   end
 
+  it "lets a status tip take the whole bar while it shows" do
+    with_app do |app|
+      app.main.status_tips_full_width?.should be_true
+    end
+  end
+
   it "gives every entry of every menu and submenu a description" do
     with_app Md::Source.new(path: "doc.md"), text: "# T\n\ntext\n", view: true, history: Md::History.new(tempfile(nil)) do |app|
       app.main.menu_bar.menus.size.should eq 7

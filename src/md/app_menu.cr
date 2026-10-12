@@ -141,7 +141,7 @@ module Md
       # Whether the viewer draws the document's images, and how, with the
       # Change for 5s trial (`app_media.cr`); `I` is free here.
       add_toggle view, "&Images", @images, option_tip("md.images")
-      build_media_menu view
+      @media_actions = build_media_menu view
       # Two more of Crysterm's options (`app_toolkit.cr`); `L` and `K` are
       # free here.
       add_choices(view, "Co&lor Depth", COLOR_DEPTHS, @color_depth, "How many colors the window is drawn with: the terminal's, or a depth of your choosing", ->color_depth_tip(ColorDepth)) { |depth| color_depth_label depth }

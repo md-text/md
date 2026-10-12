@@ -50,6 +50,10 @@ module Md
     # Applies the choice now and on every change (from `#initialize`, once
     # the menus exist).
     private def wire_tips : Nil
+      # A tip shows only while its entry is highlighted, so it may take the
+      # whole bar when it needs it, covering the permanent fields for that
+      # moment (Crysterm's `MainWindow#status_tips_full_width`).
+      @main.status_tips_full_width = true
       @tooltips.on_change { apply_tooltips }
       apply_tooltips
     end

@@ -259,9 +259,12 @@ module Md
       end
     end
 
+    # The Media Backend entries, in `MEDIA_BACKENDS` order (`#build_menus`).
+    @media_actions = [] of Crysterm::Action
+
     private def media_backend_label(backend : MediaBackend) : String
       case backend
-      in .auto?            then "&Auto-detect"
+      in .auto?            then "&Auto-detect (#{media_backend_label(Crysterm::Widget::Media.auto_type(tput: @window.tput).backend).delete('&')})"
       in .ansi?            then "A&NSI, One Cell per Pixel"
       in .ansi_true_color? then "ANSI, &True Color"
       in .ansi_c256?       then "ANSI, 25&6 Colors"

@@ -161,11 +161,13 @@ module Md
     # The Terminal Links entries, in `Hyperlinks` order (`#build_menus`).
     @hyperlinks_actions = [] of Crysterm::Action
 
-    # Brings the Auto-detect entries' labels up to what the detection says
-    # now (from View's `AboutToShow`): the terminal's answers come in after
-    # the menus are built.
+    # Brings the Auto-detect entries' labels — Terminal Links' and Media
+    # Backend's (`app_media.cr`) — up to what the detection says now (from
+    # View's `AboutToShow`): the terminal's answers come in after the menus
+    # are built.
     private def refresh_detected_labels : Nil
       @hyperlinks_actions[Hyperlinks::Auto.value]?.try &.text = hyperlinks_label(Hyperlinks::Auto)
+      @media_actions[MEDIA_BACKENDS.index!(MediaBackend::Auto)]?.try &.text = media_backend_label(MediaBackend::Auto)
     end
 
     private def hyperlinks_tip(policy : Hyperlinks) : String

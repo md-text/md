@@ -51,12 +51,12 @@ describe "Md::App media backend" do
       entries[0].checkable?.should be_true
       entries[0].checked?.should be_false
       entries[1].separator?.should be_true
-      entries[2].text.should eq "&Auto-detect"
+      # Auto-detect names what it detects here, by the entry's own label.
+      entries[2].text.should match /\A&Auto-detect \((Sub-Cell Glyphs|ANSI, One Cell per Pixel|Kitty Graphics|iTerm2 Inline Images|Sixel)\)\z/
       entries[3].separator?.should be_true # Auto-detect alone, then the cell grid
       backends = backend_entries(app)
       backends.size.should eq Backend.values.size
-      backends.map(&.text).should eq [
-        "&Auto-detect",
+      backends.map(&.text).skip(1).should eq [
         "A&NSI, One Cell per Pixel", "ANSI, &True Color", "ANSI, 25&6 Colors", "ANSI, &16 Colors", "ANSI, &8 Colors",
         "Sub-Cell &Glyphs", "Solid &Blocks", "Unicode &Half Blocks", "Unicode &Quadrants",
         "Unicode Se&xtants", "Unicode &Octants", "Braille &Dots", "ASCII &Contours",
