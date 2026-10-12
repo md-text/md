@@ -216,8 +216,8 @@ menu's own (a check made on either shows on both). Drag either of its strips to
 move it, and click the `✕` at the right end of its top border to close it; an outside click leaves it up, and
 `Escape` only takes the keyboard back to the panes. Submenus tear off too,
 and a torn-off menu's own submenus open as usual. The ordinary menus are
-unchanged, and a torn-off menu stays until closed even after the option is
-turned off (`--menu-tear-off`).
+unchanged. Turning the option off hides the torn-off menus, and turning it
+on again brings them back where they were (`--menu-tear-off`).
 
 ### Copying
 
