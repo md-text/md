@@ -462,6 +462,29 @@ describe "Md::App editing" do
     end
   end
 
+  it "promotes and demotes the heading of the caret's section from anywhere in its text, keeping the caret" do
+    with_app text: "Preface.\n\n## Title\n\nBody text.\n\n```\n# not a heading\n```\n\nMore.\n", view: false do |app|
+      doc = app.editor.document
+      place app, 10, 2 # "More.", below a code block with a # line in it
+      app.demote_heading.should be_true
+      app.markdown.lines[2].should eq "### Title"
+      app.markdown.lines[7].should eq "# not a heading"
+      app.editor.cursor_position.should eq doc.block_position(10) + 2
+      place app, 4, 5
+      app.promote_heading.should be_true
+      app.promote_heading.should be_true
+      app.markdown.lines[2].should eq "# Title"
+      app.editor.cursor_position.should eq doc.block_position(4) + 5
+      app.editor.text_cursor.block.text.should eq "Body text."
+      place app, 0, 3 # before the first heading: the line itself
+      app.promote_heading.should be_false
+      notice(app).should contain "Not a heading"
+      app.demote_heading.should be_true
+      app.markdown.lines[0].should eq "# Preface."
+      app.editor.cursor_position.should eq 5
+    end
+  end
+
   it "formats from the viewer at the source of its caret, showing the editor" do
     with_app text: "some word here\n", view: true do |app|
       app.visible_panes.should eq [Md::App::Pane::Viewer]

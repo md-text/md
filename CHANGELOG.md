@@ -223,7 +223,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   takes it off, Toggle Task Checkbox (`Alt-X`) ticks and unticks it (an
   item without a box gets a ticked one), and both make a line of text a
   list item first (`text` → `- [ ] text`), where they did nothing off a list; Promote Heading and Demote Heading
-  (`Ctrl-Up`, `Ctrl-Down`) change the line's heading level. Each change is
+  (`Ctrl-Up`, `Ctrl-Down`) change the heading level of the caret's section —
+  the caret's line when it is a heading, the nearest heading above it from
+  anywhere in the section's text — the caret staying put. Each change is
   one undo step.
 - Edit → Replace… (`Alt-H`, since Qt's `Ctrl-H` is Backspace in a terminal): the
   prompt asks for the pattern (the last search's filled in) and the

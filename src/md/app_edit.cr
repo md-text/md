@@ -77,7 +77,9 @@ module Md
     # for whole lines: ` ``` ` fences around the selection's lines or the
     # caret's paragraph, an empty block on a blank line, and off again from
     # anywhere in a fenced block. Format → Promote Heading and Demote Heading (`Ctrl-Up`,
-    # `Ctrl-Down`) move the caret's line one heading level up or down, a
+    # `Ctrl-Down`) move the heading of the caret's section one level up or
+    # down — the caret's line when it is a heading, the nearest heading
+    # above it otherwise, so they work from anywhere in the section — a
     # paragraph being the level above `#` and `######` the last.
     #
     # Format → Rewrap → Paragraph (`Alt-Q`, Emacs's `fill-paragraph`, Kate's
@@ -512,9 +514,10 @@ module Md
       moved
     end
 
-    # Format → Promote Heading: the caret's line one level up (`##` → `#`;
-    # `#` → a paragraph). Returns whether it could go up, with a notice
-    # when not.
+    # Format → Promote Heading: the caret's section's heading one level up
+    # (`##` → `#`; `#` → a paragraph), from the heading line or anywhere in
+    # the section's text (`#shift_heading`). Returns whether it could go
+    # up, with a notice when not.
     def promote_heading : Bool
       shift_heading -1
     end
@@ -655,8 +658,8 @@ module Md
       format.on(Crysterm::Event::AboutToShow) { refresh_task_entry }
       named "toggle-task", tip format.add_action("Toggle Task Chec&kbox", shortcut: "Alt+X") { check_task }, "Tick the caret's task box, or empty it; an item without a box, or a line of text, gets a ticked one"
       format.add_separator
-      named "promote-heading", tip format.add_action("&Promote Heading", shortcut: "Ctrl+Up") { promote_heading }, "Take one # off the caret's heading; a # heading becomes a paragraph"
-      named "demote-heading", tip format.add_action("&Demote Heading", shortcut: "Ctrl+Down") { demote_heading }, "Add a # to the caret's heading, down to ######; a paragraph becomes a # heading"
+      named "promote-heading", tip format.add_action("&Promote Heading", shortcut: "Ctrl+Up") { promote_heading }, "Take one # off the heading of the caret's section, from anywhere in it; a # heading becomes a paragraph"
+      named "demote-heading", tip format.add_action("&Demote Heading", shortcut: "Ctrl+Down") { demote_heading }, "Add a # to the heading of the caret's section, from anywhere in it, down to ######; before any heading, the caret's paragraph becomes a # heading"
       format.add_separator
       paragraph = Crysterm::Action.new "&Paragraph", name: "rewrap-paragraph"
       paragraph.shortcut = "Alt+Q"
@@ -982,11 +985,19 @@ module Md
       end
     end
 
-    # The caret's line moved *by* heading levels: its hashes replaced.
+    # The heading of the caret's section moved *by* levels, its hashes
+    # replaced: the caret's line when it is a heading, else the nearest
+    # heading above it — so the entries work from anywhere in the section's
+    # text, as the task entries do from anywhere on the line — a line in a
+    # fenced or indented code block being no heading. Before the first
+    # heading there is no section, and the caret's line itself is shifted:
+    # a paragraph becomes a `#` heading on Demote and stays on Promote. The
+    # caret keeps its place in the text.
     private def shift_heading(by : Int32) : Bool
       editor = formatting_editor
       doc = editor.document
-      block = editor.text_cursor.block
+      line = section_heading(doc, doc.block_at(editor.cursor_position).index)
+      block = doc.blocks[line]
       m = HEADING.match(block.text) || return false
       level = m["hashes"]?.try(&.size) || 0
       target = level + by
@@ -998,9 +1009,28 @@ module Md
         return false
       end
       from = block.position + m["lead"].size
-      Crysterm::TextCursor.new(doc, from, block.position + m[0].size).insert_text(target == 0 ? "" : "#" * target + " ")
+      to = block.position + m[0].size
+      hashes = target == 0 ? "" : "#" * target + " "
+      cursor = editor.text_cursor
+      anchor, position = cursor.anchor, cursor.position
+      Crysterm::TextCursor.new(doc, from, to).insert_text hashes
+      # A position past the hashes moves with the text; one among them
+      # goes to where the text starts.
+      shift = ->(at : Int32) { at >= to ? at + hashes.size - (to - from) : (at > from ? from + hashes.size : at) }
+      editor.text_cursor = Crysterm::TextCursor.new(doc, shift.call(anchor), shift.call(position))
       edited
       true
+    end
+
+    # The line of the heading whose section line *index* of *doc* is in:
+    # *index* itself when it is a heading, else the nearest heading above
+    # it that is no code block's line; *index* when there is none.
+    private def section_heading(doc : Crysterm::TextDocument, index : Int32) : Int32
+      code = App.code_lines doc, index
+      index.downto(0) do |i|
+        return i if !code[i] && App.heading?(doc.blocks[i].text)
+      end
+      index
     end
 
     # The editor, for a Format entry (and a paste, `app_clipboard.cr`):

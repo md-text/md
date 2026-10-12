@@ -148,7 +148,7 @@ runs too.
 | `Enter`            | In the editor, on a list item: continue the list (an empty item ends it) |
 | `Ctrl-B`, `Alt-I`, `Alt-C` | Bold, italic and code around the selection or the word at the caret, or off again (Format → Bold, Italic, Code) |
 | `Alt-X`            | Tick or untick a list item's task box, or give it a ticked one, a line of text becoming an item (Format → Toggle Task Checkbox; Format → As a Task, a check entry, adds and removes the box) |
-| `Ctrl-Up`, `Ctrl-Down` | Promote or demote the heading on the caret's line (Format → Promote Heading, Demote Heading) |
+| `Ctrl-Up`, `Ctrl-Down` | Promote or demote the heading of the caret's section, from the heading or anywhere in its text (Format → Promote Heading, Demote Heading) |
 | `Alt-Q`            | Refill the paragraph at the caret, or the selected paragraphs, to the wrap column (Format → Rewrap → Paragraph; Rewrap → Document refills them all) |
 | `Ctrl-N`           | Open a new window on this document, in a new terminal window (Window → New) |
 | `Ctrl-W`           | Outside the editor, close this window, asking first when its changes are unsaved; the last window's close quits (Window → Close Current) |
@@ -376,8 +376,12 @@ and gives an item without a box a ticked one. A task box belongs on a list
 item, so on a line of text that is no item both make it one first, `text`
 becoming `- [ ] text` (a selection's lines of text each, when it holds no
 item); Format → Promote Heading and Demote Heading (`Ctrl-Up`, `Ctrl-Down`)
-move the caret's line one heading level up or down, a paragraph being the
-level above `#`. Each change is one undo step.
+move the heading of the caret's section one level up or down, a paragraph
+being the level above `#` — the caret's line when it is a heading, and from
+anywhere in the section's text the nearest heading above it (one in a code
+block does not count), the caret staying where it is. Before the first
+heading, Demote makes the caret's paragraph a `#` heading. Each change is
+one undo step.
 
 The keys are not all Qt's: `Ctrl-B` is, but a terminal sends the same byte
 for `Ctrl-I` and `Tab`, and cannot tell `Ctrl-Shift-X` from `Ctrl-X`, so
