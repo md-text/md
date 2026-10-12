@@ -227,19 +227,23 @@ module Md
     private def add_paste_actions(edit : Crysterm::Widget::Menu) : Nil
       # `Ctrl+V` reaches the entry from a pane that does not paste itself
       # (the editor's own `Ctrl-V` is its paste).
-      edit.add_action("&Paste", shortcut: "Ctrl+V") { paste }
+      tip edit.add_action("&Paste", shortcut: "Ctrl+V") { paste }, "Paste the clipboard into the editor at the caret, as the clipboard mode reads it"
       terminal = Crysterm::Action.new "From &Terminal Clipboard"
       terminal.on(Crysterm::Event::Triggered) { paste_from_terminal }
+      tip terminal, "Paste what the terminal's clipboard holds, asked for through OSC 52"
       argv = clipboard.paste_command
       command = Crysterm::Action.new "From &Command (#{argv ? argv[0] : "none found"})"
       command.enabled = !argv.nil?
       command.on(Crysterm::Event::Triggered) { paste_from_command }
+      tip command, (argv ? "Paste the output of #{argv[0]}, the paste command found on this system" : "No paste command was found on this system")
       internal = Crysterm::Action.new "From &Internal Buffer"
       internal.on(Crysterm::Event::Triggered) { paste_from_internal }
+      tip internal, "Paste what md itself last copied"
       ring = Crysterm::Action.new "From &Kill Ring"
       ring.enabled = false
+      tip ring, "Paste a text killed in the editor with Ctrl-K, Ctrl-U or Alt-D, the most recent first"
       @kill_ring_action = ring
-      edit.add_submenu "Paste &Special", [terminal, command, internal, ring]
+      tip edit.add_submenu("Paste &Special", [terminal, command, internal, ring]), "Paste from a source named here rather than the one the clipboard mode reads"
       edit.on(Crysterm::Event::AboutToShow) { refresh_kill_ring_menu }
     end
 
@@ -252,7 +256,7 @@ module Md
       actions = kill_ring_entries.first(KILL_RING_MENU_MAX).map_with_index do |text, index|
         a = Crysterm::Action.new "&#{(index + 1) % 10} #{kill_preview text}"
         a.on(Crysterm::Event::Triggered) { paste_from_kill_ring index }
-        a
+        tip a, "Paste this killed text into the editor at the caret"
       end
       action.menu = actions
       action.enabled = !actions.empty?
@@ -391,6 +395,14 @@ module Md
       in .terminal? then "&Terminal (OSC 52)"
       in .command?  then "&Command (#{(command = clipboard.copy_command) ? command[0] : "None Found"})"
       in .internal? then "&Internal (Within md)"
+      end
+    end
+
+    private def clipboard_tip(mode : ClipboardMode) : String
+      case mode
+      in .terminal? then "Copy and paste through the terminal's clipboard escape, OSC 52"
+      in .command?  then (command = clipboard.copy_command) ? "Copy and paste through #{command[0]}, the command found on this system" : "No copy command was found on this system"
+      in .internal? then "Copy and paste within md alone, for a terminal that garbles the escape"
       end
     end
   end

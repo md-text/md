@@ -142,12 +142,12 @@ module Md
       previous = Crysterm::Action.new "&Previous File"
       previous.shortcut = "Alt+Left"
       previous.on(Crysterm::Event::Triggered) { previous_file }
-      menu.add_action previous
+      menu.add_action tip(previous, "Go back to the file this one was opened over, at the place left")
       @previous_action = previous
       following = Crysterm::Action.new "&Next File" # `next` is a keyword
       following.shortcut = "Alt+Right"
       following.on(Crysterm::Event::Triggered) { next_file }
-      menu.add_action following
+      menu.add_action tip(following, "Go forward again to the file Previous File came back from")
       @next_action = following
       refresh_navigation
     end

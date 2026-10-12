@@ -162,6 +162,7 @@ module Md
       actions = [] of Crysterm::Action
       trial = Crysterm::Action.new "Change for &#{media_trial_text}", checkable: true
       trial.bind_checked @media_trial
+      tip trial, "Try the next backend picked for #{media_trial_text}, then go back to the one before"
       actions << trial << Crysterm::Action.separator
       group = Crysterm::ActionGroup.new
       entries = [] of Crysterm::Action
@@ -171,13 +172,14 @@ module Md
         family = media_group(backend)
         action = Crysterm::Action.new media_backend_label(backend), checkable: true
         action.bind_checked(@media_backend) { @media_backend.value == backend }
+        tip action, media_backend_tip(backend)
         action.enabled = backend.available?(@window.tput)
         group.add_action action
         action.on(Crysterm::Event::Triggered) { @media_backend.value = backend }
         actions << action
         entries << action
       end
-      menu.add_submenu "Media &Backend", actions
+      tip menu.add_submenu("Media &Backend", actions), "How images are drawn: the best way this terminal has, or one named here"
       entries
     end
 
@@ -195,6 +197,32 @@ module Md
 
     # Crysterm's name for the backend, with a mnemonic; each letter once in
     # the submenu, `5` being Change for 5s'.
+    private def media_backend_tip(backend : MediaBackend) : String
+      case backend
+      in .auto?            then "Let Crysterm pick the best way this terminal draws images"
+      in .ansi?            then "Draw images as colored cells, one per pixel, at the terminal's color depth"
+      in .ansi_true_color? then "Draw images as colored cells in true color"
+      in .ansi_c256?       then "Draw images as colored cells from the 256-color palette"
+      in .ansi_c16?        then "Draw images as colored cells from the 16 ANSI colors"
+      in .ansi_c8?         then "Draw images as colored cells from the 8 ANSI colors"
+      in .glyph?           then "Draw images with the finest sub-cell glyphs this terminal renders"
+      in .glyph_block?     then "Draw images with solid blocks, one pixel per cell"
+      in .glyph_half?      then "Draw images with half blocks, two pixels per cell"
+      in .glyph_quadrant?  then "Draw images with quadrant blocks, four pixels per cell"
+      in .glyph_sextant?   then "Draw images with sextant blocks, six pixels per cell"
+      in .glyph_octant?    then "Draw images with octant blocks, eight pixels per cell"
+      in .glyph_braille?   then "Draw images with Braille dots, eight per cell"
+      in .glyph_ascii?     then "Draw images with ASCII characters alone"
+      in .sixel?           then "Draw images with Sixel graphics, as xterm and VTE terminals do"
+      in .regis?           then "Draw images with ReGIS vector graphics, on a DEC-compatible terminal"
+      in .kitty?           then "Draw images with the Kitty graphics protocol"
+      in .iterm?           then "Draw images with iTerm2's inline images protocol"
+      in .tek?             then "Draw images in a Tektronix 4014 window, as xterm emulates one"
+      in .overlay?         then "Draw images in a window a helper program lays over the terminal"
+      in .ueberzug?        then "Draw images with the ueberzug helper, laid over the terminal"
+      end
+    end
+
     private def media_backend_label(backend : MediaBackend) : String
       case backend
       in .auto?            then "&Auto-detect"

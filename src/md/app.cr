@@ -222,6 +222,7 @@ module Md
       stream(stream) if stream
       show_pane(view ? Pane::Viewer : Pane::Editor).focus
       build_menus
+      wire_tips # where the entries' descriptions show, once the menus exist
       build_status
       setup_clipboard
       apply_config

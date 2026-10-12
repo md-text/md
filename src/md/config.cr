@@ -55,6 +55,8 @@ module Superconf
     description: "Options → Mouse: when the mouse serves md, after vi's mouse option (all|normal|insert|off); off leaves it to the terminal"
   option "md.clipboard_mode", Md::App::ClipboardMode::Terminal, env: "MD_CLIPBOARD_MODE",
     description: "Options → Clipboard: where a copy goes and a paste comes from (terminal|command|internal)"
+  option "md.tooltips", Md::App::Tooltips::StatusBar, env: "MD_TOOLTIPS",
+    description: "Options → Tooltips: where a menu entry's description shows while it is highlighted — in the status bar (status_bar), in a popup beside the entry after a moment (popup), or nowhere (off)"
   # The panes.
   option "md.pane_sizes", "", env: "MD_PANE_SIZES",
     description: "The widths in columns of the editor, the viewer and the table of contents, comma-separated (0 for a pane never resized), as the dividers left them; recorded when md quits"

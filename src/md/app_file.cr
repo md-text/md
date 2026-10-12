@@ -309,7 +309,7 @@ module Md
       actions = entries.map do |entry|
         a = Crysterm::Action.new entry.path
         a.on(Crysterm::Event::Triggered) { confirm_discard { open_file entry.path } }
-        a
+        tip a, "Open this file again, at the place left in it"
       end
       action.menu = actions
       action.enabled = !actions.empty?

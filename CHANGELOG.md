@@ -300,6 +300,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   applied at once, with the menu entries and the panes following and its
   values counting as picks; the config file written now; the settings written
   to a file of your choosing.
+- Every menu entry has a one-sentence description, shown while the entry is
+  highlighted: in the status bar, in place of the document's name, by default
+  (a desktop application's status tip); or, by Options → Tooltips, in a
+  popup beside the entry after a moment, inert and gone as the highlight
+  leaves; or nowhere. `F1` on a highlighted entry shows its description
+  beside it either way. An entry bound to a setting describes itself with
+  the setting's own description, so `--help --verbose` and the menu say the
+  same. Kept across runs (`md.tooltips`).
 
 ### Changed
 

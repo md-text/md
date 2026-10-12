@@ -124,6 +124,25 @@ module Md
       end
     end
 
+    private def color_depth_tip(depth : ColorDepth) : String
+      case depth
+      in .auto?       then "Draw with as many colors as the terminal reports having"
+      in .none?       then "Draw in monochrome: the terminal's two colors, and reverse video for the rest"
+      in .basic?      then "Draw with the 8 ANSI colors"
+      in .ansi?       then "Draw with the 16 ANSI colors"
+      in .xterm256?   then "Draw with the 256-color palette"
+      in .true_color? then "Draw with true color, 16 million colors"
+      end
+    end
+
+    private def hyperlinks_tip(policy : Hyperlinks) : String
+      case policy
+      in .auto? then "Make the viewer's links hyperlinks where the terminal is known to support them"
+      in .on?   then "Make the viewer's links hyperlinks whatever the terminal, trusting it over the detection"
+      in .off?  then "Turn the viewer's links off altogether: plain text, followed by nothing"
+      end
+    end
+
     private def hyperlinks_label(policy : Hyperlinks) : String
       case policy
       in .auto? then "&When the Terminal Supports Them"

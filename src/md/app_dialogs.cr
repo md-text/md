@@ -159,6 +159,13 @@ module Md
       end
     end
 
+    private def dialog_style_tip(style : DialogStyle) : String
+      case style
+      in .modal?       then "Ask in a dialog in the middle of the window"
+      in .line_prompt? then "Ask in place of the status bar, as vi's command line does"
+      end
+    end
+
     private def dialog_style_label(style : DialogStyle) : String
       case style
       in .modal?       then "&Modal Dialogs"

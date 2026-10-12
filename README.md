@@ -187,6 +187,18 @@ searches, replaces, goes to a line and jumps between headings; the Format menu m
 up the source (see Editing Markdown below); the View menu shows and hides
 the panes.
 
+Every menu entry has a one-sentence description of what it does. While a
+menu is open, the status bar shows the highlighted entry's in place of the
+document's name — as desktop applications show a status tip — and gives the
+name back when the highlight moves on or the menu closes; the entries' keys
+are in the menus themselves. Options → Tooltips moves the descriptions: *In
+Status Bar* is that; *As a Popup* shows one in a small box beside the entry
+instead, after a moment, gone as soon as the highlight leaves it, for a
+terminal whose status bar is out of sight; *Never* shows none. Whatever the
+choice, `F1` on a highlighted entry shows its description beside it until
+the next key, and the status bar stays the document's. Kept across runs
+(`md.tooltips`).
+
 ### Copying
 
 Edit → Copy (`Ctrl-C`) copies the selection in the focused pane. With
@@ -562,8 +574,8 @@ Status Bars, Sync Cursor, Highlight Line, Line Numbers, Soft Wrap, Hard
 Wrap, Text Width, Center Text, Rulers (Horizontal and Vertical), Guides,
 Terminal Links → Double-click to Open, Dialog Style, Ask Before Discarding
 Changes, Auto-Save, Keep a Backup File, the mouse mode, the clipboard mode,
-the theme and Crysterm's own Color Depth, Terminal Links, Media Backend and
-Reduced Motion — and the pane sizes are kept across runs in
+Tooltips, the theme and Crysterm's own Color Depth, Terminal Links, Media
+Backend and Reduced Motion — and the pane sizes are kept across runs in
 `$XDG_CONFIG_HOME/md/config.yml` (`~/.config/md/config.yml`), written when
 md quits if anything changed. Watch File is not kept: like `--watch`, it is
 for the run at hand.
@@ -690,6 +702,7 @@ src/md/app_autosave.cr auto-save to a recovery file; the backup file
 src/md/app_view.cr    soft wrap, text width and centering
 src/md/app_clipboard.cr copying; the clipboard modes
 src/md/app_config.cr  the View and Options choices linked to their options, the config file written
+src/md/app_tips.cr    the menu entries' descriptions; where they show (Options → Tooltips)
 src/md/config.cr      the choices as Crysterm (Superconf) options; the config file (~/.config/md/config.yml)
 src/md/history.cr     the recent files and positions (~/.local/state/md/history.json)
 src/md/version.cr     Md::VERSION, read from shard.yml at compile time

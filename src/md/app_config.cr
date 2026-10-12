@@ -45,6 +45,7 @@ module Md
       link @backup_file, "md.backup_file"
       link @mouse_mode, "md.mouse_mode"
       link @clipboard_mode, "md.clipboard_mode"
+      link @tooltips, "md.tooltips"
       link @theme, "colors.theme"
       link @media_backend, "media.backend"
       link @color_depth, "colors.depth"

@@ -69,6 +69,20 @@ module Md
       Crysterm::CSS.resolve_theme choice, @window
     end
 
+    private def theme_tip(theme : Theme) : String
+      case theme
+      in .terminal?         then "Draw the window in the terminal's own colors"
+      in .dark?             then "Draw the window in Crysterm's dark theme"
+      in .light?            then "Draw the window in Crysterm's light theme"
+      in .none?             then "Draw the window unstyled"
+      in .breeze_dark?      then "Draw the window in KDE's Breeze Dark"
+      in .breeze_light?     then "Draw the window in KDE's Breeze Light"
+      in .qdarkstyle_dark?  then "Draw the window in the QDarkStyle dark stylesheet"
+      in .qdarkstyle_light? then "Draw the window in the QDarkStyle light stylesheet"
+      in .qtmodern_dark?    then "Draw the window in the Qt Modern dark stylesheet"
+      end
+    end
+
     private def theme_label(theme : Theme) : String
       case theme
       in .terminal?         then "&Terminal (Its Own Colors)"
