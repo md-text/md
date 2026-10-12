@@ -416,6 +416,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   resolves a transparent background to the parent's, as CSS and Qt do; only a
   widget with nothing behind it keeps the terminal default. (Fixed in
   Crysterm, which md builds against.)
+- `Ctrl-Home` and `Ctrl-End` go to the start and the end of the document, in
+  the editor and in the viewer, the other pane following with View → Sync
+  Cursor; the keys arrived but Crysterm's text edits had no binding for them,
+  now Qt's `MoveToStartOfDocument` and `MoveToEndOfDocument`. (Fixed in
+  Crysterm, which md builds against.)
 
 [Unreleased]: https://github.com/crystallabs/md/commits/main
 - Window → New no longer freezes md on macOS: once the new terminal window

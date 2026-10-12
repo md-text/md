@@ -130,6 +130,7 @@ runs too.
 | `Alt-F`, `Alt-E`, `Alt-M`, `Alt-V`, `Alt-O`, `Alt-N`, `Alt-P` | Open the File, Edit, Format, View, Options, Window and Help menus (`F10` too) |
 | `Alt-W`            | Soft Wrap in the editor on and off (View → Soft Wrap)                     |
 | `Shift` + `Left`, `Right`, `Up`, `Down`, `Home`, `End`, `PageUp`, `PageDown` | Select from the cursor, in the editor and in the viewer |
+| `Ctrl-Home`, `Ctrl-End` | Go to the start and the end of the document, in the editor and in the viewer |
 | `Ctrl-O`           | Open a file; asks for the name (File → Open…)                             |
 | `Ctrl-R`           | Reload the file from disk (File → Reload)                                 |
 | `Ctrl-S`           | Save; without a file name yet, asks for one (File → Save As… always asks) |
@@ -158,7 +159,8 @@ Qt does (`Ctrl+O`), and the right end of the menu bar names the keys that
 open the menus. The keys work from any pane, after the pane had its turn —
 the editor keeps the keys it uses — and wait while a prompt is open.
 
-The editor has the usual editing keys: arrows and `Home`/`End`, `Shift` +
+The editor has the usual editing keys: arrows and `Home`/`End`,
+`Ctrl-Home`/`Ctrl-End` for the start and the end of the document, `Shift` +
 a movement key — the arrows, `Home`/`End`, `PageUp`/`PageDown` — to select
 from the cursor, `Ctrl-Z`/`Alt-Z` to undo and redo, `Ctrl-K`/`Ctrl-Y` to kill
 and yank, and the mouse to position the cursor, select and scroll. The
