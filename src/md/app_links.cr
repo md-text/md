@@ -122,12 +122,18 @@ module Md
     # blank new document (`#blank_document`), with a notice of the close (an
     # opened file has its own). The Previous File places stay, so Previous
     # File from the next document goes to the one the closed document was
-    # opened over. The closed file's position goes to the
-    # history, as when any file is left.
+    # opened over — all but those in the closed file, on either side: a
+    # link to the document itself leaves one, which the close would
+    # otherwise open again, or Next File later. The closed file's position
+    # goes to the history, as when any file is left.
     def close_document : Nil
       confirm_discard do
         closed = @source.name || "the new document"
         remember_position
+        if path = @source.path
+          @back.reject! { |place| place.path == path }
+          @forward.reject! { |place| place.path == path }
+        end
         while target = @forward.pop?
           next unless path = target.path
           @retracing = true # a close is no step: the closed place is not kept

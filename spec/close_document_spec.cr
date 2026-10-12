@@ -104,6 +104,34 @@ describe "Md::App#close_document" do
     end
   end
 
+  it "takes every place in the closed file off the trail, never reopening it" do
+    with_three_docs do |doc_a|
+      with_app Md::Source.new(path: doc_a), text: File.read(doc_a), view: true do |app|
+        app.go_to_line 3
+        app.open_file doc_a # a link to the document itself, say
+        app.go_to_line 7
+        app.previous_file.should be_true # Next File now leads to a place in a.md
+        app.next_file_available?.should be_true
+
+        app.close_document
+        app.source.path.should be_nil # not a again
+        app.next_file_available?.should be_false
+        app.previous_file_available?.should be_false
+      end
+    end
+    with_three_docs do |doc_a, doc_b|
+      with_app Md::Source.new(path: doc_a), text: File.read(doc_a), view: true do |app|
+        app.open_file doc_b
+        app.open_file doc_a
+        app.previous_file.should be_true
+        app.previous_file.should be_true # at a, with b and a ahead
+        app.close_document
+        app.source.path.should eq doc_b
+        app.next_file_available?.should be_false # the place in a is gone too
+      end
+    end
+  end
+
   it "keeps the trail when a file is opened over the blank document" do
     with_three_docs do |doc_a, doc_b, doc_c|
       with_app Md::Source.new(path: doc_a), text: File.read(doc_a), view: true do |app|

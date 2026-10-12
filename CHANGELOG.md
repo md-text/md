@@ -342,8 +342,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   beside them (Crysterm's `MainWindow#status_tips_full_width`); View → Media
   Backend's Auto names the backend it detects in parentheses.
 - File → Close: closes the document after the unsaved-changes question, takes
-  it off the trail Previous File and Next File retrace, and opens the file
-  Next File would have gone to, or leaves a blank new document.
+  it off the trail Previous File and Next File retrace — every place in it, so
+  neither the close nor a later step opens it again — and opens the file Next
+  File would have gone to, or leaves a blank new document.
 - Help menu (`Alt-P`), last on the bar: Manual opens md's manual — the
   README's opening and its Usage chapter, built into the binary — as the
   document; About names md's version, author and website in the status bar.
