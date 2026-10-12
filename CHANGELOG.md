@@ -317,7 +317,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   document's directory, a remote one is fetched in the background. Off
   (`md.images`, `MD_IMAGES`, `--no-md-images`), that row is all there is.
 - Window menu (`Alt-N`): New Window (`Ctrl-N`) opens another md window on the
-  document, in a new terminal window asked of the emulator md runs in
+  document as it stands — unsaved edits included and flagged as such, a stream
+  as far as it has been read — in a new terminal window asked of the emulator md runs in
   (Terminal.app and iTerm2 on macOS; kitty, Alacritty, WezTerm, foot, xterm,
   Konsole and GNOME Terminal; a tmux or screen window inside one); Close
   Window (`Ctrl-W`) closes the one you are in after its unsaved-changes

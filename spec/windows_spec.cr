@@ -65,6 +65,26 @@ describe "Md::App windows" do
     end
   end
 
+  it "opens the new window on unsaved text as unsaved, so its own guard asks too" do
+    with_app Md::Source.new(path: "doc.md"), text: "A\n", view: true do |app|
+      app.window_opener = recording_opener([] of Crysterm::Window)
+      app.editor.cursor_position = 0 # a load leaves the caret at the end
+      app.editor.insert_text "changed "
+      other = app.new_window || fail("no window was opened")
+      begin
+        other.markdown.should eq "changed A\n"
+        other.editor.document.modified?.should be_true
+        other.main.status_bar.permanent_widgets[3].as(Crysterm::Widget::Label).text.should eq "✎ modified"
+        other.close_window
+        question(other).should start_with "Save changes to"
+        answer other, 'n'
+        other.window.destroyed?.should be_true
+      ensure
+        other.window.destroy
+      end
+    end
+  end
+
   it "closes the window after the unsaved-changes question, from Ctrl-W outside the editor" do
     with_app Md::Source.new(path: "doc.md") do |app, window|
       app.editor.insert_text "unsaved"

@@ -131,6 +131,12 @@ module Md
     # running application. Returns the new app, or nil with a notice saying
     # why there is none: the session cannot open windows, or the emulator
     # would not (the window did not start in time, say).
+    #
+    # Unsaved edits travel, as a second `QMainWindow` on the same document
+    # would show them: the new window gets the text with the edits in it,
+    # flagged modified, so its own guard asks before they are lost. What a
+    # window still reading a stream passes on is the text read so far, a
+    # snapshot: the rest of the stream goes on arriving here alone.
     def new_window : App?
       if reason = @window_refusal
         notice "Cannot open a window: #{reason}"
@@ -147,6 +153,12 @@ module Md
         raise ex
       end
       app.window_opener = @window_opener
+      # Text not saved here is not saved there either: the new window's own
+      # guard must ask before it is lost, and its flag must say so.
+      if @editor.document.modified?
+        app.editor.document.modified = true
+        app.refresh_status
+      end
       app.join exec_application
       app
     rescue ex
