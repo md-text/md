@@ -511,3 +511,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   resize) deletes Kitty pictures everywhere; a picture is now placed again
   whenever cells were written over it or the screen was cleared. (Fixed in
   Crysterm, which md builds against.)
+- `F1`, `F2` and `F4` work in kitty, Ghostty, iTerm2 and WezTerm, where only
+  `F3` did: with the kitty keyboard protocol on, which md asks for where the
+  terminal has it, the three keys come as `\e[P`, `\e[Q` and `\e[S`, which
+  were read as nothing and dropped (`F3` comes as `\e[13~` there). (Fixed in
+  Tput, which md builds against.)
