@@ -430,3 +430,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   macOS), so its input reader, waiting for a key there, held up the whole
   process; it is now opened non-blocking, as the first window's terminal is.
   (Fixed in Crysterm, which md builds against.)
+- Tables wider than the viewer read as tables: their columns narrow to fit
+  and the cells wrap onto more lines within their row, as Qt lays a table
+  out to the document's width, where each row ran on past the edge and the
+  grid broke apart (the manual's tables, at a terminal's usual width). A
+  table is laid out again as the window is resized. (Fixed in Crysterm,
+  which md builds against.)
