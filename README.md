@@ -312,7 +312,8 @@ dark one on a light terminal, by the background the terminal reports) in
 reverse video, which is how a light theme comes out black on white rather
 than in the terminal's defaults. View → Terminal Links is whether the
 links in the viewer are also the terminal's own hyperlinks, to click or
-hover where the terminal does that: When the Terminal Supports Them turns
+hover where the terminal does that: Auto-detect, which says in parentheses
+whether md found the terminal to support them (Yes or No), turns
 them on where the terminal is known to support them, Always trusts the
 terminal over the detection, and Never turns the viewer's links off
 altogether — drawn as plain text, followed by neither a click nor `Enter`,

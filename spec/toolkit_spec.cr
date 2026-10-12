@@ -29,7 +29,7 @@ describe "Md::App toolkit options" do
   it "offers the hyperlink policies and tells the window" do
     with_app do |app, window|
       entries = submenu(app, 3, "Terminal Lin&ks")
-      entries.map(&.text).should eq ["&When the Terminal Supports Them", "&Always", "&Never", "", "Double-click to &Open"]
+      entries.map(&.text).should eq ["&Auto-detect (No)", "&Always", "&Never", "", "Double-click to &Open"]
       entries[0, 3].map(&.checked?).should eq [true, false, false]
       app.viewer.links_enabled?.should be_true
       entries[2].trigger

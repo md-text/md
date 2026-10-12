@@ -158,6 +158,16 @@ module Md
       end
     end
 
+    # The Terminal Links entries, in `Hyperlinks` order (`#build_menus`).
+    @hyperlinks_actions = [] of Crysterm::Action
+
+    # Brings the Auto-detect entries' labels up to what the detection says
+    # now (from View's `AboutToShow`): the terminal's answers come in after
+    # the menus are built.
+    private def refresh_detected_labels : Nil
+      @hyperlinks_actions[Hyperlinks::Auto.value]?.try &.text = hyperlinks_label(Hyperlinks::Auto)
+    end
+
     private def hyperlinks_tip(policy : Hyperlinks) : String
       case policy
       in .auto? then "Make the viewer's links hyperlinks where the terminal is known to support them"
@@ -168,7 +178,7 @@ module Md
 
     private def hyperlinks_label(policy : Hyperlinks) : String
       case policy
-      in .auto? then "&When the Terminal Supports Them"
+      in .auto? then "&Auto-detect (#{@window.hyperlinks_detected? ? "Yes" : "No"})"
       in .on?   then "&Always"
       in .off?  then "&Never"
       end
