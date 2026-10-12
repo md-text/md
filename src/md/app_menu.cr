@@ -9,7 +9,7 @@ module Md
     # are shown, whether the two bars are shown,
     # whether the editor's and the viewer's
     # carets are kept in sync, whether the caret's line is highlighted,
-    # whether the editor numbers its lines, the text's layout — the text
+    # whether the editor and the viewer number their lines, the text's layout — the text
     # width's centering, rulers and guides — the
     # theme the window is drawn in, whether and how images are drawn (Images
     # and Media Backend, with its Change for 5s trial, `app_media.cr`), the

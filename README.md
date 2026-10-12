@@ -202,8 +202,8 @@ as and quits, and lists the recently opened files; the Edit menu copies,
 searches, replaces, goes to a line and jumps between headings; the Format menu marks
 up the source (see Editing Markdown below) — the markup around text first
 (Bold, Italic, Code, Code Block), then what works on whole lines (Indent and
-Outdent, the task entries, the heading level), then Rewrap; the View menu
-shows and hides the panes.
+Outdent, the task entries, the heading level), then the wrapping (Soft Wrap,
+Hard Wrap, Text Width and Rewrap); the View menu shows and hides the panes.
 
 Every menu entry has a one-sentence description of what it does. While a
 menu is open, the status bar shows the highlighted entry's in place of the
