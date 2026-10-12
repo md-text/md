@@ -65,6 +65,23 @@ describe "Md::App windows" do
     end
   end
 
+  it "renames this window in every window's list when the document changes" do
+    with_app Md::Source.new(path: "doc.md"), text: "# Doc\n", view: true do |app|
+      app.window_opener = recording_opener([] of Crysterm::Window)
+      other = app.new_window || fail("no window was opened")
+      saved = File.tempname("md-spec-windows", ".md")
+      begin
+        app.save_as(saved).should be_true
+        window_menu(app).actions[3..].map(&.text).should eq [saved, "doc.md"]
+        window_menu(other).actions[3..].map(&.text).should eq [saved, "doc.md"]
+        other.close_window
+      ensure
+        other.window.destroy
+        File.delete? saved
+      end
+    end
+  end
+
   it "opens the new window on unsaved text as unsaved, so its own guard asks too" do
     with_app Md::Source.new(path: "doc.md"), text: "A\n", view: true do |app|
       app.window_opener = recording_opener([] of Crysterm::Window)

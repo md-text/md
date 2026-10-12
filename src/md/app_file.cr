@@ -96,7 +96,7 @@ module Md
       abandon_stream
       drop_recovery
       @source = Source.new path: path
-      @window.title = title
+      retitle
       apply_base_url
       load text || ""
       @editor.document.modified = false
@@ -128,7 +128,7 @@ module Md
       abandon_stream
       drop_recovery
       @source = Source.new
-      @window.title = title
+      retitle
       apply_base_url
       load ""
       @editor.document.modified = false

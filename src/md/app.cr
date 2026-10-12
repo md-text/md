@@ -323,6 +323,14 @@ module Md
       "#{document_name} • MD"
     end
 
+    # Names the document anew wherever it is named, after `@source`
+    # changed: the terminal's title, and the entry for this window in the
+    # Window menu of every window.
+    private def retitle : Nil
+      @window.title = title
+      App.refresh_window_menus
+    end
+
     # The document's name as the title, the Window menu and the notices
     # about windows give it: the file's, `stdin` for a stream, or
     # `[No Name]`.
@@ -594,7 +602,7 @@ module Md
     # Makes *path* the document's file and saves to it.
     def save_as(path : String) : Bool
       @source = Source.new path: path
-      @window.title = title
+      retitle
       apply_base_url
       # Watch File follows the document: the watcher on the old path is
       # replaced by one on the new (`app_file.cr`).
