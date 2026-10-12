@@ -510,6 +510,15 @@ describe "Md::App editing" do
     end
   end
 
+  it "leaves a line of code before the first heading alone" do
+    with_app text: "```\nmake\n```\n", view: false do |app|
+      place app, 1, 2
+      app.demote_heading.should be_false
+      notice(app).should contain "Not a heading"
+      app.markdown.should eq "```\nmake\n```\n"
+    end
+  end
+
   it "formats from the viewer at the source of its caret, showing the editor" do
     with_app text: "some word here\n", view: true do |app|
       app.visible_panes.should eq [Md::App::Pane::Viewer]

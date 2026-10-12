@@ -1023,12 +1023,16 @@ module Md
     # text, as the task entries do from anywhere on the line — a line in a
     # fenced or indented code block being no heading. Before the first
     # heading there is no section, and the caret's line itself is shifted:
-    # a paragraph becomes a `#` heading on Demote and stays on Promote. The
+    # a paragraph becomes a `#` heading on Demote and stays on Promote, and
+    # a code block's line stays as it is. The
     # caret keeps its place in the text.
     private def shift_heading(by : Int32) : Bool
       editor = formatting_editor
       doc = editor.document
-      line = section_heading(doc, doc.block_at(editor.cursor_position).index)
+      unless line = section_heading(doc, doc.block_at(editor.cursor_position).index)
+        notice "Not a heading"
+        return false
+      end
       block = doc.blocks[line]
       m = HEADING.match(block.text) || return false
       level = m["hashes"]?.try(&.size) || 0
@@ -1056,13 +1060,14 @@ module Md
 
     # The line of the heading whose section line *index* of *doc* is in:
     # *index* itself when it is a heading, else the nearest heading above
-    # it that is no code block's line; *index* when there is none.
-    private def section_heading(doc : Crysterm::TextDocument, index : Int32) : Int32
+    # it that is no code block's line; *index* when there is none, nil
+    # when *index* is then a code block's own line.
+    private def section_heading(doc : Crysterm::TextDocument, index : Int32) : Int32?
       code = App.code_lines doc, index
       index.downto(0) do |i|
         return i if !code[i] && App.heading?(doc.blocks[i].text)
       end
-      index
+      index unless code[index]
     end
 
     # The editor, for a Format entry (and a paste, `app_clipboard.cr`):
