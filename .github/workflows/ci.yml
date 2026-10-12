@@ -73,3 +73,7 @@ jobs:
           bin/md --help
           bin/md --export html README.md | grep -q '<h1>md</h1>'
           bin/md --generate man | grep -q '^\.TH MD 1'
+          # The toolkit's options are read by md itself, with md's registered,
+          # and a value that fits no option is a message, not a backtrace.
+          bin/md --crysterm-dump-config json README.md | grep -q '"sync_cursor"'
+          bin/md --colors-theme=bogus README.md 2>&1 | grep -q '^md: cannot parse "bogus"'

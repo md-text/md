@@ -96,10 +96,10 @@ module Md
       end
     end
 
-    # The flags md itself owns. Crysterm reads its toolkit options
-    # (--colors-theme, --colors-stylesheet, ...) straight from ARGV before
-    # the parser runs, without consuming them; `.parse` takes them out of
-    # the arguments so they are neither reported as unknown nor mistaken
+    # The flags md itself owns. Crysterm's toolkit options (--colors-theme,
+    # --colors-stylesheet, ...) are read from the arguments as given, by
+    # `Config.configure` once the parser is done; `.parse` takes them out of
+    # what it parses so they are neither reported as unknown nor mistaken
     # for a file, keeping these, which take precedence over a toolkit flag
     # of the same name.
     OWN_FLAGS = OPTIONS.flat_map { |option| [option.long, option.short].compact }.to_set
@@ -133,10 +133,11 @@ module Md
         end
 
         source = Source.resolve(options.positional, stdin.tty?)
-        # The config file, the MD_*/CRYSTERM_* variables and the toolkit and
-        # settings flags among *args*: for the window about to open, so a
-        # `--help` or an `--export` reads none of it. A `--crysterm-dump-config`
-        # prints every option and exits here.
+        # Crysterm's config file and md's, the MD_*/CRYSTERM_* variables and
+        # the toolkit and settings flags among *args*: for the window about to
+        # open, so a `--help` or an `--export` reads none of it. A
+        # `--crysterm-dump-config` prints every option and exits here; a value
+        # that fits no option is an `Error`, reported below.
         Config.configure argv: args
         log_to_file
         launch(source, options, stdin)

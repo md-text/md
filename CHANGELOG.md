@@ -340,12 +340,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - The settings live in `$XDG_CONFIG_HOME/md/config.yml`
   (`~/.config/md/config.yml`), YAML in the layout `--crysterm-dump-config`
   prints, one mapping per option group, instead of `settings.json`, which is
-  no longer read. The file can hold Crysterm's options too, for md alone. It
-  is written when md quits if anything changed, with what was picked during
-  the run and what it already had; a value given on the command line or in
-  the environment is for that run and leaves the file's own entry standing,
-  and entries md does not know are kept. A broken file stops md with a
-  message naming the entry.
+  no longer read. The file can hold Crysterm's options too, for md alone;
+  Crysterm's own `~/.config/crysterm/config.yml` is read first, below it, and
+  its values are never copied into md's file. It is written when md quits if
+  anything changed, with what was picked during the run and what it already
+  had; a value given on the command line or in the environment is for that
+  run and leaves the file's own entry standing, and entries md does not know
+  are kept. A broken file stops md with a message naming the entry, as does a
+  value that fits no option in a file, a variable or a flag
+  (`--colors-theme=bogus`), with exit status 1.
 
 ### Fixed
 

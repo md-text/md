@@ -64,9 +64,9 @@ module Superconf
     description: "The widths in columns of the editor, the viewer and the table of contents, comma-separated (0 for a pane never resized), as the dividers left them; recorded when md quits"
 
   # md is the registry's application: its config file is the registry's
-  # default one (`default_config_path`), which the toolkit's help names.
-  # Crysterm loaded its own file (`~/.config/crysterm/config.yml`) when it
-  # was required, before this; the environment variables keep Crysterm's
+  # default one (`default_config_path`), which the toolkit's help names;
+  # Crysterm's own file (`~/.config/crysterm/config.yml`) is read before it
+  # (`Md::Config.configure`). The environment variables keep Crysterm's
   # `CRYSTERM_` prefix, as a toolkit's do (Qt's `QT_*`), while md's options
   # name their own `MD_*` variables above.
   self.app_name = "md"
@@ -81,8 +81,11 @@ module Md
   # The file is `$XDG_CONFIG_HOME/md/config.yml` (`~/.config/md/config.yml`),
   # YAML with one mapping per option group, as `--crysterm-dump-config` prints
   # it; a JSON file reads too. Precedence, low to high: Crysterm's own file
-  # (`~/.config/crysterm/config.yml`, read when Crysterm loads), md's file,
-  # the environment, the command line, then what is picked while md runs. A
+  # (`~/.config/crysterm/config.yml`, for every program built on it), md's
+  # file, the environment, the command line, then what is picked while md
+  # runs — all read by `.configure`, since Crysterm's own reading of them as
+  # it loads is turned off (`src/bin/md.cr`): it would run before md's options
+  # exist and before an error could be reported as anything but a backtrace. A
   # pick from a menu is recorded at once in the option (`App`'s properties
   # are linked to the options, `app_config.cr`); the file is written when md
   # quits, if anything changed, and by Options → Save Config.
@@ -124,16 +127,25 @@ module Md
       Superconf.default_config_path
     end
 
-    # Loads the configuration for the run: *file* (`.path` by default) when
-    # it exists, then the environment, then *argv* — on top of what Crysterm
-    # loaded from its own file when it was required, before md's options
-    # existed. A `--crysterm-dump-config` among *argv* prints every option,
-    # md's included, and exits. A file that cannot be read or parsed, or a
-    # value that does not fit its option — in the file, a variable or a flag
-    # — is an `Error` saying which (Superconf names the source): md does not
-    # start on a broken configuration, it says what is wrong.
+    # Crysterm's own config file, `$XDG_CONFIG_HOME/crysterm/config.yml`
+    # (`~/.config/crysterm/config.yml`): the one every program built on
+    # Crysterm reads, below its own.
+    def self.toolkit_path : String
+      Superconf.default_config_path "crysterm"
+    end
+
+    # Loads the configuration for the run, lowest precedence first: Crysterm's
+    # own file (`.toolkit_path`) when it exists, *file* (`.path` by default)
+    # when it exists, then the environment, then *argv*. A
+    # `--crysterm-dump-config` among *argv* prints every option, md's
+    # included, and exits. A file that cannot be read or parsed, or a value
+    # that does not fit its option — in a file, a variable or a flag — is an
+    # `Error` saying which (Superconf names the source): md does not start on
+    # a broken configuration, it says what is wrong.
     def self.configure(file : String = path, argv : Array(String) = ARGV) : Nil
       @@document.clear
+      toolkit = toolkit_path
+      Superconf.load_file toolkit if File.exists?(toolkit)
       exists = File.exists?(file)
       Crysterm.configure!(exists ? file : "", argv: argv)
       @@document = flatten(YAML.parse(File.read(file))) if exists

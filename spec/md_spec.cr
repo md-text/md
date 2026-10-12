@@ -62,6 +62,14 @@ describe Md::CLI do
     error.to_s.should contain "unknown option: --bogus"
   end
 
+  it "reports a toolkit value that fits no option, with the exit status of a file that cannot be read" do
+    with_config do
+      error = IO::Memory.new
+      Md::CLI.run(["--colors-theme=bogus", "notes.md"], stdout: IO::Memory.new, stderr: error).should eq 1
+      error.to_s.should start_with %(md: cannot parse "bogus" for option "colors.theme")
+    end
+  end
+
   it "rejects a second file argument" do
     error = IO::Memory.new
     Md::CLI.run(["a.md", "b.md"], stdout: IO::Memory.new, stderr: error).should eq 2

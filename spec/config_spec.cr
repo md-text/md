@@ -43,6 +43,23 @@ describe Md::Config do
       Crysterm::Config.colors_theme.should eq Crysterm::CSS::Theme::Choice::Terminal
     end
 
+    it "reads Crysterm's own file first, below md's, and leaves its values to it" do
+      with_config "md:\n  text_width: 80\n" do |path|
+        toolkit = Md::Config.toolkit_path
+        toolkit.should eq File.join(ENV["XDG_CONFIG_HOME"], "crysterm", "config.yml")
+        Dir.mkdir_p File.dirname(toolkit)
+        File.write toolkit, "colors:\n  theme: light\nmd:\n  text_width: 60\n"
+        Md::Config.configure file: path, argv: [] of String
+        Crysterm::Config.colors_theme.should eq Crysterm::CSS::Theme::Choice::Light
+        Crysterm::Config.md_text_width.should eq 80 # md's file wins
+        Md::Config.dirty?.should be_false
+        Md::Config.save.should be_true
+        file = config_file(path)
+        file["md"]["text_width"].as_i.should eq 80
+        file["colors"]?.should be_nil
+      end
+    end
+
     it "refuses a broken file, naming it" do
       error = expect_raises(Md::Error, /cannot parse config file/) { with_config("md: [\n") { } }
       (error.message || "").should contain "config.yml"

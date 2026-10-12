@@ -671,10 +671,11 @@ recorded at once, whatever had set the option before. The file is YAML (JSON
 reads too), as `--crysterm-dump-config` prints it, with one mapping per
 option group — `md` for md's own choices, `colors`, `media` and the rest for
 Crysterm's, which it can hold as well, so a theme or a media backend meant
-for md alone goes here rather than in Crysterm's `~/.config/crysterm/config.yml`.
+for md alone goes here rather than in Crysterm's `~/.config/crysterm/config.yml`
+(which md reads first, below its own, and never copies into it).
 Entries md does not know are kept across a rewrite, so an older md does not
 shed a newer one's settings; a broken file stops md with a message naming the
-entry. One YAML caution: write a value that YAML reads as a boolean, such as
+entry, as does a value that fits no option, given anywhere. One YAML caution: write a value that YAML reads as a boolean, such as
 Terminal Links' `off`, in quotes (`hyperlinks: "off"`); md's own writes
 quote every word.
 
