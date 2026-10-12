@@ -357,7 +357,8 @@ module Md
     # code or on one of its fences — the two fences come off (just the
     # opening one of a block left open to the end), leaving the code as
     # it was. Elsewhere, the selection's lines, or with no selection the
-    # run of lines around the caret without a blank one, are put between
+    # run of lines around the caret that no blank line, heading or other
+    # fenced block ends, are put between
     # ` ``` ` fences carrying the first line's quote markers and
     # indentation; on a blank line an empty block goes in, the caret on
     # its middle line, ready to type code. The caret, and a selection,
@@ -366,18 +367,25 @@ module Md
       editor = formatting_editor
       doc = editor.document
       first, last = selected_blocks
-      if block = fenced_blocks(doc).find { |open, _, end_line| open <= last && end_line >= first }
+      code = App.code_lines doc
+      if block = fenced_blocks(doc, code).find { |open, _, end_line| open <= last && end_line >= first }
         unfence doc, block[0], block[1]
       elsif !editor.selection? && doc.blocks[first].text.blank?
         at = doc.blocks[first].position
         doc.edit { Crysterm::TextCursor.new(doc, at, at + doc.blocks[first].size).insert_text "```\n\n```" }
         editor.text_cursor = Crysterm::TextCursor.new(doc, at + 4)
       else
-        unless editor.selection?
-          while first > 0 && !doc.blocks[first - 1].text.blank?
+        # A heading, a fence or a fenced block's code is no part of the
+        # caret's paragraph, which a heading on the caret's line is alone.
+        ends = ->(i : Int32) do
+          text = doc.blocks[i].text
+          text.blank? || code[i] || FENCE.matches?(text) || App.heading?(text)
+        end
+        unless editor.selection? || App.heading?(doc.blocks[first].text)
+          while first > 0 && !ends.call(first - 1)
             first -= 1
           end
-          while last + 1 < doc.block_count && !doc.blocks[last + 1].text.blank?
+          while last + 1 < doc.block_count && !ends.call(last + 1)
             last += 1
           end
         end
@@ -937,8 +945,8 @@ module Md
     # outdented line. A fence is a fence line (`FENCE`) that is no code
     # block's own line (`.code_lines`), so a fence shown inside a block's
     # code, or in an indented code block, does not count.
-    private def fenced_blocks(doc : Crysterm::TextDocument) : Array({Int32, Int32?, Int32})
-      code = App.code_lines doc
+    # *code* is `.code_lines` of the whole of *doc*.
+    private def fenced_blocks(doc : Crysterm::TextDocument, code : Array(Bool)) : Array({Int32, Int32?, Int32})
       blocks = [] of {Int32, Int32?, Int32}
       open = nil
       code.each_with_index do |is_code, i|

@@ -449,6 +449,14 @@ describe "Md::App editing" do
     end
   end
 
+  it "fences the caret's paragraph without the heading above it or a fenced block below it" do
+    with_app text: "## Install\nmake\nmake install\n```\nold\n```\n", view: false do |app|
+      place app, 1, 0
+      app.toggle_code_block.should be_true
+      app.markdown.should eq "## Install\n```\nmake\nmake install\n```\n```\nold\n```\n"
+    end
+  end
+
   it "promotes and demotes the heading on the caret's line" do
     with_app text: "## Title\n> ## quoted\n###### deep\n", view: false do |app, window|
       place app, 0, 3
