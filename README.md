@@ -388,7 +388,7 @@ move the heading of the caret's section one level up or down, a paragraph
 being the level above `#` — the caret's line when it is a heading, and from
 anywhere in the section's text the nearest heading above it (one in a code
 block does not count), the caret staying where it is. Before the first
-heading, Demote makes the caret's paragraph a `#` heading. Each change is
+heading, Demote makes the caret's line a `#` heading. Each change is
 one undo step.
 
 The keys are not all Qt's: `Ctrl-B` is, but a terminal sends the same byte

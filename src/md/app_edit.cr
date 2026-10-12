@@ -655,7 +655,7 @@ module Md
       named "toggle-task", tip format.add_action("Toggle Task Chec&kbox", shortcut: "Alt+X") { check_task }, "Tick the caret's task box, or empty it; an item without a box, or a line of text, gets a ticked one"
       format.add_separator
       named "promote-heading", tip format.add_action("&Promote Heading", shortcut: "Ctrl+Up") { promote_heading }, "Take one # off the heading of the caret's section, from anywhere in it; a # heading becomes a paragraph"
-      named "demote-heading", tip format.add_action("&Demote Heading", shortcut: "Ctrl+Down") { demote_heading }, "Add a # to the heading of the caret's section, from anywhere in it, down to ######; before any heading, the caret's paragraph becomes a # heading"
+      named "demote-heading", tip format.add_action("&Demote Heading", shortcut: "Ctrl+Down") { demote_heading }, "Add a # to the heading of the caret's section, from anywhere in it, down to ######; before any heading, the caret's line becomes a # heading"
       format.add_separator
       # How the lines wrap, as typed and shown, and how wide the text is
       # (`app_view.cr`), with Rewrap, which refills to that width. Soft
@@ -1031,7 +1031,7 @@ module Md
     # text, as the task entries do from anywhere on the line — a line in a
     # fenced or indented code block being no heading. Before the first
     # heading there is no section, and the caret's line itself is shifted:
-    # a paragraph becomes a `#` heading on Demote and stays on Promote, and
+    # a line of text becomes a `#` heading on Demote and stays on Promote, and
     # a code block's line stays as it is. The
     # caret keeps its place in the text.
     private def shift_heading(by : Int32) : Bool
