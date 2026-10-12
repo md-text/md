@@ -562,13 +562,18 @@ module Md
     # each line to `#receive` on the render fiber and ending with
     # `#finish_stream`. The viewer follows the tail while it was already at
     # the bottom, so new text scrolls into view until the reader scrolls up.
+    # A window destroyed under the stream ends the read, and Crysterm then
+    # runs *ended* at once on the reader fiber: the app is torn down by then,
+    # so nothing of it is touched.
     def stream(io : IO) : Nil
       @streaming = true
       @editor_stale = true
       @viewer.follow_tail = true
       ended = ->(error : IO::Error?) do
-        notice "Stream ended: #{error.message}" if error
-        finish_stream
+        unless @window.destroyed?
+          notice "Stream ended: #{error.message}" if error
+          finish_stream
+        end
       end
       @window.pump(io, name: "md-stream", done: ended) { |line| receive line }
     end
@@ -577,9 +582,10 @@ module Md
     # editor's text when the editor is shown. The status bar's counts take
     # the chunk in (`#text_appended`) rather than measure the whole text
     # again, so a long stream costs each line its own length here too. Must
-    # run on the render fiber (see `Crysterm::Window#post`).
+    # run on the render fiber (see `Crysterm::Window#post`); a chunk that
+    # arrives after the window was destroyed is dropped.
     def receive(chunk : String) : Nil
-      return if @stream_abandoned
+      return if @stream_abandoned || @window.destroyed?
       @streamed << chunk
       @viewer.append_markdown chunk
       append_to_editor chunk unless @editor_stale
@@ -602,8 +608,9 @@ module Md
     end
 
     # Flushes whatever the stream left incomplete; the end-of-stream signal.
+    # Nothing to do once the window is destroyed.
     def finish_stream : Nil
-      return if @stream_abandoned
+      return if @stream_abandoned || @window.destroyed?
       @viewer.flush_markdown
       @viewer.document.refresh_tocs
       @streaming = false
