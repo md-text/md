@@ -50,11 +50,18 @@ module Md
   # against losing unsaved changes and the history of recent files in
   # `app_file.cr`; auto-save and the backup file in `app_autosave.cr`;
   # copying and pasting, and the clipboard mode (Options → Clipboard), in
-  # `app_clipboard.cr`;
+  # `app_clipboard.cr`; following a link and the way back from it (File →
+  # Previous File, Next File) in `app_links.cr`;
   # the editing that knows Markdown — lists continued on `Enter` and
   # indented with `Tab`, the Format menu — in `app_edit.cr`; the questions
   # md asks, in place of the status bar or in a dialog (View → Dialog
-  # Style), in `app_dialogs.cr`.
+  # Style), in `app_dialogs.cr`; the theme in `app_theme.cr`, the viewer's
+  # pictures and how they are drawn (View → Images, Media Backend) in
+  # `app_media.cr`, Crysterm's other options in the menus in
+  # `app_toolkit.cr`, the entries' descriptions (Options → Tooltips) in
+  # `app_tips.cr`, the settings' link to the config file in `app_config.cr`,
+  # Options → Clear Caches… in `app_caches.cr` and the other windows of the
+  # process in `app_windows.cr`.
   #
   # Keys: `F1`/`F2`/`F3` show and focus the editor/viewer/table of contents,
   # or hide it when it is already focused; `F4` hides the menu bar and the
