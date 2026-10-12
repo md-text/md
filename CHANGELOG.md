@@ -127,7 +127,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   runs with the other View choices.
 - Command line: `+N` or `--line N` (`-l N`) opens on source line `N` in
   both panes, as `less +N` and `vim +N` do (past the end: the last line; a
-  bare `+`: the end), ahead of the remembered position; `--view` and
+  bare `+`: the end), ahead of the remembered position — on a stream once
+  the line has arrived, or at the stream's end for a line never reached
+  or counted from the end, as `less +N` on a pipe waits; `--view` and
   `--edit` choose the pane whatever the file is, so `md --edit README.md`
   opens the editor on it and `md --view new.md` the viewer on an empty
   document. Giving both is a usage error.

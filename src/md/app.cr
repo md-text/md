@@ -110,6 +110,9 @@ module Md
     # nothing per chunk.
     @streamed = IO::Memory.new
     @editor_stale = false
+    # The line a streamed document was asked to open on (`--line`), until the
+    # stream has it (`#jump_to_pending_line`).
+    @pending_line : Int32?
     # The viewer was not re-rendered after the last edit (it was hidden).
     @viewer_stale = false
     # Set while the editor's text is replaced programmatically, so the
@@ -150,7 +153,8 @@ module Md
     # kept in the config file (`app_config.cr`); with *watch*, the file is followed from the start
     # (`--watch`). A *line* (`+N`, `--line N`) is where the panes start
     # instead of the remembered position: the user asked, so the history
-    # does not get a say.
+    # does not get a say; on a stream, once the line has arrived
+    # (`#jump_to_pending_line`).
     def initialize(@source : Source, text : String = "", stream : IO? = nil,
                    view : Bool = !stream.nil? || !text.empty?, window : Crysterm::Window? = nil,
                    @history : History? = nil, @config : Bool = false, watch : Bool = false,
@@ -238,10 +242,15 @@ module Md
       build_status
       setup_clipboard
       apply_config
-      if line
-        go_to_line line
-      else
+      if line.nil?
         restore_position
+      elsif stream
+        # A stream has none of its lines yet: the jump waits for the line
+        # (`#receive`) or the stream's end (`#finish_stream`), as `less +N`
+        # on a pipe waits.
+        @pending_line = line
+      else
+        go_to_line line
       end
       refresh_recent_menu
       self.watch_file = watch
@@ -590,7 +599,21 @@ module Md
       @viewer.append_markdown chunk
       append_to_editor chunk unless @editor_stale
       text_appended chunk
+      jump_to_pending_line if (line = @pending_line) && line > 0 && line_rendered?(line)
       refresh_status
+    end
+
+    # Whether the viewer has rendered source line *line* of the stream: a
+    # block starts on it, or a block from above it runs past it, a later
+    # block being in. Crysterm's stream holds a construct back until the
+    # blank line that ends it (and a list or a quote until something follows
+    # it), so a line the editor's text already has may be in no block yet;
+    # jumping then would leave the viewer on the nearest block above
+    # (`#viewer_position`), where the jump of a file lands on the line.
+    private def line_rendered?(line : Int32) : Bool
+      vdoc = @viewer.document
+      return false unless index = vdoc.block_from_source_line(line)
+      vdoc.blocks[index].source_line == line || !vdoc.next_source_line_after(index).nil?
     end
 
     # Appends *chunk* to the editor's text at its end — an insertion, so a
@@ -608,14 +631,33 @@ module Md
     end
 
     # Flushes whatever the stream left incomplete; the end-of-stream signal.
-    # Nothing to do once the window is destroyed.
+    # A `--line` the stream never reached, or that counts from the end, is
+    # taken now that the end is known. Nothing to do once the window is
+    # destroyed.
     def finish_stream : Nil
       return if @stream_abandoned || @window.destroyed?
       @viewer.flush_markdown
       @viewer.document.refresh_tocs
       @streaming = false
       highlight_matches Pane::Viewer
+      jump_to_pending_line
       refresh_status
+    end
+
+    # `--line` on a stream, once the line has arrived or the stream ended:
+    # the editor is brought up to date first, as `#go_to_line` counts the
+    # editor's lines (and follows the rest of the stream from then on), and
+    # the jump is the one a file gets. The viewer stays on the line rather
+    # than following the tail: the line asked for is usually the last block
+    # rendered yet, its view at the bottom, which follow-tail would scroll
+    # away from on the next chunk (a jump at the stream's end has no tail
+    # left to follow).
+    private def jump_to_pending_line : Nil
+      return unless line = @pending_line
+      @pending_line = nil
+      fill_editor if @editor_stale
+      go_to_line line
+      @viewer.follow_tail = false
     end
 
     # Replaces the editor text as a reset, not an edit: no undo entry, and no

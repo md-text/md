@@ -273,6 +273,7 @@ module Md
       return unless @streaming
       @stream_abandoned = true
       @streaming = false
+      @pending_line = nil # the file's own position counts now
       @viewer.follow_tail = false
     end
 

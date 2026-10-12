@@ -90,7 +90,9 @@ editor shown; a file or a stream starts with only the viewer (`--edit` and
 `--view` override that choice). `+N` or `--line N` puts both panes on source
 line `N`, as `less +N` and `vim +N` do — past the end lands on the last line,
 and a bare `+` is the end — instead of the position md remembers for the
-file. Show any combination you like; the viewer re-renders as you type, and the table of
+file. On a stream the panes go there once the line has arrived and the
+viewer shows it, as `less +N` on a pipe waits for it; a line the stream
+never reaches, or one counted from the end, is taken when the stream ends. Show any combination you like; the viewer re-renders as you type, and the table of
 contents follows the document's headings and keeps the heading you are
 under highlighted as you move through either pane — or its nearest shown
 parent while that branch is folded. A document arriving on standard

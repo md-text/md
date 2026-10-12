@@ -3,6 +3,17 @@ require "file_utils"
 
 DOC = "# Title\n\nSome *text*.\n\n## Section\n\nMore.\n"
 
+# An App built on a stream, as the CLI builds one for standard input (the
+# chunks come through `#receive`), asked to open on *line*.
+private def with_streaming_app(line : Int32, &)
+  window = headless_window
+  begin
+    yield Md::App.new(Md::Source.new(stdin: true), stream: IO::Memory.new(""), view: true, window: window, line: line)
+  ensure
+    window.destroy
+  end
+end
+
 describe Md::App do
   it "opens an empty editor for a new document" do
     with_app do |app, window|
@@ -103,6 +114,47 @@ describe Md::App do
       app.editor.value.should end_with "line three\n"
       window.repaint
       window.dump.to_s.should contain "line three"
+    end
+  end
+
+  it "opens a stream on the line asked for once the viewer has it, or at the stream's end" do
+    with_streaming_app line: 4 do |app|
+      app.receive "# One\n"
+      app.receive "\n"
+      app.receive "two\n"
+      app.receive "# Four\n"
+      app.viewer.cursor_position.should eq 0 # the line is in, but held back until its blank line
+      app.editor.value.should eq ""
+      app.receive "\n"
+      doc = app.viewer.document
+      landed = doc.block_at(app.viewer.cursor_position).index
+      doc.blocks[landed].text.should eq "Four"
+      app.editor.value.should eq "# One\n\ntwo\n# Four\n\n" # brought up to date for the jump
+      app.editor.text_cursor.block_number.should eq 3
+      app.viewer.follow_tail?.should be_false # staying on the line, not the tail
+      app.receive "six\n"
+      app.editor.value.should end_with "six\n" # and following the stream since
+      doc.block_at(app.viewer.cursor_position).index.should eq landed
+    end
+    # A line the editor has but the viewer not yet (a paragraph still open)
+    # waits too, or the viewer would land on the block above and stay there.
+    with_streaming_app line: 3 do |app|
+      app.receive "# One\n\ntwo\n# Four\n"
+      app.viewer.cursor_position.should eq 0
+      app.receive "\n"
+      doc = app.viewer.document
+      doc.blocks[doc.block_at(app.viewer.cursor_position).index].text.should eq "two"
+      app.editor.text_cursor.block_number.should eq 2
+    end
+    # A line the stream never reaches, or one counting from the end, waits
+    # for the end.
+    with_streaming_app line: 0 do |app|
+      app.receive "a\n\nb\n\nc"
+      app.viewer.cursor_position.should eq 0
+      app.finish_stream
+      doc = app.viewer.document
+      doc.blocks[doc.block_at(app.viewer.cursor_position).index].text.should eq "c"
+      app.editor.text_cursor.block_number.should eq 4
     end
   end
 
