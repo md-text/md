@@ -104,7 +104,7 @@ and the viewer equally, the table of contents as a 30-column list. Drag a
 divider with the mouse to resize the panes beside it, or, without a mouse,
 press `Alt-R`: the divider next to the pane you are in takes the keys,
 `Left` and `Right` move it a column at a time, and `Enter`, `Escape` or
-`Tab` go back to the panes. Uncheck View → Resizable Panes to lock the panes
+`Tab` go back to the panes. Uncheck Options → Resizable Panes to lock the panes
 as they are — the dividers then refuse the mouse and the keys, and `Alt-R`
 says so — and check it again to resize them. A hidden pane gives its width
 to the others and gets it back when shown. The sizes, and whether the panes
@@ -142,7 +142,7 @@ runs too.
 | `Ctrl-L`           | Go to a source line; asks for the number (Edit → Go to Line…)             |
 | `:`, `Alt-K`       | The command line: a command's name runs it, `Tab` completing it, and a number goes to that source line (`:` outside the editor; Edit → Run md Command…; see Commands) |
 | `Alt-Down`, `Alt-Up`, `]`, `[` | Jump to the next and previous heading (`]` and `[` outside the editor; Edit → Next Heading, Previous Heading) |
-| `Alt-R`            | Resize the panes from the keyboard (when View → Resizable Panes is on): `Left`/`Right` move the divider next to the pane, `Enter`/`Escape` return |
+| `Alt-R`            | Resize the panes from the keyboard (when Options → Resizable Panes is on): `Left`/`Right` move the divider next to the pane, `Enter`/`Escape` return |
 | `Backspace`        | Outside the editor, go back to the file you were in before the last link or open, where you left it (File → Previous File) |
 | `Alt-Left`, `Alt-Right` | Previous File and Next File (File → Previous File, Next File); in the editor and the viewer these move by word instead |
 | `Enter`            | In the editor, on a list item: continue the list (an empty item ends it) |
@@ -720,8 +720,8 @@ command, and so is every key no entry has:
 | `open`, `reload`, `close`, `previous-file`, `next-file`, `save`, `save-as`, `quit` | The File menu |
 | `copy`, `copy-as-markdown`, `paste`, `paste-from-terminal`, `paste-from-command`, `paste-from-internal`, `find`, `find-backward`, `find-next`, `find-previous`, `replace`, `clear-search-highlights`, `command`, `go-to-line`, `next-heading`, `previous-heading`, `vi-mode` | The Edit menu, and `?` |
 | `bold`, `italic`, `code`, `code-block`, `indent`, `outdent`, `task`, `toggle-task`, `promote-heading`, `demote-heading`, `soft-wrap`, `hard-wrap`, `rewrap-paragraph`, `rewrap-document` | The Format menu (`soft-wrap` and `hard-wrap` turn their setting on or off) |
-| `editor`, `viewer`, `toc`, `resizable-panes`, `bars`, `sync-cursor`, `highlight-line`, `line-numbers`, `center-text`, `horizontal-ruler`, `vertical-ruler`, `guides`, `images`, `media-trial`, `link-double-click`, `watch-file` | The View menu's check entries: each turns its setting on or off |
-| `overwrite-mode`, `confirm-discard`, `autosave`, `backup-file`, `reduced-motion`, `detachable-menus`, `vi-config`, `load-config`, `save-config`, `save-config-as`, `clear-caches` | The Options menu |
+| `editor`, `viewer`, `toc`, `bars`, `sync-cursor`, `highlight-line`, `line-numbers`, `center-text`, `horizontal-ruler`, `vertical-ruler`, `guides`, `images`, `media-trial`, `link-double-click`, `watch-file` | The View menu's check entries: each turns its setting on or off |
+| `overwrite-mode`, `confirm-discard`, `autosave`, `backup-file`, `resizable-panes`, `reduced-motion`, `detachable-menus`, `vi-config`, `load-config`, `save-config`, `save-config-as`, `clear-caches` | The Options menu |
 | `new-window`, `close-window`, `manual`, `about` | The Window and Help menus |
 | `toggle-editor`, `toggle-viewer`, `toggle-toc`, `toggle-bars`, `cycle-mouse-mode`, `cycle-theme`, `suspend`, `resize-panes` | `F1`–`F6`, `Ctrl-Z` and `Alt-R` |
 
@@ -736,11 +736,11 @@ not know.
 ### Settings
 
 The choices made in the Edit, Format, View and Options menus — Vi Mode, Soft Wrap, Hard
-Wrap, Text Width, Resizable Panes, Menu and
+Wrap, Text Width, Menu and
 Status Bars, Sync Cursor, Highlight Line, Line Numbers, Center Document, Rulers (Horizontal and Vertical), Guides,
 Images, Terminal Links → Double-click to Open, Dialog Style, Ask Before Discarding
 Changes, Auto-Save, Keep a Backup File, the mouse mode, the clipboard mode,
-Tooltips, the theme and Crysterm's own Color Depth, Terminal Links, Media
+Resizable Panes, Tooltips, the theme and Crysterm's own Color Depth, Terminal Links, Media
 Backend, Reduced Motion, Detachable Menus and Vi Mode Uses Your Neovim Config — and the pane sizes are kept across runs in
 `$XDG_CONFIG_HOME/md/config.yml` (`~/.config/md/config.yml`), written when
 md quits if anything changed. Watch File is not kept: like `--watch`, it is

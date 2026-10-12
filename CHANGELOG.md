@@ -182,7 +182,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Resizable panes: the panes sit in a splitter (Crysterm's, after Qt's
   `QSplitter`) with a divider between each two shown, dragged with the mouse
   or moved with `Left`/`Right` after `Alt+R` focuses the divider next to the
-  pane (`Enter`/`Escape` return). View → Resizable Panes, a check entry kept
+  pane (`Enter`/`Escape` return). Options → Resizable Panes, a check entry kept
   in the settings as `resizable_panes`, locks the panes as they are when
   unchecked: the dividers refuse the mouse and the keys, and `Alt+R` says
   so. A hidden pane takes no width and shows no divider, and gets its width
@@ -399,6 +399,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   were in View; their commands and settings keep their names.
 - View → Center Text is called Center Document; its command (`center-text`)
   and setting (`md.center_text`) keep their names.
+- Resizable Panes is in the Options menu, where it was in View; its command
+  (`resizable-panes`) and setting (`md.resizable_panes`) keep their names.
 - The settings live in `$XDG_CONFIG_HOME/md/config.yml`
   (`~/.config/md/config.yml`), YAML in the layout `--crysterm-dump-config`
   prints, one mapping per option group, instead of `settings.json`, which is

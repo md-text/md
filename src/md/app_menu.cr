@@ -6,7 +6,7 @@ module Md
     # headings, Vi Mode, `app_vi.cr`), Format (the Markdown markup, `app_edit.cr`: the markup around text, then
     # indentation, the task boxes and the heading level, then the wrapping —
     # soft wrap, hard wrap, a text width, `app_view.cr`, and Rewrap), View (which panes
-    # are shown and whether they resize, whether the two bars are shown,
+    # are shown, whether the two bars are shown,
     # whether the editor's and the viewer's
     # carets are kept in sync, whether the caret's line is highlighted,
     # whether the editor numbers its lines, the text's layout — the text
@@ -19,7 +19,8 @@ module Md
     # Options (the two
     # modes the status bar toggles — overwrite mode and the mouse mode — the
     # unsaved-changes guard, auto-save and the backup file
-    # (`app_autosave.cr`), the clipboard mode, reduced motion and detachable
+    # (`app_autosave.cr`), the clipboard mode, whether the panes resize
+    # (`app_panes.cr`), reduced motion and detachable
     # menus (`app_toolkit.cr`), where the entries' descriptions show (Tooltips,
     # `app_tips.cr`), the config file's entries
     # (`app_config.cr`) and Clear Caches…,
@@ -118,7 +119,6 @@ module Md
         view.add_action tip(action, pane_tip(pane))
         @view_actions[pane] = action
       end
-      add_toggle view, "Resi&zable Panes", "resizable-panes", @resizable_panes, option_tip("md.resizable_panes")
       # `F4` is the key, and the way back once the bars are gone.
       add_toggle view, "Menu and Status &Bars", "bars", @bars, option_tip("md.bars")
       view.add_separator
@@ -129,7 +129,7 @@ module Md
       # Soft Wrap, Hard Wrap and Text Width are Format's, with Rewrap
       # (`app_edit.cr`); the centering of the text column stays here.
       add_toggle view, "&Center Document", "center-text", @center_text, option_tip("md.center_text")
-      # `u` and `g`: Resizable Panes takes `z`, so `r` is free, but `u` stays.
+      # `u` and `g`; `r` and `z` are free.
       rulers = view.add_submenu "R&ulers", [toggle_action("&Horizontal", "horizontal-ruler", @horizontal_ruler, option_tip("md.horizontal_ruler")), toggle_action("&Vertical", "vertical-ruler", @vertical_ruler, option_tip("md.vertical_ruler"))]
       tip rulers, "A column ruler along the top and a row ruler down the left of each pane"
       add_toggle view, "&Guides", "guides", @guides, option_tip("md.guides")
@@ -167,6 +167,9 @@ module Md
       # there is none.
       clipboard = add_choices(options, "&Clipboard", "clipboard", ClipboardMode.values, @clipboard_mode, option_tip("md.clipboard_mode"), ->clipboard_tip(ClipboardMode)) { |mode| clipboard_label mode }
       clipboard[ClipboardMode::Command.value].enabled = !self.clipboard.copy_command.nil?
+      # Whether the dividers between the panes move (`app_panes.cr`); `z`
+      # is free, as `r` is not.
+      add_toggle options, "Resi&zable Panes", "resizable-panes", @resizable_panes, option_tip("md.resizable_panes")
       # Crysterm's `render.reduced_motion` (`app_toolkit.cr`); `d` is free.
       add_toggle options, "Re&duced Motion", "reduced-motion", @reduced_motion, "Skip Crysterm's animations and show their end state at once"
       # Crysterm's `menu.tear_off` (`app_toolkit.cr`); `e` is free.

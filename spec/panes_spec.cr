@@ -2,7 +2,7 @@ require "./spec_helper"
 require "file_utils"
 
 # The panes in their splitter (`app_panes.cr`): dividers between the shown
-# panes, resizing by divider and by key, View → Resizable Panes locking
+# panes, resizing by divider and by key, Options → Resizable Panes locking
 # them, and the sizes kept in the settings.
 
 private def key(window, key : Tput::Key)
@@ -109,10 +109,10 @@ describe "Md::App panes" do
     end
   end
 
-  it "locks the panes as they are when View → Resizable Panes is unchecked" do
+  it "locks the panes as they are when Options → Resizable Panes is unchecked" do
     with_app text: PANES_DOC do |app, window|
       show_all app
-      resizable = menu_actions(app)[3]
+      resizable = menu(app, 4).actions.find!(&.text.==("Resi&zable Panes"))
       resizable.text.should eq "Resi&zable Panes"
       resizable.checkable?.should be_true
       resizable.checked?.should be_true
@@ -186,9 +186,4 @@ describe "Md::App panes" do
       end
     end
   end
-end
-
-# The View menu's entries.
-private def menu_actions(app)
-  app.main.menu_bar.menus[3].actions
 end

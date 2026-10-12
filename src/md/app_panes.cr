@@ -18,7 +18,7 @@ module Md
     # handles; a focused divider is the smallest addition that makes the
     # mouse optional, as it is everywhere else in md.
     #
-    # View → Resizable Panes (`#resizable_panes?`, a setting) is whether the
+    # Options → Resizable Panes (`#resizable_panes?`, a setting) is whether the
     # dividers move at all: unchecked, the panes stay locked as they are —
     # the splitter's `resizable` (Qt disables the handles) refuses the mouse
     # and the keys, and `Alt+R` says so — until it is checked again.
@@ -33,7 +33,7 @@ module Md
     # keeps the split the user set.
     getter splitter : Crysterm::Widget::Splitter
 
-    # View → Resizable Panes; see the class comment. A reactive property, so
+    # Options → Resizable Panes; see the class comment. A reactive property, so
     # the menu entry binds to it (`#build_menus`) and the config keeps it
     # (`app_config.cr`); `#resizable_panes?` and `#resizable_panes=` are
     # its plain face.
@@ -86,7 +86,7 @@ module Md
     # instead while the panes are locked.
     def resize_panes : Nil
       unless @resizable_panes.value
-        notice "Panes are locked (View → Resizable Panes)"
+        notice "Panes are locked (Options → Resizable Panes)"
         return
       end
       shown = visible_panes

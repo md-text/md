@@ -37,8 +37,6 @@ module Superconf
     description: "View → Rulers → Vertical: a row ruler down the left of each pane"
   option "md.guides", false, env: "MD_GUIDES",
     description: "View → Guides: guide lines at the text's edges, and wherever one is pulled off the column ruler"
-  option "md.resizable_panes", true, env: "MD_RESIZABLE_PANES",
-    description: "View → Resizable Panes: let the dividers between the panes move"
   option "md.bars", true, env: "MD_BARS",
     description: "View → Menu and Status Bars: show the menu bar and the status bar (F4 hides and shows them together)"
   option "md.images", true, env: "MD_IMAGES",
@@ -63,6 +61,8 @@ module Superconf
     description: "Options → Mouse: when the mouse serves md, after vi's mouse option (all|normal|insert|off); off leaves it to the terminal"
   option "md.clipboard_mode", Md::App::ClipboardMode::Terminal, env: "MD_CLIPBOARD_MODE",
     description: "Options → Clipboard: where a copy goes and a paste comes from (terminal|command|internal)"
+  option "md.resizable_panes", true, env: "MD_RESIZABLE_PANES",
+    description: "Options → Resizable Panes: let the dividers between the panes move"
   option "md.tooltips", Md::App::Tooltips::StatusBar, env: "MD_TOOLTIPS",
     description: "Options → Tooltips: where a menu entry's description shows while it is highlighted — in the status bar (status_bar), in a popup beside the entry after a moment (popup), or nowhere (off)"
   # The panes.
