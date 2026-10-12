@@ -40,7 +40,7 @@ private def checked_for(backend : Backend) : Array(Bool)
 end
 
 describe "Md::App media backend" do
-  it "offers Crysterm's media backends in the View menu after Theme and Images, Auto-detect checked" do
+  it "offers Crysterm's media backends in the View menu after Theme and Images, Auto checked" do
     with_media_app do |app|
       app.media_backend.should eq Backend::Auto
       texts = menu(app, 3).actions.map(&.text)
@@ -51,9 +51,9 @@ describe "Md::App media backend" do
       entries[0].checkable?.should be_true
       entries[0].checked?.should be_false
       entries[1].separator?.should be_true
-      # Auto-detect names what it detects here, by the entry's own label.
-      entries[2].text.should match /\A&Auto-detect \((Sub-Cell Glyphs|ANSI, One Cell per Pixel|Kitty Graphics|iTerm2 Inline Images|Sixel)\)\z/
-      entries[3].separator?.should be_true # Auto-detect alone, then the cell grid
+      # Auto names what it detects here, by the entry's own label.
+      entries[2].text.should match /\A&Auto \((Sub-Cell Glyphs|ANSI, One Cell per Pixel|Kitty Graphics|iTerm2 Inline Images|Sixel)\)\z/
+      entries[3].separator?.should be_true # Auto alone, then the cell grid
       backends = backend_entries(app)
       backends.size.should eq Backend.values.size
       backends.map(&.text).skip(1).should eq [
@@ -75,7 +75,7 @@ describe "Md::App media backend" do
     end
   end
 
-  it "disables the backends this terminal cannot drive, Auto-detect never" do
+  it "disables the backends this terminal cannot drive, Auto never" do
     with_media_app do |app, window|
       entry(app, Backend::Auto).enabled?.should be_true
       entry(app, Backend::Ansi).enabled?.should be_true
@@ -127,13 +127,13 @@ describe "Md::App media backend" do
       Crysterm::Config.media_backend.should eq Backend::AnsiC16
       app.media_trial_running?.should be_true
       backend_entries(app).map(&.checked?).should eq checked_for(Backend::AnsiC16)
-      notice(app).should contain "ANSI, 16 colors for 50ms, then back to Auto-detect"
+      notice(app).should contain "ANSI, 16 colors for 50ms, then back to Auto"
 
       settle { app.media_backend == Backend::Auto }
       Crysterm::Config.media_backend.should eq Backend::Auto
       app.media_trial_running?.should be_false
       backend_entries(app).map(&.checked?).should eq checked_for(Backend::Auto)
-      notice(app).should contain "back to Auto-detect"
+      notice(app).should contain "back to Auto"
       app.media_trial?.should be_true # the check stays for the next pick
     end
   end

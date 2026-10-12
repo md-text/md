@@ -87,23 +87,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   look. `F6` cycles through all eight, `--colors-theme breeze-dark` names
   one for a run, and the choice is kept in the settings like the others.
 - View → Media Backend: how Crysterm draws images, from the backends
-  `--media-backend` names — Auto-detect, the default, or one of the cell
+  `--media-backend` names — Auto, the default, or one of the cell
   grid, the terminal's own graphics (Sixel, ReGIS, Kitty, iTerm2,
   Tektronix) and the external overlays (w3mimgdisplay, Überzug), those the
   terminal cannot drive disabled. A pick takes effect at once: Crysterm
   rebuilds the images it drew under the old backend (its CSS
   `background-image` layers, in every window) and the status bar says
-  which is on. Change for 5s, a check entry above Auto-detect, makes a pick
+  which is on. Change for 5s, a check entry above Auto, makes a pick
   a trial: five seconds of the backend, then back to the one before, the
   checks following; another pick restarts the time, picking the original
   ends the trial, and unchecking during one keeps the tried backend. The
   backend is kept with the other settings, as Crysterm's `media.backend`.
-- View → Color Depth (Crysterm's `colors.depth`: Auto-detect, Monochrome, 8,
+- View → Color Depth (Crysterm's `colors.depth`: Auto, Monochrome, 8,
   16, 256 Colors, True Color; the whole window is redrawn at the new depth;
   at Monochrome a light theme reads black on white, Crysterm drawing a cell
   whose polarity is the opposite of the terminal's in reverse video),
   View → Terminal Links (`render.hyperlinks`: whether the viewer's links are
-  the terminal's own hyperlinks — Auto-detect, with the detection's Yes or No
+  the terminal's own hyperlinks — Auto, with the detection's Yes or No
   beside it, Always,
   and Never, which turns the viewer's links off altogether: plain text,
   followed by neither a click nor `Enter`, skipped by `Tab`) and Options → Reduced
@@ -340,7 +340,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - A menu entry's description in the status bar takes as much of the bar as it
   needs, covering the fields on the right while it shows when it does not fit
   beside them (Crysterm's `MainWindow#status_tips_full_width`); View → Media
-  Backend's Auto-detect names the backend it detects in parentheses.
+  Backend's Auto names the backend it detects in parentheses.
 - File → Close: closes the document after the unsaved-changes question, takes
   it off the trail Previous File and Next File retrace, and opens the file
   Next File would have gone to, or leaves a blank new document.
@@ -358,6 +358,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   of its own (`LinePrompt#prompt(completer:)`), and a shortcut stands down
   under a modal dialog in Crysterm itself (`Window#active_modal_widget`),
   where md held its keys back on its own.
+- Every automatic choice in the menus is called Auto and names in
+  parentheses what it detects on this terminal, brought up to date when View
+  opens: Media Backend's (Auto (Sixel)), Terminal Links' (Auto (Yes)) and now
+  Color Depth's (Auto (256 Colors)), through Crysterm's new
+  `Window#detected_color_count`; Terminal Links' Always now answers to
+  `W`, leaving `A` to Auto.
 
 ### Changed
 

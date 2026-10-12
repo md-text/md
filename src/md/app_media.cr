@@ -2,7 +2,7 @@ module Md
   class App
     # View → Media Backend: how Crysterm draws images — the choices its
     # `--media-backend` option takes, as `QImageIOHandler` plugins or a
-    # `QMediaPlayer`'s backends are a list to pick from. Auto-detect (the
+    # `QMediaPlayer`'s backends are a list to pick from. Auto (the
     # default) leaves it to Crysterm, which picks the best backend the
     # terminal drives: Kitty graphics on a Kitty, Sixel on an xterm, sub-cell
     # glyphs or plain cells anywhere else. A pick names one instead and holds
@@ -10,7 +10,7 @@ module Md
     # terminal cannot, rather than quietly downgrading), so the menu disables
     # the entries this terminal cannot drive — ReGIS and Tektronix always,
     # since nothing detects them, the overlays without their helper program —
-    # and Auto-detect never. Setting the property sets Crysterm's
+    # and Auto never. Setting the property sets Crysterm's
     # `media.backend` option, and Crysterm rebuilds the media it resolved
     # under the old setting: the viewer's pictures and every widget's CSS
     # `background-image` layer are dropped and come back for the new backend
@@ -30,7 +30,7 @@ module Md
     # (`#apply_base_url`); an `http(s)` source is fetched in the background,
     # the picture taking its rows when it arrives.
     #
-    # "Change for 5s", above Auto-detect, is a trial: while it is checked, a
+    # "Change for 5s", above Auto, is a trial: while it is checked, a
     # pick switches for `#media_trial_span` and then goes back to the backend
     # in force before the trial, so a backend can be seen without being
     # kept — a notice says what is on and that it is for a while. Another
@@ -43,7 +43,7 @@ module Md
     # settings, by the name `--media-backend` spells it.
     alias MediaBackend = Crysterm::Widget::Media::Backend
 
-    # The backends offered, in menu order: Auto-detect, then grouped by how
+    # The backends offered, in menu order: Auto, then grouped by how
     # the pixels reach the window (`Media::Family`) — the cell grid, the
     # ANSI variants before the glyph ones; the terminal's own graphics,
     # Tektronix among them as the terminal draws that too; the external
@@ -219,7 +219,7 @@ module Md
       entries
     end
 
-    # The menu's groups: Auto-detect alone, the cell grid, what the terminal
+    # The menu's groups: Auto alone, the cell grid, what the terminal
     # itself draws (in-band graphics and the Tektronix window), the external
     # overlays.
     private def media_group(backend : MediaBackend) : Int32
@@ -264,7 +264,7 @@ module Md
 
     private def media_backend_label(backend : MediaBackend) : String
       case backend
-      in .auto?            then "&Auto-detect (#{media_backend_label(Crysterm::Widget::Media.auto_type(tput: @window.tput).backend).delete('&')})"
+      in .auto?            then "&Auto (#{media_backend_label(Crysterm::Widget::Media.auto_type(tput: @window.tput).backend).delete('&')})"
       in .ansi?            then "A&NSI, One Cell per Pixel"
       in .ansi_true_color? then "ANSI, &True Color"
       in .ansi_c256?       then "ANSI, 25&6 Colors"

@@ -279,7 +279,7 @@ so the next plain run is back to the stored theme. A stylesheet of your own
 is on, so your rules stay in force when the theme changes under them.
 
 View → Media Backend picks how Crysterm draws images, from the backends its
-`--media-backend` option names. Auto-detect, the default, leaves the choice
+`--media-backend` option names. Auto, the default, leaves the choice
 to Crysterm, which takes the best one your terminal drives (the entry names
 it in parentheses) — Kitty graphics
 on Kitty, Sixel on an xterm, sub-cell glyphs or one cell per pixel anywhere
@@ -292,7 +292,7 @@ disabled — ReGIS and Tektronix always, since nothing detects them, the
 overlays without their helper program. A pick takes effect at once: Crysterm
 drops the images it drew under the old backend and draws them again with the
 new one, and the status bar says which is on. Check Change for 5s, above
-Auto-detect, to try a backend instead of keeping it: the pick switches for
+Auto, to try a backend instead of keeping it: the pick switches for
 five seconds and then goes back to the backend in force before, the check
 marks following; another pick during the five seconds starts them over and
 still returns to the original, picking the original ends the trial, and
@@ -304,8 +304,9 @@ for 5s is not, like Overwrite Mode.
 
 Four more of Crysterm's options sit in the menus, for a reader who would
 otherwise set them on the command line. View → Color Depth is how many
-colors the window is drawn with — Auto-detect, the default, takes the
-terminal's word, and Monochrome, 8, 16, 256 Colors or True Color force a
+colors the window is drawn with — Auto, the default, takes the
+terminal's word (the entry names the depth it found in parentheses, as in
+Auto (256 Colors)), and Monochrome, 8, 16, 256 Colors or True Color force a
 depth, for a terminal that reports fewer colors than it shows, or to see a
 theme as a plainer terminal would; the whole window is redrawn at the new
 depth at once (`--colors-depth`). Monochrome sends no colors at all, so a
@@ -315,7 +316,7 @@ dark one on a light terminal, by the background the terminal reports) in
 reverse video, which is how a light theme comes out black on white rather
 than in the terminal's defaults. View → Terminal Links is whether the
 links in the viewer are also the terminal's own hyperlinks, to click or
-hover where the terminal does that: Auto-detect, which says in parentheses
+hover where the terminal does that: Auto, which says in parentheses
 whether md found the terminal to support them (Yes or No), turns
 them on where the terminal is known to support them, Always trusts the
 terminal over the detection, and Never turns the viewer's links off

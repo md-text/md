@@ -146,14 +146,14 @@ module Md
       @media_actions = build_media_menu view
       # Two more of Crysterm's options (`app_toolkit.cr`); `L` and `K` are
       # free here.
-      add_choices(view, "Co&lor Depth", "color-depth", COLOR_DEPTHS, @color_depth, "How many colors the window is drawn with: the terminal's, or a depth of your choosing", ->color_depth_tip(ColorDepth)) { |depth| color_depth_label depth }
+      @color_depth_actions = add_choices(view, "Co&lor Depth", "color-depth", COLOR_DEPTHS, @color_depth, "How many colors the window is drawn with: the terminal's, or a depth of your choosing", ->color_depth_tip(ColorDepth)) { |depth| color_depth_label depth }
       # Never turns the viewer's links off altogether; Double-click to Open
       # is how a click follows one (`app_toolkit.cr`).
       @hyperlinks_actions = add_choices(view, "Terminal Lin&ks", "hyperlinks", Hyperlinks.values, @hyperlinks, "Whether the viewer's links are the terminal's own hyperlinks too, to click or hover", ->hyperlinks_tip(Hyperlinks), [toggle_action("Double-click to &Open", "link-double-click", @link_double_click, option_tip("md.link_double_click"))]) { |policy| hyperlinks_label policy }
       view.add_separator
       add_choices(view, "&Dialog Style", "dialog-style", DialogStyle.values, @dialog_style, option_tip("md.dialog_style"), ->dialog_style_tip(DialogStyle)) { |style| dialog_style_label style }
       add_toggle view, "&Watch File", "watch-file", @watch_file, "Reload the file whenever it changes on disk, for this run"
-      # The Auto-detect entries name what the detection says, which a probe
+      # The Auto entries name what the detection says, which a probe
       # answered after the menus were built may have changed.
       view.on(Crysterm::Event::AboutToShow) { refresh_detected_labels }
 

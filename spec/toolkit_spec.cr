@@ -11,7 +11,10 @@ describe "Md::App toolkit options" do
   it "offers the color depths, the current one checked, and applies a pick to the window" do
     with_app Md::Source.new(path: "doc.md"), text: "# T\n\ntext\n", view: true do |app, window|
       entries = submenu(app, 3, "Co&lor Depth")
-      entries.map(&.text).should eq ["&Auto-detect", "&Monochrome", "&8 Colors", "1&6 Colors", "&256 Colors", "&True Color"]
+      # Auto names the depth Crysterm detects here, by that depth's own label.
+      detected = entries[0].text
+      detected.should match /\A&Auto \((Monochrome|8 Colors|16 Colors|256 Colors|True Color|\d+ Colors)\)\z/
+      entries.map(&.text).skip(1).should eq ["&Monochrome", "&8 Colors", "1&6 Colors", "&256 Colors", "&True Color"]
       entries.map(&.checked?).should eq [true, false, false, false, false, false]
       entries[3].trigger
       app.color_depth.should eq Crysterm::ColorDepth::Ansi
@@ -21,6 +24,9 @@ describe "Md::App toolkit options" do
       app.color_depth = Crysterm::ColorDepth::TrueColor
       window.color_count.should eq 0x1000000
       entries[5].checked?.should be_true
+      # The detection, not the pick: View's AboutToShow brings it up to date.
+      menu(app, 3).emit Crysterm::Event::AboutToShow
+      entries[0].text.should eq detected
     end
   ensure
     Crysterm::Config.reset "colors.depth"
@@ -29,7 +35,7 @@ describe "Md::App toolkit options" do
   it "offers the hyperlink policies and tells the window" do
     with_app do |app, window|
       entries = submenu(app, 3, "Terminal Lin&ks")
-      entries.map(&.text).should eq ["&Auto-detect (No)", "&Always", "&Never", "", "Double-click to &Open"]
+      entries.map(&.text).should eq ["&Auto (No)", "Al&ways", "&Never", "", "Double-click to &Open"]
       entries[0, 3].map(&.checked?).should eq [true, false, false]
       app.viewer.links_enabled?.should be_true
       entries[2].trigger

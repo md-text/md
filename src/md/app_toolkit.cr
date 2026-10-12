@@ -138,7 +138,7 @@ module Md
 
     private def color_depth_label(depth : ColorDepth) : String
       case depth
-      in .auto?       then "&Auto-detect"
+      in .auto?       then "&Auto (#{detected_color_depth_name})"
       in .none?       then "&Monochrome"
       in .basic?      then "&8 Colors"
       in .ansi?       then "1&6 Colors"
@@ -158,14 +158,29 @@ module Md
       end
     end
 
+    # The depth Auto draws with here, named as its entry is: Crysterm's
+    # `Window#detected_color_count`, whatever depth is picked now.
+    private def detected_color_depth_name : String
+      count = @window.detected_color_count
+      if depth = COLOR_DEPTHS.find(&.to_count.==(count))
+        color_depth_label(depth).delete('&')
+      else
+        "#{count} Colors"
+      end
+    end
+
+    # The Color Depth entries, in `COLOR_DEPTHS` order (`#build_menus`).
+    @color_depth_actions = [] of Crysterm::Action
+
     # The Terminal Links entries, in `Hyperlinks` order (`#build_menus`).
     @hyperlinks_actions = [] of Crysterm::Action
 
-    # Brings the Auto-detect entries' labels — Terminal Links' and Media
-    # Backend's (`app_media.cr`) — up to what the detection says now (from
-    # View's `AboutToShow`): the terminal's answers come in after the menus
-    # are built.
+    # Brings the Auto entries' labels — Color Depth's, Terminal Links' and
+    # Media Backend's (`app_media.cr`) — up to what the detection says now
+    # (from View's `AboutToShow`): the terminal's answers come in after the
+    # menus are built.
     private def refresh_detected_labels : Nil
+      @color_depth_actions[COLOR_DEPTHS.index!(ColorDepth::Auto)]?.try &.text = color_depth_label(ColorDepth::Auto)
       @hyperlinks_actions[Hyperlinks::Auto.value]?.try &.text = hyperlinks_label(Hyperlinks::Auto)
       @media_actions[MEDIA_BACKENDS.index!(MediaBackend::Auto)]?.try &.text = media_backend_label(MediaBackend::Auto)
     end
@@ -180,8 +195,8 @@ module Md
 
     private def hyperlinks_label(policy : Hyperlinks) : String
       case policy
-      in .auto? then "&Auto-detect (#{@window.hyperlinks_detected? ? "Yes" : "No"})"
-      in .on?   then "&Always"
+      in .auto? then "&Auto (#{@window.hyperlinks_detected? ? "Yes" : "No"})"
+      in .on?   then "Al&ways"
       in .off?  then "&Never"
       end
     end
