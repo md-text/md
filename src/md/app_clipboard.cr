@@ -350,10 +350,14 @@ module Md
     end
 
     # The plain text of the current block (`#viewer_block_span`), its lines
-    # joined by newlines.
+    # joined by newlines — the way it reads: a table row whose cells wrap
+    # gives its display lines (`TextDocumentFragment#to_plain_text`).
     private def current_block_text : String
-      blocks = @viewer.document.blocks
-      viewer_block_span.join('\n') { |index| blocks[index].text }
+      doc = @viewer.document
+      span = viewer_block_span
+      from = doc.block_position(span.begin)
+      to = doc.block_position(span.end) + doc.blocks[span.end].size
+      doc.copy_fragment(from, to).to_plain_text
     end
 
     # The Markdown source of the current block (`#viewer_block_span`): the

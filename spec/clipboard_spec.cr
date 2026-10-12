@@ -110,6 +110,20 @@ describe "Md::App copying" do
     end
   end
 
+  it "copies a table whose cells wrap as it reads, a row's lines apart" do
+    with_clipboard do |clip|
+      long = (["word"] * 40).join(' ')
+      with_app Md::Source.new(path: "doc.md"), text: "| a | b |\n|---|---|\n| 1 | #{long} |\n", view: true do |app|
+        caret_on app, "│ 1 │"
+        app.copy
+        lines = clip.text.lines
+        lines.size.should be > 5
+        lines.map(&.size).uniq.size.should eq 1 # every line the table's width
+        lines.select(&.starts_with?("│ 1 │")).size.should eq 1
+      end
+    end
+  end
+
   it "copies the viewer's selection when there is one" do
     with_clipboard do |clip|
       with_app Md::Source.new(path: "doc.md"), text: CLIP_DOC, view: true do |app, window|
