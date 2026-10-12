@@ -258,6 +258,15 @@ describe "Md::App editing" do
     end
   end
 
+  it "leaves a line of code that looks like a list item alone" do
+    with_app text: "```\n- not an item\n```\n", view: false do |app|
+      place app, 1, 3
+      app.toggle_task_box.should be_false
+      app.check_task.should be_false
+      app.markdown.should eq "```\n- not an item\n```\n"
+    end
+  end
+
   it "shows on the Task entry whether the caret's item is a task, as the menu opens, and flips it" do
     with_app text: "- [ ] task\n- item\ntext\n\n# Heading\n", view: false do |app|
       format = menu(app, 2)

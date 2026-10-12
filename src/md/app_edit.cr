@@ -808,7 +808,8 @@ module Md
       nil
     end
 
-    # The list items the caret's line or the selection's lines hold, each
+    # The list items the caret's line or the selection's lines hold (a
+    # code block's line holding none, whatever it looks like), each
     # yielded with the document and the position of its task box — where
     # the box is, or where one would go, after the marker's spacing — for
     # the block to edit, all in one undo step. Without a list item among
@@ -822,10 +823,11 @@ module Md
       editor = formatting_editor
       doc = editor.document
       first, last = selected_blocks
-      lines = (first..last).select { |i| ListItem.parse(doc.blocks[i].text) }
+      # A code block's line is code, whatever it looks like.
+      code = App.code_lines doc, last
+      lines = (first..last).select { |i| !code[i] && ListItem.parse(doc.blocks[i].text) }
       bare = lines.empty?
       if bare
-        code = App.code_lines doc, last
         lines = (first..last).select do |i|
           text = doc.blocks[i].text
           !text.blank? && !code[i] && !App.unbreakable_line?(text)
