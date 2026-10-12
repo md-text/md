@@ -282,13 +282,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   word wrap. As a line is typed past the wrap column — the Text Width, or
   80 without one — it is broken at the last space before the column and the
   rest carried to a new line, which keeps its place in the Markdown: a list
-  item's content indentation, a blockquote's `> `; a code block, a heading
-  and a table row are never broken. The keystroke and its wrap are one undo
-  step. (The wrapping is Crysterm's `hard_wrap_column`, with md supplying
-  the Markdown continuation.) Format → Rewrap → Paragraph (`Alt-Q`) refills
-  the paragraph at the cursor, or the selection's paragraphs, and Rewrap →
-  Document every paragraph of the file, to the same column, with the same
-  Markdown rules.
+  item's content indentation, a blockquote's `> `; a code block (fenced or
+  indented), a heading, a table row and a rule are never broken. The
+  keystroke and its wrap are one undo step. (The wrapping is Crysterm's
+  `hard_wrap_column`, with md supplying the Markdown continuation.)
+  Format → Rewrap → Paragraph (`Alt-Q`) refills the paragraph at the cursor,
+  or the selection's paragraphs, and Rewrap → Document every paragraph of
+  the file, to the same column, with the same Markdown rules.
 - Every View and Options choice is a configuration option as well, in
   Crysterm's registry beside the toolkit's own: `md.sync_cursor`,
   `md.text_width`, `md.mouse_mode` and the rest, each settable in the config

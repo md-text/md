@@ -88,6 +88,16 @@ describe "Md::App hard wrap" do
     end
   end
 
+  it "leaves an indented code block unbroken" do
+    with_app text: "text\n\n    aaaa bbbb cccc dddd\n", view: false do |app, window|
+      app.hard_wrap = true
+      app.text_width = 20
+      place app, 2, 23
+      type window, "e"
+      app.markdown.lines[2].should eq "    aaaa bbbb cccc dddde"
+    end
+  end
+
   it "undoes the keystroke and its wrap as one step" do
     with_app text: "aaaa bbbb cccc ddddd\n", view: false do |app, window|
       app.hard_wrap = true
@@ -149,6 +159,14 @@ describe "Md::App rewrap paragraph" do
       notice(app).should contain "Not a paragraph"
       place app, 1, 0
       app.rewrap_paragraph.should be_false
+    end
+  end
+
+  it "leaves an indented code block, a fence nested in a list item and a rule alone" do
+    with_app text: "para one\nline two\n\n    code here\n    more code\n\n- item\n  - sub\n\n    ```\n    fenced in\n    sub\n    ```\n\ntext\n---\nafter\nrule\n", view: false do |app|
+      app.text_width = 40
+      app.rewrap_document.should be_true
+      app.markdown.should eq "para one line two\n\n    code here\n    more code\n\n- item\n  - sub\n\n    ```\n    fenced in\n    sub\n    ```\n\ntext\n---\nafter rule\n"
     end
   end
 

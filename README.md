@@ -544,13 +544,13 @@ the column and the rest carried to a new line, so the source itself stays
 narrow — where Soft Wrap only folds the display. The column is the Text
 Width when one is set, else 80. The carried line keeps its place in the
 Markdown: in a list item it is indented to the item's text, in a blockquote
-it gets the `> `, and a code block, a heading or a table row is never
-broken. The keystroke and the wrap it caused undo as one step. Format →
-Rewrap → Paragraph (`Alt-Q`, Emacs's fill) refills the paragraph at the
-cursor, or every paragraph the selection touches, and Rewrap → Document
-every paragraph in the file, to the same column — a list item keeping its
-marker, a quote its markers, code blocks untouched — whether or not Hard
-Wrap is on.
+it gets the `> `, and a code block (fenced or indented), a heading, a table
+row or a rule is never broken. The keystroke and the wrap it caused undo as
+one step. Format → Rewrap → Paragraph (`Alt-Q`, Emacs's fill) refills the
+paragraph at the cursor, or every paragraph the selection touches, and
+Rewrap → Document every paragraph in the file, to the same column — a list
+item keeping its marker, a quote its markers, code blocks untouched —
+whether or not Hard Wrap is on.
 
 Save As asks for the name in place of the status bar, the way vi's command
 line replaces its status line: the current name is filled in, `Tab` and

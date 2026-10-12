@@ -24,8 +24,8 @@ module Md
     # in the Markdown: with the item's content indentation on a list item,
     # with the quote markers and indentation of any other line
     # (`App.continuation_prefix`). A line that cannot be broken without
-    # changing its meaning — a fenced code block's, a fence, a heading, a
-    # table row (`App.unbreakable?`) — is left alone.
+    # changing its meaning — a code block's, fenced or indented, a fence, a
+    # heading, a table row, a rule (`App.unbreakable?`) — is left alone.
     def hard_wrap_prefix(line : String) : String?
       return if App.unbreakable?(document, document.block_at(cursor_position).index)
       App.continuation_prefix(line)
@@ -80,11 +80,12 @@ module Md
     # the selection touches — and Rewrap → Document every paragraph of the
     # document, to the wrap column (`#wrap_column`, `app_view.cr`), the
     # companion of View → Hard Wrap, which breaks lines as they are typed. A paragraph is a run of lines without a blank one,
-    # in the same blockquote, that no list item, heading, fence or table
-    # row starts or interrupts (`#continues?`); a list item's lines keep
-    # the marker and take the item's content indentation, a quote's keep
-    # the `> `, and a code block is not a paragraph. The caret keeps its
-    # place in the text, counted in the characters that are not spaces.
+    # in the same blockquote, that no list item, heading, fence, table row
+    # or rule starts or interrupts (`#continues?`); a list item's lines
+    # keep the marker and take the item's content indentation, a quote's
+    # keep the `> `, and a code block, fenced or indented
+    # (`App.code_lines`), is not a paragraph. The caret keeps its place in
+    # the text, counted in the characters that are not spaces.
     #
     # The keys: `Ctrl-B` is Qt's bold, and the editor does not use it;
     # `Alt-Q` is Emacs's fill, free in the editor too. Qt's
@@ -167,44 +168,140 @@ module Md
     # them: what a wrapped line's continuation starts with outside a list.
     QUOTE_LEAD = /\A(?:[ \t]*>)*[ \t]*/
 
-    # A code fence, in a quote or indented up to the three columns
-    # CommonMark allows; the lines between two are a code block.
-    FENCE = /\A(?:[ \t]*>)*[ \t]{0,3}(?:```|~~~)/
+    # A line opening with a code fence, in a quote or indented however far:
+    # a fence proper when it is indented at most three columns past the
+    # content around it (`.code_lines` tells), and a code block's own line
+    # otherwise — unbreakable either way.
+    FENCE = /\A(?:[ \t]*>)*[ \t]*(?<fence>`{3,}|~{3,})/
+
+    # A line that can close a fenced code block: a run of backticks or
+    # tildes alone on it (the quote markers taken off).
+    CLOSING_FENCE = /\A[ \t]*(?<fence>`{3,}|~{3,})[ \t]*\z/
 
     # A table row (or its delimiter row).
     TABLE_ROW = /\A(?:[ \t]*>)*[ \t]*\|/
 
-    # Whether line *index* of *doc* must not be broken or refilled: a line of
-    # a fenced code block (an odd number of fences above it), a fence, a
-    # heading or a table row. One line's answer, with a scan of the lines
-    # above it; a caller that asks about many lines takes `.fenced_lines`
-    # once instead.
+    # A thematic break (`---`, `* * *`, `___`) or a setext heading's
+    # underline (`===`, `---`): a line that joined to the one above would
+    # be its text, or make it a heading.
+    RULE = /\A(?:[ \t]*>)*[ \t]{0,3}(?:(?:-[ \t]*){3,}|(?:\*[ \t]*){3,}|(?:_[ \t]*){3,}|=+[ \t]*)\z/
+
+    # The blockquote markers a line starts with, each with the one space it
+    # may take: what comes after is the line as the quote holds it, its
+    # indentation counted from there.
+    QUOTE_MARKERS = /\A(?:[ \t]*> ?)*/
+
+    # Whether line *index* of *doc* must not be broken or refilled: a code
+    # block's line, a fence, a heading, a table row or a rule. One line's
+    # answer, with a scan of the lines above it (`.code_lines`); a caller
+    # that asks about many lines takes the scan once instead.
     def self.unbreakable?(doc : Crysterm::TextDocument, index : Int32) : Bool
-      return true if unbreakable_line?(doc.blocks[index].text)
-      fences = 0
-      index.times { |i| fences += 1 if FENCE.matches?(doc.blocks[i].text) }
-      fences.odd?
+      unbreakable_line?(doc.blocks[index].text) || code_lines(doc, index)[index]
     end
 
-    # Whether *line* is unbreakable on its own account — a fence, a heading
-    # or a table row — whatever surrounds it.
+    # Whether *line* is unbreakable on its own account — a fence, a heading,
+    # a table row or a rule — whatever surrounds it.
     def self.unbreakable_line?(line : String) : Bool
-      FENCE.matches?(line) || TABLE_ROW.matches?(line) || heading?(line)
+      FENCE.matches?(line) || TABLE_ROW.matches?(line) || heading?(line) || RULE.matches?(line)
     end
 
-    # Which lines of *doc* lie in a fenced code block (the fences themselves
-    # not counted), in one pass over the lines: a rewrap looks at every line
-    # of its range, and would otherwise scan the lines above each of them
-    # again.
-    def self.fenced_lines(doc : Crysterm::TextDocument) : Array(Bool)
-      inside = false
-      Array(Bool).new(doc.block_count) do |i|
-        if FENCE.matches?(doc.blocks[i].text)
-          inside = !inside
+    # Which of lines 0 to *upto* of *doc* are a code block's: between two
+    # fences (the fences themselves not counted), or indented four columns
+    # past the content of the list item holding them — past the margin
+    # outside a list — where paragraph text does not continue, which is
+    # CommonMark's indented code block (`    code` after a blank line; a
+    # line indented so right under text is the paragraph's). Indentation
+    # is counted from the item's content as CommonMark counts it, so a
+    # fence four columns in under a nested item is still a fence, and a
+    # marker four columns in after a blank line is code, not an item. One
+    # pass over the lines, the items open at each kept as a stack of their
+    # content columns, so a rewrap asks about every line of its range, and
+    # a hard wrap about the caret's, without a scan of the lines above each.
+    def self.code_lines(doc : Crysterm::TextDocument, upto : Int32 = doc.block_count - 1) : Array(Bool)
+      scan = CodeScan.new
+      Array(Bool).new(upto + 1) { |i| scan.code?(doc.blocks[i].text) }
+    end
+
+    # What `.code_lines` carries from one line to the next: the fence of
+    # the code block open (nil outside one), the content columns of the
+    # list items open, innermost last, and whether paragraph text runs on
+    # from above.
+    private class CodeScan
+      @fence : String? = nil
+      @items = [] of Int32
+      @text_above = false
+
+      # Whether *line* is a code block's, the scan moved past it.
+      def code?(line : String) : Bool
+        body = line.sub(QUOTE_MARKERS, "")
+        indent = indent_width body
+        if @fence && !body.blank? && (top = @items.last?) && indent < top
+          # A line less indented than the item's content ends the item, and
+          # the code block in it.
+          @fence = nil
+        end
+        if open = @fence
+          @fence = nil if closes?(body, open, indent)
+          !@fence.nil?
+        elsif body.blank?
+          @text_above = false
           false
         else
-          inside
+          outside_fence? body, indent
         end
+      end
+
+      # Whether *body*, a line with text outside a fenced block, is an
+      # indented code block's; a fence, an item or text it opens is noted.
+      private def outside_fence?(body : String, indent : Int32) : Bool
+        # A line less indented than an item's content ends the item (a
+        # sibling replaces one).
+        while (top = @items.last?) && top > indent
+          @items.pop
+        end
+        # Four columns past the content: code, unless paragraph text runs
+        # on from above.
+        return !@text_above if indent - margin >= INDENT
+        if run = FENCE.match(body).try(&.["fence"])
+          @fence = run
+          @text_above = false
+        elsif !RULE.matches?(body) && (item = ListItem.parse(body))
+          # An item opens (`* * *` is a rule, not one); its text can run on
+          # to the next line.
+          @items << indent + item.content_offset
+          @text_above = !item.empty?
+        else
+          @text_above = !App.unbreakable_line?(body)
+        end
+        false
+      end
+
+      # Whether *body* closes the fenced block *open* began: a run of the
+      # same character, no shorter, with nothing after it, at most three
+      # columns past the content around the block. Any other line is the
+      # block's own.
+      private def closes?(body : String, open : String, indent : Int32) : Bool
+        run = CLOSING_FENCE.match(body).try(&.["fence"]) || return false
+        run[0] == open[0] && run.size >= open.size && indent - margin < INDENT
+      end
+
+      # The content column of the innermost item open, 0 outside a list.
+      private def margin : Int32
+        @items.last? || 0
+      end
+
+      # The columns *text*'s leading whitespace takes, a tab reaching the
+      # next multiple of four as CommonMark counts it.
+      private def indent_width(text : String) : Int32
+        width = 0
+        text.each_char do |char|
+          case char
+          when ' '  then width += 1
+          when '\t' then width += INDENT - width % INDENT
+          else           break
+          end
+        end
+        width
       end
     end
 
@@ -274,12 +371,12 @@ module Md
     def rewrap_paragraph : Bool
       editor = formatting_editor
       first, last = selected_blocks
-      fenced = App.fenced_lines editor.document
+      code = App.code_lines editor.document
       unless editor.selection?
-        first = paragraph_start first, fenced
-        last = paragraph_end first, fenced
+        first = paragraph_start first, code
+        last = paragraph_end first, code
       end
-      rewrap_blocks first, last, fenced
+      rewrap_blocks first, last, code
     end
 
     # Format → Rewrap → Document: every paragraph of the document refilled,
@@ -287,14 +384,14 @@ module Md
     # whether there was a paragraph, with a notice when there was none.
     def rewrap_document : Bool
       doc = formatting_editor.document
-      rewrap_blocks 0, doc.block_count - 1, App.fenced_lines(doc)
+      rewrap_blocks 0, doc.block_count - 1, App.code_lines(doc)
     end
 
     # Lines *first* to *last* of the editor's document refilled paragraph by
     # paragraph, the caret keeping its place; the shared body of the two
-    # Rewrap entries. *fenced* says which lines are a code block's
-    # (`.fenced_lines`).
-    private def rewrap_blocks(first : Int32, last : Int32, fenced : Array(Bool)) : Bool
+    # Rewrap entries. *code* says which lines are a code block's
+    # (`.code_lines`).
+    private def rewrap_blocks(first : Int32, last : Int32, code : Array(Bool)) : Bool
       editor = formatting_editor
       doc = editor.document
       lines = (first..last).map { |i| doc.blocks[i].text }
@@ -302,12 +399,12 @@ module Md
       found = false
       i = 0
       while i < lines.size
-        if lines[i].blank? || fenced[first + i] || App.unbreakable_line?(lines[i])
+        if lines[i].blank? || code[first + i] || App.unbreakable_line?(lines[i])
           filled << lines[i]
           i += 1
           next
         end
-        stop = Math.min(paragraph_end(first + i, fenced), last) - first
+        stop = Math.min(paragraph_end(first + i, code), last) - first
         filled.concat fill(lines[i..stop], wrap_column)
         found = true
         i = stop + 1
@@ -402,11 +499,11 @@ module Md
     end
 
     # The first line of the paragraph line *index* is in: up from it while
-    # the line above continues into it (`#continues?`). *fenced* is the
-    # document's `.fenced_lines`.
-    private def paragraph_start(index : Int32, fenced : Array(Bool)) : Int32
+    # the line above continues into it (`#continues?`). *code* is the
+    # document's `.code_lines`.
+    private def paragraph_start(index : Int32, code : Array(Bool)) : Int32
       doc = @editor.document
-      while index > 0 && continues?(doc, index - 1, index, fenced)
+      while index > 0 && continues?(doc, index - 1, index, code)
         index -= 1
       end
       index
@@ -414,9 +511,9 @@ module Md
 
     # The last line of the paragraph line *index* is in: down from it while
     # the next line continues it.
-    private def paragraph_end(index : Int32, fenced : Array(Bool)) : Int32
+    private def paragraph_end(index : Int32, code : Array(Bool)) : Int32
       doc = @editor.document
-      while index + 1 < doc.block_count && continues?(doc, index, index + 1, fenced)
+      while index + 1 < doc.block_count && continues?(doc, index, index + 1, code)
         index += 1
       end
       index
@@ -425,10 +522,10 @@ module Md
     # Whether line *below* continues the paragraph line *above* is in: both
     # are breakable text, in the same blockquote, and *below* starts nothing
     # of its own (a list item would).
-    private def continues?(doc : Crysterm::TextDocument, above : Int32, below : Int32, fenced : Array(Bool)) : Bool
+    private def continues?(doc : Crysterm::TextDocument, above : Int32, below : Int32, code : Array(Bool)) : Bool
       a = doc.blocks[above].text
       b = doc.blocks[below].text
-      return false if a.blank? || b.blank? || fenced[above] || fenced[below]
+      return false if a.blank? || b.blank? || code[above] || code[below]
       return false if App.unbreakable_line?(a) || App.unbreakable_line?(b) || ListItem.parse(b)
       quote_depth(a) == quote_depth(b)
     end
