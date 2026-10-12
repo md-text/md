@@ -147,7 +147,7 @@ runs too.
 | `Alt-Left`, `Alt-Right` | Previous File and Next File (File → Previous File, Next File); in the editor and the viewer these move by word instead |
 | `Enter`            | In the editor, on a list item: continue the list (an empty item ends it) |
 | `Ctrl-B`, `Alt-I`, `Alt-C` | Bold, italic and code around the selection or the word at the caret, or off again (Format → Bold, Italic, Code) |
-| `Alt-X`            | Tick or untick a list item's task box, or give it a ticked one (Format → Toggle Task; Format → Task, a check entry, adds and removes the box) |
+| `Alt-X`            | Tick or untick a list item's task box, or give it a ticked one, a line of text becoming an item (Format → Toggle Task Checkbox; Format → As a Task, a check entry, adds and removes the box) |
 | `Ctrl-Up`, `Ctrl-Down` | Promote or demote the heading on the caret's line (Format → Promote Heading, Demote Heading) |
 | `Alt-Q`            | Refill the paragraph at the caret, or the selected paragraphs, to the wrap column (Format → Rewrap → Paragraph; Rewrap → Document refills them all) |
 | `Ctrl-N`           | Open a new window on this document, in a new terminal window (Window → New) |
@@ -366,18 +366,20 @@ selected, so a second press undoes the first. Format → Code Block puts
 the selected lines, or the paragraph at the caret, between ```` ``` ````
 fences (inside a quote, the fences carry its `> `), drops an empty fenced
 block on a blank line with the caret inside it, and takes the fences off
-again when the caret is anywhere in a fenced block. Format → Task, a check entry
-whose check shows whether the item at the caret is a task when the menu
-opens, gives a list item a `[ ]` box and takes it off again; Format →
-Toggle Task (`Alt-X`) ticks the box `[x]` and unticks it, and gives an item
-without a box a
-ticked one; Format → Promote Heading and Demote Heading (`Ctrl-Up`, `Ctrl-Down`)
+again when the caret is anywhere in a fenced block. Format → As a Task, a
+check entry whose check shows whether the item at the caret is a task when
+the menu opens, gives a list item a `[ ]` box and takes it off again;
+Format → Toggle Task Checkbox (`Alt-X`) ticks the box `[x]` and unticks it,
+and gives an item without a box a ticked one. A task box belongs on a list
+item, so on a line of text that is no item both make it one first, `text`
+becoming `- [ ] text` (a selection's lines of text each, when it holds no
+item); Format → Promote Heading and Demote Heading (`Ctrl-Up`, `Ctrl-Down`)
 move the caret's line one heading level up or down, a paragraph being the
 level above `#`. Each change is one undo step.
 
 The keys are not all Qt's: `Ctrl-B` is, but a terminal sends the same byte
 for `Ctrl-I` and `Tab`, and cannot tell `Ctrl-Shift-X` from `Ctrl-X`, so
-Italic, Code and Toggle Task use `Alt` chords the editor does not
+Italic, Code and Toggle Task Checkbox use `Alt` chords the editor does not
 (`Alt-B` and `Alt-F` are its readline word moves). Indent and Outdent show
 `Tab` and `Shift+Tab`, keys that are theirs in the editor alone. The Format
 menu works from any pane: chosen while reading, it edits the source of the

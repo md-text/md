@@ -61,12 +61,14 @@ module Md
     # `QPlainTextEdit` (`tabChangesFocus` is off by default): `F1`–`F3` and
     # the mouse put the focus elsewhere.
     #
-    # Format → Task, a check entry, gives a list item a task box, or takes
-    # off the one it has: `- item` ⇄ `- [ ] item`; its check shows whether
-    # the caret's item is a task, read as the menu opens
+    # Format → As a Task, a check entry, gives a list item a task box, or
+    # takes off the one it has: `- item` ⇄ `- [ ] item`; its check shows
+    # whether the caret's item is a task, read as the menu opens
     # (`#refresh_task_entry`, Qt's `aboutToShow`). Format → Toggle Task
-    # (`Alt-X`) ticks the box and unticks it, `- [ ] item` ⇄ `- [x] item`;
-    # an item without a box gets one ticked. Format → Bold, Italic and Code (`Ctrl-B`, `Alt-I`,
+    # Checkbox (`Alt-X`) ticks the box and unticks it, `- [ ] item` ⇄
+    # `- [x] item`; an item without a box gets one ticked. A task box
+    # belongs on a list item, so both make a line of text one first: `text`
+    # → `- [ ] text` (`#edit_task_items`). Format → Bold, Italic and Code (`Ctrl-B`, `Alt-I`,
     # `Alt-C`) wrap the selection — or the word at the caret, or, with
     # neither, a pair the caret is put between — in `**`, `*` and backticks,
     # and take them off again from text that has them (`_` and `__` count
@@ -94,7 +96,7 @@ module Md
     # `Alt-Q` is Emacs's fill, free in the editor too. Qt's
     # `Ctrl-I` is out of reach — a terminal sends the same byte for `Ctrl-I`
     # and `Tab` — and so is `Ctrl-Shift-X`, which a terminal does not tell
-    # from `Ctrl-X`, so Italic, Code and Toggle Task take `Alt` chords the
+    # from `Ctrl-X`, so Italic, Code and Toggle Task Checkbox take `Alt` chords the
     # editor leaves alone (`Alt-B` and `Alt-F` are readline's word moves
     # there). `Enter`, `Tab` and `Shift-Tab` are the editor's own
     # (`MarkdownEdit#key_filter`), taken ahead of its editing keys — and of
@@ -113,7 +115,7 @@ module Md
     # editor at the source of the viewer's caret, showing the editor when
     # it is hidden.
 
-    # The Format → Task entry, whose check follows the caret's item.
+    # The Format → As a Task entry, whose check follows the caret's item.
     @task_action : Crysterm::Action?
 
     # A list item line taken apart: the blockquote markers before it (`>`
@@ -382,10 +384,11 @@ module Md
       true
     end
 
-    # Format → Task: a task box on the caret's list item, or on every list
-    # item of the selection — `[ ] ` added to an item without one, and taken
-    # off an item that has one. Returns whether there was an item, with a
-    # notice when there was not.
+    # Format → As a Task: a task box on the caret's list item, or on every
+    # list item of the selection — `[ ] ` added to an item without one, and
+    # taken off an item that has one; a line of text is made an item with a
+    # box (`#edit_task_items`). Returns whether there was an item or a line
+    # of text, with a notice when there was not.
     def toggle_task_box : Bool
       edit_task_items do |doc, box, item|
         if task = item.task
@@ -396,7 +399,7 @@ module Md
       end
     end
 
-    # Format → Toggle Task: the box ticked when empty and emptied when
+    # Format → Toggle Task Checkbox: the box ticked when empty and emptied when
     # ticked, on the same items; an item without a box gets a ticked one,
     # so a plain item is done in one key. Likewise.
     def check_task : Bool
@@ -632,14 +635,14 @@ module Md
       format.add_separator
       # The check is the caret's item's, read as the menu opens; picking the
       # entry flips it and the box with it.
-      task = Crysterm::Action.new "&Task", checkable: true, name: "task"
-      # Off a list item nothing changes, and the check flipped by the pick
-      # is put back.
+      task = Crysterm::Action.new "As a &Task", checkable: true, name: "task"
+      # With no item nor text to make one of, nothing changes, and the
+      # check flipped by the pick is put back.
       task.on(Crysterm::Event::Triggered) { refresh_task_entry unless toggle_task_box }
-      format.add_action tip(task, "Give the caret's list item a task box, [ ], or take it off; the selection's items too")
+      format.add_action tip(task, "Give the caret's list item a task box, [ ], or take it off, making a line of text an item first; the selection's items too")
       @task_action = task
       format.on(Crysterm::Event::AboutToShow) { refresh_task_entry }
-      named "toggle-task", tip format.add_action("Toggle Tas&k", shortcut: "Alt+X") { check_task }, "Tick the caret's task box, or empty it; an item without a box gets a ticked one"
+      named "toggle-task", tip format.add_action("Toggle Task Chec&kbox", shortcut: "Alt+X") { check_task }, "Tick the caret's task box, or empty it; an item without a box, or a line of text, gets a ticked one"
       indent = named "indent", tip format.add_action("I&ndent", shortcut: "Tab") { indent_lines 1 }, "Indent the caret's line or the selection's lines; a list item nests under the one above"
       outdent = named "outdent", tip format.add_action("&Outdent", shortcut: "Shift+Tab") { indent_lines -1 }, "Outdent the caret's line or the selection's lines, one level or four spaces"
       # The editor's keys (see the class comment): the entries' shortcuts
@@ -773,23 +776,39 @@ module Md
     # The list items the caret's line or the selection's lines hold, each
     # yielded with the document and the position of its task box — where
     # the box is, or where one would go, after the marker's spacing — for
-    # the block to edit, all in one undo step. Returns whether there was an
-    # item, with a notice when there was not. The position is taken as each
+    # the block to edit, all in one undo step. Without a list item among
+    # them, the lines of text become items first, a `- ` put after their
+    # quote markers and indentation, since a task box belongs on an item;
+    # a blank line, a code block's, a heading, a fence, a table row and a
+    # rule do not. Returns whether there was an item or a line to make one
+    # of, with a notice when there was not. The position is taken as each
     # item's turn comes, so an earlier item's edit has already moved it.
     private def edit_task_items(& : Crysterm::TextDocument, Int32, ListItem ->) : Bool
       editor = formatting_editor
       doc = editor.document
       first, last = selected_blocks
-      items = (first..last).compact_map do |i|
-        (item = ListItem.parse(doc.blocks[i].text)) ? {i, item} : nil
+      lines = (first..last).select { |i| ListItem.parse(doc.blocks[i].text) }
+      bare = lines.empty?
+      if bare
+        code = App.code_lines doc, last
+        lines = (first..last).select do |i|
+          text = doc.blocks[i].text
+          !text.blank? && !code[i] && !App.unbreakable_line?(text)
+        end
       end
-      if items.empty?
-        notice "Not a list item"
+      if lines.empty?
+        notice "Not a list item or a line of text"
         return false
       end
       doc.edit do
-        items.each do |i, item|
-          at = doc.blocks[i].position + item.quote.size + item.indent.size + item.content_offset
+        lines.each do |i|
+          if bare
+            lead = QUOTE_LEAD.match(doc.blocks[i].text).try(&.[0].size) || 0
+            Crysterm::TextCursor.new(doc, doc.blocks[i].position + lead).insert_text "- "
+          end
+          block = doc.blocks[i]
+          item = ListItem.parse(block.text) || next
+          at = block.position + item.quote.size + item.indent.size + item.content_offset
           yield doc, at, item
         end
         nil

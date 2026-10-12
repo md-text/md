@@ -218,10 +218,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   longer leaves the editor; `F1`–`F3` and the mouse do. Format → Bold, Italic and Code
   (`Ctrl-B`, `Alt-I`, `Alt-C`) wrap the selection or the word at the caret
   in `**`, `*` or backticks, the markers hugging the text (spaces at the
-  selection's ends stay outside), or unwrap it, a selection taking in spaces beside the markers unwrapping too; Task, a check entry showing
+  selection's ends stay outside), or unwrap it, a selection taking in spaces beside the markers unwrapping too; As a Task, a check entry showing
   whether the caret's item is one, adds a `[ ]` box to a list item and
-  takes it off, Toggle Task (`Alt-X`) ticks and unticks it (an
-  item without a box gets a ticked one); Promote Heading and Demote Heading
+  takes it off, Toggle Task Checkbox (`Alt-X`) ticks and unticks it (an
+  item without a box gets a ticked one), and both make a line of text a
+  list item first (`text` → `- [ ] text`), where they did nothing off a list; Promote Heading and Demote Heading
   (`Ctrl-Up`, `Ctrl-Down`) change the line's heading level. Each change is
   one undo step.
 - Edit → Replace… (`Alt-H`, since Qt's `Ctrl-H` is Backspace in a terminal): the

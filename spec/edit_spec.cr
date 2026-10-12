@@ -214,13 +214,13 @@ describe "Md::App editing" do
     end
   end
 
-  it "gives a list item a task box and takes it off, ticks and unticks it, and says so off a list" do
+  it "gives a list item a task box and takes it off, ticks and unticks it, and makes a line of text an item" do
     with_app text: "- item\ntext\n", view: false do |app, window|
       app.show_pane Md::App::Pane::Viewer
       place app, 0, 3
       app.toggle_task_box.should be_true
       app.markdown.should eq "- [ ] item\ntext\n"
-      press(window, Tput::Key::AltX).accepted?.should be_true # Toggle Task
+      press(window, Tput::Key::AltX).accepted?.should be_true # Toggle Task Checkbox
       app.markdown.should eq "- [x] item\ntext\n"
       app.viewer.document.blocks[0].block_format.checked?.should be_true # the viewer followed
       app.check_task.should be_true
@@ -234,19 +234,36 @@ describe "Md::App editing" do
       app.editor.undo.should be_true # each one step
       app.markdown.should eq "- [x] item\ntext\n"
       place app, 1, 0
-      app.toggle_task_box.should be_false
-      notice(app).should contain "Not a list item"
-      app.check_task.should be_false
+      app.toggle_task_box.should be_true
+      app.markdown.should eq "- [x] item\n- [ ] text\n"
+      app.editor.undo.should be_true # the item and its box, one step
       app.markdown.should eq "- [x] item\ntext\n"
+      place app, 1, 0
+      app.check_task.should be_true
+      app.markdown.should eq "- [x] item\n- [x] text\n"
+    end
+  end
+
+  it "makes the lines of text a selection holds items with boxes, in a quote too, and says so where there is none" do
+    with_app text: "> one\n> two\n\n# Heading\n\n```\ncode\n```\n", view: false do |app|
+      select_text app, 0, app.editor.document.block_position(2)
+      app.toggle_task_box.should be_true
+      app.markdown.should eq "> - [ ] one\n> - [ ] two\n\n# Heading\n\n```\ncode\n```\n"
+      {3, 6}.each do |line| # a heading, a code block's line
+        place app, line, 1
+        app.check_task.should be_false
+        notice(app).should contain "Not a list item or a line of text"
+      end
+      app.markdown.should eq "> - [ ] one\n> - [ ] two\n\n# Heading\n\n```\ncode\n```\n"
     end
   end
 
   it "shows on the Task entry whether the caret's item is a task, as the menu opens, and flips it" do
-    with_app text: "- [ ] task\n- item\ntext\n", view: false do |app|
+    with_app text: "- [ ] task\n- item\ntext\n\n# Heading\n", view: false do |app|
       format = menu(app, 2)
-      task = format.actions.find! { |a| a.text == "&Task" }
+      task = format.actions.find! { |a| a.text == "As a &Task" }
       task.checkable?.should be_true
-      toggle = format.actions.find! { |a| a.text == "Toggle Tas&k" }
+      toggle = format.actions.find! { |a| a.text == "Toggle Task Chec&kbox" }
       toggle.shortcut_text.should eq "Alt+X"
       place app, 0, 2
       format.emit Crysterm::Event::AboutToShow
@@ -256,10 +273,15 @@ describe "Md::App editing" do
       task.checked?.should be_false
       task.trigger # picking the entry: checked, and the box with it
       task.checked?.should be_true
-      app.markdown.should eq "- [ ] task\n- [ ] item\ntext\n"
+      app.markdown.should eq "- [ ] task\n- [ ] item\ntext\n\n# Heading\n"
       place app, 2, 0
       format.emit Crysterm::Event::AboutToShow
       task.checked?.should be_false # no item
+      task.trigger # a line of text: made an item, with a box
+      task.checked?.should be_true
+      app.markdown.should eq "- [ ] task\n- [ ] item\n- [ ] text\n\n# Heading\n"
+      place app, 4, 2 # nothing to make a task of
+      format.emit Crysterm::Event::AboutToShow
       task.trigger
       task.checked?.should be_false # nothing to flip: the check stays off
       notice(app).should contain "Not a list item"
@@ -270,7 +292,7 @@ describe "Md::App editing" do
     with_app Md::Source.new(path: "doc.md"), text: "- [x] task\n- item\n", view: true do |app|
       app.visible_panes.should eq [Md::App::Pane::Viewer]
       format = menu(app, 2)
-      task = format.actions.find! { |a| a.text == "&Task" }
+      task = format.actions.find! { |a| a.text == "As a &Task" }
       plain = app.viewer.document.plain_text
       app.viewer.text_cursor = Crysterm::TextCursor.new(app.viewer.document, plain.index!("item"))
       format.emit Crysterm::Event::AboutToShow

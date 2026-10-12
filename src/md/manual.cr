@@ -43,7 +43,7 @@ module Md
       {"Alt-W", "Soft Wrap in the editor on and off."},
       {"Enter", "In the editor, on a list item: continue the list; on an empty item, end it."},
       {"Ctrl-B, Alt-I, Alt-C", "Bold, italic and code around the selection or the word at the caret, or off again."},
-      {"Alt-X", "Tick or untick a list item's task box, or give it a ticked one (Format -> Toggle Task; Format -> Task, a check entry, adds and removes the box)."},
+      {"Alt-X", "Tick or untick a list item's task box, or give it a ticked one, a line of text becoming an item (Format -> Toggle Task Checkbox; Format -> As a Task, a check entry, adds and removes the box)."},
       {"Ctrl-Up, Ctrl-Down", "Promote or demote the heading on the caret's line."},
       {"Alt-Q", "Refill the paragraph at the caret, or the selected paragraphs, to the wrap column (the text width, or 80); Format -> Rewrap -> Document refills every paragraph."},
       {"Ctrl-N", "Open another md window on this document, in a new terminal window (Window -> New)."},
