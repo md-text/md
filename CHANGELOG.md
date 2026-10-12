@@ -427,6 +427,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   are kept. A broken file stops md with a message naming the entry, as does a
   value that fits no option in a file, a variable or a flag
   (`--colors-theme=bogus`), with exit status 1.
+- A torn-off menu's close button is a boxed `⊠`, reading as a window's
+  button rather than a letter, where it was a bare `✕`; an ASCII terminal
+  shows `x`. (Changed in Crysterm, which md builds against.)
+- The menus' check marks are one character, `☑`/`☐`, and `◉`/`○` for a
+  choice of one (the theme, the mouse mode), where they were `[x]`/`[ ]`,
+  so the entries sit two columns further left; an ASCII terminal keeps
+  `[x]`. (Changed in Crysterm, which md builds against.)
 
 ### Fixed
 
@@ -531,6 +538,3 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   they become usable while the menu is open. They still highlight under the
   pointer, to show why they are disabled. (Fixed in Crysterm, which md
   builds against.)
-- A torn-off menu's close button is a boxed `⊠`, reading as a window's
-  button rather than a letter, where it was a bare `✕`; an ASCII terminal
-  shows `x`. (Changed in Crysterm, which md builds against.)
