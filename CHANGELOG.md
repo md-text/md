@@ -401,3 +401,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   Crysterm, which md builds against.)
 
 [Unreleased]: https://github.com/crystallabs/md/commits/main
+- Window → New no longer freezes md on macOS: once the new terminal window
+  opened, the first window stopped answering the mouse and the keyboard, and
+  the input it had not read was printed to the terminal when md quit. The new
+  window's terminal was opened blocking (as Crystal opens every file on
+  macOS), so its input reader, waiting for a key there, held up the whole
+  process; it is now opened non-blocking, as the first window's terminal is.
+  (Fixed in Crysterm, which md builds against.)
