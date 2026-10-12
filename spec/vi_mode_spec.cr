@@ -100,6 +100,21 @@ describe "Md::App Vi Mode" do
     end
   end
 
+  it "shows and focuses the editor when turned on from the menu, and says nothing of Neovim ending when turned off" do
+    with_app text: "# A\n\ntext\n" do |app, window|
+      app.viewer.focused?.should be_true
+      vi_entry(app).trigger
+      app.vi.attached?.should be_true
+      app.editor.focused?.should be_true
+      vi_type window, "ggAb<Esc>"
+      app.markdown.should eq "# Ab\n\ntext\n"
+      vi_entry(app).trigger
+      app.vi_mode?.should be_false
+      sleep 50.milliseconds
+      notice(app).should_not contain "Neovim ended"
+    end
+  end
+
   it "keeps the viewer's : as md's command line" do
     with_app text: "# A\n\ntext\n" do |app, window|
       app.vi_mode = true

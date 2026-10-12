@@ -395,7 +395,8 @@ viewer's caret, showing the editor if it is hidden.
 ### Vi Mode
 
 Edit → Vi Mode (`md.vi_mode`) edits the editor's text as in Neovim: an
-`nvim` runs embedded, headless, and takes the editor's keys — `i`, `dd`,
+`nvim` runs embedded, headless, and takes the editor's keys (turning it on
+from the menu or by name shows and focuses the editor) — `i`, `dd`,
 `ciw`, `.`, counts, registers, text objects, `/` and the rest are
 Neovim's own — while the editor keeps the document, so the viewer, the
 status bar, Find, Format and the other menus work on the text as before.

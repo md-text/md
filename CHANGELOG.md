@@ -372,7 +372,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `W`, leaving `A` to Auto.
 - Edit → Vi Mode (`vi-mode`, `md.vi_mode`): the editor is edited by an
   embedded Neovim (Crysterm's `Neovim::Handler`), its keys Neovim's but for
-  the function keys and the `Alt` chords, which stay md's. The status bar
+  the function keys and the `Alt` chords, which stay md's; turned on from
+  the menu or by name, it shows and focuses the editor, so the keys typed
+  next are Neovim's even where the viewer had the focus. The status bar
   shows the mode left of the position and the command line while one is
   typed, Neovim's messages come as notices, Visual mode is the editor's
   selection, `u`/`Ctrl-R` are Neovim's undo and redo, and `:w` saves (`:w

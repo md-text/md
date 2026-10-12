@@ -24,8 +24,9 @@ module Md
     # change to it restarts Neovim when Vi Mode is on. Without `nvim` the
     # entry is disabled and says why; a Neovim that ends turns Vi Mode off.
     #
-    # The viewer's `:` stays md's command line, the viewer being no text
-    # input. The line prompts keep plain editing: a question is answered in
+    # Turned on from the menu or by name, Vi Mode shows and focuses the
+    # editor. The viewer's `:` stays md's command line, the viewer being no
+    # text input. The line prompts keep plain editing: a question is answered in
     # a few keys, where starting in Normal mode would only be in the way.
     @vi_mode : Crysterm::Reactive::Property(Bool) = Crysterm::Reactive::Property.new(false)
     @vi_config : Crysterm::Reactive::Property(Bool) = Crysterm::Reactive::Property.new(false)
@@ -125,6 +126,12 @@ module Md
       edit.add_separator
       entry = add_toggle edit, "V&i Mode", "vi-mode", @vi_mode, option_tip("md.vi_mode") + (available ? "" : missing)
       entry.enabled = available
+      # Turned on from the menu or by name, Vi Mode takes the keys of the
+      # editor, which it shows and focuses: with the viewer focused (where
+      # a file opens), the keys typed next went to the viewer, which has no
+      # Insert mode, while the status bar already said NORMAL. The setting
+      # loaded at start leaves the focus where the document opens.
+      entry.on(Crysterm::Event::Triggered) { |e| show_pane(Pane::Editor).focus if e.checked && vi_mode? }
       config = add_toggle options, "Vi Mode Uses Your &Neovim Config", "vi-config", @vi_config, option_tip("md.vi_config") + (available ? "" : missing)
       config.enabled = available
     end
