@@ -606,8 +606,11 @@ choices, not a cache, and stay.
 ### Windows
 
 Window → New Window (`Ctrl-N`) opens another md window on the document you
-are looking at — the same file, with the editor's text as it stands, and
-the viewer shown if it is shown here — in a new terminal window. md asks
+are looking at — the same file, with the editor's text as it stands,
+unsaved edits included and flagged as unsaved there too, and the viewer
+shown if it is shown here — in a new terminal window. A window still
+reading a stream passes on what has arrived so far; the rest of the stream
+keeps arriving in the window that reads it. md asks
 the terminal emulator it is running in for one: kitty, Alacritty, WezTerm,
 foot, xterm, Konsole and GNOME Terminal, Terminal.app and iTerm2 on macOS
 (`$TERMINAL` names another), or a new tmux or screen window inside a
