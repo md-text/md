@@ -34,8 +34,9 @@ module Md
     # The handler driving the editor while Vi Mode is on.
     getter vi : Crysterm::Neovim::Handler = Crysterm::Neovim::Handler.new
 
-    # The status bar's mode field, shown while Vi Mode is on.
-    @vi_field : Crysterm::Widget::Label = Crysterm::Widget::Label.new(text: "", width: 9)
+    # The status bar's mode field, shown while Vi Mode is on; made in
+    # `#initialize` with the other fields, once the window exists.
+    @vi_field : Crysterm::Widget::Label
 
     def vi_mode? : Bool
       @vi_mode.value

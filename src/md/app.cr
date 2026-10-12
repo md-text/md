@@ -173,6 +173,7 @@ module Md
       @main = Crysterm::Widget::MainWindow.new parent: @window
       @main.menu_bar # filled by `#build_menus`, once the panes exist
       @name_field = Crysterm::Widget::Label.new text: ""
+      @vi_field = Crysterm::Widget::Label.new text: "", width: 9
       @position_field = Crysterm::Widget::Label.new text: "", width: POSITION_WIDTH
       @size_field = Crysterm::Widget::Label.new text: "", width: SIZE_WIDTH
       @encoding_field = Crysterm::Widget::Label.new text: "", width: ENCODING_WIDTH
