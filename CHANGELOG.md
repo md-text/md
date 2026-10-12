@@ -225,7 +225,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   list item first (`text` → `- [ ] text`), where they did nothing off a list; Promote Heading and Demote Heading
   (`Ctrl-Up`, `Ctrl-Down`) change the heading level of the caret's section —
   the caret's line when it is a heading, the nearest heading above it from
-  anywhere in the section's text — the caret staying put. Each change is
+  anywhere in the section's text, a setext one (`Title` over `===` or `---`)
+  included, which becomes an ATX one at its new level (`---` demoted is
+  `### Title`) — the caret staying put. Each change is
   one undo step.
 - Edit → Replace… (`Alt-H`, since Qt's `Ctrl-H` is Backspace in a terminal): the
   prompt asks for the pattern (the last search's filled in) and the

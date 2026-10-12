@@ -80,7 +80,8 @@ module Md
     # `Ctrl-Down`) move the heading of the caret's section one level up or
     # down — the caret's line when it is a heading, the nearest heading
     # above it otherwise, so they work from anywhere in the section — a
-    # paragraph being the level above `#` and `######` the last.
+    # paragraph being the level above `#` and `######` the last; a setext
+    # heading moved becomes an ATX one (`#shift_heading`).
     #
     # Format → Rewrap — labelled with the column, `Rewrap (to 80 Columns)`
     # — → Paragraph (`Alt-Q`, Emacs's `fill-paragraph`, Kate's
@@ -192,6 +193,22 @@ module Md
     # A line that can close a fenced code block: a run of backticks or
     # tildes alone on it (the quote markers taken off).
     CLOSING_FENCE = /\A[ \t]*(?<fence>`{3,}|~{3,})[ \t]*\z/
+
+    # A setext heading's underline: a run of `=` (level 1) or `-` (level
+    # 2) alone on a line, after any quote markers and at most three
+    # columns of indentation. It underlines the paragraph above it; after
+    # a blank line, a `---` is a rule (`RULE`) instead.
+    SETEXT_UNDERLINE = /\A(?:[ \t]*>)*[ \t]{0,3}(?<mark>=+|-+)[ \t]*\z/
+
+    # A heading of a document by its lines: *first* and *last* are the
+    # same line for an ATX heading (`## Title`), the paragraph's first line
+    # and the underline for a setext one (`Title` over `---`); *level* is
+    # 1 to 6, or 0 for a line that is no heading.
+    record Heading, first : Int32, last : Int32, level : Int32 do
+      def setext? : Bool
+        last > first
+      end
+    end
 
     # A table row (or its delimiter row).
     TABLE_ROW = /\A(?:[ \t]*>)*[ \t]*\|/
@@ -323,6 +340,74 @@ module Md
     # Whether *line* is an ATX heading.
     def self.heading?(line : String) : Bool
       !HEADING.match(line).try(&.["hashes"]?).nil?
+    end
+
+    # The headings of *doc*, in order: ATX ones (`## Title`) and setext
+    # ones (`Title` over a line of `=` or `-`), a code block's line
+    # (*code*, `.code_lines` of the whole of *doc*) being no part of
+    # either. A setext heading's text is the paragraph right above the
+    # underline, in the same blockquote: a run of lines of text that no
+    # blank line, list item, fence, table row, rule or ATX heading
+    # interrupts. A line that runs on lazily — a list item's text, or a
+    # quote's on a line without its markers — is no such paragraph, so
+    # the `---` under it is a rule.
+    def self.headings(doc : Crysterm::TextDocument, code : Array(Bool)) : Array(Heading)
+      scan = HeadingScan.new
+      headings = [] of Heading
+      code.each_with_index do |is_code, i|
+        text = doc.blocks[i].text
+        if is_code || text.blank?
+          scan.reset
+        elsif heading = scan.heading(i, text)
+          headings << heading
+        end
+      end
+      headings
+    end
+
+    # What `.headings` carries from one line to the next: the paragraph an
+    # underline would make a heading, by its first line and quote depth,
+    # and whether lazy text runs on instead.
+    private class HeadingScan
+      @start : Int32? = nil
+      @depth = 0
+      @lazy = false
+
+      # A blank line or a code block's: no paragraph runs on past it.
+      def reset : Nil
+        @start = nil
+        @lazy = false
+      end
+
+      # The heading line *index*, *text*, ends or is, the scan moved past it.
+      def heading(index : Int32, text : String) : Heading?
+        quotes = QUOTE.match(text).try(&.[0].count('>')) || 0
+        if (first = @start) && quotes == @depth && (underline = SETEXT_UNDERLINE.match(text))
+          @start = nil
+          return Heading.new(first, index, underline["mark"].starts_with?('=') ? 1 : 2)
+        end
+        if hashes = HEADING.match(text).try(&.["hashes"]?)
+          reset
+          return Heading.new(index, index, hashes.size)
+        end
+        paragraph index, text, quotes
+        nil
+      end
+
+      # Notes line *index*, *text*, no heading, at quote depth *quotes*.
+      private def paragraph(index : Int32, text : String, quotes : Int32) : Nil
+        if App.unbreakable_line?(text)
+          reset
+        elsif ListItem.parse(text) || @lazy || (@start && quotes < @depth)
+          # An item's text, or a quote's on a line without its markers,
+          # runs on lazily.
+          @start = nil
+          @lazy = true
+        elsif @start.nil? || quotes > @depth
+          @start = index
+          @depth = quotes
+        end
+      end
     end
 
     # What a line continuing *line* starts with: the quote markers and the
@@ -998,53 +1083,44 @@ module Md
     # *doc*, each with its line break; the editor's caret, or selection,
     # kept on the same text.
     private def unfence(doc : Crysterm::TextDocument, open : Int32, close : Int32?) : Nil
-      cuts = [line_span(doc, open)]
-      close.try { |line| cuts << line_span(doc, line) }
-      cursor = @editor.text_cursor
-      anchor, position = cursor.anchor, cursor.position
-      doc.edit do
-        cuts.reverse_each { |(start, stop)| Crysterm::TextCursor.new(doc, start, stop).remove_selected_text }
-        nil
-      end
-      # A position past a cut moves back by its size; one inside it goes
-      # to where the cut was.
-      shift = ->(at : Int32) do
-        cuts.reverse.reduce(at) { |pos, (from, to)| pos >= to ? pos - (to - from) : (pos > from ? from : pos) }
-      end
-      @editor.text_cursor = Crysterm::TextCursor.new(doc, shift.call(anchor), shift.call(position))
+      spans = [line_span(doc, open)]
+      close.try { |line| spans << line_span(doc, line) }
+      replace_spans doc, spans
     end
 
     # Line *index* of *doc* with its line break, as the positions from and
-    # to: the break after it, or before it for the last line.
-    private def line_span(doc : Crysterm::TextDocument, index : Int32) : {Int32, Int32}
+    # to and nothing to put there (`#replace_spans`): the break after it,
+    # or before it for the last line.
+    private def line_span(doc : Crysterm::TextDocument, index : Int32) : {Int32, Int32, String}
       block = doc.blocks[index]
       if index + 1 < doc.block_count
-        {block.position, doc.blocks[index + 1].position}
+        {block.position, doc.blocks[index + 1].position, ""}
       else
-        {Math.max(block.position - 1, 0), block.position + block.size}
+        {Math.max(block.position - 1, 0), block.position + block.size, ""}
       end
     end
 
     # The heading of the caret's section moved *by* levels, its hashes
-    # replaced: the caret's line when it is a heading, else the nearest
-    # heading above it — so the entries work from anywhere in the section's
-    # text, as the task entries do from anywhere on the line — a line in a
-    # fenced or indented code block being no heading. Before the first
-    # heading there is no section, and the caret's line itself is shifted:
-    # a line of text becomes a `#` heading on Demote and stays on Promote, and
-    # a code block's line stays as it is. The
-    # caret keeps its place in the text.
+    # replaced: the caret's line when it is a heading (or a setext
+    # heading's text or underline), else the nearest heading above it —
+    # so the entries work from anywhere in the section's text, as the task
+    # entries do from anywhere on the line — a line in a fenced or
+    # indented code block being no heading. A setext heading (`Title` over
+    # `===` or `---`) moved becomes an ATX one at the new level, `## Title`
+    # or `### Title` from a `---` one, its lines joined into one; a `===`
+    # one promoted loses its underline and is a paragraph. Before the
+    # first heading there is no section, and the caret's line itself is
+    # shifted: a line of text becomes a `#` heading on Demote and stays on
+    # Promote, and a code block's line stays as it is. The caret keeps its
+    # place in the text.
     private def shift_heading(by : Int32) : Bool
       editor = formatting_editor
       doc = editor.document
-      unless line = section_heading(doc, doc.block_at(editor.cursor_position).index)
+      unless heading = section_heading(doc, doc.block_at(editor.cursor_position).index)
         notice "Not a heading"
         return false
       end
-      block = doc.blocks[line]
-      m = HEADING.match(block.text) || return false
-      level = m["hashes"]?.try(&.size) || 0
-      target = level + by
+      target = heading.level + by
       if target > 6
         notice "No heading level below 6"
         return false
@@ -1052,30 +1128,80 @@ module Md
         notice "Not a heading"
         return false
       end
-      from = block.position + m["lead"].size
-      to = block.position + m[0].size
       hashes = target == 0 ? "" : "#" * target + " "
-      cursor = editor.text_cursor
-      anchor, position = cursor.anchor, cursor.position
-      Crysterm::TextCursor.new(doc, from, to).insert_text hashes
-      # A position past the hashes moves with the text; one among them
-      # goes to where the text starts.
-      shift = ->(at : Int32) { at >= to ? at + hashes.size - (to - from) : (at > from ? from + hashes.size : at) }
-      editor.text_cursor = Crysterm::TextCursor.new(doc, shift.call(anchor), shift.call(position))
+      replace_spans doc, heading_spans(doc, heading, hashes)
       edited
       true
     end
 
-    # The line of the heading whose section line *index* of *doc* is in:
-    # *index* itself when it is a heading, else the nearest heading above
-    # it that is no code block's line; *index* when there is none, nil
-    # when *index* is then a code block's own line.
-    private def section_heading(doc : Crysterm::TextDocument, index : Int32) : Int32?
-      code = App.code_lines doc, index
-      index.downto(0) do |i|
-        return i if !code[i] && App.heading?(doc.blocks[i].text)
+    # The edits that give *heading* of *doc* the prefix *hashes* (empty
+    # for none), as `#replace_spans` takes them: an ATX heading's hashes
+    # replaced; a setext heading's underline taken off and, unless it is
+    # to be a paragraph, its lines joined into one after the hashes.
+    private def heading_spans(doc : Crysterm::TextDocument, heading : Heading, hashes : String) : Array({Int32, Int32, String})
+      first = doc.blocks[heading.first]
+      m = HEADING.match(first.text) || return [] of {Int32, Int32, String}
+      start = first.position + m["lead"].size
+      return [{start, first.position + m[0].size, hashes}] unless heading.setext?
+      spans = [] of {Int32, Int32, String}
+      spans << {start, start, hashes} unless hashes.empty?
+      (heading.first...heading.last).each do |i|
+        line = doc.blocks[i]
+        next_line = doc.blocks[i + 1]
+        from = line.position + line.text.rstrip.size
+        if i + 1 == heading.last
+          spans << {from, next_line.position + next_line.size, ""}
+        elsif !hashes.empty?
+          spans << {from, next_line.position + (QUOTE_LEAD.match(next_line.text).try(&.[0].size) || 0), " "}
+        end
       end
-      index unless code[index]
+      spans
+    end
+
+    # The heading whose section line *index* of *doc* is in: the one on
+    # *index*, or whose text or underline it is, else the nearest heading
+    # above it, no code block's line being one (`.headings`). Line *index*
+    # alone, at level 0, when there is none; nil when *index* is then a
+    # code block's own line.
+    private def section_heading(doc : Crysterm::TextDocument, index : Int32) : Heading?
+      code = App.code_lines doc
+      App.headings(doc, code).reverse_each do |heading|
+        return heading if heading.first <= index
+      end
+      Heading.new(index, index, 0) unless code[index]
+    end
+
+    # Replaces each span of *doc* — its start, its end and the text put
+    # there, the spans in document order and apart — as one undo step,
+    # the editor's caret, or selection, kept on the same text: a position
+    # past a span moves with the text after it, one inside it goes to the
+    # end of what replaced it.
+    private def replace_spans(doc : Crysterm::TextDocument, spans : Array({Int32, Int32, String})) : Nil
+      cursor = @editor.text_cursor
+      anchor, position = cursor.anchor, cursor.position
+      doc.edit do
+        spans.reverse_each do |(from, to, text)|
+          edit = Crysterm::TextCursor.new(doc, from, to)
+          text.empty? ? edit.remove_selected_text : edit.insert_text(text)
+        end
+        nil
+      end
+      @editor.text_cursor = Crysterm::TextCursor.new(doc, shifted(spans, anchor), shifted(spans, position))
+    end
+
+    # Position *at* of a document after `#replace_spans` made *spans*.
+    private def shifted(spans : Array({Int32, Int32, String}), at : Int32) : Int32
+      offset = 0
+      spans.each do |(from, to, text)|
+        if at >= to
+          offset += text.size - (to - from)
+        elsif at > from
+          return from + offset + text.size
+        else
+          break
+        end
+      end
+      at + offset
     end
 
     # The editor, for a Format entry (and a paste, `app_clipboard.cr`):

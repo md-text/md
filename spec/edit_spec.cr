@@ -512,6 +512,46 @@ describe "Md::App editing" do
     end
   end
 
+  it "shifts a setext heading from its section, making it an ATX one" do
+    text = "# Top\n\nSetext Title\n---\n\nBody text.\n"
+    with_app text: text, view: false do |app|
+      doc = app.editor.document
+      place app, 5, 4 # in the section under the --- heading, not the # one
+      app.demote_heading.should be_true
+      app.markdown.should eq "# Top\n\n### Setext Title\n\nBody text.\n"
+      app.editor.cursor_position.should eq doc.block_position(4) + 4
+      app.editor.text_cursor.block.text.should eq "Body text."
+    end
+    with_app text: text, view: false do |app|
+      place app, 3, 1 # on the underline
+      app.promote_heading.should be_true
+      app.markdown.should eq "# Top\n\n# Setext Title\n\nBody text.\n"
+    end
+    # A === heading's lines joined; promoted, it loses the underline.
+    with_app text: "> Two\n> lines\n> ===\ntext\n", view: false do |app|
+      place app, 0, 2
+      app.demote_heading.should be_true
+      app.markdown.should eq "> ## Two lines\ntext\n"
+    end
+    with_app text: "Title\n===\n\ntext\n", view: false do |app|
+      place app, 3, 0
+      app.promote_heading.should be_true
+      app.markdown.should eq "Title\n\ntext\n"
+    end
+  end
+
+  it "takes a --- after a blank line, a list item or in code for no setext underline" do
+    {"# Top\n\nText\n\n---\n\nmore\n",
+     "# Top\n\n- item\n---\nmore\n",
+     "# Top\n\n```\nText\n---\n```\nmore\n"}.each do |text|
+      with_app text: text, view: false do |app|
+        place app, app.editor.document.block_count - 2, 0
+        app.demote_heading.should be_true
+        app.markdown.should eq text.sub("# Top", "## Top")
+      end
+    end
+  end
+
   it "leaves a line of code before the first heading alone" do
     with_app text: "```\nmake\n```\n", view: false do |app|
       place app, 1, 2

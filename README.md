@@ -387,7 +387,11 @@ item); Format → Promote Heading and Demote Heading (`Ctrl-Up`, `Ctrl-Down`)
 move the heading of the caret's section one level up or down, a paragraph
 being the level above `#` — the caret's line when it is a heading, and from
 anywhere in the section's text the nearest heading above it (one in a code
-block does not count), the caret staying where it is. Before the first
+block does not count), the caret staying where it is. A setext heading
+(`Title` over a line of `===` or `---`; a `---` after a blank line is a
+rule) counts too, and becomes an ATX one as it moves: `---` is level 2, so
+Demote makes it `### Title` and Promote `# Title`, while a promoted `===`
+heading loses its underline. Before the first
 heading, Demote makes the caret's line a `#` heading. Each change is
 one undo step.
 
