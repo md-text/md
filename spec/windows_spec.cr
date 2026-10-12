@@ -65,6 +65,15 @@ describe "Md::App windows" do
     end
   end
 
+  it "shows an & in a document's name as it is, not as a mnemonic" do
+    with_app Md::Source.new(path: "Q&A.md"), text: "# Q\n", view: true do |app|
+      entry = window_menu(app).actions[3]
+      entry.text.should eq "Q&&A.md"
+      entry.mnemonic.should be_nil
+      Crysterm::Mnemonic.parse(entry.text)[0].should eq "Q&A.md"
+    end
+  end
+
   it "renames this window in every window's list when the document changes" do
     with_app Md::Source.new(path: "doc.md"), text: "# Doc\n", view: true do |app|
       app.window_opener = recording_opener([] of Crysterm::Window)

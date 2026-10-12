@@ -337,7 +337,7 @@ module Md
       return unless (history = @history) && (action = @recent_action)
       entries = history.recent
       actions = entries.map do |entry|
-        a = Crysterm::Action.new entry.path
+        a = Crysterm::Action.new literal_label(entry.path)
         a.on(Crysterm::Event::Triggered) { confirm_discard { open_file entry.path } }
         tip a, "Open this file again, at the place left in it"
       end

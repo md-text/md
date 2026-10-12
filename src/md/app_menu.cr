@@ -216,6 +216,12 @@ module Md
       "Menu = #{keys.join(" / ")}"
     end
 
+    # *text* — a file's name, a killed text — as a menu entry's label shows
+    # it, each `&` doubled so none reads as a mnemonic.
+    private def literal_label(text : String) : String
+      text.gsub('&', "&&")
+    end
+
     # A check entry for a setting that is a reactive property, its check
     # bound to the property and the property set by the entry. *tip* is the
     # entry's description (`app_tips.cr`) — its option's, for a setting

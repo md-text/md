@@ -228,7 +228,7 @@ module Md
       @window_entries.each { |entry| menu.remove_action entry }
       group = Crysterm::ActionGroup.new
       @window_entries = App.instances.map do |app|
-        entry = Crysterm::Action.new app.document_name, checkable: true
+        entry = Crysterm::Action.new literal_label(app.document_name), checkable: true
         tip entry, (app.same?(self) ? "This window" : "Bring the window showing #{app.document_name} to the front, where the terminal allows")
         entry.checked = app.same? self
         group.add_action entry
