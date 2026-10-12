@@ -201,6 +201,17 @@ choice, `F1` on a highlighted entry shows its description beside it until
 the next key, and the status bar stays the document's. Kept across runs
 (`md.tooltips`).
 
+Options → Detachable Menus gives every menu a grab strip (`⠿⠿⠿`) in the
+middle of its top border, after GNOME 2's tear-off menus: drag the strip —
+or just click it — and a copy of the menu is torn off and stays on screen
+where you drop it, with the same entries, kept in step with the menu's own
+(a check made on either shows on both). Drag its strip to move it, and click
+the `✕` at its right end to close it; an outside click leaves it up, and
+`Escape` only takes the keyboard back to the panes. Submenus tear off too,
+and a torn-off menu's own submenus open as usual. The ordinary menus are
+unchanged, and a torn-off menu stays until closed even after the option is
+turned off (`--menu-tear-off`).
+
 ### Copying
 
 Edit → Copy (`Ctrl-C`) copies the selection in the focused pane. With
@@ -308,7 +319,9 @@ Open makes a double click follow a link where a single one does by default,
 the choice desktops offer; a single click then only places the caret
 (`md.link_double_click`). Options → Reduced Motion skips Crysterm's
 animations — a pressed button, a fade — and shows their end state at once
-(`--render-reduced-motion`). All three are kept with the other settings.
+(`--render-reduced-motion`). Options → Detachable Menus is described with
+the menus above (`--menu-tear-off`). All four are kept with the other
+settings.
 
 ### Editing Markdown
 
@@ -624,7 +637,7 @@ Wrap, Text Width, Center Text, Rulers (Horizontal and Vertical), Guides,
 Images, Terminal Links → Double-click to Open, Dialog Style, Ask Before Discarding
 Changes, Auto-Save, Keep a Backup File, the mouse mode, the clipboard mode,
 Tooltips, the theme and Crysterm's own Color Depth, Terminal Links, Media
-Backend and Reduced Motion — and the pane sizes are kept across runs in
+Backend, Reduced Motion and Detachable Menus — and the pane sizes are kept across runs in
 `$XDG_CONFIG_HOME/md/config.yml` (`~/.config/md/config.yml`), written when
 md quits if anything changed. Watch File is not kept: like `--watch`, it is
 for the run at hand.

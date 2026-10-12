@@ -17,8 +17,9 @@ module Md
     # Options (the two
     # modes the status bar toggles — overwrite mode and the mouse mode — the
     # unsaved-changes guard, auto-save and the backup file
-    # (`app_autosave.cr`), the clipboard mode, where the entries'
-    # descriptions show (Tooltips, `app_tips.cr`), the config file's entries
+    # (`app_autosave.cr`), the clipboard mode, reduced motion and detachable
+    # menus (`app_toolkit.cr`), where the entries' descriptions show (Tooltips,
+    # `app_tips.cr`), the config file's entries
     # (`app_config.cr`) and Clear Caches…,
     # `app_caches.cr`) and Window (another window on the document, this one
     # closed, the open windows to switch between, `app_windows.cr`), so
@@ -161,6 +162,8 @@ module Md
       clipboard[ClipboardMode::Command.value].enabled = !self.clipboard.copy_command.nil?
       # Crysterm's `render.reduced_motion` (`app_toolkit.cr`); `d` is free.
       add_toggle options, "Re&duced Motion", @reduced_motion, "Skip Crysterm's animations and show their end state at once"
+      # Crysterm's `menu.tear_off` (`app_toolkit.cr`); `e` is free.
+      add_toggle options, "D&etachable Menus", @tear_off_menus, "Give every menu a grab strip that tears off a copy to keep on screen"
       # Where these descriptions show (`app_tips.cr`); `t` is free.
       add_choices(options, "&Tooltips", Tooltips.values, @tooltips, option_tip("md.tooltips"), ->tooltips_tip(Tooltips)) { |mode| tooltips_label mode }
       options.add_separator

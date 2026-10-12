@@ -1,9 +1,10 @@
 module Md
   class App
-    # Three of Crysterm's own options in the menus, beside the theme and the
+    # Four of Crysterm's own options in the menus, beside the theme and the
     # media backend: the ones a reader may want to change while md runs,
     # and would otherwise set on the command line (`--colors-depth`,
-    # `--render-hyperlinks`, `--render-reduced-motion`) or in a config file.
+    # `--render-hyperlinks`, `--render-reduced-motion`, `--menu-tear-off`) or
+    # in a config file.
     # Each is a reactive property the menu entries bind to; a change sets
     # the option, which is where Crysterm reads it, and the property is
     # linked to the option with the other settings (`app_config.cr`), so a
@@ -34,6 +35,15 @@ module Md
     # Crysterm's animations — a button's press, a fade — are skipped and
     # their end state shown at once, as a desktop's reduced-motion setting
     # asks.
+    #
+    # Options → Detachable Menus (`#tear_off_menus?`, `menu.tear_off`): every
+    # menu gets a grab strip (`⠿⠿⠿`) in the middle of its top border, after
+    # GNOME 2's tear-off menus (Qt's `QMenu::tearOffEnabled`). Dragging the
+    # strip — or clicking it — tears off a copy of the menu that stays on
+    # screen where it is dropped, with the same entries kept in step with the
+    # menu's own (Crysterm's torn-off menu shares the `Action`s), movable by
+    # its strip and closed by the `✕` at its right end; the ordinary menus
+    # are unchanged. A torn-off menu stays until closed, option or no option.
     alias ColorDepth = Crysterm::ColorDepth
     alias Hyperlinks = Crysterm::AutoToggle
 
@@ -46,6 +56,7 @@ module Md
     @color_depth : Crysterm::Reactive::Property(ColorDepth) = Crysterm::Reactive::Property.new(Crysterm::Config.colors_depth)
     @hyperlinks : Crysterm::Reactive::Property(Hyperlinks) = Crysterm::Reactive::Property.new(Crysterm::Config.render_hyperlinks)
     @reduced_motion : Crysterm::Reactive::Property(Bool) = Crysterm::Reactive::Property.new(Crysterm::Config.render_reduced_motion)
+    @tear_off_menus : Crysterm::Reactive::Property(Bool) = Crysterm::Reactive::Property.new(Crysterm::Config.menu_tear_off)
     @link_double_click : Crysterm::Reactive::Property(Bool) = Crysterm::Reactive::Property.new(false)
 
     def color_depth : ColorDepth
@@ -87,6 +98,16 @@ module Md
       @reduced_motion.value = value
     end
 
+    def tear_off_menus? : Bool
+      @tear_off_menus.value
+    end
+
+    # Gives the menus their tear-off strips, or takes them away (Options →
+    # Detachable Menus); a menu already torn off stays until closed.
+    def tear_off_menus=(value : Bool) : Bool
+      @tear_off_menus.value = value
+    end
+
     # Applies the choices on changes, through Crysterm's options, where
     # Crysterm reads them; the frame is asked for where one is needed, as a
     # change from a setter paints nothing on its own.
@@ -102,6 +123,8 @@ module Md
       end
       apply_hyperlinks
       @reduced_motion.on_change { Crysterm::Config.render_reduced_motion = @reduced_motion.value }
+      # The menus read the option live, and Crysterm repaints the open ones.
+      @tear_off_menus.on_change { Crysterm::Config.menu_tear_off = @tear_off_menus.value }
       @link_double_click.on_change { @viewer.double_click_links = @link_double_click.value }
     end
 

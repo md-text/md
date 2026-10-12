@@ -324,6 +324,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   switch between. Quit closes every window, each asking about its own
   changes. Where no window can be opened the entry is disabled and the key
   says why.
+- Options → Detachable Menus (`menu.tear_off`, `--menu-tear-off`): every menu
+  carries a grab strip (`⠿⠿⠿`) in the middle of its top border, after GNOME 2's
+  tear-off menus; dragging it — or clicking it — tears off a copy of the menu
+  that stays on screen where it is dropped, with the same entries kept in step
+  with the menu's own, movable by its strip, closed by the `✕` at its right
+  end, and left alone by outside clicks and `Escape`. Submenus tear off too.
+  The ordinary menus are unchanged; the choice is kept with the other
+  settings. (Crysterm's tear-off menus, which md builds against.)
 
 ### Changed
 
