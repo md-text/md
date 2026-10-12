@@ -94,6 +94,22 @@ describe "Md::App copying" do
     end
   end
 
+  it "copies a table whole, as drawn or as its source rows, from a row or a border" do
+    with_clipboard do |clip|
+      with_app Md::Source.new(path: "doc.md"), text: "# T\n\n| a | b |\n|---|---|\n| 1 | 2 |\n\nAfter.\n", view: true do |app|
+        caret_on app, "│ 1 │ 2 │"
+        app.copy
+        clip.text.should eq "┌───┬───┐\n│ a │ b │\n├───┼───┤\n│ 1 │ 2 │\n└───┴───┘"
+        notice(app).should eq " Copied 5 lines"
+        app.copy_as_markdown
+        clip.text.should eq "| a | b |\n|---|---|\n| 1 | 2 |"
+        caret_on app, "┌" # the top border is the table's, not the heading's above
+        app.copy_as_markdown
+        clip.text.should eq "| a | b |\n|---|---|\n| 1 | 2 |"
+      end
+    end
+  end
+
   it "copies the viewer's selection when there is one" do
     with_clipboard do |clip|
       with_app Md::Source.new(path: "doc.md"), text: CLIP_DOC, view: true do |app, window|

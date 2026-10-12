@@ -163,19 +163,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `lineWrapColumnOrWidth` and `QScrollArea::alignment`; the scroll bars
   stay at the frame outside the viewport margins, and `TextEdit` paints
   from the margins.)
-- Edit → Copy (`Ctrl-C`) copies the selection or, with nothing selected,
-  the current block — the caret's line in the editor; in the viewer and
-  the table of contents the paragraph, heading, list item or whole fenced
-  code block the viewer's caret is in — as plain text, with a notice of
-  how much was copied; Edit → Copy as Markdown copies the block's source
-  lines, fences included. Options → Clipboard picks where a copy goes, kept
-  across runs: the terminal's OSC 52 escape (the default), a system command
-  found on the PATH (`pbcopy`, `wl-copy`, `xclip`, `xsel` or tmux's buffer,
-  named in the entry) for where the escape does not get through, or md
-  alone. The mode is Crysterm's new `Application::Clipboard#mode`, so the
-  editor's own `Ctrl-C`, `Ctrl-X` and `Ctrl-V` follow it, a paste in
-  Command mode reading the paired command; and a selection-less `Ctrl-C`
-  now passes from a text pane to the application.
+- Edit → Copy (`Ctrl-C`) copies the selection or, with nothing selected, the
+  current block — the caret's line in the editor; in the viewer and the table
+  of contents the paragraph, heading, list item, whole fenced code block or
+  whole table the viewer's caret is in — as plain text, with a notice of how
+  much was copied; Edit → Copy as Markdown copies the block's source lines,
+  fences included. Options → Clipboard picks where a copy goes, kept across
+  runs: the terminal's OSC 52 escape (the default), a system command found on
+  the PATH (`pbcopy`, `wl-copy`, `xclip`, `xsel` or tmux's buffer, named in
+  the entry) for where the escape does not get through, or md alone. The mode
+  is Crysterm's new `Application::Clipboard#mode`, so the editor's own
+  `Ctrl-C`, `Ctrl-X` and `Ctrl-V` follow it, a paste in Command mode reading
+  the paired command; and a selection-less `Ctrl-C` now passes from a text
+  pane to the application.
 - Resizable panes: the panes sit in a splitter (Crysterm's, after Qt's
   `QSplitter`) with a divider between each two shown, dragged with the mouse
   or moved with `Left`/`Right` after `Alt+R` focuses the divider next to the

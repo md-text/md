@@ -7,14 +7,14 @@ module Md
     # or the caret's line when nothing is selected. In the viewer and the
     # table of contents, the viewer's selection, or the block the viewer's
     # caret is in — a paragraph, a heading, a list item, or a fenced code
-    # block whole, every line of it — as plain text, the way it reads. Copy
-    # as Markdown copies the source instead: the lines of the editor's text
-    # the selected or current block was rendered from, fences included (the
-    # importer stamps each block with its source line, `TextBlock#source_line`,
-    # as Sync Cursor relies on); in the editor the text is the source
-    # already, so it copies what Copy does. `Ctrl+C` is Copy's key: a pane
-    # with a selection copies it itself (Crysterm's clipboard keys), and
-    # with nothing selected the key reaches the entry.
+    # block or a table whole, every line of it — as plain text, the way it
+    # reads. Copy as Markdown copies the source instead: the lines of the
+    # editor's text the selected or current block was rendered from, fences
+    # included (the importer stamps each block with its source line,
+    # `TextBlock#source_line`, as Sync Cursor relies on); in the editor the
+    # text is the source already, so it copies what Copy does. `Ctrl+C` is
+    # Copy's key: a pane with a selection copies it itself (Crysterm's
+    # clipboard keys), and with nothing selected the key reaches the entry.
     #
     # Where a copy goes is the clipboard mode (`ClipboardMode`, Crysterm's
     # `Application::Clipboard::Mode`): the terminal's clipboard escape,
@@ -308,21 +308,22 @@ module Md
 
     # The viewer blocks a copy takes, as a range of block indexes: the
     # blocks the selection touches, else the caret's block — a fenced code
-    # block's line with the neighbouring lines of the same block, since a
-    # code block renders as one block per line.
+    # block's line or a table's row with the neighbouring lines of the same
+    # block, since a code block renders as one block per line and a table
+    # as one per row and border.
     private def viewer_block_span : Range(Int32, Int32)
       vdoc = @viewer.document
       if range = @viewer.selection_range
         return vdoc.block_at(range.begin).index..vdoc.block_at(range.end - 1).index
       end
       index = vdoc.block_at(@viewer.cursor_position).index
-      return index..index unless code_block?(index)
+      return index..index unless code_block?(index) || table?(index)
       first = index
-      while first > 0 && code_block?(first - 1)
+      while first > 0 && same_block?(first - 1, index)
         first -= 1
       end
       last = index
-      while last + 1 < vdoc.block_count && code_block?(last + 1)
+      while last + 1 < vdoc.block_count && same_block?(last + 1, index)
         last += 1
       end
       first..last
@@ -330,6 +331,22 @@ module Md
 
     private def code_block?(index : Int32) : Bool
       @viewer.document.blocks[index].block_format.code_block?
+    end
+
+    private def table?(index : Int32) : Bool
+      !@viewer.document.blocks[index].block_format.table_format.nil?
+    end
+
+    # Whether viewer blocks *index* and *other* render lines of the same
+    # code block, or rows of the same table (whose blocks share one
+    # `TextTableFormat`, the table's identity).
+    private def same_block?(index : Int32, other : Int32) : Bool
+      blocks = @viewer.document.blocks
+      if table = blocks[other].block_format.table_format
+        blocks[index].block_format.table_format.same? table
+      else
+        code_block?(index)
+      end
     end
 
     # The plain text of the current block (`#viewer_block_span`), its lines
@@ -345,9 +362,9 @@ module Md
     # lines after it, and the fence that opens a following code block (a
     # fence line renders nothing, so no block is stamped with it) — and,
     # for a code block, with its fences: the opening one above the stamped
-    # first line and the closing one after the last. Empty for a block that
-    # came from no source line (a table border, a quote's blank line, with
-    # nothing stamped above it).
+    # first line and the closing one after the last. Empty for a span that
+    # holds no block stamped with a source line (a quote's blank line on
+    # its own).
     private def current_source_text : String
       span = viewer_block_span
       source = markdown.lines
@@ -364,12 +381,13 @@ module Md
     end
 
     # The first and last source line (1-based) of viewer blocks *span*: from
-    # the first block's line to the line before the next rendered block's —
-    # for a code block, no further than its closing fence. Nil when no line
-    # is stamped at or above the span, or none is left.
+    # the first stamped block's line (a table's top border is stamped with
+    # none; its header row is) to the line before the next rendered block's
+    # — for a code block, no further than its closing fence. Nil when no
+    # block of the span is stamped, or no line is left.
     private def source_line_range(span : Range(Int32, Int32), source : Array(String)) : {Int32, Int32}?
       vdoc = @viewer.document
-      return unless from = vdoc.source_line_at(span.begin)
+      return unless from = span.each.compact_map { |index| vdoc.blocks[index].source_line }.first?
       to = Math.min((vdoc.next_source_line_after(span.end) || source.size + 1) - 1, source.size)
       if code_block?(span.end) && (last = vdoc.blocks[span.end].source_line)
         to = Math.min(to, last < source.size && fence?(source[last]) ? last + 1 : last)

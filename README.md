@@ -217,11 +217,12 @@ turned off (`--menu-tear-off`).
 Edit → Copy (`Ctrl-C`) copies the selection in the focused pane. With
 nothing selected, in the editor it copies the caret's line, and in the
 viewer or the table of contents the block the viewer's caret is in — a
-paragraph, a heading, a list item, or a fenced code block whole — as plain
-text, the way it reads. Edit → Copy as Markdown copies the block's source
-instead: the lines of the Markdown it was rendered from, fences included. A
-notice says how much was copied. In a pane with a selection, `Ctrl-C` is
-the pane's own copy, as `Ctrl-X` and `Ctrl-V` are its cut and paste.
+paragraph, a heading, a list item, or a fenced code block or a table
+whole — as plain text, the way it reads. Edit → Copy as Markdown copies the
+block's source instead: the lines of the Markdown it was rendered from,
+fences included. A notice says how much was copied. In a pane with a
+selection, `Ctrl-C` is the pane's own copy, as `Ctrl-X` and `Ctrl-V` are
+its cut and paste.
 
 Where a copy goes is the clipboard mode, under Options → Clipboard:
 
