@@ -180,30 +180,47 @@ module Md
     end
 
     # Line count, word count and whether the text uses CRLF line endings,
-    # recomputed only after the text changed.
+    # recomputed only after the text changed (`#text_changed`); a streamed
+    # chunk is added to them instead (`#text_appended`), so a stream is
+    # measured once over, not from its start at every line.
     private def measure : {Int32, Int32, Bool}
-      @measured ||= begin
-        text = markdown
-        lines = text.count('\n')
-        lines += 1 unless text.empty? || text.ends_with?('\n')
-        # Runs of non-whitespace, counted in one pass with nothing allocated.
-        words = 0
-        in_word = false
-        text.each_char do |char|
-          if char.whitespace?
-            in_word = false
-          elsif !in_word
-            in_word = true
-            words += 1
-          end
+      newlines, words, crlf, last = (@measured ||= measure_text(markdown))
+      # A last line without its newline is a line too.
+      {last && last != '\n' ? newlines + 1 : newlines, words, crlf}
+    end
+
+    # Measures *text* as the continuation of a text ending in *before* (nil
+    # at the start): its newlines, its words — runs of non-whitespace,
+    # counted in one pass with nothing allocated, a run begun before *text*
+    # not counted again — whether a CRLF is in it or straddles the join, and
+    # the last character so far.
+    private def measure_text(text : String, before : Char? = nil) : {Int32, Int32, Bool, Char?}
+      words = 0
+      in_word = before ? !before.whitespace? : false
+      text.each_char do |char|
+        if char.whitespace?
+          in_word = false
+        elsif !in_word
+          in_word = true
+          words += 1
         end
-        {lines, words, text.includes?("\r\n")}
       end
+      crlf = text.includes?("\r\n") || (before == '\r' && text.starts_with?('\n'))
+      {text.count('\n'), words, crlf, text[-1]? || before}
     end
 
     # Forgets the cached measurements; the next refresh recomputes them.
     private def text_changed : Nil
       @measured = nil
+    end
+
+    # Adds a streamed *chunk* to the measurements while they are current;
+    # otherwise the next refresh measures the whole text, chunk included.
+    private def text_appended(chunk : String) : Nil
+      return unless measured = @measured
+      newlines, words, crlf, last = measured
+      more, more_words, more_crlf, now = measure_text(chunk, last)
+      @measured = {newlines + more, words + more_words, crlf || more_crlf, now}
     end
 
     # Shows *text* in place of the name field for a while (a save result, a

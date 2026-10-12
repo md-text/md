@@ -309,6 +309,29 @@ describe "Md::App status bar" do
       app.main.status_bar.prompting?.should be_true
     end
   end
+
+  it "counts a streamed document chunk by chunk, a word or a line ending split between chunks once" do
+    with_app Md::Source.new(stdin: true), view: true do |app|
+      app.stream IO::Memory.new("")
+      size = app.main.status_bar.permanent_widgets[1].as(Crysterm::Widget::Label)
+      encoding = app.main.status_bar.permanent_widgets[2].as(Crysterm::Widget::Label)
+      app.receive "one two\r"
+      size.text.should eq "1 line, 2 words"
+      encoding.text.should eq "UTF-8 LF"
+      app.receive "\nthr"
+      size.text.should eq "2 lines, 3 words"
+      encoding.text.should eq "UTF-8 CRLF"
+      app.receive "ee four\n"
+      size.text.should eq "2 lines, 4 words"
+      app.finish_stream
+      size.text.should eq "2 lines, 4 words"
+      app.show_pane Md::App::Pane::Editor # the editor's text, measured afresh, says the same
+      doc = app.editor.document
+      app.editor.text_cursor = Crysterm::TextCursor.new(doc, doc.size)
+      app.editor.insert_text "five"
+      size.text.should eq "3 lines, 5 words"
+    end
+  end
 end
 
 describe "Md::App menus" do

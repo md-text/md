@@ -136,8 +136,9 @@ module Md
     @modified_field : Crysterm::Widget::Label
     @overwrite_button : Crysterm::Widget::ToolButton
     @mouse_button : Crysterm::Widget::ToolButton
-    # Cached `#measure` result; `nil` after the text changed.
-    @measured : {Int32, Int32, Bool}?
+    # Cached measurements of the text — newlines, words, CRLF, the last
+    # character (`#measure_text`); `nil` after the text changed.
+    @measured : {Int32, Int32, Bool, Char?}?
 
     # Builds the user interface for *source*. *text* is the document's initial
     # Markdown; *stream* is an IO the document is read from instead, as it
@@ -573,14 +574,16 @@ module Md
     end
 
     # Appends a streamed *chunk* of Markdown to the document — and to the
-    # editor's text when the editor is shown. Must run on the render fiber
-    # (see `Crysterm::Window#post`).
+    # editor's text when the editor is shown. The status bar's counts take
+    # the chunk in (`#text_appended`) rather than measure the whole text
+    # again, so a long stream costs each line its own length here too. Must
+    # run on the render fiber (see `Crysterm::Window#post`).
     def receive(chunk : String) : Nil
       return if @stream_abandoned
       @streamed << chunk
       @viewer.append_markdown chunk
       append_to_editor chunk unless @editor_stale
-      text_changed
+      text_appended chunk
       refresh_status
     end
 
