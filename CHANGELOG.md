@@ -347,6 +347,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Help menu (`Alt-P`), last on the bar: Manual opens md's manual — the
   README's opening and its Usage chapter, built into the binary — as the
   document; About names md's version, author and website in the status bar.
+- Commands: everything md does has a name (`save`, `soft-wrap`,
+  `theme-breeze-dark`, `toggle-editor`…), and the command line runs it by
+  that name, as vi's `:` runs an ex command — `:` in the viewer, which still
+  goes to a line given a number, or `Alt-K` (Edit → Run Command…) anywhere,
+  `Tab` completing the name. Every menu entry is a command, and the keys no
+  entry has (`F1`–`F6`, `Ctrl-Z`, `Alt-R`) are now named actions too. The
+  names are Crysterm's action names (`Action#name`, Qt's `objectName`),
+  found with the new `find_action`; a prompt now completes with a completer
+  of its own (`LinePrompt#prompt(completer:)`), and a shortcut stands down
+  under a modal dialog in Crysterm itself (`Window#active_modal_widget`),
+  where md held its keys back on its own.
 
 ### Changed
 

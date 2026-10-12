@@ -237,6 +237,7 @@ module Md
       stream(stream) if stream
       show_pane(view ? Pane::Viewer : Pane::Editor).focus
       build_menus
+      build_key_actions
       wire_tips # where the entries' descriptions show, once the menus exist
       register_window
       build_status
@@ -722,25 +723,17 @@ module Md
       e.accept if handled
     end
 
-    # The application's special keys — the panes and the mouse mode, whose
-    # gestures no menu entry has, `Ctrl-Z`, the way to a divider and back,
-    # and `Ctrl-N` while its entry is disabled (`app_windows.cr`); returns
-    # whether *key* was one.
+    # The application's special keys — the way out of a divider being
+    # moved, the panes' navigation keys and `Ctrl-N` while its entry is
+    # disabled (`app_windows.cr`); returns whether *key* was one. The other
+    # keys no menu entry has are named actions' shortcuts
+    # (`#build_key_actions`).
     private def app_key(key : Tput::Key) : Bool
       case key
-      when .f1?              then toggle_pane Pane::Editor
-      when .f2?              then toggle_pane Pane::Viewer
-      when .f3?              then toggle_pane Pane::Toc
-      when .f4?              then toggle_bars
-      when .f5?              then cycle_mouse_mode
-      when .f6?              then cycle_theme
-      when .ctrl_z?          then suspend
-      when .alt_r?           then resize_panes
-      when .ctrl_n?          then return refuse_new_window
-      when .enter?, .escape? then return leave_divider
-      else                        return navigation_key(key)
+      when .ctrl_n?          then refuse_new_window
+      when .enter?, .escape? then leave_divider
+      else                        navigation_key(key)
       end
-      true
     end
 
     # What `Ctrl-Z` does outside the editor: the shell's suspend
@@ -754,25 +747,23 @@ module Md
       @suspender.call
     end
 
-    # The pager keys of the viewer: `/` and `?` search, `n` and `N` repeat
-    # the search, `:` goes to a line, `[` and `]` jump between headings, `q`
-    # quits — md's quit, which closes every window through its guard, where
-    # Crysterm's default quit key (which `q` is too, kept live while a pane
-    # reads input, and which stands down once the key is taken here) asks
-    # this window alone. Returns whether *char* was one.
+    # The pager keys of the viewer, each running a command
+    # (`app_commands.cr`): `/` and `?` search, `n` and `N` repeat the
+    # search, `:` is the command line (a number goes to that line), `[` and
+    # `]` jump between headings, `q` quits — md's quit, which closes every
+    # window through its guard, where Crysterm's default quit key (which `q`
+    # is too, kept live while a pane reads input, and which stands down once
+    # the key is taken here) asks this window alone. Returns whether *char*
+    # was one.
     private def pager_key(char : Char) : Bool
-      case char
-      when '/' then search_prompt
-      when '?' then search_prompt backward: true
-      when 'n' then find_next
-      when 'N' then find_next reverse: true
-      when ':' then go_to_line_prompt
-      when '[' then jump_heading -1
-      when ']' then jump_heading 1
-      when 'q' then quit
-      else          return false
-      end
+      return false unless name = PAGER_KEYS[char]?
+      run_command name
       true
     end
+
+    PAGER_KEYS = {
+      '/' => "find", '?' => "find-backward", 'n' => "find-next", 'N' => "find-previous",
+      ':' => "command", '[' => "previous-heading", ']' => "next-heading", 'q' => "quit",
+    }
   end
 end

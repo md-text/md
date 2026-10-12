@@ -6,8 +6,8 @@ module Md
     # `Alt+H` is Replace.
     private def build_help_menu(bar : Crysterm::Widget::MenuBar) : Nil
       help = bar.add_menu "Hel&p"
-      tip help.add_action("&Manual") { show_manual }, "Open md's manual, the README's chapters on using md, as a document"
-      tip help.add_action("&About md") { about }, "Show md's version, author and website in the status bar"
+      named "manual", tip help.add_action("&Manual") { show_manual }, "Open md's manual, the README's chapters on using md, as a document"
+      named "about", tip help.add_action("&About md") { about }, "Show md's version, author and website in the status bar"
     end
 
     # Where Help → Manual writes the manual to open it: md's cache directory

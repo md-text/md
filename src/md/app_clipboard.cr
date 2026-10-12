@@ -227,16 +227,16 @@ module Md
     private def add_paste_actions(edit : Crysterm::Widget::Menu) : Nil
       # `Ctrl+V` reaches the entry from a pane that does not paste itself
       # (the editor's own `Ctrl-V` is its paste).
-      tip edit.add_action("&Paste", shortcut: "Ctrl+V") { paste }, "Paste the clipboard into the editor at the caret, as the clipboard mode reads it"
-      terminal = Crysterm::Action.new "From &Terminal Clipboard"
+      named "paste", tip edit.add_action("&Paste", shortcut: "Ctrl+V") { paste }, "Paste the clipboard into the editor at the caret, as the clipboard mode reads it"
+      terminal = Crysterm::Action.new "From &Terminal Clipboard", name: "paste-from-terminal"
       terminal.on(Crysterm::Event::Triggered) { paste_from_terminal }
       tip terminal, "Paste what the terminal's clipboard holds, asked for through OSC 52"
       argv = clipboard.paste_command
-      command = Crysterm::Action.new "From &Command (#{argv ? argv[0] : "none found"})"
+      command = Crysterm::Action.new "From &Command (#{argv ? argv[0] : "none found"})", name: "paste-from-command"
       command.enabled = !argv.nil?
       command.on(Crysterm::Event::Triggered) { paste_from_command }
       tip command, (argv ? "Paste the output of #{argv[0]}, the paste command found on this system" : "No paste command was found on this system")
-      internal = Crysterm::Action.new "From &Internal Buffer"
+      internal = Crysterm::Action.new "From &Internal Buffer", name: "paste-from-internal"
       internal.on(Crysterm::Event::Triggered) { paste_from_internal }
       tip internal, "Paste what md itself last copied"
       ring = Crysterm::Action.new "From &Kill Ring"

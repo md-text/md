@@ -71,10 +71,11 @@ module Md
     # the question was given up. *label* is the prompt's, as vi spells
     # them (`Open: `, `/`, `:`); *question* is the dialog's text, by
     # default the label itself (`Open:`), for the labels that read as one.
-    # The field starts at *value*.
-    def ask_text(label : String, value : String = "", question : String? = nil, &callback : String? ->) : Nil
+    # The field starts at *value*. *completer* completes the answer at a
+    # line prompt (`LinePrompt#prompt`), by default as a file name.
+    def ask_text(label : String, value : String = "", question : String? = nil, completer : Proc(String, Array(String))? = @main.status_bar.line_prompt.completer, &callback : String? ->) : Nil
       case @dialog_style.value
-      in .line_prompt? then status_prompt(label, value, &callback)
+      in .line_prompt? then status_prompt(label, value, completer, &callback)
       in .modal?       then read_in_dialog(question || label.strip, value, &callback)
       end
     end
@@ -129,8 +130,8 @@ module Md
     # editor's command line appears over a full-screen view. The bar is
     # shown after the prompt opens: opening cancels a question still up,
     # whose end would hide the bar again.
-    private def status_prompt(label : String, value : String, &callback : String? ->) : Nil
-      @main.status_bar.prompt(label, value, &callback)
+    private def status_prompt(label : String, value : String, completer : Proc(String, Array(String))? = @main.status_bar.line_prompt.completer, &callback : String? ->) : Nil
+      @main.status_bar.prompt(label, value, completer: completer, &callback)
       @main.status_bar.show unless @bars.value
     end
 

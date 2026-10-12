@@ -196,7 +196,7 @@ module Md
     # cannot drive disabled. Returns the backend entries in that order.
     private def build_media_menu(menu : Crysterm::Widget::Menu) : Array(Crysterm::Action)
       actions = [] of Crysterm::Action
-      trial = Crysterm::Action.new "Change for &#{media_trial_text}", checkable: true
+      trial = Crysterm::Action.new "Change for &#{media_trial_text}", checkable: true, name: "media-trial"
       trial.bind_checked @media_trial
       tip trial, "Try the next backend picked for #{media_trial_text}, then go back to the one before"
       actions << trial << Crysterm::Action.separator
@@ -206,7 +206,7 @@ module Md
       MEDIA_BACKENDS.each_with_index do |backend, index|
         actions << Crysterm::Action.separator if index > 0 && media_group(backend) != family
         family = media_group(backend)
-        action = Crysterm::Action.new media_backend_label(backend), checkable: true
+        action = Crysterm::Action.new media_backend_label(backend), checkable: true, name: "media-backend-#{command_slug backend}"
         action.bind_checked(@media_backend) { @media_backend.value == backend }
         tip action, media_backend_tip(backend)
         action.enabled = backend.available?(@window.tput)

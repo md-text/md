@@ -208,10 +208,10 @@ module Md
     # menu opens, since a title changes with the file.
     private def build_window_menu(bar : Crysterm::Widget::MenuBar) : Nil
       menu = bar.add_menu "Wi&ndow"
-      @new_window_action = tip menu.add_action("&New", shortcut: "Ctrl+N") { new_window },
+      @new_window_action = named "new-window", tip menu.add_action("&New", shortcut: "Ctrl+N") { new_window },
         "Open this document in another md window, in a new terminal window"
       # The editor's `Ctrl-W` kills a word, so the key works outside it.
-      tip menu.add_action("&Close Current", shortcut: "Ctrl+W") { close_window },
+      named "close-window", tip menu.add_action("&Close Current", shortcut: "Ctrl+W") { close_window },
         "Close this window, asking about unsaved changes; the last window closing quits md"
       menu.add_separator
       menu.on(Crysterm::Event::AboutToShow) { refresh_window_menu }

@@ -587,22 +587,22 @@ module Md
     # The Format menu, between Edit and View (from `#build_menus`).
     private def build_format_menu(bar : Crysterm::Widget::MenuBar) : Nil
       format = bar.add_menu "For&mat"
-      tip format.add_action("&Bold", shortcut: "Ctrl+B") { toggle_bold }, "Put ** around the selection or the word at the caret, or take it off"
-      tip format.add_action("&Italic", shortcut: "Alt+I") { toggle_italic }, "Put * around the selection or the word at the caret, or take it off"
-      tip format.add_action("&Code", shortcut: "Alt+C") { toggle_code }, "Put backticks around the selection or the word at the caret, or take them off"
+      named "bold", tip format.add_action("&Bold", shortcut: "Ctrl+B") { toggle_bold }, "Put ** around the selection or the word at the caret, or take it off"
+      named "italic", tip format.add_action("&Italic", shortcut: "Alt+I") { toggle_italic }, "Put * around the selection or the word at the caret, or take it off"
+      named "code", tip format.add_action("&Code", shortcut: "Alt+C") { toggle_code }, "Put backticks around the selection or the word at the caret, or take them off"
       format.add_separator
       # The check is the caret's item's, read as the menu opens; picking the
       # entry flips it and the box with it.
-      task = Crysterm::Action.new "&Task", checkable: true
+      task = Crysterm::Action.new "&Task", checkable: true, name: "task"
       # Off a list item nothing changes, and the check flipped by the pick
       # is put back.
       task.on(Crysterm::Event::Triggered) { refresh_task_entry unless toggle_task_box }
       format.add_action tip(task, "Give the caret's list item a task box, [ ], or take it off; the selection's items too")
       @task_action = task
       format.on(Crysterm::Event::AboutToShow) { refresh_task_entry }
-      tip format.add_action("Toggle Tas&k", shortcut: "Alt+X") { check_task }, "Tick the caret's task box, or empty it; an item without a box gets a ticked one"
-      indent = tip format.add_action("I&ndent", shortcut: "Tab") { indent_lines 1 }, "Indent the caret's line or the selection's lines; a list item nests under the one above"
-      outdent = tip format.add_action("&Outdent", shortcut: "Shift+Tab") { indent_lines -1 }, "Outdent the caret's line or the selection's lines, one level or four spaces"
+      named "toggle-task", tip format.add_action("Toggle Tas&k", shortcut: "Alt+X") { check_task }, "Tick the caret's task box, or empty it; an item without a box gets a ticked one"
+      indent = named "indent", tip format.add_action("I&ndent", shortcut: "Tab") { indent_lines 1 }, "Indent the caret's line or the selection's lines; a list item nests under the one above"
+      outdent = named "outdent", tip format.add_action("&Outdent", shortcut: "Shift+Tab") { indent_lines -1 }, "Outdent the caret's line or the selection's lines, one level or four spaces"
       # The editor's keys (see the class comment): the entries' shortcuts
       # only while the editor has the focus.
       {indent, outdent}.each do |action|
@@ -610,14 +610,14 @@ module Md
         @editor.add_action action
       end
       format.add_separator
-      tip format.add_action("&Promote Heading", shortcut: "Ctrl+Up") { promote_heading }, "Take one # off the caret's heading; a # heading becomes a paragraph"
-      tip format.add_action("&Demote Heading", shortcut: "Ctrl+Down") { demote_heading }, "Add a # to the caret's heading, down to ######; a paragraph becomes a # heading"
+      named "promote-heading", tip format.add_action("&Promote Heading", shortcut: "Ctrl+Up") { promote_heading }, "Take one # off the caret's heading; a # heading becomes a paragraph"
+      named "demote-heading", tip format.add_action("&Demote Heading", shortcut: "Ctrl+Down") { demote_heading }, "Add a # to the caret's heading, down to ######; a paragraph becomes a # heading"
       format.add_separator
-      paragraph = Crysterm::Action.new "&Paragraph"
+      paragraph = Crysterm::Action.new "&Paragraph", name: "rewrap-paragraph"
       paragraph.shortcut = "Alt+Q"
       paragraph.on(Crysterm::Event::Triggered) { rewrap_paragraph }
       tip paragraph, "Refill the caret's paragraph, or the selection's, to the wrap column: the text width, or 80 without one"
-      document = Crysterm::Action.new "&Document"
+      document = Crysterm::Action.new "&Document", name: "rewrap-document"
       document.on(Crysterm::Event::Triggered) { rewrap_document }
       tip document, "Refill every paragraph of the document to the wrap column, as one undo step"
       tip format.add_submenu("Re&wrap", [paragraph, document]), "Refill paragraphs to the wrap column, a list item keeping its marker and a quote its markers"

@@ -138,7 +138,8 @@ runs too.
 | `Ctrl-F`, `/`, `?` | Search; asks for the pattern (`/` and `?` outside the editor, `?` backward; Edit → Find…) |
 | `Ctrl-G`, `Alt-G`, `n`, `N` | Next and previous match (`n` and `N` outside the editor; Edit → Find Next, Find Previous) |
 | `Alt-H`            | Replace; asks for the pattern and the replacement, then about each match (Edit → Replace…) |
-| `Ctrl-L`, `:`      | Go to a source line; asks for the number (`:` outside the editor; Edit → Go to Line…) |
+| `Ctrl-L`           | Go to a source line; asks for the number (Edit → Go to Line…)             |
+| `:`, `Alt-K`       | The command line: a command's name runs it, `Tab` completing it, and a number goes to that source line (`:` outside the editor; Edit → Run Command…; see Commands) |
 | `Alt-Down`, `Alt-Up`, `]`, `[` | Jump to the next and previous heading (`]` and `[` outside the editor; Edit → Next Heading, Previous Heading) |
 | `Alt-R`            | Resize the panes from the keyboard (when View → Resizable Panes is on): `Left`/`Right` move the divider next to the pane, `Enter`/`Escape` return |
 | `Backspace`        | Outside the editor, go back to the file you were in before the last link or open, where you left it (File → Previous File) |
@@ -401,8 +402,9 @@ undone with `Ctrl-Z`, the `a` as a single step. A notice reports how many
 matches were replaced. (Qt's key, `Ctrl-H`, is Backspace in the terminal,
 hence `Alt-H`.)
 
-`:` (or `Ctrl-L`) asks for a source line number and puts both panes there;
-`0` and negative numbers count from the end. `]` and `[` (or `Alt-Down` and
+`Ctrl-L` (or `:`, the command line, given a number) asks for a source
+line number and puts both panes there; `0` and negative numbers count from
+the end. `]` and `[` (or `Alt-Down` and
 `Alt-Up`, Edit → Next Heading and Previous Heading) jump to the next and
 previous heading, in both panes, with the heading on the viewer's top row
 as a table of contents jump lands.
@@ -652,6 +654,33 @@ chapter of the README, built into md — as the document, so it reads, searches 
 navigates like any other; File → Previous File goes back to what was open
 before. Help → About names md's version, its author and its website in the
 status bar. `Alt-P` opens the menu, since `Alt-H` is Replace.
+
+### Commands
+
+Everything md does has a name, and the command line runs it by that name,
+as vi's `:` runs an ex command: `:` in the viewer or the table of contents,
+or `Alt-K` (Edit → Run Command…) anywhere, asks for a command; `Tab`
+completes the name and cycles through the names that start with what was
+typed. A number instead goes to that source line. Every menu entry is a
+command, and so is every key no entry has:
+
+| Commands | |
+| -------- | - |
+| `open`, `reload`, `close`, `previous-file`, `next-file`, `save`, `save-as`, `quit` | The File menu |
+| `copy`, `copy-as-markdown`, `paste`, `paste-from-terminal`, `paste-from-command`, `paste-from-internal`, `find`, `find-backward`, `find-next`, `find-previous`, `replace`, `clear-search-highlights`, `command`, `go-to-line`, `next-heading`, `previous-heading` | The Edit menu, and `?` |
+| `bold`, `italic`, `code`, `task`, `toggle-task`, `indent`, `outdent`, `promote-heading`, `demote-heading`, `rewrap-paragraph`, `rewrap-document` | The Format menu |
+| `editor`, `viewer`, `toc`, `resizable-panes`, `bars`, `sync-cursor`, `highlight-line`, `line-numbers`, `soft-wrap`, `hard-wrap`, `center-text`, `horizontal-ruler`, `vertical-ruler`, `guides`, `images`, `media-trial`, `link-double-click`, `watch-file` | The View menu's check entries: each turns its setting on or off |
+| `overwrite-mode`, `confirm-discard`, `autosave`, `backup-file`, `reduced-motion`, `detachable-menus`, `load-config`, `save-config`, `save-config-as`, `clear-caches` | The Options menu |
+| `new-window`, `close-window`, `manual`, `about` | The Window and Help menus |
+| `toggle-editor`, `toggle-viewer`, `toggle-toc`, `toggle-bars`, `cycle-mouse-mode`, `cycle-theme`, `suspend`, `resize-panes` | `F1`–`F6`, `Ctrl-Z` and `Alt-R` |
+
+A choice among several is named after its submenu and the choice:
+`theme-breeze-dark`, `text-width-80` (`text-width-off` for none,
+`text-width-to-last-guide`), `color-depth-xterm256`, `hyperlinks-auto`,
+`dialog-style-modal`, `mouse-all`, `clipboard-terminal`,
+`tooltips-status-bar`, `media-backend-kitty`. A command that cannot run
+now — an entry the menu shows disabled — says so, as does a name md does
+not know.
 
 ### Settings
 

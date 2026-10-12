@@ -181,12 +181,12 @@ module Md
     # Qt's shortcuts for a browser's back and forward (`Alt-Left`/`Alt-Right`,
     # which the menu names); disabled while there is no file to go to.
     private def add_navigation_actions(menu : Crysterm::Widget::Menu) : Nil
-      previous = Crysterm::Action.new "&Previous File"
+      previous = Crysterm::Action.new "&Previous File", name: "previous-file"
       previous.shortcut = "Alt+Left"
       previous.on(Crysterm::Event::Triggered) { previous_file }
       menu.add_action tip(previous, "Go back to the file this one was opened over, at the place left")
       @previous_action = previous
-      following = Crysterm::Action.new "&Next File" # `next` is a keyword
+      following = Crysterm::Action.new "&Next File", name: "next-file" # `next` is a keyword
       following.shortcut = "Alt+Right"
       following.on(Crysterm::Event::Triggered) { next_file }
       menu.add_action tip(following, "Go forward again to the file Previous File came back from")

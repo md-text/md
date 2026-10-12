@@ -59,47 +59,48 @@ module Md
       bar = @main.menu_bar
 
       file = bar.add_menu "&File"
-      tip file.add_action("&Open…", shortcut: "Ctrl+O") { open_prompt }, "Open a file, asked for by name; Tab completes it"
+      named "open", tip file.add_action("&Open…", shortcut: "Ctrl+O") { open_prompt }, "Open a file, asked for by name; Tab completes it"
       # Filled from the history (`#refresh_recent_menu`); without one, an
       # empty, disabled entry says the feature exists.
       recent = file.add_submenu "Open &Recent"
       tip recent, "Open one of the files opened before, the most recent first"
       recent.enabled = false
       @recent_action = recent
-      tip file.add_action("&Reload", shortcut: "Ctrl+R") { reload }, "Read the file from disk again, keeping your place"
+      named "reload", tip file.add_action("&Reload", shortcut: "Ctrl+R") { reload }, "Read the file from disk again, keeping your place"
       # The document off the trail, the next one on it in its place, or a
       # blank one (`app_links.cr`).
-      tip file.add_action("&Close") { close_document }, "Close the document, asking about unsaved changes first, and go on to the next file, or a new one"
+      named "close", tip file.add_action("&Close") { close_document }, "Close the document, asking about unsaved changes first, and go on to the next file, or a new one"
       file.add_separator
       # The files left, retraced (`app_links.cr`).
       add_navigation_actions file
       file.add_separator
-      tip file.add_action("&Save", shortcut: "Ctrl+S") { save }, "Write the document to its file"
-      tip file.add_action("Save &As…") { save_as_prompt }, "Write the document to a file asked for by name, and keep that name"
+      named "save", tip file.add_action("&Save", shortcut: "Ctrl+S") { save }, "Write the document to its file"
+      named "save-as", tip file.add_action("Save &As…") { save_as_prompt }, "Write the document to a file asked for by name, and keep that name"
       file.add_separator
       # The same key as Crysterm's default quit key: the entry's shortcut
       # consumes it, so the default stands down and the one path — the
       # window's close request, with the unsaved-changes guard on it — is
       # taken once.
-      tip file.add_action("&Quit", shortcut: "Ctrl+Q") { quit }, "Leave md, asking about unsaved changes first"
+      named "quit", tip file.add_action("&Quit", shortcut: "Ctrl+Q") { quit }, "Leave md, asking about unsaved changes first"
 
       edit = bar.add_menu "&Edit"
       # `Ctrl+C` reaches the entry when the focused pane has no selection to
       # copy itself, `Ctrl+V` from a pane that does not paste
       # (`app_clipboard.cr`).
-      tip edit.add_action("&Copy", shortcut: "Ctrl+C") { copy }, "Copy the selection, or the caret's line or block, as plain text"
-      tip edit.add_action("Copy as &Markdown") { copy_as_markdown }, "Copy the Markdown source of the selection or the caret's block"
+      named "copy", tip edit.add_action("&Copy", shortcut: "Ctrl+C") { copy }, "Copy the selection, or the caret's line or block, as plain text"
+      named "copy-as-markdown", tip edit.add_action("Copy as &Markdown") { copy_as_markdown }, "Copy the Markdown source of the selection or the caret's block"
       add_paste_actions edit
       edit.add_separator
-      tip edit.add_action("&Find…", shortcut: "Ctrl+F") { search_prompt }, "Search the document for a pattern, highlighting the matches"
-      tip edit.add_action("Find &Next", shortcut: "Ctrl+G") { find_next }, "Go to the next match of the last search"
-      tip edit.add_action("Find &Previous", shortcut: "Alt+G") { find_next reverse: true }, "Go to the previous match of the last search"
-      tip edit.add_action("&Replace…", shortcut: "Alt+H") { replace_prompt }, "Replace the matches of a pattern, asking at each one"
-      tip edit.add_action("Clear Search &Highlights") { clear_search_highlight }, "Stop highlighting the last search's matches"
+      named "find", tip edit.add_action("&Find…", shortcut: "Ctrl+F") { search_prompt }, "Search the document for a pattern, highlighting the matches"
+      named "find-next", tip edit.add_action("Find &Next", shortcut: "Ctrl+G") { find_next }, "Go to the next match of the last search"
+      named "find-previous", tip edit.add_action("Find &Previous", shortcut: "Alt+G") { find_next reverse: true }, "Go to the previous match of the last search"
+      named "replace", tip edit.add_action("&Replace…", shortcut: "Alt+H") { replace_prompt }, "Replace the matches of a pattern, asking at each one"
+      named "clear-search-highlights", tip edit.add_action("Clear Search &Highlights") { clear_search_highlight }, "Stop highlighting the last search's matches"
       edit.add_separator
-      tip edit.add_action("&Go to Line…", shortcut: "Ctrl+L") { go_to_line_prompt }, "Put the caret on a source line, asked for by number"
-      tip edit.add_action("Nex&t Heading", shortcut: "Alt+Down") { jump_heading 1 }, "Jump to the next heading"
-      tip edit.add_action("Pre&vious Heading", shortcut: "Alt+Up") { jump_heading -1 }, "Jump to the previous heading"
+      named "command", tip edit.add_action("Run Comman&d…", shortcut: "Alt+K") { command_prompt }, "Run a command by name, or go to a line by number, as the viewer's : does; Tab completes the name"
+      named "go-to-line", tip edit.add_action("&Go to Line…", shortcut: "Ctrl+L") { go_to_line_prompt }, "Put the caret on a source line, asked for by number"
+      named "next-heading", tip edit.add_action("Nex&t Heading", shortcut: "Alt+Down") { jump_heading 1 }, "Jump to the next heading"
+      named "previous-heading", tip edit.add_action("Pre&vious Heading", shortcut: "Alt+Up") { jump_heading -1 }, "Jump to the previous heading"
 
       build_format_menu bar
 
@@ -110,79 +111,80 @@ module Md
         # the pane. The last shown pane's entry is disabled rather than
         # refused (`#refresh_menus`), where `#hide_pane` refuses the keys.
         action = widget(pane).toggle_view_action pane_label(pane)
+        action.name = pane_command(pane)
         action.on(Crysterm::Event::Triggered) { |e| widget(pane).focus if e.checked }
         view.add_action tip(action, pane_tip(pane))
         @view_actions[pane] = action
       end
-      add_toggle view, "Resi&zable Panes", @resizable_panes, option_tip("md.resizable_panes")
+      add_toggle view, "Resi&zable Panes", "resizable-panes", @resizable_panes, option_tip("md.resizable_panes")
       # `F4` is the key, and the way back once the bars are gone.
-      add_toggle view, "Menu and Status &Bars", @bars, option_tip("md.bars")
+      add_toggle view, "Menu and Status &Bars", "bars", @bars, option_tip("md.bars")
       view.add_separator
-      add_toggle view, "S&ync Cursor", @sync_cursor, option_tip("md.sync_cursor")
-      add_toggle view, "&Highlight Line", @highlight_line, option_tip("md.highlight_line")
-      add_toggle view, "Line &Numbers", @line_numbers, option_tip("md.line_numbers")
+      add_toggle view, "S&ync Cursor", "sync-cursor", @sync_cursor, option_tip("md.sync_cursor")
+      add_toggle view, "&Highlight Line", "highlight-line", @highlight_line, option_tip("md.highlight_line")
+      add_toggle view, "Line &Numbers", "line-numbers", @line_numbers, option_tip("md.line_numbers")
       view.add_separator
-      add_toggle(view, "&Soft Wrap", @soft_wrap, option_tip("md.soft_wrap")).shortcut = "Alt+W"
-      add_toggle view, "H&ard Wrap", @hard_wrap, option_tip("md.hard_wrap")
+      add_toggle(view, "&Soft Wrap", "soft-wrap", @soft_wrap, option_tip("md.soft_wrap")).shortcut = "Alt+W"
+      add_toggle view, "H&ard Wrap", "hard-wrap", @hard_wrap, option_tip("md.hard_wrap")
       # To Last Guide sets the width by a guide (`app_view.cr`).
-      last_guide = Crysterm::Action.new "To &Last Guide"
+      last_guide = Crysterm::Action.new "To &Last Guide", name: "text-width-to-last-guide"
       last_guide.on(Crysterm::Event::Triggered) { text_width_to_last_guide }
       tip last_guide, "Set the text width by the last guide pulled off the column ruler"
-      add_choices(view, "Te&xt Width", TEXT_WIDTHS, @text_width, option_tip("md.text_width"), ->text_width_tip(Int32), [last_guide]) { |width| text_width_label width }
-      add_toggle view, "&Center Text", @center_text, option_tip("md.center_text")
+      add_choices(view, "Te&xt Width", "text-width", TEXT_WIDTHS, @text_width, option_tip("md.text_width"), ->text_width_tip(Int32), [last_guide]) { |width| text_width_label width }
+      add_toggle view, "&Center Text", "center-text", @center_text, option_tip("md.center_text")
       # `u` and `g`: Resizable Panes takes `z`, so `r` is free, but `u` stays.
-      rulers = view.add_submenu "R&ulers", [toggle_action("&Horizontal", @horizontal_ruler, option_tip("md.horizontal_ruler")), toggle_action("&Vertical", @vertical_ruler, option_tip("md.vertical_ruler"))]
+      rulers = view.add_submenu "R&ulers", [toggle_action("&Horizontal", "horizontal-ruler", @horizontal_ruler, option_tip("md.horizontal_ruler")), toggle_action("&Vertical", "vertical-ruler", @vertical_ruler, option_tip("md.vertical_ruler"))]
       tip rulers, "A column ruler along the top and a row ruler down the left of each pane"
-      add_toggle view, "&Guides", @guides, option_tip("md.guides")
+      add_toggle view, "&Guides", "guides", @guides, option_tip("md.guides")
       view.add_separator
       # The colors the window is drawn in, with the other appearance choices;
       # `F6` cycles them (`app_theme.cr`).
-      add_choices(view, "The&me", THEMES, @theme, "The colors the window is drawn in; F6 cycles them", ->theme_tip(Theme)) { |theme| theme_label theme }
+      add_choices(view, "The&me", "theme", THEMES, @theme, "The colors the window is drawn in; F6 cycles them", ->theme_tip(Theme)) { |theme| theme_label theme }
       # Whether the viewer draws the document's images, and how, with the
       # Change for 5s trial (`app_media.cr`); `I` is free here.
-      add_toggle view, "&Images", @images, option_tip("md.images")
+      add_toggle view, "&Images", "images", @images, option_tip("md.images")
       @media_actions = build_media_menu view
       # Two more of Crysterm's options (`app_toolkit.cr`); `L` and `K` are
       # free here.
-      add_choices(view, "Co&lor Depth", COLOR_DEPTHS, @color_depth, "How many colors the window is drawn with: the terminal's, or a depth of your choosing", ->color_depth_tip(ColorDepth)) { |depth| color_depth_label depth }
+      add_choices(view, "Co&lor Depth", "color-depth", COLOR_DEPTHS, @color_depth, "How many colors the window is drawn with: the terminal's, or a depth of your choosing", ->color_depth_tip(ColorDepth)) { |depth| color_depth_label depth }
       # Never turns the viewer's links off altogether; Double-click to Open
       # is how a click follows one (`app_toolkit.cr`).
-      @hyperlinks_actions = add_choices(view, "Terminal Lin&ks", Hyperlinks.values, @hyperlinks, "Whether the viewer's links are the terminal's own hyperlinks too, to click or hover", ->hyperlinks_tip(Hyperlinks), [toggle_action("Double-click to &Open", @link_double_click, option_tip("md.link_double_click"))]) { |policy| hyperlinks_label policy }
+      @hyperlinks_actions = add_choices(view, "Terminal Lin&ks", "hyperlinks", Hyperlinks.values, @hyperlinks, "Whether the viewer's links are the terminal's own hyperlinks too, to click or hover", ->hyperlinks_tip(Hyperlinks), [toggle_action("Double-click to &Open", "link-double-click", @link_double_click, option_tip("md.link_double_click"))]) { |policy| hyperlinks_label policy }
       view.add_separator
-      add_choices(view, "&Dialog Style", DialogStyle.values, @dialog_style, option_tip("md.dialog_style"), ->dialog_style_tip(DialogStyle)) { |style| dialog_style_label style }
-      add_toggle view, "&Watch File", @watch_file, "Reload the file whenever it changes on disk, for this run"
+      add_choices(view, "&Dialog Style", "dialog-style", DialogStyle.values, @dialog_style, option_tip("md.dialog_style"), ->dialog_style_tip(DialogStyle)) { |style| dialog_style_label style }
+      add_toggle view, "&Watch File", "watch-file", @watch_file, "Reload the file whenever it changes on disk, for this run"
       # The Auto-detect entries name what the detection says, which a probe
       # answered after the menus were built may have changed.
       view.on(Crysterm::Event::AboutToShow) { refresh_detected_labels }
 
       options = bar.add_menu "&Options"
-      overwrite = Crysterm::Action.new "&Overwrite Mode", checkable: true
+      overwrite = Crysterm::Action.new "&Overwrite Mode", checkable: true, name: "overwrite-mode"
       overwrite.bind_checked(@editor, Crysterm::Event::OverwriteModeChanged) { @editor.overwrite_mode? }
       overwrite.on(Crysterm::Event::Triggered) { |e| @editor.overwrite_mode = e.checked }
       options.add_action tip(overwrite, "Type over the editor's text rather than insert; Insert toggles it there")
-      add_toggle options, "&Ask Before Discarding Changes", @confirm_discard, option_tip("md.confirm_discard")
-      add_toggle options, "A&uto-Save", @autosave, option_tip("md.autosave")
-      add_toggle options, "&Keep a Backup File", @backup_file, option_tip("md.backup_file")
-      add_choices(options, "&Mouse", MouseMode.values, @mouse_mode, option_tip("md.mouse_mode"), ->mouse_tip(MouseMode)) { |mode| mouse_label mode }
+      add_toggle options, "&Ask Before Discarding Changes", "confirm-discard", @confirm_discard, option_tip("md.confirm_discard")
+      add_toggle options, "A&uto-Save", "autosave", @autosave, option_tip("md.autosave")
+      add_toggle options, "&Keep a Backup File", "backup-file", @backup_file, option_tip("md.backup_file")
+      add_choices(options, "&Mouse", "mouse", MouseMode.values, @mouse_mode, option_tip("md.mouse_mode"), ->mouse_tip(MouseMode)) { |mode| mouse_label mode }
       # The Command entry names the command found, and cannot be picked when
       # there is none.
-      clipboard = add_choices(options, "&Clipboard", ClipboardMode.values, @clipboard_mode, option_tip("md.clipboard_mode"), ->clipboard_tip(ClipboardMode)) { |mode| clipboard_label mode }
+      clipboard = add_choices(options, "&Clipboard", "clipboard", ClipboardMode.values, @clipboard_mode, option_tip("md.clipboard_mode"), ->clipboard_tip(ClipboardMode)) { |mode| clipboard_label mode }
       clipboard[ClipboardMode::Command.value].enabled = !self.clipboard.copy_command.nil?
       # Crysterm's `render.reduced_motion` (`app_toolkit.cr`); `d` is free.
-      add_toggle options, "Re&duced Motion", @reduced_motion, "Skip Crysterm's animations and show their end state at once"
+      add_toggle options, "Re&duced Motion", "reduced-motion", @reduced_motion, "Skip Crysterm's animations and show their end state at once"
       # Crysterm's `menu.tear_off` (`app_toolkit.cr`); `e` is free.
-      add_toggle options, "D&etachable Menus", @tear_off_menus, "Give every menu a grab strip that tears off a copy to keep on screen"
+      add_toggle options, "D&etachable Menus", "detachable-menus", @tear_off_menus, "Give every menu a grab strip that tears off a copy to keep on screen"
       # Where these descriptions show (`app_tips.cr`); `t` is free.
-      add_choices(options, "&Tooltips", Tooltips.values, @tooltips, option_tip("md.tooltips"), ->tooltips_tip(Tooltips)) { |mode| tooltips_label mode }
+      add_choices(options, "&Tooltips", "tooltips", Tooltips.values, @tooltips, option_tip("md.tooltips"), ->tooltips_tip(Tooltips)) { |mode| tooltips_label mode }
       options.add_separator
       # The config file (`app_config.cr`): applied from a file now, written
       # now, or written elsewhere; `L` and `S` are free here, `A` is Ask's.
-      tip options.add_action("&Load Config…") { load_config_prompt }, "Apply a config file now, asked for by name; its values count as picks"
-      tip options.add_action("&Save Config") { save_config_now }, "Write the settings to the config file now, not only at exit"
-      tip options.add_action("Sa&ve Config As…") { save_config_prompt }, "Write the settings to a file asked for by name, for a copy or a variant"
+      named "load-config", tip options.add_action("&Load Config…") { load_config_prompt }, "Apply a config file now, asked for by name; its values count as picks"
+      named "save-config", tip options.add_action("&Save Config") { save_config_now }, "Write the settings to the config file now, not only at exit"
+      named "save-config-as", tip options.add_action("Sa&ve Config As…") { save_config_prompt }, "Write the settings to a file asked for by name, for a copy or a variant"
       options.add_separator
       # `C` is the clipboard's; the ellipsis says it asks first.
-      tip options.add_action("Clea&r Caches…") { clear_caches_prompt }, "Forget the recent files, their positions and the recovery files, after asking"
+      named "clear-caches", tip options.add_action("Clea&r Caches…") { clear_caches_prompt }, "Forget the recent files, their positions and the recovery files, after asking"
 
       # Last on the bar, as a Window menu is (`app_windows.cr`).
       build_window_menu bar
@@ -214,14 +216,14 @@ module Md
     # bound to the property and the property set by the entry. *tip* is the
     # entry's description (`app_tips.cr`) — its option's, for a setting
     # (`#option_tip`).
-    private def add_toggle(menu : Crysterm::Widget::Menu, text : String, property : Crysterm::Reactive::Property(Bool), tip : String) : Crysterm::Action
-      menu.add_action toggle_action(text, property, tip)
+    private def add_toggle(menu : Crysterm::Widget::Menu, text : String, name : String, property : Crysterm::Reactive::Property(Bool), tip : String) : Crysterm::Action
+      menu.add_action toggle_action(text, name, property, tip)
     end
 
     # A checkable entry bound to *property*, for a menu or a submenu; *tip*
     # as in `#add_toggle`.
-    private def toggle_action(text : String, property : Crysterm::Reactive::Property(Bool), tip : String) : Crysterm::Action
-      action = Crysterm::Action.new text, checkable: true
+    private def toggle_action(text : String, name : String, property : Crysterm::Reactive::Property(Bool), tip : String) : Crysterm::Action
+      action = Crysterm::Action.new text, checkable: true, name: name
       action.bind_checked property
       tip action, tip
     end
@@ -232,10 +234,10 @@ module Md
     # description is *tip*, each choice's what *tips* says of it. *extra*
     # entries, when given, follow the choices after a separator (a related
     # toggle, a command). Returns the choice entries in *choices*' order.
-    private def add_choices(menu : Crysterm::Widget::Menu, title : String, choices : Enumerable(T), property : Crysterm::Reactive::Property(T), tip : String, tips : T -> String, extra : Array(Crysterm::Action) = [] of Crysterm::Action, &label : T -> String) : Array(Crysterm::Action) forall T
+    private def add_choices(menu : Crysterm::Widget::Menu, title : String, name : String, choices : Enumerable(T), property : Crysterm::Reactive::Property(T), tip : String, tips : T -> String, extra : Array(Crysterm::Action) = [] of Crysterm::Action, &label : T -> String) : Array(Crysterm::Action) forall T
       group = Crysterm::ActionGroup.new
       actions = choices.map do |choice|
-        action = Crysterm::Action.new label.call(choice), checkable: true
+        action = Crysterm::Action.new label.call(choice), checkable: true, name: "#{name}-#{command_slug choice}"
         action.bind_checked(property) { property.value == choice }
         group.add_action action
         action.on(Crysterm::Event::Triggered) { property.value = choice }
@@ -251,6 +253,16 @@ module Md
     def refresh_menus : Nil
       last = visible_panes.size == 1
       @view_actions.each { |pane, action| action.enabled = !(last && widget(pane).visible?) }
+    end
+
+    # The View entry's command name: the pane's, as a toggle is named after
+    # what it toggles (`app_commands.cr`).
+    private def pane_command(pane : Pane) : String
+      case pane
+      in .editor? then "editor"
+      in .viewer? then "viewer"
+      in .toc?    then "toc"
+      end
     end
 
     private def pane_label(pane : Pane) : String
