@@ -388,6 +388,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   empty fenced block on a blank line with the caret inside, and takes the
   fences off again from anywhere in a fenced block — just the opening one of
   a block left open — each as one undo step.
+- View → Line Numbers is a submenu: *Editor* (`line-numbers`,
+  `md.line_numbers`) is the editor's gutter as before, and *Viewer*
+  (`viewer-line-numbers`, `md.viewer_line_numbers`, off by default) puts one
+  on the viewer, numbering its rendered rows from 1 as shown — wrapped rows,
+  the blank rows between blocks and a picture's rows each counted — rather
+  than the source lines (Crysterm's line-number gutter, now on every scroll
+  area, `AbstractScrollArea#line_numbers`).
 
 ### Changed
 

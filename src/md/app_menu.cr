@@ -124,7 +124,7 @@ module Md
       view.add_separator
       add_toggle view, "S&ync Cursor", "sync-cursor", @sync_cursor, option_tip("md.sync_cursor")
       add_toggle view, "&Highlight Line", "highlight-line", @highlight_line, option_tip("md.highlight_line")
-      add_toggle view, "Line &Numbers", "line-numbers", @line_numbers, option_tip("md.line_numbers")
+      tip view.add_submenu("Line &Numbers", [toggle_action("&Editor", "line-numbers", @line_numbers, option_tip("md.line_numbers")), toggle_action("&Viewer", "viewer-line-numbers", @viewer_line_numbers, option_tip("md.viewer_line_numbers"))]), "A gutter numbering the lines of the editor and the rendered rows of the viewer"
       view.add_separator
       # Soft Wrap, Hard Wrap and Text Width are Format's, with Rewrap
       # (`app_edit.cr`); the centering of the text column stays here.

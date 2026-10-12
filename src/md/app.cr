@@ -126,11 +126,16 @@ module Md
     @sync_cursor : Crysterm::Reactive::Property(Bool) = Crysterm::Reactive::Property.new(false)
     # View → Highlight Line; see the class comment. Likewise.
     @highlight_line : Crysterm::Reactive::Property(Bool) = Crysterm::Reactive::Property.new(false)
-    # View → Line Numbers: the editor's gutter (Crysterm's
-    # `PlainTextEdit#line_numbers`), as a property the menu entry and the
-    # config link to; the editor's own event keeps it in step with the
-    # editor (`#initialize`).
+    # View → Line Numbers → Editor: the editor's gutter (Crysterm's
+    # `AbstractScrollArea#line_numbers`), numbering the source lines, as a
+    # property the menu entry and the config link to; the editor's own
+    # event keeps it in step with the editor (`#initialize`).
     @line_numbers : Crysterm::Reactive::Property(Bool) = Crysterm::Reactive::Property.new(false)
+    # View → Line Numbers → Viewer: the same gutter on the viewer, which
+    # numbers the rendered rows 1 to N as shown (wrapped rows and the blank
+    # rows between blocks each counted), not the source lines they came
+    # from. Likewise.
+    @viewer_line_numbers : Crysterm::Reactive::Property(Bool) = Crysterm::Reactive::Property.new(false)
 
     # The status bar's fields (see `#build_status` in `app_status.cr`).
     @name_field : Crysterm::Widget::Label
@@ -221,8 +226,10 @@ module Md
         refresh_status
       end
       @line_numbers.on_change { @editor.line_numbers = @line_numbers.value }
+      @viewer_line_numbers.on_change { @viewer.line_numbers = @viewer_line_numbers.value }
       @bars.on_change { apply_bars }
       @editor.on(Crysterm::Event::LineNumbersChanged) { |e| @line_numbers.value = e.visible }
+      @viewer.on(Crysterm::Event::LineNumbersChanged) { |e| @viewer_line_numbers.value = e.visible }
       @watch_file.on_change do
         setup_file
         refresh_status
@@ -427,9 +434,20 @@ module Md
       @line_numbers.value
     end
 
-    # Shows or hides the editor's line numbers (View → Line Numbers).
+    # Shows or hides the editor's line numbers (View → Line Numbers →
+    # Editor).
     def line_numbers=(value : Bool) : Bool
       @line_numbers.value = value
+    end
+
+    def viewer_line_numbers? : Bool
+      @viewer_line_numbers.value
+    end
+
+    # Shows or hides the viewer's line numbers (View → Line Numbers →
+    # Viewer).
+    def viewer_line_numbers=(value : Bool) : Bool
+      @viewer_line_numbers.value = value
     end
 
     # The viewer position rendered from editor position *pos*: the start of

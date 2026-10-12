@@ -32,6 +32,7 @@ module Md
       link @sync_cursor, "md.sync_cursor"
       link @highlight_line, "md.highlight_line"
       link @line_numbers, "md.line_numbers"
+      link @viewer_line_numbers, "md.viewer_line_numbers"
       link @soft_wrap, "md.soft_wrap"
       link @hard_wrap, "md.hard_wrap"
       link @text_width, "md.text_width"

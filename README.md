@@ -570,8 +570,13 @@ that renders nothing (a blank line, a code fence) maps to the rendered block
 just above it. *Highlight Line*, also in the View menu, tints the row the
 cursor is on in each pane; together with *Sync Cursor* the two tinted rows
 are the same place in the document, which makes the pairing easy to see.
-*Line Numbers* puts a gutter with the source line numbers on the editor's
-left, the way code editors do; the choice is kept across runs.
+*Line Numbers* puts a gutter with line numbers down a pane's left, the
+way code editors do: *Editor* numbers the editor's source lines, *Viewer*
+the viewer's rendered rows. The viewer's numbers count the rows as shown,
+from 1 at the top of the rendered document — a paragraph that wraps over
+three rows takes three numbers, and the blank rows between blocks and a
+picture's rows are counted too — so they are not the source line numbers,
+and they change when the text re-wraps. Both choices are kept across runs.
 
 Four more entries lay the text out, the first three in the Format menu,
 beside Hard Wrap and Rewrap, and the last in View. *Soft Wrap* (`Alt-W`) is the
@@ -721,7 +726,7 @@ command, and so is every key no entry has:
 | `open`, `reload`, `close`, `previous-file`, `next-file`, `save`, `save-as`, `quit` | The File menu |
 | `copy`, `copy-as-markdown`, `paste`, `paste-from-terminal`, `paste-from-command`, `paste-from-internal`, `find`, `find-backward`, `find-next`, `find-previous`, `replace`, `clear-search-highlights`, `command`, `go-to-line`, `next-heading`, `previous-heading`, `vi-mode` | The Edit menu, and `?` |
 | `bold`, `italic`, `code`, `code-block`, `indent`, `outdent`, `task`, `toggle-task`, `promote-heading`, `demote-heading`, `soft-wrap`, `hard-wrap`, `rewrap-paragraph`, `rewrap-document` | The Format menu (`soft-wrap` and `hard-wrap` turn their setting on or off) |
-| `editor`, `viewer`, `toc`, `bars`, `sync-cursor`, `highlight-line`, `line-numbers`, `center-text`, `horizontal-ruler`, `vertical-ruler`, `guides`, `images`, `media-trial`, `link-double-click`, `watch-file` | The View menu's check entries: each turns its setting on or off |
+| `editor`, `viewer`, `toc`, `bars`, `sync-cursor`, `highlight-line`, `line-numbers`, `viewer-line-numbers`, `center-text`, `horizontal-ruler`, `vertical-ruler`, `guides`, `images`, `media-trial`, `link-double-click`, `watch-file` | The View menu's check entries: each turns its setting on or off |
 | `overwrite-mode`, `confirm-discard`, `autosave`, `backup-file`, `resizable-panes`, `reduced-motion`, `detachable-menus`, `vi-config`, `load-config`, `save-config`, `save-config-as`, `clear-caches` | The Options menu |
 | `new-window`, `close-window`, `manual`, `about` | The Window and Help menus |
 | `toggle-editor`, `toggle-viewer`, `toggle-toc`, `toggle-bars`, `cycle-mouse-mode`, `cycle-theme`, `suspend`, `resize-panes` | `F1`–`F6`, `Ctrl-Z` and `Alt-R` |
@@ -738,7 +743,8 @@ not know.
 
 The choices made in the Edit, Format, View and Options menus — Vi Mode, Soft Wrap, Hard
 Wrap, Text Width, Menu and
-Status Bars, Sync Cursor, Highlight Line, Line Numbers, Center Document, Rulers (Horizontal and Vertical), Guides,
+Status Bars, Sync Cursor, Highlight Line, Line Numbers (Editor and
+Viewer), Center Document, Rulers (Horizontal and Vertical), Guides,
 Images, Terminal Links → Double-click to Open, Dialog Style, Ask Before Discarding
 Changes, Auto-Save, Keep a Backup File, the mouse mode, the clipboard mode,
 Resizable Panes, Tooltips, the theme and Crysterm's own Color Depth, Terminal Links, Media

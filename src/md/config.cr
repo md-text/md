@@ -28,7 +28,9 @@ module Superconf
   option "md.highlight_line", false, env: "MD_HIGHLIGHT_LINE",
     description: "View → Highlight Line: tint the caret's row in both panes"
   option "md.line_numbers", false, env: "MD_LINE_NUMBERS",
-    description: "View → Line Numbers: number the editor's lines in a gutter"
+    description: "View → Line Numbers → Editor: number the editor's source lines in a gutter"
+  option "md.viewer_line_numbers", false, env: "MD_VIEWER_LINE_NUMBERS",
+    description: "View → Line Numbers → Viewer: number the viewer's rendered rows in a gutter, from 1, apart from the source lines"
   option "md.center_text", true, env: "MD_CENTER_TEXT",
     description: "View → Center Document: center a capped text column in a wider pane rather than keep it at the left"
   option "md.horizontal_ruler", false, env: "MD_HORIZONTAL_RULER",
