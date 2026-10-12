@@ -375,20 +375,7 @@ module Md
         doc.edit { Crysterm::TextCursor.new(doc, at, at + doc.blocks[first].size).insert_text "```\n\n```" }
         editor.text_cursor = Crysterm::TextCursor.new(doc, at + 4)
       else
-        # A heading, a fence or a fenced block's code is no part of the
-        # caret's paragraph, which a heading on the caret's line is alone.
-        ends = ->(i : Int32) do
-          text = doc.blocks[i].text
-          text.blank? || code[i] || FENCE.matches?(text) || App.heading?(text)
-        end
-        unless editor.selection? || App.heading?(doc.blocks[first].text)
-          while first > 0 && !ends.call(first - 1)
-            first -= 1
-          end
-          while last + 1 < doc.block_count && !ends.call(last + 1)
-            last += 1
-          end
-        end
+        first, last = code_paragraph(doc, code, first) unless editor.selection?
         fence first, last
       end
       edited
@@ -940,6 +927,27 @@ module Md
       char == mark || (mark == '*' && char == '_')
     end
 
+    # The lines, first and last, of the paragraph around line *index* of
+    # *doc* that Format → Code Block fences: the run of lines no blank
+    # line ends, nor a heading, a fence or a fenced block's code (*code*,
+    # `.code_lines` of the whole of *doc*), which are no part of it; a
+    # heading on line *index* is alone.
+    private def code_paragraph(doc : Crysterm::TextDocument, code : Array(Bool), index : Int32) : {Int32, Int32}
+      ends = ->(i : Int32) do
+        text = doc.blocks[i].text
+        text.blank? || code[i] || FENCE.matches?(text) || App.heading?(text)
+      end
+      first = last = index
+      return {first, last} if App.heading?(doc.blocks[index].text)
+      while first > 0 && !ends.call(first - 1)
+        first -= 1
+      end
+      while last + 1 < doc.block_count && !ends.call(last + 1)
+        last += 1
+      end
+      {first, last}
+    end
+
     # The fenced code blocks of *doc*, each as the lines of its opening
     # and its closing fence and its last line; the closing fence is nil
     # for a block that runs to the end of the document, or that an outdent
@@ -995,7 +1003,7 @@ module Md
       cursor = @editor.text_cursor
       anchor, position = cursor.anchor, cursor.position
       doc.edit do
-        cuts.reverse_each { |from, to| Crysterm::TextCursor.new(doc, from, to).remove_selected_text }
+        cuts.reverse_each { |(start, stop)| Crysterm::TextCursor.new(doc, start, stop).remove_selected_text }
         nil
       end
       # A position past a cut moves back by its size; one inside it goes

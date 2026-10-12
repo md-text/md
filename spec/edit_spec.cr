@@ -286,7 +286,8 @@ describe "Md::App editing" do
       place app, 2, 0
       format.emit Crysterm::Event::AboutToShow
       task.checked?.should be_false # no item
-      task.trigger # a line of text: made an item, with a box
+      # A line of text: made an item, with a box.
+      task.trigger
       task.checked?.should be_true
       app.markdown.should eq "- [ ] task\n- [ ] item\n- [ ] text\n\n# Heading\n"
       place app, 4, 2 # nothing to make a task of
@@ -412,7 +413,8 @@ describe "Md::App editing" do
       app.toggle_code_block.should be_true
       app.markdown.should eq "Intro.\n\n```\nputs 1\nputs 2\n```\n\nAfter.\n"
       app.editor.cursor_position.should eq app.editor.document.block_position(4) + 2 # still in "puts 2"
-      place app, 2, 0 # the opening fence
+      # The opening fence.
+      place app, 2, 0
       app.toggle_code_block.should be_true
       app.markdown.should eq "Intro.\n\nputs 1\nputs 2\n\nAfter.\n"
       app.toggle_code_block

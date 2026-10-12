@@ -403,7 +403,7 @@ describe "Md::App menus" do
       check = uninitialized Proc(String, Array(Crysterm::Action), Nil)
       check = ->(name : String, actions : Array(Crysterm::Action)) do
         letters = actions.reject(&.separator?).compact_map(&.mnemonic)
-        {name, letters.tally.select { |_, n| n > 1 }.keys}.should eq({name, [] of Char})
+        {name, letters.tally.select { |_, count| count > 1 }.keys}.should eq({name, [] of Char})
         actions.each { |action| action.menu.try { |sub| check.call "#{name} → #{action.text}", sub } }
         nil
       end

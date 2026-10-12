@@ -33,7 +33,7 @@ describe "Md::App line numbers" do
       # The paragraph wraps over several rows, each numbered; the blank row
       # after it too, then "short" — the rendered rows, not the source's
       # line 3.
-      rows = (0...app.viewer.aheight).map { |r| pane_row(window, app.viewer, r) }
+      rows = (0...app.viewer.aheight).map { |row| pane_row(window, app.viewer, row) }
       rows[0][0, 5].should eq " 1 wo"
       rows[1][0, 2].should eq " 2"
       short = rows.index!(&.includes?("short"))
