@@ -493,3 +493,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   where it stayed missing until md was restarted; a broken link is still not
   fetched again more than about every 30 seconds. (Fixed in Crysterm, which
   md builds against.)
+- A picture in the viewer drawn with the Kitty graphics protocol shows as
+  soon as the document opens, where it was covered by the page drawn after it
+  and appeared only once the view was scrolled: when the terminal's colors
+  became known md wrote every cell of the page again, the blanks under the
+  picture too, and a terminal that keeps its pictures in its cells (as
+  WezTerm does) dropped the picture under them, while a screen clear (after a
+  resize) deletes Kitty pictures everywhere; a picture is now placed again
+  whenever cells were written over it or the screen was cleared. (Fixed in
+  Crysterm, which md builds against.)
