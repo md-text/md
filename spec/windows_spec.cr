@@ -25,7 +25,7 @@ describe "Md::App windows" do
       application.add window
       opened = [] of Crysterm::Window
       app.window_opener = recording_opener(opened)
-      window_menu(app).actions.map(&.text).should eq ["&New", "&Close Current", "", "md - doc.md"]
+      window_menu(app).actions.map(&.text).should eq ["&New", "&Close Current", "", "doc.md"]
       window_menu(app).actions[0].enabled?.should be_true
       window_menu(app).actions[3].checked?.should be_true
       window_menu(app).actions.map(&.shortcut_text).should eq ["Ctrl+N", "Ctrl+W", "", ""]
@@ -33,7 +33,7 @@ describe "Md::App windows" do
       other = app.new_window || fail("no window was opened")
       begin
         other.window.should be opened.first
-        other.window.title.should eq "md - doc.md"
+        other.window.title.should eq "doc.md • MD"
         # Joined to the running application, on screen and reading input.
         other.window.application.should be application
         application.windows.should eq [window, other.window]
@@ -43,7 +43,7 @@ describe "Md::App windows" do
         other.markdown.should eq app.markdown
         other.visible_panes.should eq [Md::App::Pane::Viewer]
         # Both windows list both, each with its own checked.
-        window_menu(app).actions.map(&.text).should eq ["&New", "&Close Current", "", "md - doc.md", "md - doc.md"]
+        window_menu(app).actions.map(&.text).should eq ["&New", "&Close Current", "", "doc.md", "doc.md"]
         window_menu(app).actions[3..].map(&.checked?).should eq [true, false]
         window_menu(other).actions[3..].map(&.checked?).should eq [false, true]
         # Independent: an edit in one is not in the other.
@@ -56,7 +56,7 @@ describe "Md::App windows" do
         other.window.destroyed?.should be_true
         window.destroyed?.should be_false
         application.windows.should eq [window]
-        window_menu(app).actions.map(&.text).should eq ["&New", "&Close Current", "", "md - doc.md"]
+        window_menu(app).actions.map(&.text).should eq ["&New", "&Close Current", "", "doc.md"]
         Md::App.instances.should contain app
         Md::App.instances.should_not contain other
       ensure
@@ -151,7 +151,7 @@ describe "Md::App windows" do
       other = app.new_window || fail("no window was opened")
       begin
         window_menu(app).actions[4].trigger
-        notice(app).should contain "md - a.md is in another terminal window"
+        notice(app).should contain "a.md is in another terminal window"
         window_menu(app).actions[3..].map(&.checked?).should eq [true, false] # the checks stay with each window's own
         window_menu(app).actions[3].trigger                                   # this one: nothing to do
         window_menu(app).actions[3..].map(&.checked?).should eq [true, false]

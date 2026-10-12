@@ -166,6 +166,8 @@ module Md
                    @history : History? = nil, @config : Bool = false, watch : Bool = false,
                    line : Int32? = nil)
       @window = window || Crysterm::Window.new(title: title)
+      # A window handed in (Window → New's, a spec's) is titled as well.
+      @window.title = title if window
       @window.always_propagated_chars << 'q'
 
       @main = Crysterm::Widget::MainWindow.new parent: @window
@@ -311,9 +313,20 @@ module Md
       status
     end
 
-    # The window title: the program name and the document's, when it has one.
+    # The terminal's title: the document's name, then the program's —
+    # `README.md • MD`, or `[No Name] • MD` for a document without one, as
+    # Vim names it. Crysterm sends it on any terminal (one without titles
+    # ignores it) and puts the terminal's own title back when md hands the
+    # terminal back, at exit and while suspended.
     def title : String
-      (name = @source.name) ? "md - #{name}" : "md"
+      "#{document_name} • MD"
+    end
+
+    # The document's name as the title, the Window menu and the notices
+    # about windows give it: the file's, `stdin` for a stream, or
+    # `[No Name]`.
+    def document_name : String
+      @source.name || "[No Name]"
     end
 
     # The document's current Markdown source.

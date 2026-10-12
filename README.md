@@ -99,6 +99,13 @@ parent while that branch is folded. A document arriving on standard
 input is rendered as it comes in, and the viewer keeps scrolling to the end
 until you scroll up.
 
+The terminal's title is the document's name followed by `• MD` —
+`README.md • MD`, `stdin • MD` for a stream, `[No Name] • MD` for a new
+document — and changes as you open, save as or close a file. A terminal
+without titles ignores it; one that keeps a stack of titles (xterm, kitty,
+Ghostty, iTerm2, WezTerm, foot…) gets its own back when md exits or is
+suspended.
+
 The shown panes share the width with a divider between each two: the editor
 and the viewer equally, the table of contents as a 30-column list. Drag a
 divider with the mouse to resize the panes beside it, or, without a mouse,
@@ -698,7 +705,7 @@ shared, written by the window that ends last. Window → Close Current
 window you are in alone, after its unsaved-changes question; in the last
 window it is Quit. File → Quit (`Ctrl-Q`, `q`) closes every window, each
 asking about its own changes first, so a window with changes stays until
-you answer. The Window menu lists the open windows by title, the one you
+you answer. The Window menu lists the open windows by their documents' names, the one you
 are in checked; picking another makes it the active window — raised, when
 the two share a terminal; otherwise a notice says it is in another terminal
 window, since one terminal cannot raise another. Terminal.app keeps a

@@ -10,7 +10,7 @@ describe "Md::App open" do
         app.visible_panes.should eq [Md::App::Pane::Editor]
         app.open_file(path).should be_true
         app.source.path.should eq path
-        app.title.should eq "md - #{path}"
+        app.title.should eq "#{path} • MD"
         window.title.should eq app.title
         app.markdown.should eq "# Opened\n\nBody.\n"
         app.viewer.document.plain_text.should contain "Body."

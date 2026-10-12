@@ -61,7 +61,7 @@ describe "Md::App links" do
         app.viewer.activate_link "docs/target.md" # Enter on the link, with the viewer's event
         app.source.path.should eq target
         app.markdown.should eq TARGET_DOC
-        app.title.should eq "md - #{target}"
+        app.title.should eq "#{target} • MD"
         app.visible_panes.should eq [Md::App::Pane::Editor, Md::App::Pane::Viewer]
         back.enabled?.should be_true
         forward.enabled?.should be_false

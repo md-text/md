@@ -36,7 +36,7 @@ describe "Md::App#close_document" do
 
         app.close_document
         app.source.path.should eq doc_c
-        app.title.should eq "md - #{doc_c}"
+        app.title.should eq "#{doc_c} • MD"
         app.editor.text_cursor.block_number.should eq 12 # where c was left
         app.editor.document.modified?.should be_false
         (history.entry(doc_b) || fail("b.md was not remembered")).line.should eq 5
@@ -78,8 +78,8 @@ describe "Md::App#close_document" do
         app.close_document
         app.source.path.should be_nil
         app.source.stdin?.should be_false
-        app.title.should eq "md"
-        window.title.should eq "md"
+        app.title.should eq "[No Name] • MD"
+        window.title.should eq "[No Name] • MD"
         app.markdown.should eq ""
         app.viewer.document.plain_text.strip.should eq ""
         app.editor.document.modified?.should be_false
@@ -197,7 +197,7 @@ describe "Md::App#close_document" do
       app.streaming?.should be_false
       app.source.stdin?.should be_false
       app.source.name.should be_nil
-      app.title.should eq "md"
+      app.title.should eq "[No Name] • MD"
       notice(app).should contain "Closed stdin"
       app.receive "late\n" # the reader fiber may still deliver
       app.finish_stream

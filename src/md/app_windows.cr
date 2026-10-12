@@ -198,7 +198,7 @@ module Md
     private def activate_window(app : App) : Nil
       unless app.same? self
         app.window.activate
-        notice "#{app.title} is in another terminal window" unless app.window.screen.same? @window.screen
+        notice "#{app.document_name} is in another terminal window" unless app.window.screen.same? @window.screen
       end
       App.refresh_window_menus
     end
@@ -219,7 +219,8 @@ module Md
     end
 
     # Remakes the list of windows in this window's menu — one check entry
-    # per open window, titled as its window is, this one checked — and
+    # per open window, named by its document (`#document_name`, the title
+    # without its ` • MD`), this one checked — and
     # enables New as the session allows.
     def refresh_window_menu : Nil
       return unless menu = @window_menu
@@ -227,8 +228,8 @@ module Md
       @window_entries.each { |entry| menu.remove_action entry }
       group = Crysterm::ActionGroup.new
       @window_entries = App.instances.map do |app|
-        entry = Crysterm::Action.new app.title, checkable: true
-        tip entry, (app.same?(self) ? "This window" : "Bring the window showing #{app.title} to the front, where the terminal allows")
+        entry = Crysterm::Action.new app.document_name, checkable: true
+        tip entry, (app.same?(self) ? "This window" : "Bring the window showing #{app.document_name} to the front, where the terminal allows")
         entry.checked = app.same? self
         group.add_action entry
         entry.on(Crysterm::Event::Triggered) { activate_window app }

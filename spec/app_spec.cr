@@ -20,7 +20,7 @@ describe Md::App do
       app.visible_panes.should eq [Md::App::Pane::Editor]
       app.editor.focused?.should be_true
       app.markdown.should eq ""
-      app.title.should eq "md"
+      app.title.should eq "[No Name] • MD"
       window.repaint
     end
   end
@@ -30,7 +30,7 @@ describe Md::App do
       app.visible_panes.should eq [Md::App::Pane::Viewer]
       app.viewer.focused?.should be_true
       app.markdown.should eq DOC
-      app.title.should eq "md - doc.md"
+      app.title.should eq "doc.md • MD"
       app.viewer.document.plain_text.should contain "Some text."
       window.repaint
       window.dump.to_s.should contain "Title"
@@ -69,7 +69,7 @@ describe Md::App do
   it "opens a named file that does not exist yet in the editor" do
     with_app Md::Source.new(path: "new.md") do |app|
       app.visible_panes.should eq [Md::App::Pane::Editor]
-      app.title.should eq "md - new.md"
+      app.title.should eq "new.md • MD"
     end
   end
 
@@ -241,7 +241,7 @@ describe Md::App do
         File.read(other).should eq "copied"
         File.exists?(path).should be_false
         app.source.path.should eq other
-        app.title.should eq "md - #{other}"
+        app.title.should eq "#{other} • MD"
         app.main.status_bar.prompting?.should be_false
         app.editor.focused?.should be_true
         File.read_lines(other) # a second save goes straight to the new name

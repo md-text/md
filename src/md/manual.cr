@@ -115,7 +115,10 @@ module Md
           \fB\-\fR, or with no \fIFILE\fR and content on standard input, it views
           the document as it streams in, following the tail until the reader
           scrolls up. The viewer re-renders as the source is edited, and the
-          table of contents follows the document's headings.
+          table of contents follows the document's headings. The terminal's title
+          is the document's name followed by \(lq\(bu MD\(rq, or
+          \(lq[No Name] \(bu MD\(rq for a new document; the terminal's own title
+          comes back when md exits.
           .PP
           \fB+\fIN\fR (or \fB\-\-line\fR \fIN\fR) opens on source line \fIN\fR in
           both panes, as in
