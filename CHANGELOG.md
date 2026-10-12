@@ -330,11 +330,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   changes. Where no window can be opened the entry is disabled and the key
   says why.
 - Options → Detachable Menus (`menu.tear_off`, `--menu-tear-off`): every menu
-  carries a grab strip (`⠿⠿⠿`) in the middle of its top border, after GNOME 2's
-  tear-off menus; dragging it — or clicking it — tears off a copy of the menu
-  that stays on screen where it is dropped, with the same entries kept in step
-  with the menu's own, movable by its strip, closed by the `✕` at its right
-  end, and left alone by outside clicks and `Escape`. Submenus tear off too.
+  carries a grab strip (`⠿⠿⠿`) in the middle of its top border and another in
+  the middle of its bottom border, after GNOME 2's tear-off menus; dragging
+  either — or clicking it — tears off a copy of the menu that stays on screen
+  where it is dropped, with the same entries kept in step with the menu's own,
+  movable by either strip, closed by the `✕` at the right end of its top border, and left alone by outside clicks and `Escape`. Submenus tear off too.
   The ordinary menus are unchanged; the choice is kept with the other
   settings. (Crysterm's tear-off menus, which md builds against.)
 - A menu entry's description in the status bar takes as much of the bar as it

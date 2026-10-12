@@ -208,11 +208,12 @@ the next key, and the status bar stays the document's. Kept across runs
 (`md.tooltips`).
 
 Options → Detachable Menus gives every menu a grab strip (`⠿⠿⠿`) in the
-middle of its top border, after GNOME 2's tear-off menus: drag the strip —
-or just click it — and a copy of the menu is torn off and stays on screen
-where you drop it, with the same entries, kept in step with the menu's own
-(a check made on either shows on both). Drag its strip to move it, and click
-the `✕` at its right end to close it; an outside click leaves it up, and
+middle of its top border and another in the middle of its bottom border, after
+GNOME 2's tear-off menus: drag either strip — or just click it — and a copy of
+the menu is torn off and stays on screen where you drop it, the point you
+grabbed staying under the pointer, with the same entries, kept in step with the
+menu's own (a check made on either shows on both). Drag either of its strips to
+move it, and click the `✕` at the right end of its top border to close it; an outside click leaves it up, and
 `Escape` only takes the keyboard back to the panes. Submenus tear off too,
 and a torn-off menu's own submenus open as usual. The ordinary menus are
 unchanged, and a torn-off menu stays until closed even after the option is
