@@ -1,7 +1,7 @@
 require "./spec_helper"
 require "file_utils"
 
-# Format → Soft Wrap and Text Width, and View → Center Text: the editor's wrap mode, a
+# Format → Soft Wrap and Text Width, and View → Center Document: the editor's wrap mode, a
 # cap on the text's width and the capped column's placement, through
 # Crysterm's `wrap_content`, `line_wrap_column` and
 # `line_wrap_column_alignment`.
@@ -78,8 +78,8 @@ describe "Md::App text layout" do
       pane_row(window, app.viewer, 1)[29].should eq 'w'
       app.viewer.position_at(app.viewer.aleft + 29, app.viewer.atop).should eq 0
 
-      center = menu(app, 3).actions.find!(&.text.==("&Center Text"))
-      center.text.should eq "&Center Text"
+      center = menu(app, 3).actions.find!(&.text.==("&Center Document"))
+      center.text.should eq "&Center Document"
       center.checked?.should be_true
       center.trigger
       app.center_text?.should be_false

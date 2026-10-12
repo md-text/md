@@ -14,7 +14,7 @@ module Md
     # out in — 72, 80, 100 or 120 columns, or no cap — for a wide terminal,
     # where a line that runs the whole width is hard to read. It applies to
     # both panes (Crysterm's `line_wrap_column`), so with Sync Cursor the
-    # two keep the same measure. View → Center Text (`#center_text?`)
+    # two keep the same measure. View → Center Document (`#center_text?`)
     # places the column in the middle of a wider pane rather than at its
     # left edge (`line_wrap_column_alignment`).
     #
@@ -88,7 +88,7 @@ module Md
     end
 
     # Centers the text column in a wider pane, or keeps it at the left
-    # (View → Center Text). Makes a difference only with a text width set.
+    # (View → Center Document). Makes a difference only with a text width set.
     def center_text=(value : Bool) : Bool
       @center_text.value = value
     end

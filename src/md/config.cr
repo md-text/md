@@ -30,7 +30,7 @@ module Superconf
   option "md.line_numbers", false, env: "MD_LINE_NUMBERS",
     description: "View → Line Numbers: number the editor's lines in a gutter"
   option "md.center_text", true, env: "MD_CENTER_TEXT",
-    description: "View → Center Text: center a capped text column in a wider pane rather than keep it at the left"
+    description: "View → Center Document: center a capped text column in a wider pane rather than keep it at the left"
   option "md.horizontal_ruler", false, env: "MD_HORIZONTAL_RULER",
     description: "View → Rulers → Horizontal: a column ruler along the top of each pane"
   option "md.vertical_ruler", false, env: "MD_VERTICAL_RULER",

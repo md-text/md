@@ -581,7 +581,7 @@ not run the whole width of a wide terminal; it applies to both panes, which
 keeps them reading side by side under Sync Cursor. *To Last Guide*, below
 the widths, sets it to the column of the rightmost guide you pulled onto
 the editor while editing, the viewer otherwise (see Guides), so a guide
-dragged to a good place becomes the width. *Center Text* puts the
+dragged to a good place becomes the width. *Center Document* puts the
 capped column in the middle of a wider pane rather than at its left edge.
 
 Two more measure it. *Rulers* puts a column ruler along the top row of each
@@ -737,7 +737,7 @@ not know.
 
 The choices made in the Edit, Format, View and Options menus — Vi Mode, Soft Wrap, Hard
 Wrap, Text Width, Resizable Panes, Menu and
-Status Bars, Sync Cursor, Highlight Line, Line Numbers, Center Text, Rulers (Horizontal and Vertical), Guides,
+Status Bars, Sync Cursor, Highlight Line, Line Numbers, Center Document, Rulers (Horizontal and Vertical), Guides,
 Images, Terminal Links → Double-click to Open, Dialog Style, Ask Before Discarding
 Changes, Auto-Save, Keep a Backup File, the mouse mode, the clipboard mode,
 Tooltips, the theme and Crysterm's own Color Depth, Terminal Links, Media

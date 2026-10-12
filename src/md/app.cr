@@ -38,7 +38,7 @@ module Md
   # in both panes (Crysterm's `highlight_current_line`) — with Sync
   # Cursor, the two tinted rows are the same place in the document.
   #
-  # Format → Soft Wrap and Text Width and View → Center Text
+  # Format → Soft Wrap and Text Width and View → Center Document
   # (`app_view.cr`) lay the text out: the editor's wrap mode, a cap on the
   # text's width for a wide terminal, and whether the capped column is
   # centered in the pane. View →

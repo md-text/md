@@ -160,7 +160,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   edge or lets them run past it with sideways scrolling; Format → Text Width
   caps the text at 72, 80, 100 or 120 columns for a wide terminal, in both
   panes — or, with To Last Guide, at the rightmost guide pulled onto the
-  editor while editing, the viewer otherwise — and View → Center Text puts the capped column in the middle of the
+  editor while editing, the viewer otherwise — and View → Center Document puts the capped column in the middle of the
   pane. All three are kept across runs. (Crysterm: `line_wrap_column` and
   `line_wrap_column_alignment` on `AbstractScrollArea`, Qt's
   `lineWrapColumnOrWidth` and `QScrollArea::alignment`; the scroll bars
@@ -397,6 +397,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Soft Wrap (`Alt-W`), Hard Wrap and Text Width (with To Last Guide) are in
   the Format menu, before Rewrap, which refills to that width, where they
   were in View; their commands and settings keep their names.
+- View → Center Text is called Center Document; its command (`center-text`)
+  and setting (`md.center_text`) keep their names.
 - The settings live in `$XDG_CONFIG_HOME/md/config.yml`
   (`~/.config/md/config.yml`), YAML in the layout `--crysterm-dump-config`
   prints, one mapping per option group, instead of `settings.json`, which is

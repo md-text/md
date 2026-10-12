@@ -128,7 +128,7 @@ module Md
       view.add_separator
       # Soft Wrap, Hard Wrap and Text Width are Format's, with Rewrap
       # (`app_edit.cr`); the centering of the text column stays here.
-      add_toggle view, "&Center Text", "center-text", @center_text, option_tip("md.center_text")
+      add_toggle view, "&Center Document", "center-text", @center_text, option_tip("md.center_text")
       # `u` and `g`: Resizable Panes takes `z`, so `r` is free, but `u` stays.
       rulers = view.add_submenu "R&ulers", [toggle_action("&Horizontal", "horizontal-ruler", @horizontal_ruler, option_tip("md.horizontal_ruler")), toggle_action("&Vertical", "vertical-ruler", @vertical_ruler, option_tip("md.vertical_ruler"))]
       tip rulers, "A column ruler along the top and a row ruler down the left of each pane"
