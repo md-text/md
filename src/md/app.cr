@@ -165,9 +165,7 @@ module Md
                    view : Bool = !stream.nil? || !text.empty?, window : Crysterm::Window? = nil,
                    @history : History? = nil, @config : Bool = false, watch : Bool = false,
                    line : Int32? = nil)
-      @window = window || Crysterm::Window.new(title: title)
-      # A window handed in (Window → New's, a spec's) is titled as well.
-      @window.title = title if window
+      @window = App.titled_window window, title
       @window.always_propagated_chars << 'q'
 
       @main = Crysterm::Widget::MainWindow.new parent: @window
@@ -312,6 +310,14 @@ module Md
       status = @window.exec
       finish
       status
+    end
+
+    # *window* given *title*, a window handed in (Window → New's, a
+    # spec's) being titled as a new one is.
+    def self.titled_window(window : Crysterm::Window?, title : String) : Crysterm::Window
+      return Crysterm::Window.new(title: title) unless window
+      window.title = title
+      window
     end
 
     # The terminal's title: the document's name (`#document_name`), then

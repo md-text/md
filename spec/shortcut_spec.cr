@@ -27,7 +27,7 @@ describe "Md::App shortcuts" do
       (menu(app, 2).actions.last.menu || fail("Rewrap has no submenu")).map(&.shortcut_text).should eq ["Alt+Q", ""]
       # The pane entries' gesture is not the F-keys', so they name no key,
       # nor does any other View entry.
-      menu(app, 3).actions.map(&.shortcut_text).uniq.should eq [""]
+      menu(app, 3).actions.map(&.shortcut_text).uniq!.should eq [""]
       app.main.menu_bar.open_menu 0
       window.repaint
       rows = window.dump.to_s.lines
