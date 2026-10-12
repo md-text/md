@@ -441,6 +441,14 @@ describe "Md::App editing" do
     end
   end
 
+  it "fences a paragraph after a block an outdent ended, leaving that block alone" do
+    with_app text: "- item\n  ```\n  code\n\nafter\n", view: false do |app|
+      place app, 4, 2 # past the list item, which ended the block in it
+      app.toggle_code_block.should be_true
+      app.markdown.should eq "- item\n  ```\n  code\n\n```\nafter\n```\n"
+    end
+  end
+
   it "promotes and demotes the heading on the caret's line" do
     with_app text: "## Title\n> ## quoted\n###### deep\n", view: false do |app, window|
       place app, 0, 3

@@ -366,7 +366,7 @@ module Md
       editor = formatting_editor
       doc = editor.document
       first, last = selected_blocks
-      if block = fenced_blocks(doc).find { |open, close| open <= last && (close || doc.block_count - 1) >= first }
+      if block = fenced_blocks(doc).find { |open, _, end_line| open <= last && end_line >= first }
         unfence doc, block[0], block[1]
       elsif !editor.selection? && doc.blocks[first].text.blank?
         at = doc.blocks[first].position
@@ -931,14 +931,15 @@ module Md
     end
 
     # The fenced code blocks of *doc*, each as the lines of its opening
-    # and its closing fence; the closing one is nil for a block that runs
-    # to the end of the document, or that an outdent ends inside a list
-    # item. A fence is a fence line (`FENCE`) that is no code block's own
-    # line (`.code_lines`), so a fence shown inside a block's code, or in
-    # an indented code block, does not count.
-    private def fenced_blocks(doc : Crysterm::TextDocument) : Array({Int32, Int32?})
+    # and its closing fence and its last line; the closing fence is nil
+    # for a block that runs to the end of the document, or that an outdent
+    # ends inside a list item, its last line then the one before the
+    # outdented line. A fence is a fence line (`FENCE`) that is no code
+    # block's own line (`.code_lines`), so a fence shown inside a block's
+    # code, or in an indented code block, does not count.
+    private def fenced_blocks(doc : Crysterm::TextDocument) : Array({Int32, Int32?, Int32})
       code = App.code_lines doc
-      blocks = [] of {Int32, Int32?}
+      blocks = [] of {Int32, Int32?, Int32}
       open = nil
       code.each_with_index do |is_code, i|
         next if is_code
@@ -946,13 +947,13 @@ module Md
         if start = open
           # The first line after the opening fence that is no code ends
           # the block: its closing fence, or the line an outdent ended it on.
-          blocks << {start, fence ? i : nil}
+          blocks << (fence ? {start, i, i} : {start, nil, i - 1})
           open = nil
           next if fence
         end
         open = i if fence
       end
-      open.try { |start| blocks << {start, nil} }
+      open.try { |start| blocks << {start, nil, doc.block_count - 1} }
       blocks
     end
 
