@@ -451,6 +451,11 @@ describe "Md::App pasting" do
         app.markdown.should eq "first killsecond\nkill & more"
         app.paste_from_kill_ring 5
         notice(app).should eq " No kill ring entry 6"
+        # Cut at 39 characters, the 39th an &, which stays one shown &.
+        ring.interrupt
+        ring.kill "#{"x" * 38}&tail of a long kill"
+        edit.emit Crysterm::Event::AboutToShow
+        (paste_special(app)[3].menu || [] of Crysterm::Action).first.text.should eq "&1 #{"x" * 38}&&…"
       end
     end
   end

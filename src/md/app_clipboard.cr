@@ -263,11 +263,12 @@ module Md
     end
 
     # A kill ring entry on one menu row: its line breaks shown as `⏎`, cut
-    # to `KILL_RING_PREVIEW` columns, and its `&` kept from reading as a
-    # mnemonic.
+    # to `KILL_RING_PREVIEW` characters, and its `&` kept from reading as a
+    # mnemonic — doubled after the cut, so a cut cannot split a doubled one
+    # and leave a lone `&` underlining the `…`.
     private def kill_preview(text : String) : String
-      line = literal_label text.gsub('\n', '⏎')
-      line.size > KILL_RING_PREVIEW ? "#{line[0, KILL_RING_PREVIEW - 1]}…" : line
+      line = text.gsub('\n', '⏎')
+      literal_label(line.size > KILL_RING_PREVIEW ? "#{line[0, KILL_RING_PREVIEW - 1]}…" : line)
     end
 
     # Puts the mode on the clipboard now and whenever it changes.
