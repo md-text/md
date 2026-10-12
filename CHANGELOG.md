@@ -483,8 +483,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   mode (`\eOM`, `\eOp`…), which tput dropped, and under the kitty keyboard
   protocol as keypad codes that went unused. (Fixed in tput, which md builds
   against.)
-
-[Unreleased]: https://github.com/crystallabs/md/commits/main
 - Window → New no longer freezes md on macOS: once the new terminal window
   opened, the first window stopped answering the mouse and the keyboard, and
   the input it had not read was printed to the terminal when md quit. The new
@@ -543,3 +541,5 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `p`), View → Menu and Status Bars `s` (Media Backend keeping `b`) and
   Options → Mouse → Never `v` (While Reading keeping `n`), where two
   entries shared a letter and pressing it always took the first of them.
+
+[Unreleased]: https://github.com/crystallabs/md/commits/main
