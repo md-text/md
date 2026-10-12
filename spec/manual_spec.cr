@@ -32,6 +32,9 @@ describe Md::Manual do
     man.should contain "\\fB\\-\\-md\\-text\\-width\\fR \\fIVALUE\\fR (\\fBMD_TEXT_WIDTH\\fR, \\fImd.text_width\\fR)"
     man.should contain "$XDG_CONFIG_HOME/md/config.yml"
     man.should_not contain "→"
+    # The Window menu's keys, with the Replace key, are in the KEYS section.
+    {"Ctrl\\-N", "Ctrl\\-W", "Alt\\-H"}.each { |key| man.should contain ".B #{key}" }
+    man.should contain "Alt\\-O, Alt\\-N"
   end
 
   it "starts no text line with a dot or a quote, which roff would read as a request" do

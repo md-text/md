@@ -25,7 +25,7 @@ module Md
       {"F5", "Cycle the mouse mode (a: always, n: while reading, i: while editing, off), after vi's 'set mouse='."},
       {"F6", "Cycle the theme: terminal, dark, light and the five Qt themes (View -> Theme)."},
       {"Ctrl-Z", "Outside the editor, suspend md to the shell (fg resumes); in the editor, undo."},
-      {"F10, Alt-F, Alt-E, Alt-M, Alt-V, Alt-O", "Open the menu bar, or the File, Edit, Format, View and Options menus."},
+      {"F10, Alt-F, Alt-E, Alt-M, Alt-V, Alt-O, Alt-N", "Open the menu bar, or the File, Edit, Format, View, Options and Window menus."},
       {"Ctrl-O", "Open a file (asks for the name, with completion)."},
       {"Ctrl-R", "Reload the file from disk."},
       {"Ctrl-S", "Save; without a file name yet, ask for one."},
@@ -33,6 +33,7 @@ module Md
       {"Ctrl-V", "Paste the clipboard into the editor at the caret; outside the editor, at the source of the viewer's caret. Edit -> Paste Special pastes from the terminal's clipboard, the paste command, md's own buffer or the editor's kill ring."},
       {"Ctrl-F, /, ?", "Search; `/' and `?' outside the editor, `?' backward."},
       {"Ctrl-G, Alt-G, n, N", "Next and previous match (n and N outside the editor)."},
+      {"Alt-H", "Replace: asks for the pattern and the replacement, then about each match (Edit -> Replace)."},
       {"Ctrl-L, :", "Go to a source line (`:' outside the editor)."},
       {"Alt-Down, Alt-Up, ], [", "Jump to the next and the previous heading (] and [ outside the editor)."},
       {"Backspace, Alt-Left, Alt-Right", "Back to the file you were in before the last link or open, where you left it (Backspace outside the editor; File -> Previous File), and on to the next again (File -> Next File)."},
@@ -43,7 +44,9 @@ module Md
       {"Alt-X", "Tick or untick a list item's task box, or give it a ticked one (Format -> Toggle Task; Format -> Task, a check entry, adds and removes the box)."},
       {"Ctrl-Up, Ctrl-Down", "Promote or demote the heading on the caret's line."},
       {"Alt-Q", "Refill the paragraph at the caret, or the selected paragraphs, to the wrap column (the text width, or 80); Format -> Rewrap -> Document refills every paragraph."},
-      {"Ctrl-Q, q", "Quit (q anywhere but in the editor); asks first when changes are unsaved."},
+      {"Ctrl-N", "Open another md window on this document, in a new terminal window (Window -> New Window)."},
+      {"Ctrl-W", "Outside the editor, close this window, asking first when its changes are unsaved; closing the last window quits (Window -> Close Window)."},
+      {"Ctrl-Q, q", "Quit, closing every window (q anywhere but in the editor); each window asks first when its changes are unsaved."},
     ]
 
     # *value* checked against `KINDS`: a usage error otherwise.
