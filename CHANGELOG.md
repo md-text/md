@@ -449,3 +449,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   up the focus as the window was torn down afterwards, hid the cursor again.
   A terminal whose cursor is not white also keeps its own color, where md
   left it white. (Fixed in Crysterm and Tput, which md builds against.)
+- A remote image the viewer could not fetch, because of a network blip, comes
+  in with the next re-render (an edit, a reload) once the network is back,
+  where it stayed missing until md was restarted; a broken link is still not
+  fetched again more than about every 30 seconds. (Fixed in Crysterm, which
+  md builds against.)
