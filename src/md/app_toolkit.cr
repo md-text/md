@@ -46,8 +46,8 @@ module Md
     # strip — or clicking it — tears off a copy of the menu that stays on
     # screen where it is dropped, with the same entries kept in step with the
     # menu's own (Crysterm's torn-off menu shares the `Action`s), movable by
-    # its strip and closed by the `✕` at its right end; the ordinary menus
-    # are unchanged. A torn-off menu stays until closed, option or no option.
+    # its strip and closed by the `⊠` (`x` on an ASCII terminal) at its right
+    # end; the ordinary menus are unchanged. A torn-off menu stays until closed, option or no option.
     alias ColorDepth = Crysterm::ColorDepth
     alias Hyperlinks = Crysterm::AutoToggle
 

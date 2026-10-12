@@ -339,7 +339,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   the middle of its bottom border, after GNOME 2's tear-off menus; dragging
   either — or clicking it — tears off a copy of the menu that stays on screen
   where it is dropped, with the same entries kept in step with the menu's own,
-  movable by either strip, closed by the `✕` at the right end of its top border, and left alone by outside clicks and `Escape`. Submenus tear off too.
+  movable by either strip, closed by the `⊠` (`x` on an ASCII terminal) at the right end of its top border, and left alone by outside clicks and `Escape`. Submenus tear off too.
   The ordinary menus are unchanged; the choice is kept with the other
   settings. (Crysterm's tear-off menus, which md builds against.)
 - A menu entry's description in the status bar takes as much of the bar as it
@@ -531,3 +531,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   they become usable while the menu is open. They still highlight under the
   pointer, to show why they are disabled. (Fixed in Crysterm, which md
   builds against.)
+- A torn-off menu's close button is a boxed `⊠`, reading as a window's
+  button rather than a letter, where it was a bare `✕`; an ASCII terminal
+  shows `x`. (Changed in Crysterm, which md builds against.)

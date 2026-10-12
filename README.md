@@ -224,7 +224,7 @@ GNOME 2's tear-off menus: drag either strip — or just click it — and a copy 
 the menu is torn off and stays on screen where you drop it, the point you
 grabbed staying under the pointer, with the same entries, kept in step with the
 menu's own (a check made on either shows on both). Drag either of its strips to
-move it, and click the `✕` at the right end of its top border to close it; an outside click leaves it up, and
+move it, and click the `⊠` (`x` on an ASCII terminal) at the right end of its top border to close it; an outside click leaves it up, and
 `Escape` only takes the keyboard back to the panes. Submenus tear off too,
 and a torn-off menu's own submenus open as usual. The ordinary menus are
 unchanged. Turning the option off hides the torn-off menus, and turning it
