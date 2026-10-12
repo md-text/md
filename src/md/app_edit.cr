@@ -776,9 +776,17 @@ module Md
         edited
         return true
       end
-      from, to = widen(doc, cursor.selection_start, cursor.selection_end, marker[0])
+      # The spaces at the selection's ends are left out first, so the
+      # markers already around the text are found and taken off, and new
+      # ones go against it.
+      from, to = cursor.selection_start, cursor.selection_end
       text = doc.plain_text(from, to)
-      if depth = wrapped_depth(text, marker)
+      unless text.blank?
+        from += text.size - text.lstrip.size
+        to -= text.size - text.rstrip.size
+      end
+      from, to = widen(doc, from, to, marker[0])
+      if depth = wrapped_depth(doc.plain_text(from, to), marker)
         doc.edit do
           Crysterm::TextCursor.new(doc, to - depth, to).remove_selected_text
           Crysterm::TextCursor.new(doc, from, from + depth).remove_selected_text
@@ -786,11 +794,6 @@ module Md
         end
         to -= 2 * depth
       else
-        lead = text.size - text.lstrip.size
-        unless lead == text.size
-          to -= text.size - text.rstrip.size
-          from += lead
-        end
         doc.edit do
           Crysterm::TextCursor.new(doc, to).insert_text marker
           Crysterm::TextCursor.new(doc, from).insert_text marker

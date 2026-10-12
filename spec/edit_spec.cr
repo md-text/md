@@ -358,6 +358,15 @@ describe "Md::App editing" do
     end
   end
 
+  it "takes the markers off text selected with spaces beside them, rather than adding more" do
+    with_app text: "a **word** here\n", view: false do |app|
+      select_text app, 2, 11 # "**word** "
+      app.toggle_bold.should be_true
+      app.markdown.should eq "a word here\n"
+      app.editor.selected_text.should eq "word"
+    end
+  end
+
   it "inserts the pair with the caret between when there is nothing to wrap" do
     with_app do |app|
       app.toggle_bold.should be_true
