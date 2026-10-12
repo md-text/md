@@ -14,7 +14,7 @@ module Md
     # The search wraps around with a notice, as vi's does. Every match is
     # underlined (`ExtraSelection`s, re-made as the text changes) and the
     # current one is the pane's selection; Edit → Clear Search Highlights takes the
-    # underlines off (vi's `:nohlsearch`).
+    # underlines off until the next search, `n` included (vi's `:nohlsearch`).
     #
     # Go to line (`:` in the viewer, `Ctrl-L` anywhere, Edit → Go to Line…)
     # asks for a source line and puts both panes there; `[` and `]` in the
@@ -50,6 +50,11 @@ module Md
     # The overlays this search put on each pane, so re-highlighting replaces
     # ours and leaves the pane's own (the viewer's focused link) alone.
     @match_selections = {} of Pane => Array(Crysterm::Widget::TextEdit::ExtraSelection)
+    # Whether the matches are underlined: from a search until Clear Search
+    # Highlights, which lasts until the next search — `n` is one, as it is
+    # for vi's `:nohlsearch` — so an edit meanwhile neither brings the
+    # underlines back nor pays for the scan that would.
+    @highlighting = false
 
     # A replace in progress: what the matches become, where it started (so
     # the wrap-around stops there), whether it has wrapped, whether it found
@@ -85,17 +90,23 @@ module Md
       @search_pattern = pattern
       @search_backward = backward
       @search_regex = compile_pattern pattern
+      @highlighting = true
       highlight_matches_everywhere
       find_next
     end
 
     # Moves to the next match in the search's direction, or against it with
-    # *reverse*, wrapping around the document with a notice. Returns whether a
-    # match was found; without a search yet it says so and returns false.
+    # *reverse*, wrapping around the document with a notice; the underlines
+    # come back when they were cleared. Returns whether a match was found;
+    # without a search yet it says so and returns false.
     def find_next(reverse : Bool = false) : Bool
       unless regex = @search_regex
         notice "No previous search"
         return false
+      end
+      unless @highlighting
+        @highlighting = true
+        highlight_matches_everywhere
       end
       backward = @search_backward != reverse
       found = search_pane.editor? ? find_in(@editor, regex, backward) : find_in(@viewer, regex, backward)
@@ -151,6 +162,7 @@ module Md
       @search_pattern = pattern
       @search_backward = false
       @search_regex = compile_pattern pattern
+      @highlighting = true
       highlight_matches_everywhere
       # A selection (the last search's match, say) is where the first match
       # is looked for, not past.
@@ -365,8 +377,10 @@ module Md
       end
     end
 
-    # Takes the match highlight off both panes; the pattern stays for `n`.
+    # Takes the match highlight off both panes, until the next search or
+    # `n`; the pattern stays.
     def clear_search_highlight : Nil
+      @highlighting = false
       Pane.each { |pane| set_match_selections pane, [] of Crysterm::Widget::TextEdit::ExtraSelection }
     end
 
@@ -434,7 +448,7 @@ module Md
       entry = if dir > 0
                 outline.find { |e| e.block > block }
               else
-                outline.reverse.find { |e| e.block < block }
+                outline.reverse_each.find { |e| e.block < block }
               end
       unless entry
         notice(dir > 0 ? "No heading below" : "No heading above")
@@ -450,10 +464,11 @@ module Md
     end
 
     # The search's overlay on *pane*, remade from the current text — after
-    # an edit, a stream chunk or a re-render replaced the text under it.
+    # an edit, a stream chunk or a re-render replaced the text under it —
+    # while the matches are highlighted at all.
     private def highlight_matches(pane : Pane = search_pane) : Nil
       regex = @search_regex
-      return unless regex
+      return unless regex && @highlighting
       doc = pane.editor? ? @editor.document : @viewer.document
       text = doc.to_plain_text
       format = Crysterm::TextCharFormat.new(underline: true)
@@ -467,7 +482,7 @@ module Md
 
     # Both panes' overlays remade (the panes share the pattern, not the text).
     private def highlight_matches_everywhere : Nil
-      return unless @search_regex
+      return unless @search_regex && @highlighting
       highlight_matches Pane::Editor
       highlight_matches Pane::Viewer
     end

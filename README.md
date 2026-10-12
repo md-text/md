@@ -378,7 +378,7 @@ valid one and plain text otherwise, and it ignores case unless it contains
 an uppercase letter, as vi's `smartcase` does. The search wraps around the
 end of the document with a notice. Every match is underlined in both panes
 and the current one is selected; Edit → Clear Search Highlights takes the underlines
-off, and `n` still knows the pattern.
+off until the next search — `n` is one, and still knows the pattern.
 
 Replacing (`Alt-H`, Edit → Replace…) works like vi's `:s///c`, at the same
 prompt: it asks for the pattern — the last search's is filled in — and

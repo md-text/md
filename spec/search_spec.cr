@@ -72,8 +72,12 @@ describe "Md::App search" do
       clear.trigger
       app.editor.extra_selections.should be_empty
       app.viewer.extra_selections.should be_empty
-      app.search_pattern.should eq "needle" # `n` still works
+      app.editor.insert_text "x" # an edit does not bring them back
+      app.editor.extra_selections.should be_empty
+      app.search_pattern.should eq "needle" # `n` still works, and the underlines return with it
       app.find_next.should be_true
+      app.editor.extra_selections.size.should eq 4
+      app.viewer.extra_selections.size.should eq 4
     end
   end
 
