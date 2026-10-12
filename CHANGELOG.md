@@ -421,6 +421,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   Cursor; the keys arrived but Crysterm's text edits had no binding for them,
   now Qt's `MoveToStartOfDocument` and `MoveToEndOfDocument`. (Fixed in
   Crysterm, which md builds against.)
+- The numeric keypad's `Enter` does what `Enter` does — a new line or a
+  continued list in the editor, reading on or following a link in the viewer
+  — and its digits and operators type, where they did nothing (on macOS
+  terminals among others): the terminal sends them in application keypad
+  mode (`\eOM`, `\eOp`…), which tput dropped, and under the kitty keyboard
+  protocol as keypad codes that went unused. (Fixed in tput, which md builds
+  against.)
 
 [Unreleased]: https://github.com/crystallabs/md/commits/main
 - Window → New no longer freezes md on macOS: once the new terminal window

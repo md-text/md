@@ -158,6 +158,8 @@ The menus show these keys next to their entries, spelled as
 Qt does (`Ctrl+O`), and the right end of the menu bar names the keys that
 open the menus. The keys work from any pane, after the pane had its turn —
 the editor keeps the keys it uses — and wait while a prompt is open.
+The numeric keypad's `Enter` is `Enter` wherever this says `Enter`, and
+its digits and operators type as the main keyboard's do.
 
 The editor has the usual editing keys: arrows and `Home`/`End`,
 `Ctrl-Home`/`Ctrl-End` for the start and the end of the document, `Shift` +
