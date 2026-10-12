@@ -439,6 +439,7 @@ module Md
     # menu's entries) refreshed.
     private def pane_shown : Nil
       sync_carets
+      track_toc # the outline may have changed while the pane was hidden
       refresh_status
     end
 
@@ -628,8 +629,10 @@ module Md
       highlight_matches Pane::Viewer
       # The viewer's caret kept its offset, not its place in the changed
       # text; an edit that left the editor's caret in place (a Delete)
-      # reports no move to re-place it.
+      # reports no move to re-place it; the outline under the caret may have
+      # changed too.
       sync_to_editor if @editor.focused?
+      track_toc
     end
 
     # Application-level keys, after the focused widget had its turn. The

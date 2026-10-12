@@ -225,4 +225,21 @@ describe "Md::App go to line and headings" do
       app.toc.selected_node.try(&.text).should eq "Alpha"
     end
   end
+
+  it "re-reads the table of contents' highlight when the outline changed under the caret" do
+    with_app text: "# A\n\ntext\n", view: false do |app, window|
+      app.editor.focus
+      app.editor.text_cursor = Crysterm::TextCursor.new(app.editor.document, app.editor.document.size)
+      app.editor.insert_text "\n# B\n\nmore"
+      app.show_pane Md::App::Pane::Toc
+      app.toc.nodes.map(&.text).should eq ["A", "B"]
+      app.toc.selected_node.try(&.text).should eq "B"
+      # A deletion that leaves the caret in place moves the highlight too.
+      app.editor.text_cursor = Crysterm::TextCursor.new(app.editor.document, app.markdown.index!("# B"), app.markdown.index!("more"))
+      press window, Tput::Key::Delete
+      app.markdown.should eq "# A\n\ntext\n\nmore"
+      app.toc.nodes.map(&.text).should eq ["A"]
+      app.toc.selected_node.try(&.text).should eq "A"
+    end
+  end
 end

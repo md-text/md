@@ -108,7 +108,11 @@ says so — and check it again to resize them. A hidden pane gives its width
 to the others and gets it back when shown. The sizes, and whether the panes
 are resizable, are kept across runs with the other settings; a wider or
 narrower terminal next time keeps the proportions of the editor and the
-viewer, and the table of contents its columns.
+viewer, and the table of contents its columns. `F4`, or View → Menu and
+Status Bars, hides the two bars and brings them back, so the panes take the
+whole terminal; the entries' keys keep working meanwhile, and a question
+asked in place of the status bar shows the bar while it is open. Kept across
+runs too.
 
 | Key                | Action                                                                    |
 | ------------------ | ------------------------------------------------------------------------- |
@@ -305,8 +309,9 @@ every line of the selection (Format → Indent and Outdent): a list item, or
 a selection with one in it, moves by the list's rules — an item nests under
 the item above by that item's content offset, two columns for `- `, three
 for `1. `, as CommonMark wants a child list, and no deeper (Markdown has no
-deeper level without an item to hold it, and the first item of a list has
-nothing to nest under, so those stay, with a notice), and outdents back to
+deeper level without an item to hold it, and the first item of a list — or
+a selection starting on one — has nothing to nest under, so those stay,
+with a notice), and outdents back to
 the indentation of the nearest shallower item — and any other line by
 Markdown's unit of four spaces, `Shift-Tab` taking up to four spaces, or a
 tab, off its front. `Tab` therefore never leaves the editor, as it does not

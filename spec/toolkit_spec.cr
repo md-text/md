@@ -47,9 +47,10 @@ describe "Md::App toolkit options" do
   end
 
   it "starts without links under a configured Never, and follows a link on a double click when asked" do
-    with_config %(render:\n  hyperlinks: "off"\n) do
+    with_config %(render:\n  hyperlinks: "off"\nmd:\n  link_double_click: true\n) do
       with_app Md::Source.new(path: "doc.md"), text: "See [the site](https://example.com).\n", view: true, config: true do |app|
         app.viewer.links_enabled?.should be_false
+        app.viewer.double_click_links?.should be_true
       end
     end
     with_app Md::Source.new(path: "doc.md"), text: "See [the site](https://example.com).\n", view: true do |app|

@@ -144,7 +144,7 @@ module Md
       previous.on(Crysterm::Event::Triggered) { previous_file }
       menu.add_action previous
       @previous_action = previous
-      following = Crysterm::Action.new "&Next File"
+      following = Crysterm::Action.new "&Next File" # `next` is a keyword
       following.shortcut = "Alt+Right"
       following.on(Crysterm::Event::Triggered) { next_file }
       menu.add_action following

@@ -247,6 +247,22 @@ describe "Md::App editing" do
     end
   end
 
+  it "reads the Task entry's state from the viewer's caret while reading, without showing the editor" do
+    with_app Md::Source.new(path: "doc.md"), text: "- [x] task\n- item\n", view: true do |app|
+      app.visible_panes.should eq [Md::App::Pane::Viewer]
+      format = menu(app, 2)
+      task = format.actions.find! { |a| a.text == "&Task" }
+      plain = app.viewer.document.plain_text
+      app.viewer.text_cursor = Crysterm::TextCursor.new(app.viewer.document, plain.index!("item"))
+      format.emit Crysterm::Event::AboutToShow
+      task.checked?.should be_false
+      app.viewer.text_cursor = Crysterm::TextCursor.new(app.viewer.document, plain.index!("task"))
+      format.emit Crysterm::Event::AboutToShow
+      task.checked?.should be_true
+      app.visible_panes.should eq [Md::App::Pane::Viewer] # opening a menu edits nothing
+    end
+  end
+
   it "boxes and checks every list item of a selection, each as it is, in one undo step" do
     with_app text: "- a\n- [x] b\ntext\n- [ ] c\n", view: false do |app|
       select_text app, 0, app.editor.document.size

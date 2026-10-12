@@ -71,6 +71,28 @@ describe "Md::App menu and status bars" do
     end
   end
 
+  it "shows the status bar for the Replace question too, and closes an open menu on F4" do
+    with_app Md::Source.new(path: "doc.md"), text: "aa bb aa\n", view: true do |app, window|
+      app.bars = false
+      app.replace_prompt
+      answer app, "aa"
+      answer app, "cc"
+      app.main.status_bar.prompting?.should be_true
+      app.main.status_bar.visible?.should be_true
+      question(app).should start_with "Replace?"
+      answer app, 'q'
+      app.main.status_bar.visible?.should be_false
+
+      app.bars = true
+      window.repaint
+      app.main.menu_bar.open_menu 1
+      app.main.menu_bar.menus[1].visible?.should be_true
+      press(window, Tput::Key::F4).accepted?.should be_true
+      app.main.menu_bar.menus[1].visible?.should be_false # the hidden bar took its menu down
+      app.main.menu_bar.visible?.should be_false
+    end
+  end
+
   it "keeps the choice across runs" do
     with_config "md:\n  bars: false\n" do |path|
       with_app Md::Source.new(path: "doc.md"), text: "# T\n", view: true, config: true do |app|

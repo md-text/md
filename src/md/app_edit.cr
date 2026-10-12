@@ -311,12 +311,7 @@ module Md
       editor = formatting_editor
       doc = editor.document
       first, last = selected_blocks
-      found = (first..last).each do |i|
-        if item = ListItem.parse(doc.blocks[i].text)
-          break({i, item})
-        end
-      end
-      if found
+      if found = first_item(doc, first, last)
         index, item = found
         if direction > 0
           # Markdown has no deeper level without an item to hold it: an
@@ -516,19 +511,27 @@ module Md
     # Puts the caret's item's state on the Task entry as the Format menu
     # opens: checked when the item at the caret — the first list item of
     # the selection, when there is one — has a task box; unchecked on an
-    # item without one, and on a line that is no item. Through the
-    # formatting target, so the viewer's caret counts while reading.
+    # item without one, and on a line that is no item. Read without moving
+    # anything (opening a menu is not an edit): the editor's caret while
+    # editing, the source of the viewer's otherwise.
     private def refresh_task_entry : Nil
       action = @task_action || return
-      first, last = selected_blocks
-      action.checked = !first_item(formatting_editor.document, first, last).try(&.task).nil?
+      doc = @editor.document
+      first, last = if @editor.focused?
+                      selected_blocks
+                    else
+                      line = doc.block_at(editor_position(@viewer.cursor_position)).index
+                      {line, line}
+                    end
+      action.checked = !first_item(doc, first, last).try(&.[1].task).nil?
     end
 
-    # The first list item among lines *first* to *last* of *doc*, or nil.
-    private def first_item(doc : Crysterm::TextDocument, first : Int32, last : Int32) : ListItem?
+    # The first list item among lines *first* to *last* of *doc*, with its
+    # line, or nil.
+    private def first_item(doc : Crysterm::TextDocument, first : Int32, last : Int32) : {Int32, ListItem}?
       (first..last).each do |i|
         if item = ListItem.parse(doc.blocks[i].text)
-          return item
+          return {i, item}
         end
       end
       nil

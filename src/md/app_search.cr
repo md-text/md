@@ -179,7 +179,7 @@ module Md
     # `""`. A key typed before the question is up goes into the editor.
     private def ask_replace : Nil
       prompt = @main.status_bar.line_prompt
-      prompt.prompt("Replace? (y)es (n)o (a)ll (q)uit ", "") { |text| replace_answered text }
+      status_prompt("Replace? (y)es (n)o (a)ll (q)uit ", "") { |text| replace_answered text }
       field = prompt.field
       @replace_key = field.on(Crysterm::Event::KeyPress) do |e|
         next if e.key || !e.char.in?('y', 'n', 'a', 'q')
