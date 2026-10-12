@@ -521,10 +521,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   terminal has it, the three keys come as `\e[P`, `\e[Q` and `\e[S`, which
   were read as nothing and dropped (`F3` comes as `\e[13~` there). (Fixed in
   Tput, which md builds against.)
-- The terminal's title is the document's name followed by ` • MD`
-  (`README.md • MD`, `[No Name] • MD` for a new document), where it was
-  `md - README.md` or `md`, and the Window menu lists the windows by their
-  documents' names. A terminal with a title stack gets its own title back
+- The terminal's title is the document's file name, without its directory,
+  followed by ` • MD` (`README.md • MD` for `docs/README.md`, `[No Name] • MD`
+  for a new document), where it was `md - docs/README.md` or `md`, and the
+  Window menu lists the windows by those names. A terminal with a title stack gets its own title back
   when md exits or is suspended, where the title md set before entering the
   alternate screen could be the one put back, and the title is set again on
   coming back from a suspend; a title under tmux is sent for tmux to take,

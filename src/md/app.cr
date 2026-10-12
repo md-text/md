@@ -314,8 +314,8 @@ module Md
       status
     end
 
-    # The terminal's title: the document's name, then the program's —
-    # `README.md • MD`, or `[No Name] • MD` for a document without one, as
+    # The terminal's title: the document's name (`#document_name`), then
+    # the program's — `README.md • MD`, or `[No Name] • MD` for a document without one, as
     # Vim names it. Crysterm sends it on any terminal (one without titles
     # ignores it) and puts the terminal's own title back when md hands the
     # terminal back, at exit and while suspended.
@@ -332,10 +332,16 @@ module Md
     end
 
     # The document's name as the title, the Window menu and the notices
-    # about windows give it: the file's, `stdin` for a stream, or
-    # `[No Name]`.
+    # about windows give it: the file's name without its directory
+    # (`README.md`, however the path was given — as typed on the command
+    # line or expanded by File → Open), `stdin` for a stream, or
+    # `[No Name]`. The status bar shows the whole path.
     def document_name : String
-      @source.name || "[No Name]"
+      if path = @source.path
+        File.basename path
+      else
+        @source.name || "[No Name]"
+      end
     end
 
     # The document's current Markdown source.

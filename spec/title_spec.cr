@@ -1,6 +1,7 @@
 require "./spec_helper"
 
-# The terminal's title: the document's name followed by ` • MD`, or
+# The terminal's title: the document's file name, without its directory,
+# followed by ` • MD`, or
 # `[No Name] • MD`, sent to the terminal at start and whenever the document
 # changes (File → Open, Save As, Close), the terminal's own title saved
 # first and put back when md lets the terminal go.
@@ -22,14 +23,22 @@ describe "Md::App terminal title" do
         sent_titles(window).last.should eq "[No Name] • MD"
 
         app.open_file(path).should be_true
-        sent_titles(window).last.should eq "#{path} • MD"
+        sent_titles(window).last.should eq "#{File.basename path} • MD"
 
         app.save_as(saved).should be_true
-        sent_titles(window).last.should eq "#{saved} • MD"
+        sent_titles(window).last.should eq "#{File.basename saved} • MD"
       end
     ensure
       File.delete? path
       File.delete? saved
+    end
+  end
+
+  it "names the file without its directory, the status bar keeping the path" do
+    with_app Md::Source.new(path: "docs/guide.md"), text: "# G\n" do |app, window|
+      app.title.should eq "guide.md • MD"
+      sent_titles(window).last.should eq "guide.md • MD"
+      app.main.status_bar.normal_widgets.first.as(Crysterm::Widget::Label).text.should contain "docs/guide.md"
     end
   end
 

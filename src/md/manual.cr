@@ -116,7 +116,8 @@ module Md
           the document as it streams in, following the tail until the reader
           scrolls up. The viewer re-renders as the source is edited, and the
           table of contents follows the document's headings. The terminal's title
-          is the document's name followed by \(lq\(bu MD\(rq, or
+          is the document's file name, without its directory, followed by
+          \(lq\(bu MD\(rq, or
           \(lq[No Name] \(bu MD\(rq for a new document; the terminal's own title
           comes back when md exits.
           .PP

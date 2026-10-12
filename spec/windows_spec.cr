@@ -81,8 +81,8 @@ describe "Md::App windows" do
       saved = File.tempname("md-spec-windows", ".md")
       begin
         app.save_as(saved).should be_true
-        window_menu(app).actions[3..].map(&.text).should eq [saved, "doc.md"]
-        window_menu(other).actions[3..].map(&.text).should eq [saved, "doc.md"]
+        window_menu(app).actions[3..].map(&.text).should eq [File.basename(saved), "doc.md"]
+        window_menu(other).actions[3..].map(&.text).should eq [File.basename(saved), "doc.md"]
         other.close_window
       ensure
         other.window.destroy

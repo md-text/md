@@ -36,7 +36,7 @@ describe "Md::App#close_document" do
 
         app.close_document
         app.source.path.should eq doc_c
-        app.title.should eq "#{doc_c} • MD"
+        app.title.should eq "#{File.basename doc_c} • MD"
         app.editor.text_cursor.block_number.should eq 12 # where c was left
         app.editor.document.modified?.should be_false
         (history.entry(doc_b) || fail("b.md was not remembered")).line.should eq 5

@@ -241,7 +241,7 @@ describe Md::App do
         File.read(other).should eq "copied"
         File.exists?(path).should be_false
         app.source.path.should eq other
-        app.title.should eq "#{other} • MD"
+        app.title.should eq "#{File.basename other} • MD"
         app.main.status_bar.prompting?.should be_false
         app.editor.focused?.should be_true
         File.read_lines(other) # a second save goes straight to the new name

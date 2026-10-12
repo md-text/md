@@ -99,9 +99,9 @@ parent while that branch is folded. A document arriving on standard
 input is rendered as it comes in, and the viewer keeps scrolling to the end
 until you scroll up.
 
-The terminal's title is the document's name followed by `• MD` —
-`README.md • MD`, `stdin • MD` for a stream, `[No Name] • MD` for a new
-document — and changes as you open, save as or close a file. A terminal
+The terminal's title is the document's file name, without its directory,
+followed by `• MD` — `README.md • MD` for `docs/README.md`, `stdin • MD`
+for a stream, `[No Name] • MD` for a new document — and changes as you open, save as or close a file. A terminal
 without titles ignores it; one that keeps a stack of titles (xterm, kitty,
 Ghostty, iTerm2, WezTerm, foot…) gets its own back when md exits or is
 suspended.
