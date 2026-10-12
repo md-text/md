@@ -1,20 +1,20 @@
 module Md
   class App
     # The document's file, beyond saving: opening another (File → Open…,
-    # `Ctrl-O`, asked for like Save As, `app_dialogs.cr`), re-reading it
-    # from disk (File → Reload,
-    # `Ctrl-R`) and following it as other programs rewrite it (View → Watch
-    # File, `--watch`), the guard that asks before unsaved changes are lost,
-    # and the history of recent files and positions (`History`, File → Open
-    # Recent).
+    # `Ctrl-O`, asked for like Save As, `app_dialogs.cr`), closing it for
+    # the next on the trail or a blank one (File → Close, `app_links.cr`),
+    # re-reading it from disk (File → Reload, `Ctrl-R`) and following it as
+    # other programs rewrite it (View → Watch File, `--watch`), the guard
+    # that asks before unsaved changes are lost, and the history of recent
+    # files and positions (`History`, File → Open Recent).
     #
-    # The guard (`#confirm_discard`) sits in front of quitting, opening and
-    # reloading: with changes unsaved it asks — Save, Don't save or Cancel —
-    # and the action goes ahead only on an answer that settles the changes.
-    # Quitting asks through Crysterm's close request (`Event::CloseRequest`,
-    # which the default `q`/`Ctrl-Q` keys honor), so File → Quit and the
-    # keys take the same path. Options → Ask Before Discarding Changes turns
-    # the guard off for those who save by habit.
+    # The guard (`#confirm_discard`) sits in front of quitting, opening,
+    # closing and reloading: with changes unsaved it asks — Save, Don't save
+    # or Cancel — and the action goes ahead only on an answer that settles
+    # the changes. Quitting asks through Crysterm's close request
+    # (`Event::CloseRequest`, which the default `q`/`Ctrl-Q` keys honor), so
+    # File → Quit and the keys take the same path. Options → Ask Before
+    # Discarding Changes turns the guard off for those who save by habit.
     #
     # Watching polls the file (`Crysterm::FileWatcher`) and reloads it when
     # its contents changed on disk — unless the editor holds unsaved changes,
@@ -116,6 +116,25 @@ module Md
     rescue ex : IO::Error
       notice "Cannot open #{path}: #{ex.message}"
       false
+    end
+
+    # Makes a blank new document, as `md` started with no file has (File →
+    # Close with nothing ahead on the trail, `app_links.cr`): no name — Save
+    # asks for one, the title and the status bar show none — nothing to
+    # watch, no recovery file yet (the one of the document left goes), and a
+    # stream being followed is abandoned. The editor is shown and focused to
+    # take the text; the other panes stay as they were.
+    private def blank_document : Nil
+      abandon_stream
+      drop_recovery
+      @source = Source.new
+      @window.title = title
+      apply_base_url
+      load ""
+      @editor.document.modified = false
+      show_pane(Pane::Editor).focus
+      setup_file
+      refresh_status
     end
 
     # Opens a file dropped on the window. A terminal has no drop of its

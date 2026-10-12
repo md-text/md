@@ -32,6 +32,14 @@ module Md
     # viewer's own history would only swap the viewer's document, so the
     # viewer's link following is turned off (`open_links = false`) and it is
     # left with the event.
+    #
+    # File → Close (`#close_document`) takes the document off the trail, as
+    # closing a tab takes it out of a browser's tab strip: the document goes
+    # through the guard, its place goes to the history as for any file left,
+    # and the place Next File would lead to takes its place — the way
+    # `QMdiArea::closeActiveSubWindow` activates the window after the one
+    # closed. With nothing ahead, a blank new document is left, as `md`
+    # starts with no file; Previous File still leads back from it.
 
     # A place the reader left: the document's file (`nil` for a new or
     # streamed document, which has nowhere to be reopened from) and the
@@ -107,6 +115,40 @@ module Md
       end
     end
 
+    # Closes the document (File → Close), through the guard, and takes it
+    # off the trail: the place Next File leads to is opened in its stead —
+    # where it was left, and a file that cannot be read any more is skipped
+    # for the one after it, its notice saying so — or, with none ahead, a
+    # blank new document (`#blank_document`), with a notice of the close (an
+    # opened file has its own). The Previous File places stay, so Previous
+    # File from the next document goes to the one the closed document was
+    # opened over. The closed file's position goes to the
+    # history, as when any file is left.
+    def close_document : Nil
+      confirm_discard do
+        closed = @source.name || "the new document"
+        remember_position
+        while target = @forward.pop?
+          next unless path = target.path
+          @retracing = true # a close is no step: the closed place is not kept
+          opened = begin
+            open_file path
+          ensure
+            @retracing = false
+          end
+          if opened
+            go_to_line target.line, target.column
+            break
+          end
+        end
+        unless opened
+          blank_document
+          notice "Closed #{closed}"
+        end
+        refresh_navigation
+      end
+    end
+
     # The links' part of the viewer's wiring (from `#wire_panes`): the follow
     # is ours, and `Backspace` (`Ctrl-H` on terminals that send it so) goes
     # to the previous file through our stack. The viewer binds the key to
@@ -155,16 +197,12 @@ module Md
     # Records the place left when a file is opened over the document
     # (`#open_file`): a Previous File step, unless Previous File or Next
     # File is doing the opening. A document without a file is gone for good
-    # once another is opened over it, and so are the places in it.
+    # once another is opened over it, so it leaves no place to come back to;
+    # the trail behind it stays, as it does behind the blank document File →
+    # Close leaves (`#close_document`).
     private def leave_document : Nil
       return if @retracing
-      if @source.path
-        push place
-      else
-        @back.clear
-        @forward.clear
-        refresh_navigation
-      end
+      push place if @source.path
     end
 
     # Puts the viewer on heading *name* — on its top row, as a browser lands
@@ -254,16 +292,17 @@ module Md
       refresh_navigation
     end
 
-    # Moves to the last place on *from*, the place left going onto *onto*.
-    # A place in another file is opened through the guard, so the move may
-    # be refused (Cancel); the stacks change only once it happened. Returns
+    # Moves to the last place on *from*, the place left going onto *onto* —
+    # unless it is in a document without a file, which is left for good. A
+    # place in another file is opened through the guard, so the move may be
+    # refused (Cancel); the stacks change only once it happened. Returns
     # whether there was a place to go to.
     private def travel(from : Array(Place), onto : Array(Place)) : Bool
       target = from.last? || return false
       here = place
       arrive(target) do |moved|
         from.pop
-        onto << here if here && moved
+        onto << here if here && here.path && moved
         refresh_navigation
       end
       true
@@ -272,7 +311,7 @@ module Md
     # Puts the panes at *target*, then runs *arrived* with whether they got
     # there: at once in the same document — which a place without a file is
     # always in, since a document without a file is only ever left for good
-    # — after opening the file otherwise. A file unreadable since it was
+    # and leaves no place on the stacks — after opening the file otherwise. A file unreadable since it was
     # left cannot be arrived at: its notice says so and the document stays
     # as it is; the place is still spent, so the next step leads somewhere.
     private def arrive(target : Place, &arrived : Bool ->) : Nil
