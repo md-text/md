@@ -23,12 +23,11 @@ describe "Md::App shortcuts" do
       menu(app, 0).actions.map(&.shortcut_text).should eq ["Ctrl+O", "", "Ctrl+R", "", "", "Alt+Left", "Alt+Right", "", "Ctrl+S", "", "", "Ctrl+Q"]
       menu(app, 1).actions.map(&.shortcut_text).should eq ["Ctrl+C", "", "Ctrl+V", "", "", "Ctrl+F", "Ctrl+G", "Alt+G", "Alt+H", "", "", "Alt+K", "Ctrl+L", "Alt+Down", "Alt+Up", "", ""]
       # Rewrap is a submenu; its Paragraph entry carries Alt+Q.
-      menu(app, 2).actions.map(&.shortcut_text).should eq ["Ctrl+B", "Alt+I", "Alt+C", "", "", "Tab", "Shift+Tab", "", "", "Alt+X", "", "Ctrl+Up", "Ctrl+Down", "", ""]
+      menu(app, 2).actions.map(&.shortcut_text).should eq ["Ctrl+B", "Alt+I", "Alt+C", "", "", "Tab", "Shift+Tab", "", "", "Alt+X", "", "Ctrl+Up", "Ctrl+Down", "", "Alt+W", "", "", ""]
       (menu(app, 2).actions.last.menu || fail("Rewrap has no submenu")).map(&.shortcut_text).should eq ["Alt+Q", ""]
-      # The pane entries' gesture is not the F-keys', so they name no key;
-      # only Soft Wrap has one.
-      view = menu(app, 3).actions
-      view.map(&.shortcut_text).should eq view.map { |action| action.text == "&Soft Wrap" ? "Alt+W" : "" }
+      # The pane entries' gesture is not the F-keys', so they name no key,
+      # nor does any other View entry.
+      menu(app, 3).actions.map(&.shortcut_text).uniq.should eq [""]
       app.main.menu_bar.open_menu 0
       window.repaint
       rows = window.dump.to_s.lines

@@ -1,7 +1,7 @@
 require "crysterm"
 require "yaml"
 
-# The View and Options menu choices as configuration options, in Crysterm's
+# The Edit, Format, View and Options menu choices as configuration options, in Crysterm's
 # registry (`Crysterm::Config`, which is the Superconf shard): each is a
 # `md.<name>` key in the config file, an `MD_<NAME>` environment variable, a
 # `--md-<name>` command-line option and a typed accessor
@@ -14,6 +14,14 @@ require "yaml"
 # Watch File and Overwrite Mode are not here: the first is per run, as
 # `--watch` is, the second is the editor's state.
 module Superconf
+  # Format.
+  option "md.soft_wrap", true, env: "MD_SOFT_WRAP",
+    description: "Format → Soft Wrap: fold a long line at the editor's edge instead of scrolling sideways"
+  option "md.hard_wrap", false, env: "MD_HARD_WRAP",
+    description: "Format → Hard Wrap: break a line being typed at the text width (80 columns without one)"
+  option "md.text_width", 0, env: "MD_TEXT_WIDTH",
+    description: "Format → Text Width: the most columns the text is laid out in, in both panes; 0 is the pane's width",
+    validate: ->(n : Int32) { n >= 0 }
   # View.
   option "md.sync_cursor", false, env: "MD_SYNC_CURSOR",
     description: "View → Sync Cursor: keep the editor's and the viewer's carets on the same place in the document"
@@ -21,13 +29,6 @@ module Superconf
     description: "View → Highlight Line: tint the caret's row in both panes"
   option "md.line_numbers", false, env: "MD_LINE_NUMBERS",
     description: "View → Line Numbers: number the editor's lines in a gutter"
-  option "md.soft_wrap", true, env: "MD_SOFT_WRAP",
-    description: "View → Soft Wrap: fold a long line at the editor's edge instead of scrolling sideways"
-  option "md.hard_wrap", false, env: "MD_HARD_WRAP",
-    description: "View → Hard Wrap: break a line being typed at the text width (80 columns without one)"
-  option "md.text_width", 0, env: "MD_TEXT_WIDTH",
-    description: "View → Text Width: the most columns the text is laid out in, in both panes; 0 is the pane's width",
-    validate: ->(n : Int32) { n >= 0 }
   option "md.center_text", true, env: "MD_CENTER_TEXT",
     description: "View → Center Text: center a capped text column in a wider pane rather than keep it at the left"
   option "md.horizontal_ruler", false, env: "MD_HORIZONTAL_RULER",

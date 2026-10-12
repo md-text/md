@@ -24,7 +24,7 @@ describe Md::Config do
       option = Crysterm::Config["md.text_width"]
       option.cli.should eq "--md-text-width"
       Superconf.env_name(option).should eq "MD_TEXT_WIDTH"
-      option.description.should start_with "View → Text Width"
+      option.description.should start_with "Format → Text Width"
       Crysterm::Config.md_text_width.should eq 0
       Md::Config.flags.should contain "--no-md-sync-cursor"
       Md::Config.help.should contain "--md-dialog-style=VALUE"

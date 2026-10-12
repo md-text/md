@@ -64,7 +64,7 @@ describe "Md::App Vi Mode" do
       app.editor.document.modified?.should be_true
       vi_type window, "u"
       app.markdown.should eq "hello world"
-      # md's own keys still work: Alt-W is View → Soft Wrap.
+      # md's own keys still work: Alt-W is Format → Soft Wrap.
       wrap = app.soft_wrap?
       vi_type window, "<M-w>"
       app.soft_wrap?.should eq !wrap

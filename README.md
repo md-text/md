@@ -128,7 +128,7 @@ runs too.
 | `F6`               | Cycle the theme: terminal, dark, light and the five Qt themes (View → Theme) |
 | `Ctrl-Z`           | Outside the editor, suspend md to the shell (`fg` resumes); in the editor, undo |
 | `Alt-F`, `Alt-E`, `Alt-M`, `Alt-V`, `Alt-O`, `Alt-N`, `Alt-P` | Open the File, Edit, Format, View, Options, Window and Help menus (`F10` too) |
-| `Alt-W`            | Soft Wrap in the editor on and off (View → Soft Wrap)                     |
+| `Alt-W`            | Soft Wrap in the editor on and off (Format → Soft Wrap)                     |
 | `Shift` + `Left`, `Right`, `Up`, `Down`, `Home`, `End`, `PageUp`, `PageDown` | Select from the cursor, in the editor and in the viewer |
 | `Ctrl-Home`, `Ctrl-End` | Go to the start and the end of the document, in the editor and in the viewer |
 | `Ctrl-O`           | Open a file; asks for the name (File → Open…)                             |
@@ -572,7 +572,8 @@ are the same place in the document, which makes the pairing easy to see.
 *Line Numbers* puts a gutter with the source line numbers on the editor's
 left, the way code editors do; the choice is kept across runs.
 
-Four more View entries lay the text out. *Soft Wrap* (`Alt-W`) is the
+Four more entries lay the text out, the first three in the Format menu,
+beside Hard Wrap and Rewrap, and the last in View. *Soft Wrap* (`Alt-W`) is the
 editor's: on, a long line folds at the pane's edge; off, it runs past the
 edge and the pane scrolls sideways. *Text Width* caps the width the text is
 laid out in — 72, 80, 100 or 120 columns, or *Unlimited* — so a line does
@@ -718,8 +719,8 @@ command, and so is every key no entry has:
 | -------- | - |
 | `open`, `reload`, `close`, `previous-file`, `next-file`, `save`, `save-as`, `quit` | The File menu |
 | `copy`, `copy-as-markdown`, `paste`, `paste-from-terminal`, `paste-from-command`, `paste-from-internal`, `find`, `find-backward`, `find-next`, `find-previous`, `replace`, `clear-search-highlights`, `command`, `go-to-line`, `next-heading`, `previous-heading`, `vi-mode` | The Edit menu, and `?` |
-| `bold`, `italic`, `code`, `code-block`, `indent`, `outdent`, `task`, `toggle-task`, `promote-heading`, `demote-heading`, `rewrap-paragraph`, `rewrap-document` | The Format menu |
-| `editor`, `viewer`, `toc`, `resizable-panes`, `bars`, `sync-cursor`, `highlight-line`, `line-numbers`, `soft-wrap`, `hard-wrap`, `center-text`, `horizontal-ruler`, `vertical-ruler`, `guides`, `images`, `media-trial`, `link-double-click`, `watch-file` | The View menu's check entries: each turns its setting on or off |
+| `bold`, `italic`, `code`, `code-block`, `indent`, `outdent`, `task`, `toggle-task`, `promote-heading`, `demote-heading`, `soft-wrap`, `hard-wrap`, `rewrap-paragraph`, `rewrap-document` | The Format menu (`soft-wrap` and `hard-wrap` turn their setting on or off) |
+| `editor`, `viewer`, `toc`, `resizable-panes`, `bars`, `sync-cursor`, `highlight-line`, `line-numbers`, `center-text`, `horizontal-ruler`, `vertical-ruler`, `guides`, `images`, `media-trial`, `link-double-click`, `watch-file` | The View menu's check entries: each turns its setting on or off |
 | `overwrite-mode`, `confirm-discard`, `autosave`, `backup-file`, `reduced-motion`, `detachable-menus`, `vi-config`, `load-config`, `save-config`, `save-config-as`, `clear-caches` | The Options menu |
 | `new-window`, `close-window`, `manual`, `about` | The Window and Help menus |
 | `toggle-editor`, `toggle-viewer`, `toggle-toc`, `toggle-bars`, `cycle-mouse-mode`, `cycle-theme`, `suspend`, `resize-panes` | `F1`–`F6`, `Ctrl-Z` and `Alt-R` |
@@ -734,9 +735,9 @@ not know.
 
 ### Settings
 
-The choices made in the Edit, View and Options menus — Vi Mode, Resizable Panes, Menu and
-Status Bars, Sync Cursor, Highlight Line, Line Numbers, Soft Wrap, Hard
-Wrap, Text Width, Center Text, Rulers (Horizontal and Vertical), Guides,
+The choices made in the Edit, Format, View and Options menus — Vi Mode, Soft Wrap, Hard
+Wrap, Text Width, Resizable Panes, Menu and
+Status Bars, Sync Cursor, Highlight Line, Line Numbers, Center Text, Rulers (Horizontal and Vertical), Guides,
 Images, Terminal Links → Double-click to Open, Dialog Style, Ask Before Discarding
 Changes, Auto-Save, Keep a Backup File, the mouse mode, the clipboard mode,
 Tooltips, the theme and Crysterm's own Color Depth, Terminal Links, Media

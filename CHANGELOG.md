@@ -156,8 +156,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   without a name, standard input included — and removes it on a save or a
   normal exit, so the directory holds only what a crash lost; opening a file
   whose copy is newer than it gets a notice naming the copy.
-- View → Soft Wrap (`Alt-W`) folds long lines in the editor at the pane's
-  edge or lets them run past it with sideways scrolling; View → Text Width
+- Format → Soft Wrap (`Alt-W`) folds long lines in the editor at the pane's
+  edge or lets them run past it with sideways scrolling; Format → Text Width
   caps the text at 72, 80, 100 or 120 columns for a wide terminal, in both
   panes — or, with To Last Guide, at the rightmost guide pulled onto the
   editor while editing, the viewer otherwise — and View → Center Text puts the capped column in the middle of the
@@ -285,7 +285,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `Shift` + a movement key — the arrows, `Home`/`End`, `PageUp`/`PageDown`
   — selects from the cursor in the viewer as well as in the editor, for
   `Ctrl-C` to copy; a spec now holds both panes to it.
-- View → Hard Wrap, off by default and kept with the settings: Kate's static
+- Format → Hard Wrap, off by default and kept with the settings: Kate's static
   word wrap. As a line is typed past the wrap column — the Text Width, or
   80 without one — it is broken at the last space before the column and the
   rest carried to a new line, which keeps its place in the Markdown: a list
@@ -394,6 +394,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - The Format menu is grouped by what an entry works on: Bold, Italic, Code
   and Code Block; then Indent and Outdent, in a section of their own below
   them; then the task entries; then the heading level; then Rewrap.
+- Soft Wrap (`Alt-W`), Hard Wrap and Text Width (with To Last Guide) are in
+  the Format menu, before Rewrap, which refills to that width, where they
+  were in View; their commands and settings keep their names.
 - The settings live in `$XDG_CONFIG_HOME/md/config.yml`
   (`~/.config/md/config.yml`), YAML in the layout `--crysterm-dump-config`
   prints, one mapping per option group, instead of `settings.json`, which is

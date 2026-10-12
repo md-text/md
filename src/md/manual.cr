@@ -40,7 +40,7 @@ module Md
       {"Alt-Down, Alt-Up, ], [", "Jump to the next and the previous heading (] and [ outside the editor)."},
       {"Backspace, Alt-Left, Alt-Right", "Back to the file you were in before the last link or open, where you left it (Backspace outside the editor; File -> Previous File), and on to the next again (File -> Next File)."},
       {"Alt-R", "Resize the panes from the keyboard (when View -> Resizable Panes is on): Left and Right move the divider next to the pane, Enter or Escape return."},
-      {"Alt-W", "Soft Wrap in the editor on and off."},
+      {"Alt-W", "Soft Wrap in the editor on and off (Format -> Soft Wrap)."},
       {"Enter", "In the editor, on a list item: continue the list; on an empty item, end it."},
       {"Ctrl-B, Alt-I, Alt-C", "Bold, italic and code around the selection or the word at the caret, or off again."},
       {"Alt-X", "Tick or untick a list item's task box, or give it a ticked one, a line of text becoming an item (Format -> Toggle Task Checkbox; Format -> As a Task, a check entry, adds and removes the box)."},

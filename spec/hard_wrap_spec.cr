@@ -1,7 +1,7 @@
 require "./spec_helper"
 require "file_utils"
 
-# View → Hard Wrap: Kate's static word wrap in the editor, through Crysterm's
+# Format → Hard Wrap: Kate's static word wrap in the editor, through Crysterm's
 # `hard_wrap_column`, with the carried line continuing the Markdown it is in
 # (`MarkdownEdit#hard_wrap_prefix`); and Format → Rewrap → Paragraph, the
 # refill of a paragraph to the same column.
@@ -17,9 +17,9 @@ private def type(window, text)
   text.each_char { |char| press window, char }
 end
 
-# The View menu's Hard Wrap entry.
+# The Format menu's Hard Wrap entry.
 private def hard_wrap_entry(app)
-  menu(app, 3).actions.find! { |a| a.text.downcase == "h&ard wrap" }
+  menu(app, 2).actions.find! { |a| a.text == "&Hard Wrap" }
 end
 
 describe "Md::App hard wrap" do

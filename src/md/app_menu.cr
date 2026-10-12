@@ -4,12 +4,13 @@ module Md
     # the next file, save, quit), Edit (copy, paste and paste from a named
     # source, find, repeat the find, replace, go to a line, jump between
     # headings, Vi Mode, `app_vi.cr`), Format (the Markdown markup, `app_edit.cr`: the markup around text, then
-    # indentation, the task boxes and the heading level, then Rewrap), View (which panes
+    # indentation, the task boxes and the heading level, then the wrapping —
+    # soft wrap, hard wrap, a text width, `app_view.cr`, and Rewrap), View (which panes
     # are shown and whether they resize, whether the two bars are shown,
     # whether the editor's and the viewer's
     # carets are kept in sync, whether the caret's line is highlighted,
-    # whether the editor numbers its lines, the text's layout — soft wrap,
-    # hard wrap, a text width and its centering, rulers and guides — the
+    # whether the editor numbers its lines, the text's layout — the text
+    # width's centering, rulers and guides — the
     # theme the window is drawn in, whether and how images are drawn (Images
     # and Media Backend, with its Change for 5s trial, `app_media.cr`), the
     # color depth and the links
@@ -46,8 +47,8 @@ module Md
     # Qt's spelling, `Ctrl+O`): the menu shows it in its right-hand column,
     # and Crysterm fires the entry on the key from anywhere in the window —
     # after the focused pane had its turn, so the editor keeps the keys it
-    # uses, and not while a prompt is open. Of the View entries only Soft
-    # Wrap (`Alt+W`, free in the editor, where `Alt+Z` is redo) has one: the
+    # uses, and not while a prompt is open. Of the settings only Soft Wrap
+    # (`Alt+W`, in Format) has one, and the View entries none: the
     # pane keys (`F1`–`F3`, `#app_key`) show and focus a pane or hide the
     # focused one, a different gesture from the entries' show-and-hide, so
     # they stay application keys, with `F4` (the bars, whose entry would
@@ -125,13 +126,8 @@ module Md
       add_toggle view, "&Highlight Line", "highlight-line", @highlight_line, option_tip("md.highlight_line")
       add_toggle view, "Line &Numbers", "line-numbers", @line_numbers, option_tip("md.line_numbers")
       view.add_separator
-      add_toggle(view, "&Soft Wrap", "soft-wrap", @soft_wrap, option_tip("md.soft_wrap")).shortcut = "Alt+W"
-      add_toggle view, "H&ard Wrap", "hard-wrap", @hard_wrap, option_tip("md.hard_wrap")
-      # To Last Guide sets the width by a guide (`app_view.cr`).
-      last_guide = Crysterm::Action.new "To &Last Guide", name: "text-width-to-last-guide"
-      last_guide.on(Crysterm::Event::Triggered) { text_width_to_last_guide }
-      tip last_guide, "Set the text width by the last guide pulled off the column ruler"
-      add_choices(view, "Te&xt Width", "text-width", TEXT_WIDTHS, @text_width, option_tip("md.text_width"), ->text_width_tip(Int32), [last_guide]) { |width| text_width_label width }
+      # Soft Wrap, Hard Wrap and Text Width are Format's, with Rewrap
+      # (`app_edit.cr`); the centering of the text column stays here.
       add_toggle view, "&Center Text", "center-text", @center_text, option_tip("md.center_text")
       # `u` and `g`: Resizable Panes takes `z`, so `r` is free, but `u` stays.
       rulers = view.add_submenu "R&ulers", [toggle_action("&Horizontal", "horizontal-ruler", @horizontal_ruler, option_tip("md.horizontal_ruler")), toggle_action("&Vertical", "vertical-ruler", @vertical_ruler, option_tip("md.vertical_ruler"))]

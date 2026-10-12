@@ -393,7 +393,7 @@ describe "Md::App menus" do
       menu(app, 0).actions.map(&.text).should eq ["&Open…", "Open &Recent", "&Reload", "&Close", "", "&Previous File", "&Next File", "", "&Save", "Save &As…", "", "&Quit"]
       menu(app, 0).actions[1].enabled?.should be_false # no history, nothing recent
       menu(app, 4).actions.map(&.text).should eq ["&Overwrite Mode", "&Ask Before Discarding Changes", "A&uto-Save", "&Keep a Backup File", "&Mouse", "&Clipboard", "Re&duced Motion", "D&etachable Menus", "&Tooltips", "Vi Mode Uses Your &Neovim Config", "", "&Load Config…", "&Save Config", "Sa&ve Config As…", "", "Clea&r Caches…"]
-      menu(app, 2).actions.map(&.text).should eq ["&Bold", "&Italic", "&Code", "Code B&lock", "", "I&ndent", "&Outdent", "", "As a &Task", "Toggle Task Chec&kbox", "", "&Promote Heading", "&Demote Heading", "", "Re&wrap (to 80 Columns)"]
+      menu(app, 2).actions.map(&.text).should eq ["&Bold", "&Italic", "&Code", "Code B&lock", "", "I&ndent", "&Outdent", "", "As a &Task", "Toggle Task Chec&kbox", "", "&Promote Heading", "&Demote Heading", "", "&Soft Wrap", "&Hard Wrap", "Te&xt Width", "Re&wrap (to 80 Columns)"]
       menu(app, 3).actions.map(&.text).should contain "The&me" # with the other appearance choices
     end
   end

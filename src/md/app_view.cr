@@ -1,16 +1,16 @@
 module Md
   class App
-    # The View menu's layout choices for the text: whether the editor soft
-    # wraps, how wide the text may be and where the column sits — Qt's
+    # The layout choices for the text, Format's and View's: whether the
+    # editor soft wraps, how wide the text may be and where the column sits — Qt's
     # `QPlainTextEdit::setLineWrapMode` and `QTextEdit`'s
     # `setLineWrapColumnOrWidth` in md's clothes.
     #
-    # View → Soft Wrap (`#soft_wrap?`) is the editor's line wrap mode: on,
+    # Format → Soft Wrap (`#soft_wrap?`) is the editor's line wrap mode: on,
     # a long line folds at the pane's edge (`WidgetWidth`); off, it runs
     # past it and the pane scrolls sideways (`NoWrap`). The viewer always
     # wraps, as a page does.
     #
-    # View → Text Width (`#text_width`) caps the width the text is laid
+    # Format → Text Width (`#text_width`) caps the width the text is laid
     # out in — 72, 80, 100 or 120 columns, or no cap — for a wide terminal,
     # where a line that runs the whole width is hard to read. It applies to
     # both panes (Crysterm's `line_wrap_column`), so with Sync Cursor the
@@ -33,7 +33,7 @@ module Md
     # mouse, dragged by their ruler end, and dropped on another guide, or
     # back on the ruler, to be rid of them. The two edge guides stay.
     #
-    # View → Hard Wrap (`#hard_wrap?`) is Kate's static word wrap
+    # Format → Hard Wrap (`#hard_wrap?`) is Kate's static word wrap
     # (Settings → Editor → Editing → Static Word Wrap) in the editor: a line
     # that grows past the wrap column as it is typed is broken at the last
     # space before the column and the rest carried to a new line
@@ -67,7 +67,7 @@ module Md
       @soft_wrap.value
     end
 
-    # Turns the editor's soft wrap on or off (View → Soft Wrap).
+    # Turns the editor's soft wrap on or off (Format → Soft Wrap).
     def soft_wrap=(value : Bool) : Bool
       @soft_wrap.value = value
     end
@@ -77,7 +77,7 @@ module Md
       @text_width.value
     end
 
-    # Caps the text width (View → Text Width); any width goes, the menu
+    # Caps the text width (Format → Text Width); any width goes, the menu
     # offers `TEXT_WIDTHS`.
     def text_width=(value : Int32) : Int32
       @text_width.value = Math.max(value, 0)
@@ -131,7 +131,7 @@ module Md
       @hard_wrap.value
     end
 
-    # Turns the editor's hard wrap on or off (View → Hard Wrap).
+    # Turns the editor's hard wrap on or off (Format → Hard Wrap).
     def hard_wrap=(value : Bool) : Bool
       @hard_wrap.value = value
     end
@@ -190,7 +190,7 @@ module Md
       refresh_status
     end
 
-    # View → Text Width → To Last Guide: the width set to the column of the
+    # Format → Text Width → To Last Guide: the width set to the column of the
     # rightmost guide pulled onto the focused pane (the editor while
     # editing, the viewer otherwise) — where the text is to end — so a guide
     # dragged to a good place becomes the width, as a design tool's margin

@@ -19,7 +19,7 @@ module Md
       super
     end
 
-    # The line a hard wrap (View → Hard Wrap, Crysterm's `hard_wrap_column`)
+    # The line a hard wrap (Format → Hard Wrap, Crysterm's `hard_wrap_column`)
     # carries over from *line*, the caret's, starts as a continuation of it
     # in the Markdown: with the item's content indentation on a list item,
     # with the quote markers and indentation of any other line
@@ -87,7 +87,7 @@ module Md
     # Apply Word Wrap) refills the caret's paragraph — or every paragraph
     # the selection touches — and Rewrap → Document every paragraph of the
     # document, to the wrap column (`#wrap_column`, `app_view.cr`), the
-    # companion of View → Hard Wrap, which breaks lines as they are typed. A paragraph is a run of lines without a blank one,
+    # companion of Format → Hard Wrap, which breaks lines as they are typed. A paragraph is a run of lines without a blank one,
     # in the same blockquote, that no list item, heading, fence, table row
     # or rule starts or interrupts (`#continues?`); a list item's lines
     # keep the marker and take the item's content indentation, a quote's
@@ -662,6 +662,17 @@ module Md
       named "promote-heading", tip format.add_action("&Promote Heading", shortcut: "Ctrl+Up") { promote_heading }, "Take one # off the heading of the caret's section, from anywhere in it; a # heading becomes a paragraph"
       named "demote-heading", tip format.add_action("&Demote Heading", shortcut: "Ctrl+Down") { demote_heading }, "Add a # to the heading of the caret's section, from anywhere in it, down to ######; before any heading, the caret's paragraph becomes a # heading"
       format.add_separator
+      # How the lines wrap, as typed and shown, and how wide the text is
+      # (`app_view.cr`), with Rewrap, which refills to that width. Soft
+      # Wrap is the one setting with a key (`Alt+W`, free in the editor,
+      # where `Alt+Z` is redo).
+      add_toggle(format, "&Soft Wrap", "soft-wrap", @soft_wrap, option_tip("md.soft_wrap")).shortcut = "Alt+W"
+      add_toggle format, "&Hard Wrap", "hard-wrap", @hard_wrap, option_tip("md.hard_wrap")
+      # To Last Guide sets the width by a guide (`app_view.cr`).
+      last_guide = Crysterm::Action.new "To &Last Guide", name: "text-width-to-last-guide"
+      last_guide.on(Crysterm::Event::Triggered) { text_width_to_last_guide }
+      tip last_guide, "Set the text width by the last guide pulled off the column ruler"
+      add_choices(format, "Te&xt Width", "text-width", TEXT_WIDTHS, @text_width, option_tip("md.text_width"), ->text_width_tip(Int32), [last_guide]) { |width| text_width_label width }
       paragraph = Crysterm::Action.new "&Paragraph", name: "rewrap-paragraph"
       paragraph.shortcut = "Alt+Q"
       paragraph.on(Crysterm::Event::Triggered) { rewrap_paragraph }
