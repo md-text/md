@@ -70,6 +70,43 @@ describe Md::CLI do
     end
   end
 
+  it "reports an error escaping the running app as the app's, not as a usage error" do
+    with_config do
+      dir = File.tempname("md-spec-run")
+      previous = {ENV["XDG_STATE_HOME"]?, ENV["XDG_CACHE_HOME"]?}
+      log_file = Crysterm::Config.log_file
+      ENV["XDG_STATE_HOME"] = File.join(dir, "state")
+      ENV["XDG_CACHE_HOME"] = File.join(dir, "cache")
+      window = headless_window
+      begin
+        error = IO::Memory.new
+        built = nil
+        # An `ArgumentError`, as a usage error is: raised by the app, it is
+        # the app's.
+        status = Md::CLI.run([File.join(dir, "notes.md")], stdout: IO::Memory.new, stderr: error, window: window) do |app|
+          built = app
+          raise ArgumentError.new("broken in the app")
+        end
+        built.try(&.window).should be window
+        status.should eq 1
+        error.to_s.should start_with "md: internal error: broken in the app (ArgumentError)"
+        error.to_s.should_not contain "Usage:"
+      ensure
+        window.destroy
+        # The log file `.run` gave a default, in the scratch cache.
+        Crysterm::Config.set_default "log.file", log_file if log_file.empty?
+        {"XDG_STATE_HOME", "XDG_CACHE_HOME"}.each_with_index do |name, i|
+          if value = previous[i]
+            ENV[name] = value
+          else
+            ENV.delete name
+          end
+        end
+        FileUtils.rm_rf dir
+      end
+    end
+  end
+
   it "rejects a second file argument" do
     error = IO::Memory.new
     Md::CLI.run(["a.md", "b.md"], stdout: IO::Memory.new, stderr: error).should eq 2

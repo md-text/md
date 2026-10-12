@@ -106,8 +106,16 @@ module Md
 
     # Runs the program with the given arguments and returns the process exit
     # status. `stdout`/`stderr`/`stdin` are injectable so that specs can
-    # capture and feed them.
-    def self.run(args : Array(String), stdout : IO = STDOUT, stderr : IO = STDERR, stdin : IO = STDIN) : Int32
+    # capture and feed them, and so is the *window* the app is built on (by
+    # default a new one, on the terminal).
+    def self.run(args : Array(String), stdout : IO = STDOUT, stderr : IO = STDERR, stdin : IO = STDIN, window : Crysterm::Window? = nil) : Int32
+      run(args, stdout, stderr, stdin, window, &.run)
+    end
+
+    # The same, with the app, once built, handed to the block to run, which
+    # returns the exit status: for a spec, in place of `App#run`'s loop on
+    # the terminal. What the block raises escapes the app, as from `App#run`.
+    def self.run(args : Array(String), stdout : IO = STDOUT, stderr : IO = STDERR, stdin : IO = STDIN, window : Crysterm::Window? = nil, & : App -> Int32) : Int32
       # A usage error is one of the command line's: once the window is built,
       # an `ArgumentError` is the app's own and is reported as such below.
       app = begin
@@ -140,13 +148,13 @@ module Md
         # that fits no option is an `Error`, reported below.
         Config.configure argv: args
         log_to_file
-        launch(source, options, stdin)
+        launch(source, options, stdin, window)
       rescue ex : ArgumentError | OptionParser::Exception
         stderr.puts "md: #{ex.message}"
         stderr.puts help
         return 2
       end
-      app.run
+      yield app
     rescue ex : Error
       stderr.puts "md: #{ex.message}"
       1
@@ -258,17 +266,17 @@ module Md
     # along, and the View and Options choices are linked to the
     # configuration (`Config`, loaded by `.run`) and kept in its file;
     # `--watch` follows the file from the start, `--line` opens on that
-    # line.
-    private def self.launch(source : Source, options : Options, stdin : IO) : App
+    # line. The app is built on *window* when there is one.
+    private def self.launch(source : Source, options : Options, stdin : IO, window : Crysterm::Window?) : App
       history = History.load
       view = options.view
       line = options.line
       if source.stdin?
-        App.new source, stream: stdin, view: view.nil? ? true : view, history: history, config: true, line: line
+        App.new source, stream: stdin, view: view.nil? ? true : view, window: window, history: history, config: true, line: line
       elsif (path = source.path) && File.exists?(path)
-        App.new source, text: read_file(path), view: view.nil? ? true : view, history: history, config: true, watch: options.watch?, line: line
+        App.new source, text: read_file(path), view: view.nil? ? true : view, window: window, history: history, config: true, watch: options.watch?, line: line
       else
-        App.new source, view: view || false, history: history, config: true, watch: options.watch?, line: line
+        App.new source, view: view || false, window: window, history: history, config: true, watch: options.watch?, line: line
       end
     end
   end
