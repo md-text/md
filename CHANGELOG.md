@@ -443,3 +443,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   grid broke apart (the manual's tables, at a terminal's usual width). A
   table is laid out again as the window is resized. (Fixed in Crysterm,
   which md builds against.)
+- Window → Close Current on the last window (and Quit, which closes each
+  window) leaves the terminal with its cursor shown, as it was before md
+  started: the window handed the terminal back first, and the editor, giving
+  up the focus as the window was torn down afterwards, hid the cursor again.
+  A terminal whose cursor is not white also keeps its own color, where md
+  left it white. (Fixed in Crysterm and Tput, which md builds against.)
