@@ -351,7 +351,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Commands: everything md does has a name (`save`, `soft-wrap`,
   `theme-breeze-dark`, `toggle-editor`…), and the command line runs it by
   that name, as vi's `:` runs an ex command — `:` in the viewer, which still
-  goes to a line given a number, or `Alt-K` (Edit → Run Command…) anywhere,
+  goes to a line given a number, or `Alt-K` (Edit → Run md Command…) anywhere,
   `Tab` completing the name. Every menu entry is a command, and the keys no
   entry has (`F1`–`F6`, `Ctrl-Z`, `Alt-R`) are now named actions too. The
   names are Crysterm's action names (`Action#name`, Qt's `objectName`),

@@ -14,7 +14,7 @@ module Md
     # the fly — the recent files, the windows, the kill ring — are not
     # commands.
     #
-    # The command line is the viewer's `:` and Edit → Run Command… (`Alt-K`,
+    # The command line is the viewer's `:` and Edit → Run md Command… (`Alt-K`,
     # as Qt Creator's locator is `Ctrl-K`): a line number goes to the line, as
     # it did, anything else is a command name, `Tab` completing it
     # (`#command_prompt`). Crysterm finds the action by name among those the

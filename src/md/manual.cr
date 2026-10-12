@@ -36,7 +36,7 @@ module Md
       {"Ctrl-G, Alt-G, n, N", "Next and previous match (n and N outside the editor)."},
       {"Alt-H", "Replace: asks for the pattern and the replacement, then about each match (Edit -> Replace)."},
       {"Ctrl-L", "Go to a source line (asks for the number; Edit -> Go to Line)."},
-      {":, Alt-K", "The command line: a command's name runs it, Tab completing it, and a number goes to that source line (`:' outside the editor; Edit -> Run Command)."},
+      {":, Alt-K", "The command line: a command's name runs it, Tab completing it, and a number goes to that source line (`:' outside the editor; Edit -> Run md Command)."},
       {"Alt-Down, Alt-Up, ], [", "Jump to the next and the previous heading (] and [ outside the editor)."},
       {"Backspace, Alt-Left, Alt-Right", "Back to the file you were in before the last link or open, where you left it (Backspace outside the editor; File -> Previous File), and on to the next again (File -> Next File)."},
       {"Alt-R", "Resize the panes from the keyboard (when View -> Resizable Panes is on): Left and Right move the divider next to the pane, Enter or Escape return."},

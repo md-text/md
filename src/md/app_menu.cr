@@ -97,7 +97,7 @@ module Md
       named "replace", tip edit.add_action("&Replace…", shortcut: "Alt+H") { replace_prompt }, "Replace the matches of a pattern, asking at each one"
       named "clear-search-highlights", tip edit.add_action("Clear Search &Highlights") { clear_search_highlight }, "Stop highlighting the last search's matches"
       edit.add_separator
-      named "command", tip edit.add_action("Run Comman&d…", shortcut: "Alt+K") { command_prompt }, "Run a command by name, or go to a line by number, as the viewer's : does; Tab completes the name"
+      named "command", tip edit.add_action("Run md Comman&d…", shortcut: "Alt+K") { command_prompt }, "Run one of md's own commands by name (not a shell command), or go to a line by number, as the viewer's : does; Tab completes the name"
       named "go-to-line", tip edit.add_action("&Go to Line…", shortcut: "Ctrl+L") { go_to_line_prompt }, "Put the caret on a source line, asked for by number"
       named "next-heading", tip edit.add_action("Nex&t Heading", shortcut: "Alt+Down") { jump_heading 1 }, "Jump to the next heading"
       named "previous-heading", tip edit.add_action("Pre&vious Heading", shortcut: "Alt+Up") { jump_heading -1 }, "Jump to the previous heading"

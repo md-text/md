@@ -140,7 +140,7 @@ runs too.
 | `Ctrl-G`, `Alt-G`, `n`, `N` | Next and previous match (`n` and `N` outside the editor; Edit → Find Next, Find Previous) |
 | `Alt-H`            | Replace; asks for the pattern and the replacement, then about each match (Edit → Replace…) |
 | `Ctrl-L`           | Go to a source line; asks for the number (Edit → Go to Line…)             |
-| `:`, `Alt-K`       | The command line: a command's name runs it, `Tab` completing it, and a number goes to that source line (`:` outside the editor; Edit → Run Command…; see Commands) |
+| `:`, `Alt-K`       | The command line: a command's name runs it, `Tab` completing it, and a number goes to that source line (`:` outside the editor; Edit → Run md Command…; see Commands) |
 | `Alt-Down`, `Alt-Up`, `]`, `[` | Jump to the next and previous heading (`]` and `[` outside the editor; Edit → Next Heading, Previous Heading) |
 | `Alt-R`            | Resize the panes from the keyboard (when View → Resizable Panes is on): `Left`/`Right` move the divider next to the pane, `Enter`/`Escape` return |
 | `Backspace`        | Outside the editor, go back to the file you were in before the last link or open, where you left it (File → Previous File) |
@@ -696,7 +696,7 @@ status bar. `Alt-P` opens the menu, since `Alt-H` is Replace.
 
 Everything md does has a name, and the command line runs it by that name,
 as vi's `:` runs an ex command: `:` in the viewer or the table of contents,
-or `Alt-K` (Edit → Run Command…) anywhere, asks for a command; `Tab`
+or `Alt-K` (Edit → Run md Command…) anywhere, asks for a command; `Tab`
 completes the name and cycles through the names that start with what was
 typed. A number instead goes to that source line. Every menu entry is a
 command, and so is every key no entry has:
