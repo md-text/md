@@ -86,7 +86,7 @@ describe "Md::App Vi Mode" do
       name_field(app).text.should eq " :w"
       vi_type window, "<CR>"
       settle { File.read(path).includes? "new line" }
-      File.read(path).should eq "# Title\n\nnew line"
+      File.read(path).should eq "# Title\nnew line\n"
       app.editor.document.modified?.should be_false
       name_field(app).text.should_not contain ":w"
 
