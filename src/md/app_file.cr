@@ -156,10 +156,7 @@ module Md
         notice "No file to reload"
         return
       end
-      confirm_discard do
-        reload_from path
-        notice "Reloaded #{path}"
-      end
+      confirm_discard { notice "Reloaded #{path}" if reload_from path }
     end
 
     # Runs *action*, once unsaved changes are out of the way: at once when
@@ -217,8 +214,10 @@ module Md
     # keeping its place, the editor's caret where it was (clamped). The
     # document is then the file's, as after a save, so the recovery file
     # of the edits given up goes too (`app_autosave.cr`): left behind, it
-    # would announce them as lost at the next open.
-    private def reload_from(path : String) : Nil
+    # would announce them as lost at the next open. Returns whether the
+    # file could be read; when not, its notice says so and the document
+    # stays as it was.
+    private def reload_from(path : String) : Bool
       text = File.read path
       caret = @editor.cursor_position
       @loading = true
@@ -233,8 +232,10 @@ module Md
       text_changed
       highlight_matches_everywhere
       refresh_status
+      true
     rescue ex : IO::Error
       notice "Cannot reload #{path}: #{ex.message}"
+      false
     end
 
     # Points the watcher at the document's file, or takes it down: run when
@@ -260,8 +261,7 @@ module Md
         return
       end
       return if File.exists?(path) && File.read(path) == markdown
-      reload_from path
-      notice "Reloaded #{path} (changed on disk)"
+      notice "Reloaded #{path} (changed on disk)" if reload_from path
     rescue IO::Error
       # A file mid-rewrite; the next change is polled.
     end
