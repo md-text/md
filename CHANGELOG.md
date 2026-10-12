@@ -370,7 +370,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   Color Depth's (Auto (256 Colors)), through Crysterm's new
   `Window#detected_color_count`; Terminal Links' Always now answers to
   `W`, leaving `A` to Auto.
-- Edit → Vi Mode (`vi-mode`, `md.vi_mode`): the editor is edited by an
+- Edit → Vi Mode (Neovim) (`vi-mode`, `md.vi_mode`): the editor is edited by an
   embedded Neovim (Crysterm's `Neovim::Handler`), its keys Neovim's but for
   the function keys and the `Alt` chords, which stay md's; turned on from
   the menu or by name, it shows and focuses the editor, so the keys typed
@@ -380,7 +380,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   selection, `u`/`Ctrl-R` are Neovim's undo and redo, and `:w` saves (`:w
   FILE` saves as), `:q` closes the window as Window → Close Current does,
   `:q!` without asking, `:qa` quits, `:wq`, `:x` and `ZZ` save and close.
-  Neovim starts with `--clean` unless Options → Vi Mode Uses Your Neovim
+  Neovim starts with `--clean` unless Options → Vi Mode: Use Neovim
   Config (`vi-config`, `md.vi_config`) is on. Without `nvim` the entry is
   disabled and says why, and a Neovim that ends turns Vi Mode off. The
   viewer's `:` stays md's command line.

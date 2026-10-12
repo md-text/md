@@ -49,7 +49,7 @@ module Md
       {"Ctrl-N", "Open another md window on this document, in a new terminal window (Window -> New)."},
       {"Ctrl-W", "Outside the editor, close this window, asking first when its changes are unsaved; closing the last window quits (Window -> Close Current)."},
       {"Ctrl-Q, q", "Quit, closing every window (q anywhere but in the editor); each window asks first when its changes are unsaved."},
-      {"Vi Mode", "With Edit -> Vi Mode on, the editor's keys are an embedded Neovim's, but for the function keys and the Alt chords, which stay md's; the status bar shows Neovim's mode and command line. :w saves, :w FILE saves as FILE, :q closes the window (asking about unsaved changes), :q! closes it without asking, :qa quits, and :wq, :x and ZZ save and close."},
+      {"Vi Mode", "With Edit -> Vi Mode (Neovim) on, the editor's keys are an embedded Neovim's, but for the function keys and the Alt chords, which stay md's; the status bar shows Neovim's mode and command line. :w saves, :w FILE saves as FILE, :q closes the window (asking about unsaved changes), :q! closes it without asking, :qa quits, and :wq, :x and ZZ save and close."},
     ]
 
     # The README, read when the binary is built: the user's manual Help →

@@ -51,10 +51,10 @@ module Superconf
     description: "View → Tooltips: where a menu entry's description shows while it is highlighted — in the status bar (status_bar), in a popup beside the entry after a moment (popup), or nowhere (off)"
   # Edit.
   option "md.vi_mode", false, env: "MD_VI_MODE",
-    description: "Edit → Vi Mode: edit the editor's text as in Neovim, by an embedded nvim; the function keys and Alt combinations stay md's"
+    description: "Edit → Vi Mode (Neovim): edit the editor's text as in Neovim, by an embedded nvim; the function keys and Alt combinations stay md's"
   # Options.
   option "md.vi_config", false, env: "MD_VI_CONFIG",
-    description: "Options → Vi Mode Uses Your Neovim Config: start Vi Mode's nvim with your own config and plugins rather than --clean"
+    description: "Options → Vi Mode: Use Neovim Config: start Vi Mode's nvim with your own config and plugins rather than --clean"
   option "md.confirm_discard", true, env: "MD_CONFIRM_DISCARD",
     description: "Options → Ask Before Discarding Changes: ask what to do with unsaved changes before they would be lost"
   option "md.autosave", true, env: "MD_AUTOSAVE",

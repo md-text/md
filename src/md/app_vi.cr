@@ -1,6 +1,6 @@
 module Md
   class App
-    # Edit → Vi Mode (`#vi_mode?`): the editor is edited as in Neovim, by an
+    # Edit → Vi Mode (Neovim) (`#vi_mode?`): the editor is edited as in Neovim, by an
     # embedded `nvim` (Crysterm's `Neovim::Handler`, Qt Creator's FakeVim
     # done with the real engine). The editor keeps its document, so the
     # viewer, the status bar, Format, Find and the rest work on it as
@@ -20,7 +20,7 @@ module Md
     # save, then close.
     #
     # Neovim starts with `--clean` — none of the user's config — unless
-    # Options → Vi Mode Uses Your Neovim Config is on (`md.vi_config`); a
+    # Options → Vi Mode: Use Neovim Config is on (`md.vi_config`); a
     # change to it restarts Neovim when Vi Mode is on. Without `nvim` the
     # entry is disabled and says why; a Neovim that ends turns Vi Mode off.
     #
@@ -41,7 +41,7 @@ module Md
       @vi_mode.value
     end
 
-    # Turns Vi Mode on or off (Edit → Vi Mode).
+    # Turns Vi Mode on or off (Edit → Vi Mode (Neovim)).
     def vi_mode=(value : Bool) : Bool
       @vi_mode.value = value
     end
@@ -50,7 +50,7 @@ module Md
       @vi_config.value
     end
 
-    # Whether Neovim reads the user's config (Options → Vi Mode Uses Your
+    # Whether Neovim reads the user's config (Options → Vi Mode: Use
     # Neovim Config).
     def vi_config=(value : Bool) : Bool
       @vi_config.value = value
@@ -124,7 +124,7 @@ module Md
       available = Crysterm::Neovim.available?
       missing = " (needs nvim, which was not found)"
       edit.add_separator
-      entry = add_toggle edit, "V&i Mode", "vi-mode", @vi_mode, option_tip("md.vi_mode") + (available ? "" : missing)
+      entry = add_toggle edit, "V&i Mode (Neovim)", "vi-mode", @vi_mode, option_tip("md.vi_mode") + (available ? "" : missing)
       entry.enabled = available
       # Turned on from the menu or by name, Vi Mode takes the keys of the
       # editor, which it shows and focuses: with the viewer focused (where
@@ -132,7 +132,7 @@ module Md
       # Insert mode, while the status bar already said NORMAL. The setting
       # loaded at start leaves the focus where the document opens.
       entry.on(Crysterm::Event::Triggered) { |e| show_pane(Pane::Editor).focus if e.checked && vi_mode? }
-      config = add_toggle options, "Vi Mode Uses Your &Neovim Config", "vi-config", @vi_config, option_tip("md.vi_config") + (available ? "" : missing)
+      config = add_toggle options, "Vi Mode: Use &Neovim Config", "vi-config", @vi_config, option_tip("md.vi_config") + (available ? "" : missing)
       config.enabled = available
     end
   end

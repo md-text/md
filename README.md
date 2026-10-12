@@ -394,7 +394,7 @@ viewer's caret, showing the editor if it is hidden.
 
 ### Vi Mode
 
-Edit → Vi Mode (`md.vi_mode`) edits the editor's text as in Neovim: an
+Edit → Vi Mode (Neovim) (`md.vi_mode`) edits the editor's text as in Neovim: an
 `nvim` runs embedded, headless, and takes the editor's keys (turning it on
 from the menu or by name shows and focuses the editor) — `i`, `dd`,
 `ciw`, `.`, counts, registers, text objects, `/` and the rest are
@@ -417,7 +417,7 @@ changes, `:q!` closes it without asking, `:qa` (`:qa!`) quits, and
 `:wq`, `:x` and `ZZ` save, then close. Neovim writes no file itself.
 
 Neovim starts with `--clean`, without your config, unless Options → Vi
-Mode Uses Your Neovim Config (`md.vi_config`) is on: then your
+Mode: Use Neovim Config (`md.vi_config`) is on: then your
 `init.lua` or `init.vim` and plugins load, and a mapping of yours applies
 in the editor. Without `nvim` in `PATH` the entry is disabled, its
 description saying why; should Neovim end, Vi Mode turns off with a notice
@@ -749,7 +749,7 @@ Viewer), Center Document, Rulers (Horizontal and Vertical), Guides,
 Images, Terminal Links → Double-click to Open, Dialog Style, Ask Before Discarding
 Changes, Auto-Save, Keep a Backup File, the mouse mode, the clipboard mode,
 Resizable Panes, Tooltips, the theme and Crysterm's own Color Depth, Terminal Links, Media
-Backend, No Animations, Detachable Menus and Vi Mode Uses Your Neovim Config — and the pane sizes are kept across runs in
+Backend, No Animations, Detachable Menus and Vi Mode: Use Neovim Config — and the pane sizes are kept across runs in
 `$XDG_CONFIG_HOME/md/config.yml` (`~/.config/md/config.yml`), written when
 md quits if anything changed. Watch File is not kept: like `--watch`, it is
 for the run at hand.

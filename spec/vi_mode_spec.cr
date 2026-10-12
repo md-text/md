@@ -1,6 +1,6 @@
 require "./spec_helper"
 
-# Edit → Vi Mode: the editor edited by an embedded Neovim (`app_vi.cr`).
+# Edit → Vi Mode (Neovim): the editor edited by an embedded Neovim (`app_vi.cr`).
 
 # Types *keys* at the window, `<Esc>`, `<CR>`, `<F2>` and `<M-w>` naming those keys.
 private def vi_type(window, keys : String)
@@ -25,7 +25,7 @@ private def name_field(app)
 end
 
 private def vi_entry(app)
-  menu(app, 1).actions.find!(&.text.==("V&i Mode"))
+  menu(app, 1).actions.find!(&.text.==("V&i Mode (Neovim)"))
 end
 
 describe "Md::App Vi Mode" do
@@ -35,7 +35,7 @@ describe "Md::App Vi Mode" do
       entry.name.should eq "vi-mode"
       entry.checkable?.should be_true
       entry.enabled?.should eq Crysterm::Neovim.available?
-      menu(app, 4).actions.find!(&.text.==("Vi Mode Uses Your &Neovim Config")).name.should eq "vi-config"
+      menu(app, 4).actions.find!(&.text.==("Vi Mode: Use &Neovim Config")).name.should eq "vi-config"
       app.vi_mode?.should be_false
       vi_field(app).visible?.should be_false
     end
