@@ -25,7 +25,7 @@ describe "Md::App windows" do
       application.add window
       opened = [] of Crysterm::Window
       app.window_opener = recording_opener(opened)
-      window_menu(app).actions.map(&.text).should eq ["&New Window", "&Close Window", "", "md - doc.md"]
+      window_menu(app).actions.map(&.text).should eq ["&New", "&Close Current", "", "md - doc.md"]
       window_menu(app).actions[0].enabled?.should be_true
       window_menu(app).actions[3].checked?.should be_true
       window_menu(app).actions.map(&.shortcut_text).should eq ["Ctrl+N", "Ctrl+W", "", ""]
@@ -43,7 +43,7 @@ describe "Md::App windows" do
         other.markdown.should eq app.markdown
         other.visible_panes.should eq [Md::App::Pane::Viewer]
         # Both windows list both, each with its own checked.
-        window_menu(app).actions.map(&.text).should eq ["&New Window", "&Close Window", "", "md - doc.md", "md - doc.md"]
+        window_menu(app).actions.map(&.text).should eq ["&New", "&Close Current", "", "md - doc.md", "md - doc.md"]
         window_menu(app).actions[3..].map(&.checked?).should eq [true, false]
         window_menu(other).actions[3..].map(&.checked?).should eq [false, true]
         # Independent: an edit in one is not in the other.
@@ -56,7 +56,7 @@ describe "Md::App windows" do
         other.window.destroyed?.should be_true
         window.destroyed?.should be_false
         application.windows.should eq [window]
-        window_menu(app).actions.map(&.text).should eq ["&New Window", "&Close Window", "", "md - doc.md"]
+        window_menu(app).actions.map(&.text).should eq ["&New", "&Close Current", "", "md - doc.md"]
         Md::App.instances.should contain app
         Md::App.instances.should_not contain other
       ensure
@@ -100,7 +100,7 @@ describe "Md::App windows" do
     end
   end
 
-  it "disables New Window where none can be opened, and the key says why" do
+  it "disables Window → New where none can be opened, and the key says why" do
     with_app do |app, window|
       app.window_refusal = "no terminal emulator found"
       window_menu(app).actions[0].enabled?.should be_false

@@ -2,7 +2,7 @@ module Md
   class App
     # Windows: several md windows in one process, each a terminal window of
     # its own with its own document, editor and unsaved-changes guard — the
-    # Window menu, after `QMdiArea`'s. Window → New Window (`Ctrl-N`) asks
+    # Window menu, after `QMdiArea`'s. Window → New (`Ctrl-N`) asks
     # Crysterm for another terminal window (`Crysterm::Window.open`: the
     # emulator md runs in is told to open one — kitty, Terminal.app, a tmux
     # window inside tmux…, `Crysterm::Terminal`) and builds a second `App`
@@ -14,7 +14,7 @@ module Md
     # are shared and written by whichever window ends last (`#finish`).
     #
     # The new window joins the running application (`Application#show`), so
-    # the loop runs until the last window is gone: Window → Close Window
+    # the loop runs until the last window is gone: Window → Close Current
     # (`Ctrl-W`) closes one window through its guard (`Window#try_close`),
     # and in the last window is Quit. File → Quit (`Ctrl-Q`, `q`) closes
     # every window, each through its own guard. The menu lists the open
@@ -34,7 +34,7 @@ module Md
     @new_window_action : Crysterm::Action?
     @window_entries = [] of Crysterm::Action
 
-    # How New Window opens a terminal window, given the title: Crysterm's
+    # How Window → New opens a terminal window, given the title: Crysterm's
     # `Window.open`, which picks the emulator. Replaceable, so a spec can
     # hand out headless windows — and a replacement is taken to work
     # wherever it runs, so the entry is enabled (`#window_opener=`).
@@ -51,7 +51,7 @@ module Md
     end
 
     # Why no window can be opened here, in a sentence, or nil when one can:
-    # New Window's enabled state, and what its key says while disabled. Found
+    # Window → New's enabled state, and what its key says while disabled. Found
     # once per process (`.window_refusal`) — the session does not change —
     # and settable, so a spec can see the disabled entry anywhere.
     @window_refusal : String?
@@ -85,7 +85,7 @@ module Md
     private def register_window : Nil
       @window_refusal = App.window_refusal
       App.instances << self
-      # A close (`Window#close`: Close Window, Quit, the terminal window shut)
+      # A close (`Window#close`: Close Current, Quit, the terminal window shut)
       # tells before the teardown, while the panes still have their sizes.
       @window.on(Crysterm::Event::WindowClosed) { finish }
       @window.on(Crysterm::Event::Destroy) do
@@ -126,7 +126,7 @@ module Md
     # Set once the window is on screen (`#run`, `#join`).
     @started = false
 
-    # Window → New Window (`Ctrl-N`): opens a terminal window and an `App`
+    # Window → New (`Ctrl-N`): opens a terminal window and an `App`
     # on it showing this document as it stands (see above), joined to the
     # running application. Returns the new app, or nil with a notice saying
     # why there is none: the session cannot open windows, or the emulator
@@ -183,7 +183,7 @@ module Md
       @window.exec_application
     end
 
-    # Window → Close Window (`Ctrl-W`): closes this window alone, after the
+    # Window → Close Current (`Ctrl-W`): closes this window alone, after the
     # unsaved-changes guard (`Window#try_close` asks through the close
     # request, whose handler asks the user and closes on their answer). The
     # other windows stay; with none, the loop ends and `#run` returns.
@@ -208,10 +208,10 @@ module Md
     # menu opens, since a title changes with the file.
     private def build_window_menu(bar : Crysterm::Widget::MenuBar) : Nil
       menu = bar.add_menu "Wi&ndow"
-      @new_window_action = tip menu.add_action("&New Window", shortcut: "Ctrl+N") { new_window },
+      @new_window_action = tip menu.add_action("&New", shortcut: "Ctrl+N") { new_window },
         "Open this document in another md window, in a new terminal window"
       # The editor's `Ctrl-W` kills a word, so the key works outside it.
-      tip menu.add_action("&Close Window", shortcut: "Ctrl+W") { close_window },
+      tip menu.add_action("&Close Current", shortcut: "Ctrl+W") { close_window },
         "Close this window, asking about unsaved changes; the last window closing quits md"
       menu.add_separator
       menu.on(Crysterm::Event::AboutToShow) { refresh_window_menu }
@@ -220,7 +220,7 @@ module Md
 
     # Remakes the list of windows in this window's menu — one check entry
     # per open window, titled as its window is, this one checked — and
-    # enables New Window as the session allows.
+    # enables New as the session allows.
     def refresh_window_menu : Nil
       return unless menu = @window_menu
       @new_window_action.try &.enabled = @window_refusal.nil?
@@ -241,7 +241,7 @@ module Md
       @@instances.each &.refresh_window_menu
     end
 
-    # `Ctrl-N` while New Window is disabled: a disabled entry's shortcut does
+    # `Ctrl-N` while Window → New is disabled: a disabled entry's shortcut does
     # not fire, so the key says why here; enabled, the entry takes the key
     # itself and this is not reached. Returns whether it answered.
     private def refuse_new_window : Bool

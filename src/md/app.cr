@@ -184,7 +184,7 @@ module Md
       # the window arrives as its path (`#open_dropped`).
       @window.on(Crysterm::Event::Paste) { |e| open_dropped e.content }
       # Closing asks the window first (`Window#try_close`, which Quit and
-      # Close Window go through, and Crysterm's default quit keys); with
+      # Close Current go through, and Crysterm's default quit keys); with
       # unsaved changes the guard refuses and asks the user, closing the
       # window on their answer — the last window's close ends the app.
       @window.on(Crysterm::Event::CloseRequest) do |e|

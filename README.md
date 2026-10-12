@@ -148,8 +148,8 @@ runs too.
 | `Alt-X`            | Tick or untick a list item's task box, or give it a ticked one (Format → Toggle Task; Format → Task, a check entry, adds and removes the box) |
 | `Ctrl-Up`, `Ctrl-Down` | Promote or demote the heading on the caret's line (Format → Promote Heading, Demote Heading) |
 | `Alt-Q`            | Refill the paragraph at the caret, or the selected paragraphs, to the wrap column (Format → Rewrap → Paragraph; Rewrap → Document refills them all) |
-| `Ctrl-N`           | Open a new window on this document, in a new terminal window (Window → New Window) |
-| `Ctrl-W`           | Outside the editor, close this window, asking first when its changes are unsaved; the last window's close quits (Window → Close Window) |
+| `Ctrl-N`           | Open a new window on this document, in a new terminal window (Window → New) |
+| `Ctrl-W`           | Outside the editor, close this window, asking first when its changes are unsaved; the last window's close quits (Window → Close Current) |
 | `Ctrl-Q`           | Quit: closes every window (`q` too, anywhere but in the editor; File → Quit); each window asks first when its changes are unsaved |
 
 The menus show these keys next to their entries, spelled as
@@ -605,7 +605,7 @@ choices, not a cache, and stay.
 
 ### Windows
 
-Window → New Window (`Ctrl-N`) opens another md window on the document you
+Window → New (`Ctrl-N`) opens another md window on the document you
 are looking at — the same file, with the editor's text as it stands,
 unsaved edits included and flagged as unsaved there too, and the viewer
 shown if it is shown here — in a new terminal window. A window still
@@ -622,7 +622,7 @@ size, or this window's where the emulator takes a size.
 The windows are independent from then on: an edit in one reaches the other
 only through a save (View → Watch File in the other picks it up), and each
 asks about its own unsaved changes. The settings and the recent files are
-shared, written by the window that ends last. Window → Close Window
+shared, written by the window that ends last. Window → Close Current
 (`Ctrl-W`, outside the editor, where `Ctrl-W` kills a word) closes the
 window you are in alone, after its unsaved-changes question; in the last
 window it is Quit. File → Quit (`Ctrl-Q`, `q`) closes every window, each

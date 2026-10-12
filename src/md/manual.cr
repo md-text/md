@@ -44,8 +44,8 @@ module Md
       {"Alt-X", "Tick or untick a list item's task box, or give it a ticked one (Format -> Toggle Task; Format -> Task, a check entry, adds and removes the box)."},
       {"Ctrl-Up, Ctrl-Down", "Promote or demote the heading on the caret's line."},
       {"Alt-Q", "Refill the paragraph at the caret, or the selected paragraphs, to the wrap column (the text width, or 80); Format -> Rewrap -> Document refills every paragraph."},
-      {"Ctrl-N", "Open another md window on this document, in a new terminal window (Window -> New Window)."},
-      {"Ctrl-W", "Outside the editor, close this window, asking first when its changes are unsaved; closing the last window quits (Window -> Close Window)."},
+      {"Ctrl-N", "Open another md window on this document, in a new terminal window (Window -> New)."},
+      {"Ctrl-W", "Outside the editor, close this window, asking first when its changes are unsaved; closing the last window quits (Window -> Close Current)."},
       {"Ctrl-Q, q", "Quit, closing every window (q anywhere but in the editor); each window asks first when its changes are unsaved."},
     ]
 
