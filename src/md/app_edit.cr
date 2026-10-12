@@ -82,7 +82,8 @@ module Md
     # above it otherwise, so they work from anywhere in the section — a
     # paragraph being the level above `#` and `######` the last.
     #
-    # Format → Rewrap → Paragraph (`Alt-Q`, Emacs's `fill-paragraph`, Kate's
+    # Format → Rewrap — labelled with the column, `Rewrap (to 80 Columns)`
+    # — → Paragraph (`Alt-Q`, Emacs's `fill-paragraph`, Kate's
     # Apply Word Wrap) refills the caret's paragraph — or every paragraph
     # the selection touches — and Rewrap → Document every paragraph of the
     # document, to the wrap column (`#wrap_column`, `app_view.cr`), the
@@ -668,7 +669,16 @@ module Md
       document = Crysterm::Action.new "&Document", name: "rewrap-document"
       document.on(Crysterm::Event::Triggered) { rewrap_document }
       tip document, "Refill every paragraph of the document to the wrap column, as one undo step"
-      tip format.add_submenu("Re&wrap", [paragraph, document]), "Refill paragraphs to the wrap column, a list item keeping its marker and a quote its markers"
+      # The label names the wrap column, kept up to date as the text width
+      # changes.
+      rewrap = tip format.add_submenu(rewrap_label, [paragraph, document]), "Refill paragraphs to the wrap column, a list item keeping its marker and a quote its markers"
+      @text_width.on_change { rewrap.text = rewrap_label }
+    end
+
+    # The Rewrap submenu's label, naming the column it refills to
+    # (`#wrap_column`): `Rewrap (to 72 Columns)`, or 80 without a text width.
+    private def rewrap_label : String
+      "Re&wrap (to #{wrap_column} Columns)"
     end
 
     # Puts the caret's item's state on the Task entry as the Format menu

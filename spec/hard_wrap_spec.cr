@@ -185,12 +185,16 @@ describe "Md::App rewrap paragraph" do
     end
   end
 
-  it "shows the Format → Rewrap entries, Paragraph with its key" do
+  it "shows the Format → Rewrap entries, Paragraph with its key, the column in the label" do
     with_app do |app|
-      rewrap = menu(app, 2).actions.find! { |a| a.text == "Re&wrap" }
+      rewrap = menu(app, 2).actions.find! { |a| a.text == "Re&wrap (to 80 Columns)" }
       entries = rewrap.menu || fail("Rewrap has no submenu")
       entries.map(&.text).should eq ["&Paragraph", "&Document"]
       entries[0].shortcut_text.should eq "Alt+Q"
+      app.text_width = 72
+      rewrap.text.should eq "Re&wrap (to 72 Columns)"
+      app.text_width = 0 # no text width: the default column
+      rewrap.text.should eq "Re&wrap (to 80 Columns)"
     end
   end
 end

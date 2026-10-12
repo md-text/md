@@ -614,7 +614,8 @@ one step. Format → Rewrap → Paragraph (`Alt-Q`, Emacs's fill) refills the
 paragraph at the cursor, or every paragraph the selection touches, and
 Rewrap → Document every paragraph in the file, to the same column — a list
 item keeping its marker, a quote its markers, code blocks untouched —
-whether or not Hard Wrap is on.
+whether or not Hard Wrap is on. The Rewrap entry names that column, as
+*Rewrap (to 80 Columns)*, and follows the Text Width as it changes.
 
 Save As asks for the name in place of the status bar, the way vi's command
 line replaces its status line: the current name is filled in, `Tab` and
