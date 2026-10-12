@@ -34,6 +34,8 @@ describe Md::Manual do
     man.should_not contain "→"
     # The Window menu's keys, with the Replace key, are in the KEYS section.
     {"Ctrl\\-N", "Ctrl\\-W", "Alt\\-H"}.each { |key| man.should contain ".B #{key}" }
+    # The command line and the document's ends, as the README's table has them.
+    {":, Alt\\-K", "Ctrl\\-Home, Ctrl\\-End"}.each { |key| man.should contain ".B #{key}" }
     man.should contain "Alt\\-O, Alt\\-N"
   end
 
