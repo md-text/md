@@ -190,8 +190,8 @@ describe "Md::App editing" do
 
   it "shows Tab and Shift+Tab on Format → Indent and Outdent, keys that are theirs in the editor alone" do
     with_app text: "text\n", view: false do |app, window|
-      indent, outdent = menu(app, 2).actions[6, 2]
-      indent.text.should eq "I&ndent"
+      indent = menu(app, 2).actions.find!(&.text.==("I&ndent"))
+      outdent = menu(app, 2).actions.find!(&.text.==("&Outdent"))
       indent.shortcut_text.should eq "Tab"
       outdent.shortcut_text.should eq "Shift+Tab"
       indent.shortcut_context.widget?.should be_true
@@ -371,6 +371,50 @@ describe "Md::App editing" do
     with_app do |app|
       app.toggle_bold.should be_true
       app.markdown.should eq "****"
+      app.editor.cursor_position.should eq 2
+    end
+  end
+
+  it "puts the caret's paragraph in a fenced code block, and takes the fences off again from anywhere in it" do
+    with_app text: "Intro.\n\nputs 1\nputs 2\n\nAfter.\n", view: false do |app|
+      place app, 3, 2
+      app.toggle_code_block.should be_true
+      app.markdown.should eq "Intro.\n\n```\nputs 1\nputs 2\n```\n\nAfter.\n"
+      app.editor.cursor_position.should eq app.editor.document.block_position(4) + 2 # still in "puts 2"
+      place app, 2, 0 # the opening fence
+      app.toggle_code_block.should be_true
+      app.markdown.should eq "Intro.\n\nputs 1\nputs 2\n\nAfter.\n"
+      app.toggle_code_block
+      place app, 3, 4 # a line of the code
+      app.toggle_code_block
+      app.markdown.should eq "Intro.\n\nputs 1\nputs 2\n\nAfter.\n"
+      app.editor.document.undo
+      app.markdown.should eq "Intro.\n\n```\nputs 1\nputs 2\n```\n\nAfter.\n"
+    end
+  end
+
+  it "fences the selection's lines with their quote markers, and drops an empty block on a blank line" do
+    with_app text: "> a\n> b\n> c\n\nend\n", view: false do |app|
+      doc = app.editor.document
+      select_text app, doc.block_position(1), doc.block_position(2) + 1
+      app.toggle_code_block.should be_true
+      app.markdown.should eq "> a\n> ```\n> b\n> c\n> ```\n\nend\n"
+      app.editor.text_cursor.selected_text.should eq "> b\n>"
+      place app, 5, 0
+      app.toggle_code_block.should be_true
+      app.markdown.should eq "> a\n> ```\n> b\n> c\n> ```\n```\n\n```\nend\n"
+      app.editor.cursor_position.should eq doc.block_position(6)
+    end
+  end
+
+  it "takes the opening fence alone off a block left open, and leaves a fence inside code alone" do
+    with_app text: "````\n```\ncode\n````\n", view: false do |app|
+      place app, 1, 0 # a fence shown inside the block's code
+      app.toggle_code_block
+      app.markdown.should eq "```\ncode\n"
+      place app, 1, 2 # in a block open to the end
+      app.toggle_code_block
+      app.markdown.should eq "code\n"
       app.editor.cursor_position.should eq 2
     end
   end

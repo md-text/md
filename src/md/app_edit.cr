@@ -71,7 +71,10 @@ module Md
     # neither, a pair the caret is put between — in `**`, `*` and backticks,
     # and take them off again from text that has them (`_` and `__` count
     # too), a toggle; the text stays selected, so a second press undoes the
-    # first. Format → Promote Heading and Demote Heading (`Ctrl-Up`,
+    # first. Format → Code Block (`#toggle_code_block`) is the same toggle
+    # for whole lines: ` ``` ` fences around the selection's lines or the
+    # caret's paragraph, an empty block on a blank line, and off again from
+    # anywhere in a fenced block. Format → Promote Heading and Demote Heading (`Ctrl-Up`,
     # `Ctrl-Down`) move the caret's line one heading level up or down, a
     # paragraph being the level above `#` and `######` the last.
     #
@@ -344,6 +347,41 @@ module Md
       toggle_wrap "`"
     end
 
+    # Format → Code Block: the caret's lines in a fenced code block, or out
+    # of the one they are in. Inside a fenced block — on a line of its
+    # code or on one of its fences — the two fences come off (just the
+    # opening one of a block left open to the end), leaving the code as
+    # it was. Elsewhere, the selection's lines, or with no selection the
+    # run of lines around the caret without a blank one, are put between
+    # ` ``` ` fences carrying the first line's quote markers and
+    # indentation; on a blank line an empty block goes in, the caret on
+    # its middle line, ready to type code. The caret, and a selection,
+    # keep their place in the text. Returns true.
+    def toggle_code_block : Bool
+      editor = formatting_editor
+      doc = editor.document
+      first, last = selected_blocks
+      if block = fenced_blocks(doc).find { |open, close| open <= last && (close || doc.block_count - 1) >= first }
+        unfence doc, block[0], block[1]
+      elsif !editor.selection? && doc.blocks[first].text.blank?
+        at = doc.blocks[first].position
+        doc.edit { Crysterm::TextCursor.new(doc, at, at + doc.blocks[first].size).insert_text "```\n\n```" }
+        editor.text_cursor = Crysterm::TextCursor.new(doc, at + 4)
+      else
+        unless editor.selection?
+          while first > 0 && !doc.blocks[first - 1].text.blank?
+            first -= 1
+          end
+          while last + 1 < doc.block_count && !doc.blocks[last + 1].text.blank?
+            last += 1
+          end
+        end
+        fence first, last
+      end
+      edited
+      true
+    end
+
     # Format → Task: a task box on the caret's list item, or on every list
     # item of the selection — `[ ] ` added to an item without one, and taken
     # off an item that has one. Returns whether there was an item, with a
@@ -590,6 +628,7 @@ module Md
       named "bold", tip format.add_action("&Bold", shortcut: "Ctrl+B") { toggle_bold }, "Put ** around the selection or the word at the caret, or take it off"
       named "italic", tip format.add_action("&Italic", shortcut: "Alt+I") { toggle_italic }, "Put * around the selection or the word at the caret, or take it off"
       named "code", tip format.add_action("&Code", shortcut: "Alt+C") { toggle_code }, "Put backticks around the selection or the word at the caret, or take them off"
+      named "code-block", tip format.add_action("Code B&lock") { toggle_code_block }, "Put ``` fences around the selection's lines or the caret's paragraph, or an empty block on a blank line; inside a fenced block, take its fences off"
       format.add_separator
       # The check is the caret's item's, read as the menu opens; picking the
       # entry flips it and the box with it.
@@ -843,6 +882,82 @@ module Md
     # Whether *char* is *mark* or its spelling variant (`_` for `*`).
     private def emphasis_char?(char : Char, mark : Char) : Bool
       char == mark || (mark == '*' && char == '_')
+    end
+
+    # The fenced code blocks of *doc*, each as the lines of its opening
+    # and its closing fence; the closing one is nil for a block that runs
+    # to the end of the document, or that an outdent ends inside a list
+    # item. A fence is a fence line (`FENCE`) that is no code block's own
+    # line (`.code_lines`), so a fence shown inside a block's code, or in
+    # an indented code block, does not count.
+    private def fenced_blocks(doc : Crysterm::TextDocument) : Array({Int32, Int32?})
+      code = App.code_lines doc
+      blocks = [] of {Int32, Int32?}
+      open = nil
+      code.each_with_index do |is_code, i|
+        next if is_code
+        fence = FENCE.matches?(doc.blocks[i].text)
+        if start = open
+          # The first line after the opening fence that is no code ends
+          # the block: its closing fence, or the line an outdent ended it on.
+          blocks << {start, fence ? i : nil}
+          open = nil
+          next if fence
+        end
+        open = i if fence
+      end
+      open.try { |start| blocks << {start, nil} }
+      blocks
+    end
+
+    # Lines *first* to *last* of *doc* put between two fences, with the
+    # first line's quote markers and indentation; the editor's caret, or
+    # selection, kept on the same text.
+    private def fence(first : Int32, last : Int32) : Nil
+      doc = @editor.document
+      lead = QUOTE_LEAD.match(doc.blocks[first].text).try(&.[0]) || ""
+      from = doc.blocks[first].position
+      to = doc.blocks[last].position + doc.blocks[last].size
+      cursor = @editor.text_cursor
+      anchor, position = cursor.anchor, cursor.position
+      doc.edit do
+        Crysterm::TextCursor.new(doc, to).insert_text "\n#{lead}```"
+        Crysterm::TextCursor.new(doc, from).insert_text "#{lead}```\n"
+        nil
+      end
+      shift = ->(at : Int32) { at >= from ? at + lead.size + 4 : at }
+      @editor.text_cursor = Crysterm::TextCursor.new(doc, shift.call(anchor), shift.call(position))
+    end
+
+    # The fence lines *open* and *close* (nil for none) taken out of
+    # *doc*, each with its line break; the editor's caret, or selection,
+    # kept on the same text.
+    private def unfence(doc : Crysterm::TextDocument, open : Int32, close : Int32?) : Nil
+      cuts = [line_span(doc, open)]
+      close.try { |line| cuts << line_span(doc, line) }
+      cursor = @editor.text_cursor
+      anchor, position = cursor.anchor, cursor.position
+      doc.edit do
+        cuts.reverse_each { |from, to| Crysterm::TextCursor.new(doc, from, to).remove_selected_text }
+        nil
+      end
+      # A position past a cut moves back by its size; one inside it goes
+      # to where the cut was.
+      shift = ->(at : Int32) do
+        cuts.reverse.reduce(at) { |pos, (from, to)| pos >= to ? pos - (to - from) : (pos > from ? from : pos) }
+      end
+      @editor.text_cursor = Crysterm::TextCursor.new(doc, shift.call(anchor), shift.call(position))
+    end
+
+    # Line *index* of *doc* with its line break, as the positions from and
+    # to: the break after it, or before it for the last line.
+    private def line_span(doc : Crysterm::TextDocument, index : Int32) : {Int32, Int32}
+      block = doc.blocks[index]
+      if index + 1 < doc.block_count
+        {block.position, doc.blocks[index + 1].position}
+      else
+        {Math.max(block.position - 1, 0), block.position + block.size}
+      end
     end
 
     # The caret's line moved *by* heading levels: its hashes replaced.

@@ -377,6 +377,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   Config (`vi-config`, `md.vi_config`) is on. Without `nvim` the entry is
   disabled and says why, and a Neovim that ends turns Vi Mode off. The
   viewer's `:` stays md's command line.
+- Format → Code Block (`code-block`): Code's companion for whole lines. It
+  puts the selected lines, or the paragraph at the caret, between ```` ``` ````
+  fences carrying the first line's quote markers and indentation, drops an
+  empty fenced block on a blank line with the caret inside, and takes the
+  fences off again from anywhere in a fenced block — just the opening one of
+  a block left open — each as one undo step.
 
 ### Changed
 

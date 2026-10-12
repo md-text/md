@@ -362,7 +362,11 @@ Format → Bold, Italic and Code (`Ctrl-B`, `Alt-I`, `Alt-C`) put `**`, `*`
 or backticks around the selection, or the word at the caret, or insert the
 pair with the caret between when there is neither; on text that already has
 them (`_` and `__` count too) they take them off, and the text stays
-selected, so a second press undoes the first. Format → Task, a check entry
+selected, so a second press undoes the first. Format → Code Block puts
+the selected lines, or the paragraph at the caret, between ```` ``` ````
+fences (inside a quote, the fences carry its `> `), drops an empty fenced
+block on a blank line with the caret inside it, and takes the fences off
+again when the caret is anywhere in a fenced block. Format → Task, a check entry
 whose check shows whether the item at the caret is a task when the menu
 opens, gives a list item a `[ ]` box and takes it off again; Format →
 Toggle Task (`Alt-X`) ticks the box `[x]` and unticks it, and gives an item
@@ -705,7 +709,7 @@ command, and so is every key no entry has:
 | -------- | - |
 | `open`, `reload`, `close`, `previous-file`, `next-file`, `save`, `save-as`, `quit` | The File menu |
 | `copy`, `copy-as-markdown`, `paste`, `paste-from-terminal`, `paste-from-command`, `paste-from-internal`, `find`, `find-backward`, `find-next`, `find-previous`, `replace`, `clear-search-highlights`, `command`, `go-to-line`, `next-heading`, `previous-heading`, `vi-mode` | The Edit menu, and `?` |
-| `bold`, `italic`, `code`, `task`, `toggle-task`, `indent`, `outdent`, `promote-heading`, `demote-heading`, `rewrap-paragraph`, `rewrap-document` | The Format menu |
+| `bold`, `italic`, `code`, `code-block`, `task`, `toggle-task`, `indent`, `outdent`, `promote-heading`, `demote-heading`, `rewrap-paragraph`, `rewrap-document` | The Format menu |
 | `editor`, `viewer`, `toc`, `resizable-panes`, `bars`, `sync-cursor`, `highlight-line`, `line-numbers`, `soft-wrap`, `hard-wrap`, `center-text`, `horizontal-ruler`, `vertical-ruler`, `guides`, `images`, `media-trial`, `link-double-click`, `watch-file` | The View menu's check entries: each turns its setting on or off |
 | `overwrite-mode`, `confirm-discard`, `autosave`, `backup-file`, `reduced-motion`, `detachable-menus`, `vi-config`, `load-config`, `save-config`, `save-config-as`, `clear-caches` | The Options menu |
 | `new-window`, `close-window`, `manual`, `about` | The Window and Help menus |
