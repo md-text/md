@@ -750,7 +750,9 @@ module Md
 
     # Wraps the selection — or the word at the caret — in *marker*, or
     # unwraps it, and leaves the text selected; with nothing to wrap,
-    # inserts the pair and puts the caret between. Returns true.
+    # inserts the pair and puts the caret between. The markers hug the
+    # text: spaces at the selection's ends stay outside them, since `**word
+    # **` is no emphasis in Markdown. Returns true.
     private def toggle_wrap(marker : String) : Bool
       editor = formatting_editor
       doc = editor.document
@@ -764,7 +766,8 @@ module Md
         return true
       end
       from, to = widen(doc, cursor.selection_start, cursor.selection_end, marker[0])
-      if depth = wrapped_depth(doc.plain_text(from, to), marker)
+      text = doc.plain_text(from, to)
+      if depth = wrapped_depth(text, marker)
         doc.edit do
           Crysterm::TextCursor.new(doc, to - depth, to).remove_selected_text
           Crysterm::TextCursor.new(doc, from, from + depth).remove_selected_text
@@ -772,6 +775,11 @@ module Md
         end
         to -= 2 * depth
       else
+        lead = text.size - text.lstrip.size
+        unless lead == text.size
+          to -= text.size - text.rstrip.size
+          from += lead
+        end
         doc.edit do
           Crysterm::TextCursor.new(doc, to).insert_text marker
           Crysterm::TextCursor.new(doc, from).insert_text marker

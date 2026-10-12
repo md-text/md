@@ -328,6 +328,17 @@ describe "Md::App editing" do
     end
   end
 
+  it "keeps spaces at the selection's ends outside the markers, which must hug the text" do
+    with_app text: "a word  here\n", view: false do |app|
+      select_text app, 1, 8 # " word  "
+      app.toggle_bold.should be_true
+      app.markdown.should eq "a **word**  here\n"
+      app.editor.selected_text.should eq "word"
+      app.toggle_bold.should be_true
+      app.markdown.should eq "a word  here\n"
+    end
+  end
+
   it "inserts the pair with the caret between when there is nothing to wrap" do
     with_app do |app|
       app.toggle_bold.should be_true
