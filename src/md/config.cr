@@ -146,16 +146,33 @@ module Md
       @@document.clear
       toolkit = toolkit_path
       Superconf.load_file toolkit if File.exists?(toolkit)
-      exists = File.exists?(file)
-      Crysterm.configure!(exists ? file : "", argv: argv)
-      @@document = flatten(YAML.parse(File.read(file))) if exists
+      # md's file is read once: Superconf applies the text at file
+      # precedence, under the name `Superconf.load_file` gives a file, and
+      # the same text is kept as the file's own entries, for `.save`.
+      origin = "config file #{file}"
+      if text = read(file)
+        Superconf.load_yaml text, origin
+        @@document = flatten(YAML.parse(text))
+      end
+      Crysterm.configure!("", argv: argv)
       # Superconf stamps a file's values "config file PATH (KEY)"; with no
       # file of md's, nothing matches, Crysterm's own file's values included.
-      @@origin = exists ? "config file #{file} (" : ""
+      @@origin = text ? "#{origin} (" : ""
       watch
       @@dirty = false
-    rescue ex : Superconf::Error | YAML::ParseException | IO::Error
+    rescue ex : Superconf::Error
       raise Error.new(ex.message)
+    end
+
+    # The text of the config file *file*, or nil when there is none; a file
+    # that is there but cannot be read (a directory, no permission) is an
+    # `Error` naming it, as `Superconf.load_file` names it.
+    private def self.read(file : String) : String?
+      File.read file
+    rescue File::NotFoundError
+      nil
+    rescue ex : IO::Error
+      raise Error.new("cannot read config file #{file}: #{ex.message}")
     end
 
     # What Superconf stamps on a value from the file `.configure` loaded, up

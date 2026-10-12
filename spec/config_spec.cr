@@ -65,6 +65,17 @@ describe Md::Config do
       (error.message || "").should contain "config.yml"
     end
 
+    it "refuses a file it cannot read, naming it, and starts on none at all" do
+      with_config do |path|
+        Md::Config.configure file: path, argv: [] of String # no file: the defaults
+        Dir.mkdir_p path
+        error = expect_raises(Md::Error, /cannot read config file/) do
+          Md::Config.configure file: path, argv: [] of String
+        end
+        (error.message || "").should contain path
+      end
+    end
+
     it "refuses a value that does not fit its option" do
       expect_raises(Md::Error, /md.text_width/) do
         with_config("md:\n  text_width: wide\n") { }
