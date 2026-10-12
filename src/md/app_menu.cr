@@ -21,12 +21,14 @@ module Md
     # menus (`app_toolkit.cr`), where the entries' descriptions show (Tooltips,
     # `app_tips.cr`), the config file's entries
     # (`app_config.cr`) and Clear Caches…,
-    # `app_caches.cr`) and Window (another window on the document, this one
-    # closed, the open windows to switch between, `app_windows.cr`), so
+    # `app_caches.cr`), Window (another window on the document, this one
+    # closed, the open windows to switch between, `app_windows.cr`) and Help
+    # (the manual and About, `app_help.cr`), so
     # every setting is reachable from the keyboard through the menus as
-    # well, `Alt+F`/`Alt+E`/`Alt+M`/`Alt+V`/`Alt+O`/`Alt+N` opening them
+    # well, `Alt+F`/`Alt+E`/`Alt+M`/`Alt+V`/`Alt+O`/`Alt+N`/`Alt+P` opening them
     # (Format's letter is `m`, since Options has `o` and `Alt+R` resizes the
-    # panes; Window's is `n`, since `Alt+W` is Soft Wrap). Every entry
+    # panes; Window's is `n`, since `Alt+W` is Soft Wrap; Help's is `p`, since
+    # `Alt+H` is Replace). Every entry
     # carries a one-sentence description, shown while it is highlighted
     # (`#tip`, `#option_tip`, `app_tips.cr`).
     #
@@ -181,6 +183,8 @@ module Md
 
       # Last on the bar, as a Window menu is (`app_windows.cr`).
       build_window_menu bar
+      # After Window, as Qt puts Help (`app_help.cr`).
+      build_help_menu bar
 
       # The bar's right end names the keys that reach it, since the bar is
       # off the Tab chain and nothing else on screen says so: `F10` (the

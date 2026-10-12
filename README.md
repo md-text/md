@@ -127,7 +127,7 @@ runs too.
 | `F5`               | Cycle the mouse mode (the `🖱=` field)                                    |
 | `F6`               | Cycle the theme: terminal, dark, light and the five Qt themes (View → Theme) |
 | `Ctrl-Z`           | Outside the editor, suspend md to the shell (`fg` resumes); in the editor, undo |
-| `Alt-F`, `Alt-E`, `Alt-M`, `Alt-V`, `Alt-O`, `Alt-N` | Open the File, Edit, Format, View, Options and Window menus (`F10` too) |
+| `Alt-F`, `Alt-E`, `Alt-M`, `Alt-V`, `Alt-O`, `Alt-N`, `Alt-P` | Open the File, Edit, Format, View, Options, Window and Help menus (`F10` too) |
 | `Alt-W`            | Soft Wrap in the editor on and off (View → Soft Wrap)                     |
 | `Shift` + `Left`, `Right`, `Up`, `Down`, `Home`, `End`, `PageUp`, `PageDown` | Select from the cursor, in the editor and in the viewer |
 | `Ctrl-O`           | Open a file; asks for the name (File → Open…)                             |
@@ -634,6 +634,14 @@ the two share a terminal; otherwise a notice says it is in another terminal
 window, since one terminal cannot raise another. Terminal.app keeps a
 closed window on screen with "[Process completed]" when its profile says
 so.
+
+### Help
+
+Help → Manual opens md's manual — the opening paragraphs and the Usage
+chapter of the README, built into md — as the document, so it reads, searches and
+navigates like any other; File → Previous File goes back to what was open
+before. Help → About names md's version, its author and its website in the
+status bar. `Alt-P` opens the menu, since `Alt-H` is Replace.
 
 ### Settings
 

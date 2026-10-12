@@ -103,7 +103,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   at Monochrome a light theme reads black on white, Crysterm drawing a cell
   whose polarity is the opposite of the terminal's in reverse video),
   View → Terminal Links (`render.hyperlinks`: whether the viewer's links are
-  the terminal's own hyperlinks — When the Terminal Supports Them, Always,
+  the terminal's own hyperlinks — Auto-detect, with the detection's Yes or No
+  beside it, Always,
   and Never, which turns the viewer's links off altogether: plain text,
   followed by neither a click nor `Enter`, skipped by `Tab`) and Options → Reduced
   Motion (`render.reduced_motion`): three more of Crysterm's options in the
@@ -318,12 +319,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   picture glyph and the alt text; a relative source counts from the
   document's directory, a remote one is fetched in the background. Off
   (`md.images`, `MD_IMAGES`, `--no-md-images`), that row is all there is.
-- Window menu (`Alt-N`): New Window (`Ctrl-N`) opens another md window on the
+- Window menu (`Alt-N`): New (`Ctrl-N`) opens another md window on the
   document as it stands — unsaved edits included and flagged as such, a stream
   as far as it has been read — in a new terminal window asked of the emulator md runs in
   (Terminal.app and iTerm2 on macOS; kitty, Alacritty, WezTerm, foot, xterm,
   Konsole and GNOME Terminal; a tmux or screen window inside one); Close
-  Window (`Ctrl-W`) closes the one you are in after its unsaved-changes
+  Current (`Ctrl-W`) closes the one you are in after its unsaved-changes
   question, the last one quitting; the open windows are listed by title to
   switch between. Quit closes every window, each asking about its own
   changes. Where no window can be opened the entry is disabled and the key
@@ -336,6 +337,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   end, and left alone by outside clicks and `Escape`. Submenus tear off too.
   The ordinary menus are unchanged; the choice is kept with the other
   settings. (Crysterm's tear-off menus, which md builds against.)
+- Help menu (`Alt-P`), last on the bar: Manual opens md's manual — the
+  README's opening and its Usage chapter, built into the binary — as the
+  document; About names md's version, author and website in the status bar.
 
 ### Changed
 

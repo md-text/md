@@ -25,7 +25,7 @@ module Md
       {"F5", "Cycle the mouse mode (a: always, n: while reading, i: while editing, off), after vi's 'set mouse='."},
       {"F6", "Cycle the theme: terminal, dark, light and the five Qt themes (View -> Theme)."},
       {"Ctrl-Z", "Outside the editor, suspend md to the shell (fg resumes); in the editor, undo."},
-      {"F10, Alt-F, Alt-E, Alt-M, Alt-V, Alt-O, Alt-N", "Open the menu bar, or the File, Edit, Format, View, Options and Window menus."},
+      {"F10, Alt-F, Alt-E, Alt-M, Alt-V, Alt-O, Alt-N, Alt-P", "Open the menu bar, or the File, Edit, Format, View, Options, Window and Help menus."},
       {"Ctrl-O", "Open a file (asks for the name, with completion)."},
       {"Ctrl-R", "Reload the file from disk."},
       {"Ctrl-S", "Save; without a file name yet, ask for one."},
@@ -48,6 +48,32 @@ module Md
       {"Ctrl-W", "Outside the editor, close this window, asking first when its changes are unsaved; closing the last window quits (Window -> Close Current)."},
       {"Ctrl-Q, q", "Quit, closing every window (q anywhere but in the editor); each window asks first when its changes are unsaved."},
     ]
+
+    # The README, read when the binary is built: the user's manual Help →
+    # Manual shows (`.markdown`).
+    README = {{ read_file("#{__DIR__}/../../README.md") }}
+
+    # The manual as Markdown, for Help → Manual: the README's opening
+    # paragraphs and its Usage chapter, the parts about using md; the
+    # project's status, its badges and the chapters on installing, building
+    # and developing it are left out. One text with the README, so the two
+    # never disagree.
+    def self.markdown : String
+      String.build do |io|
+        # Before the first chapter: the opening, without the status note and
+        # the badges.
+        opening = true
+        keep = true
+        README.each_line(chomp: false) do |line|
+          if line.starts_with?("## ")
+            opening = false
+            keep = line.starts_with?("## Usage")
+          end
+          next if opening && (line.starts_with?('>') || line.starts_with?("[!["))
+          io << line if keep
+        end
+      end.gsub(/\n{3,}/, "\n\n")
+    end
 
     # *value* checked against `KINDS`: a usage error otherwise.
     def self.kind(value : String) : String
