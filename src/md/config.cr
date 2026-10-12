@@ -14,6 +14,9 @@ require "yaml"
 # Watch File and Overwrite Mode are not here: the first is per run, as
 # `--watch` is, the second is the editor's state.
 module Superconf
+  # Edit.
+  option "md.vi_mode", false, env: "MD_VI_MODE",
+    description: "Edit → Vi Mode (Neovim): edit the editor's text as in Neovim, by an embedded nvim; the function keys and Alt combinations stay md's"
   # Format.
   option "md.soft_wrap", true, env: "MD_SOFT_WRAP",
     description: "Format → Soft Wrap: fold a long line at the editor's edge instead of scrolling sideways"
@@ -49,9 +52,6 @@ module Superconf
     description: "View → Dialog Style: how a question is asked, in place of the status bar (line_prompt) or in a dialog (modal)"
   option "md.tooltips", Md::App::Tooltips::StatusBar, env: "MD_TOOLTIPS",
     description: "View → Tooltips: where a menu entry's description shows while it is highlighted — in the status bar (status_bar), in a popup beside the entry after a moment (popup), or nowhere (off)"
-  # Edit.
-  option "md.vi_mode", false, env: "MD_VI_MODE",
-    description: "Edit → Vi Mode (Neovim): edit the editor's text as in Neovim, by an embedded nvim; the function keys and Alt combinations stay md's"
   # Options.
   option "md.vi_config", false, env: "MD_VI_CONFIG",
     description: "Options → Vi Mode: Use Neovim Config: start Vi Mode's nvim with your own config and plugins rather than --clean"
