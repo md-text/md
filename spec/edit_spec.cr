@@ -169,6 +169,25 @@ describe "Md::App editing" do
     end
   end
 
+  it "leaves the space after a quote marker alone when outdenting: it is the marker's, not indentation" do
+    with_app text: "> quoted\n>   indented\n", view: false do |app|
+      place app, 0, 3
+      app.indent_lines(-1).should be_false
+      app.markdown.should eq "> quoted\n>   indented\n"
+      place app, 1, 3
+      app.indent_lines(-1).should be_true
+      app.markdown.should eq "> quoted\n> indented\n"
+    end
+    with_app text: "> - item\n>   - sub\n", view: false do |app|
+      place app, 0, 4
+      app.indent_lines(-1).should be_false
+      notice(app).should contain "Not indented"
+      place app, 1, 6
+      app.indent_lines(-1).should be_true
+      app.markdown.should eq "> - item\n> - sub\n"
+    end
+  end
+
   it "shows Tab and Shift+Tab on Format → Indent and Outdent, keys that are theirs in the editor alone" do
     with_app text: "text\n", view: false do |app, window|
       indent, outdent = menu(app, 2).actions[6, 2]

@@ -140,6 +140,13 @@ module Md
         marker.size + spacing.size
       end
 
+      # The indentation inside the quote: the one space after a `>` is the
+      # marker's (`QUOTE_MARKERS`), not indentation, so `> - item` is at
+      # the quote's margin.
+      def inner_indent : Int32
+        quote.empty? ? indent.size : indent.lchop(' ').size
+      end
+
       # The characters before the text.
       def prefix_size : Int32
         quote.size + indent.size + content_offset + (task.try(&.size) || 0)
@@ -442,7 +449,9 @@ module Md
           block = doc.blocks[i]
           text = block.text
           next if text.blank?
-          quote = QUOTE.match(text).try(&.[0].size) || 0
+          # The indentation starts after the quote markers and the one
+          # space each may take, which is the marker's, not indentation.
+          quote = QUOTE_MARKERS.match(text).try(&.[0].size) || 0
           start = block.position + quote
           if delta > 0
             Crysterm::TextCursor.new(doc, start).insert_text " " * delta
@@ -680,18 +689,20 @@ module Md
     private def item_delta(index : Int32, item : ListItem, direction : Int32) : Int32?
       if direction > 0
         # Markdown has no deeper level without an item to hold it: an item
-        # nests one level under the item above, and no further.
+        # nests one level under the item above, and no further — an item
+        # already there, or indented past it, has nowhere to go in.
         unless parent = nesting_parent(index, item)
           notice "No list item above to nest under"
           return
         end
-        target = parent.indent.size + parent.content_offset
+        delta = parent.inner_indent + parent.content_offset - item.inner_indent
+        return delta if delta > 0
+        notice "Already nested under the item above"
       else
-        target = outdented_indent(index, item)
+        delta = outdented_indent(index, item) - item.inner_indent
+        return delta if delta < 0
+        notice "Not indented"
       end
-      delta = target - item.indent.size
-      return delta unless delta == 0
-      notice(direction > 0 ? "Already nested under the item above" : "Not indented")
       nil
     end
 
@@ -703,11 +714,11 @@ module Md
       item_above(index) { |other| other.quote == item.quote && other.indent.size <= item.indent.size }
     end
 
-    # The indentation of the nearest shallower item above line *index* (in
-    # the same quote), or the margin.
+    # The indentation (`ListItem#inner_indent`) of the nearest shallower
+    # item above line *index* (in the same quote), or the margin.
     private def outdented_indent(index : Int32, item : ListItem) : Int32
       parent = item_above(index) { |other| other.quote == item.quote && other.indent.size < item.indent.size }
-      parent ? parent.indent.size : 0
+      parent ? parent.inner_indent : 0
     end
 
     # The first list item above line *index*, searching upward, that *fits*.
