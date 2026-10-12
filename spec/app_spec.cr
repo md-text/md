@@ -390,11 +390,24 @@ describe "Md::App menus" do
   it "has File, Edit, Format, View, Options, Window and Help menus" do
     with_app do |app|
       app.main.menu_bar.menus.size.should eq 7
-      menu(app, 0).actions.map(&.text).should eq ["&Open…", "Open &Recent", "&Reload", "&Close", "", "&Previous File", "&Next File", "", "&Save", "Save &As…", "", "&Quit"]
+      menu(app, 0).actions.map(&.text).should eq ["&Open…", "Open &Recent", "Reloa&d", "&Close", "", "&Previous File", "&Next File", "", "&Save", "Save &As…", "", "&Quit"]
       menu(app, 0).actions[1].enabled?.should be_false # no history, nothing recent
       menu(app, 4).actions.map(&.text).should eq ["&Overwrite Mode", "&Ask Before Discarding Changes", "A&uto-Save", "&Keep a Backup File", "&Mouse", "&Clipboard", "Resi&zable Panes", "No An&imations", "D&etachable Menus", "Vi Mode: Use &Neovim Config", "", "&Load Config…", "&Save Config", "Sa&ve Config As…", "", "Clea&r Caches…"]
       menu(app, 2).actions.map(&.text).should eq ["&Bold", "&Italic", "&Code", "Code B&lock", "", "I&ndent", "&Outdent", "", "As a &Task", "Toggle Task Chec&kbox", "", "&Promote Heading", "&Demote Heading", "", "&Soft Wrap", "&Hard Wrap", "Te&xt Width", "Re&wrap (to 80 Columns)"]
       menu(app, 3).actions.map(&.text).should contain "The&me" # with the other appearance choices
+    end
+  end
+
+  it "gives each entry of a menu or a submenu its own mnemonic" do
+    with_app do |app|
+      check = uninitialized Proc(String, Array(Crysterm::Action), Nil)
+      check = ->(name : String, actions : Array(Crysterm::Action)) do
+        letters = actions.reject(&.separator?).compact_map(&.mnemonic)
+        {name, letters.tally.select { |_, n| n > 1 }.keys}.should eq({name, [] of Char})
+        actions.each { |action| action.menu.try { |sub| check.call "#{name} → #{action.text}", sub } }
+        nil
+      end
+      app.main.menu_bar.menus.each { |menu| check.call menu.title, menu.actions }
     end
   end
 
@@ -436,7 +449,7 @@ describe "Md::App menus" do
       overwrite.checked?.should be_false
 
       modes = mouse.menu || [] of Crysterm::Action
-      modes.map(&.text).should eq ["M=&a (Always)", "M=&n (While Reading)", "M=&i (While Editing)", "M= (&Never)"]
+      modes.map(&.text).should eq ["M=&a (Always)", "M=&n (While Reading)", "M=&i (While Editing)", "M= (Ne&ver)"]
       modes.map(&.checked?).should eq [true, false, false, false]
       modes[2].trigger
       app.mouse_mode.should eq Md::App::MouseMode::Insert

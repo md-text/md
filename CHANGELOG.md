@@ -538,3 +538,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   they become usable while the menu is open. They still highlight under the
   pointer, to show why they are disabled. (Fixed in Crysterm, which md
   builds against.)
+- Each entry of a menu answers to a letter of its own: File → Reload is
+  `d` (Open Recent keeping `r`), Edit → Find Previous `o` (Paste keeping
+  `p`), View → Menu and Status Bars `s` (Media Backend keeping `b`) and
+  Options → Mouse → Never `v` (While Reading keeping `n`), where two
+  entries shared a letter and pressing it always took the first of them.

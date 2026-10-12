@@ -69,7 +69,7 @@ module Md
       tip recent, "Open one of the files opened before, the most recent first"
       recent.enabled = false
       @recent_action = recent
-      named "reload", tip file.add_action("&Reload", shortcut: "Ctrl+R") { reload }, "Read the file from disk again, keeping your place"
+      named "reload", tip file.add_action("Reloa&d", shortcut: "Ctrl+R") { reload }, "Read the file from disk again, keeping your place"
       # The document off the trail, the next one on it in its place, or a
       # blank one (`app_links.cr`).
       named "close", tip file.add_action("&Close") { close_document }, "Close the document, asking about unsaved changes first, and go on to the next file, or a new one"
@@ -96,7 +96,7 @@ module Md
       edit.add_separator
       named "find", tip edit.add_action("&Find…", shortcut: "Ctrl+F") { search_prompt }, "Search the document for a pattern, highlighting the matches"
       named "find-next", tip edit.add_action("Find &Next", shortcut: "Ctrl+G") { find_next }, "Go to the next match of the last search"
-      named "find-previous", tip edit.add_action("Find &Previous", shortcut: "Alt+G") { find_next reverse: true }, "Go to the previous match of the last search"
+      named "find-previous", tip edit.add_action("Find Previ&ous", shortcut: "Alt+G") { find_next reverse: true }, "Go to the previous match of the last search"
       named "replace", tip edit.add_action("&Replace…", shortcut: "Alt+H") { replace_prompt }, "Replace the matches of a pattern, asking at each one"
       named "clear-search-highlights", tip edit.add_action("Clear Search &Highlights") { clear_search_highlight }, "Stop highlighting the last search's matches"
       edit.add_separator
@@ -120,7 +120,7 @@ module Md
         @view_actions[pane] = action
       end
       # `F4` is the key, and the way back once the bars are gone.
-      add_toggle view, "Menu and Status &Bars", "bars", @bars, option_tip("md.bars")
+      add_toggle view, "Menu and &Status Bars", "bars", @bars, option_tip("md.bars")
       view.add_separator
       add_toggle view, "S&ync Cursor", "sync-cursor", @sync_cursor, option_tip("md.sync_cursor")
       add_toggle view, "&Highlight Line", "highlight-line", @highlight_line, option_tip("md.highlight_line")
@@ -283,7 +283,7 @@ module Md
       in .all?    then "#{icon}=&a (Always)"
       in .normal? then "#{icon}=&n (While Reading)"
       in .insert? then "#{icon}=&i (While Editing)"
-      in .off?    then "#{icon}= (&Never)"
+      in .off?    then "#{icon}= (Ne&ver)"
       end
     end
 
