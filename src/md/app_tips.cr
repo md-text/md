@@ -93,7 +93,7 @@ module Md
       case mode
       in .status_bar? then "Show a highlighted entry's description in the status bar at once"
       in .popup?      then "Show a highlighted entry's description in a popup beside it after a moment"
-      in .off?        then "Show no descriptions; F1 on an entry still shows its"
+      in .off?        then "Show no descriptions; F1 on a highlighted entry still shows it beside the entry"
       end
     end
   end
