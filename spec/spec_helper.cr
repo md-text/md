@@ -106,7 +106,8 @@ def notice(app)
   app.main.status_bar.message
 end
 
-# The menu at *index* on the bar: File, Edit, Format, View, Options, Window.
+# The menu at *index* on the bar: File, Edit, Format, View, Options, Window,
+# Help.
 def menu(app, index)
   app.main.menu_bar.menus[index]
 end

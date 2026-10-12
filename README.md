@@ -422,6 +422,14 @@ changed it, so md beside an editor shows each save as it happens. While the
 editor holds unsaved changes the reload is skipped and a notice says the
 file changed on disk. The status bar shows `(watching)` after the name.
 
+File → Close closes the document, asking first about unsaved changes, and
+takes it off the trail of files that Previous File and Next File retrace
+(see Following links); its place is remembered, as for any file left. The
+file Next File would have gone to opens in its place, where it was left;
+with none, a blank new document is left, as `md` starts without a file, and
+Previous File still leads back. A document being read from standard input
+stops being read.
+
 ### Dropping a file
 
 A file dragged from a file manager onto the window opens, as if by File →

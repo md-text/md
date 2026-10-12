@@ -1,6 +1,6 @@
 module Md
   class App
-    # The menu bar: File (open, the recent files, reload, the previous and
+    # The menu bar: File (open, the recent files, reload, close, the previous and
     # the next file, save, quit), Edit (copy, paste and paste from a named
     # source, find, repeat the find, replace, go to a line, jump between
     # headings), Format (the Markdown markup, `app_edit.cr`), View (which panes
@@ -67,6 +67,9 @@ module Md
       recent.enabled = false
       @recent_action = recent
       tip file.add_action("&Reload", shortcut: "Ctrl+R") { reload }, "Read the file from disk again, keeping your place"
+      # The document off the trail, the next one on it in its place, or a
+      # blank one (`app_links.cr`).
+      tip file.add_action("&Close") { close_document }, "Close the document, asking about unsaved changes first, and go on to the next file, or a new one"
       file.add_separator
       # The files left, retraced (`app_links.cr`).
       add_navigation_actions file

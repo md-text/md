@@ -337,6 +337,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   end, and left alone by outside clicks and `Escape`. Submenus tear off too.
   The ordinary menus are unchanged; the choice is kept with the other
   settings. (Crysterm's tear-off menus, which md builds against.)
+- File → Close: closes the document after the unsaved-changes question, takes
+  it off the trail Previous File and Next File retrace, and opens the file
+  Next File would have gone to, or leaves a blank new document.
 - Help menu (`Alt-P`), last on the bar: Manual opens md's manual — the
   README's opening and its Usage chapter, built into the binary — as the
   document; About names md's version, author and website in the status bar.
