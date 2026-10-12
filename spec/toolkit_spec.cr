@@ -1,6 +1,6 @@
 require "./spec_helper"
 
-# View → Color Depth, View → Terminal Links and Options → Reduced Motion:
+# View → Color Depth, View → Terminal Links and Options → No Animations:
 # Crysterm's own options in the menus, kept with the other settings.
 
 private def submenu(app, index, text) : Array(Crysterm::Action)
@@ -76,7 +76,7 @@ describe "Md::App toolkit options" do
 
   it "toggles reduced motion" do
     with_app do |app|
-      entry = menu(app, 4).actions.find!(&.text.==("Re&duced Motion"))
+      entry = menu(app, 4).actions.find!(&.text.==("No An&imations"))
       entry.checked?.should be_false
       entry.trigger
       app.reduced_motion?.should be_true

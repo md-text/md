@@ -331,9 +331,10 @@ altogether — drawn as plain text, followed by neither a click nor `Enter`,
 skipped by `Tab` (`--render-hyperlinks`). Below the three, Double-click to
 Open makes a double click follow a link where a single one does by default,
 the choice desktops offer; a single click then only places the caret
-(`md.link_double_click`). Options → Reduced Motion skips Crysterm's
-animations — a pressed button, a fade — and shows their end state at once
-(`--render-reduced-motion`). Options → Detachable Menus is described with
+(`md.link_double_click`). Options → No Animations skips Crysterm's
+animations and shows their end state at once (`--render-reduced-motion`):
+so far the flash of a dialog button pressed from the keyboard and the
+transitions of a stylesheet that declares them. Options → Detachable Menus is described with
 the menus above (`--menu-tear-off`). All four are kept with the other
 settings.
 
@@ -741,7 +742,7 @@ Status Bars, Sync Cursor, Highlight Line, Line Numbers, Center Document, Rulers 
 Images, Terminal Links → Double-click to Open, Dialog Style, Ask Before Discarding
 Changes, Auto-Save, Keep a Backup File, the mouse mode, the clipboard mode,
 Resizable Panes, Tooltips, the theme and Crysterm's own Color Depth, Terminal Links, Media
-Backend, Reduced Motion, Detachable Menus and Vi Mode Uses Your Neovim Config — and the pane sizes are kept across runs in
+Backend, No Animations, Detachable Menus and Vi Mode Uses Your Neovim Config — and the pane sizes are kept across runs in
 `$XDG_CONFIG_HOME/md/config.yml` (`~/.config/md/config.yml`), written when
 md quits if anything changed. Watch File is not kept: like `--watch`, it is
 for the run at hand.
@@ -866,7 +867,7 @@ src/md/app_file.cr    open, reload, watch; the unsaved-changes guard; recent fil
 src/md/app_links.cr   following links; Previous File and Next File
 src/md/app_theme.cr   the theme: Crysterm's built-in themes, switched at runtime
 src/md/app_media.cr   View → Images and Media Backend, with its Change for 5s trial
-src/md/app_toolkit.cr Crysterm's own options in the menus: color depth, terminal links, reduced motion, detachable menus
+src/md/app_toolkit.cr Crysterm's own options in the menus: color depth, terminal links, no animations, detachable menus
 src/md/app_autosave.cr auto-save to a recovery file; the backup file
 src/md/app_view.cr    soft wrap, hard wrap, text width and centering, rulers and guides
 src/md/app_clipboard.cr copying and pasting; the clipboard modes

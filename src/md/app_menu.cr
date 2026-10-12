@@ -20,7 +20,7 @@ module Md
     # modes the status bar toggles — overwrite mode and the mouse mode — the
     # unsaved-changes guard, auto-save and the backup file
     # (`app_autosave.cr`), the clipboard mode, whether the panes resize
-    # (`app_panes.cr`), reduced motion and detachable
+    # (`app_panes.cr`), No Animations (reduced motion) and detachable
     # menus (`app_toolkit.cr`), where the entries' descriptions show (Tooltips,
     # `app_tips.cr`), the config file's entries
     # (`app_config.cr`) and Clear Caches…,
@@ -170,8 +170,8 @@ module Md
       # Whether the dividers between the panes move (`app_panes.cr`); `z`
       # is free, as `r` is not.
       add_toggle options, "Resi&zable Panes", "resizable-panes", @resizable_panes, option_tip("md.resizable_panes")
-      # Crysterm's `render.reduced_motion` (`app_toolkit.cr`); `d` is free.
-      add_toggle options, "Re&duced Motion", "reduced-motion", @reduced_motion, "Skip Crysterm's animations and show their end state at once"
+      # Crysterm's `render.reduced_motion` (`app_toolkit.cr`); `i` is free.
+      add_toggle options, "No An&imations", "reduced-motion", @reduced_motion, "Show animations at their end state at once: a button's flash when pressed from the keyboard, a stylesheet's transitions"
       # Crysterm's `menu.tear_off` (`app_toolkit.cr`); `e` is free.
       add_toggle options, "D&etachable Menus", "detachable-menus", @tear_off_menus, "Give every menu a grab strip that tears off a copy to keep on screen"
       # Where these descriptions show (`app_tips.cr`); `t` is free.

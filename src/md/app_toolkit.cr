@@ -31,10 +31,14 @@ module Md
     # double-click choice desktops offer — through `TextBrowser#double_click_links`;
     # a single click then only places the caret, as on any text.
     #
-    # Options → Reduced Motion (`#reduced_motion?`, `render.reduced_motion`):
-    # Crysterm's animations — a button's press, a fade — are skipped and
-    # their end state shown at once, as a desktop's reduced-motion setting
-    # asks.
+    # Options → No Animations (`#reduced_motion?`, `render.reduced_motion`,
+    # a desktop's reduced-motion setting): Crysterm's animations are
+    # skipped and their end state shown at once. In md that is little so
+    # far: the pressed look a dialog button flashes for a tenth of a second
+    # when activated from the keyboard (View → Dialog Style → Modal
+    # Dialogs), and the transitions and fades of a stylesheet that declares
+    # them (`--colors-stylesheet`; none of the stock themes does). Animated
+    # images are to follow it too, showing one still frame.
     #
     # Options → Detachable Menus (`#tear_off_menus?`, `menu.tear_off`): every
     # menu gets a grab strip (`⠿⠿⠿`) in the middle of its top border, after

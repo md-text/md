@@ -106,8 +106,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   the terminal's own hyperlinks — Auto, with the detection's Yes or No
   beside it, Always,
   and Never, which turns the viewer's links off altogether: plain text,
-  followed by neither a click nor `Enter`, skipped by `Tab`) and Options → Reduced
-  Motion (`render.reduced_motion`): three more of Crysterm's options in the
+  followed by neither a click nor `Enter`, skipped by `Tab`) and Options → No
+  Animations (`render.reduced_motion`): three more of Crysterm's options in the
   menus, kept with the other settings. Terminal Links → Double-click to
   Open (`link_double_click`) makes a double click follow a link where a
   single one does by default. (Crysterm's `TextEdit` learnt
@@ -399,6 +399,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   were in View; their commands and settings keep their names.
 - View → Center Text is called Center Document; its command (`center-text`)
   and setting (`md.center_text`) keep their names.
+- Options → Reduced Motion is called No Animations; its command
+  (`reduced-motion`) and setting (`render.reduced_motion`) keep their names.
 - Resizable Panes is in the Options menu, where it was in View; its command
   (`resizable-panes`) and setting (`md.resizable_panes`) keep their names.
 - The settings live in `$XDG_CONFIG_HOME/md/config.yml`
