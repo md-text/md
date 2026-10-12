@@ -97,7 +97,7 @@ describe "Md::App windows" do
 
   it "reports an opener that fails instead of raising" do
     with_app do |app|
-      app.window_opener = ->(_title : String) { raise "Timed out waiting for the kitty window to start"; headless_window }
+      app.window_opener = ->(_title : String) : Crysterm::Window { raise "Timed out waiting for the kitty window to start" }
       app.new_window.should be_nil
       notice(app).should contain "Cannot open a window: Timed out waiting for the kitty window"
     end

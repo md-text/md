@@ -84,7 +84,7 @@ describe "Md::App detachable menus" do
       click_row window, torn, "S&ync Cursor"
       app.sync_cursor?.should be_false
 
-      close = torn.children.find { |c| c.content == "✕" } || fail("the torn-off menu shows no close mark")
+      close = torn.children.find { |child| child.content == "✕" } || fail("the torn-off menu shows no close mark")
       click_at window, close.aleft, close.atop
       Menu.torn_off_menus(window).should be_empty
     end

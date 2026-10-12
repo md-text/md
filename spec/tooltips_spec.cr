@@ -60,7 +60,7 @@ describe "Md::App tooltips" do
   it "gives every entry of every menu and submenu a description" do
     with_app Md::Source.new(path: "doc.md"), text: "# T\n\ntext\n", view: true, history: Md::History.new(tempfile(nil)) do |app|
       app.main.menu_bar.menus.size.should eq 6
-      all = app.main.menu_bar.menus.flat_map { |m| walk m.actions }
+      all = app.main.menu_bar.menus.flat_map { |bar_menu| walk bar_menu.actions }
       all.size.should be > 100
       all.each do |action|
         text = action.tool_tip || fail("#{action.text} has no description")

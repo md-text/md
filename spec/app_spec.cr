@@ -204,6 +204,18 @@ describe Md::App do
     end
   end
 
+  it "keeps the focused pane on Escape, with no divider to leave" do
+    with_app Md::Source.new(path: "doc.md"), text: "# T\n\ntext\n", view: true do |app, window|
+      window.repaint
+      app.viewer.focused?.should be_true
+      press(window, Tput::Key::Escape).accepted?.should be_false
+      window.focused.should eq app.viewer # not rewound to nothing
+      app.show_pane(Md::App::Pane::Editor).focus
+      press(window, Tput::Key::Escape)
+      window.focused.should eq app.editor # nor to the pane focused before
+    end
+  end
+
   it "keeps the application keys quiet while a prompt is open" do
     with_app do |app, window|
       app.save_as_prompt
