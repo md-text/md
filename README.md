@@ -193,8 +193,10 @@ cycles the modes from the keyboard too, and the Options menu offers them as
 well, next to the overwrite mode. The File menu opens, reloads, saves, saves
 as and quits, and lists the recently opened files; the Edit menu copies,
 searches, replaces, goes to a line and jumps between headings; the Format menu marks
-up the source (see Editing Markdown below); the View menu shows and hides
-the panes.
+up the source (see Editing Markdown below) — the markup around text first
+(Bold, Italic, Code, Code Block), then what works on whole lines (Indent and
+Outdent, the task entries, the heading level), then Rewrap; the View menu
+shows and hides the panes.
 
 Every menu entry has a one-sentence description of what it does. While a
 menu is open, the status bar shows the highlighted entry's in place of the
@@ -711,7 +713,7 @@ command, and so is every key no entry has:
 | -------- | - |
 | `open`, `reload`, `close`, `previous-file`, `next-file`, `save`, `save-as`, `quit` | The File menu |
 | `copy`, `copy-as-markdown`, `paste`, `paste-from-terminal`, `paste-from-command`, `paste-from-internal`, `find`, `find-backward`, `find-next`, `find-previous`, `replace`, `clear-search-highlights`, `command`, `go-to-line`, `next-heading`, `previous-heading`, `vi-mode` | The Edit menu, and `?` |
-| `bold`, `italic`, `code`, `code-block`, `task`, `toggle-task`, `indent`, `outdent`, `promote-heading`, `demote-heading`, `rewrap-paragraph`, `rewrap-document` | The Format menu |
+| `bold`, `italic`, `code`, `code-block`, `indent`, `outdent`, `task`, `toggle-task`, `promote-heading`, `demote-heading`, `rewrap-paragraph`, `rewrap-document` | The Format menu |
 | `editor`, `viewer`, `toc`, `resizable-panes`, `bars`, `sync-cursor`, `highlight-line`, `line-numbers`, `soft-wrap`, `hard-wrap`, `center-text`, `horizontal-ruler`, `vertical-ruler`, `guides`, `images`, `media-trial`, `link-double-click`, `watch-file` | The View menu's check entries: each turns its setting on or off |
 | `overwrite-mode`, `confirm-discard`, `autosave`, `backup-file`, `reduced-motion`, `detachable-menus`, `vi-config`, `load-config`, `save-config`, `save-config-as`, `clear-caches` | The Options menu |
 | `new-window`, `close-window`, `manual`, `about` | The Window and Help menus |

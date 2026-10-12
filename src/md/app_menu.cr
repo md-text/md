@@ -3,7 +3,8 @@ module Md
     # The menu bar: File (open, the recent files, reload, close, the previous and
     # the next file, save, quit), Edit (copy, paste and paste from a named
     # source, find, repeat the find, replace, go to a line, jump between
-    # headings, Vi Mode, `app_vi.cr`), Format (the Markdown markup, `app_edit.cr`), View (which panes
+    # headings, Vi Mode, `app_vi.cr`), Format (the Markdown markup, `app_edit.cr`: the markup around text, then
+    # indentation, the task boxes and the heading level, then Rewrap), View (which panes
     # are shown and whether they resize, whether the two bars are shown,
     # whether the editor's and the viewer's
     # carets are kept in sync, whether the caret's line is highlighted,

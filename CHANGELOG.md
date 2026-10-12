@@ -387,6 +387,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- The Format menu is grouped by what an entry works on: Bold, Italic, Code
+  and Code Block; then Indent and Outdent, in a section of their own below
+  them; then the task entries; then the heading level; then Rewrap.
 - The settings live in `$XDG_CONFIG_HOME/md/config.yml`
   (`~/.config/md/config.yml`), YAML in the layout `--crysterm-dump-config`
   prints, one mapping per option group, instead of `settings.json`, which is
