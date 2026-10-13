@@ -125,8 +125,9 @@ module Md
     # than every interval.
     @autosave_failed = false
 
-    # The text received from the stream, which the text is filled from when
-    # an editor is first shown (`#fill`).
+    # The text received from the stream while the text has yet to be filled
+    # from it, which it is when an editor is first shown (`#fill`); emptied
+    # then, the text holding the stream from there on.
     @streamed = IO::Memory.new
     # Whether the text has yet to be filled from the stream.
     getter? editor_stale = false
@@ -376,8 +377,11 @@ module Md
         @stream_scrubbed = true
         chunk = decoded
       end
-      @streamed << chunk
-      loading { Crysterm::TextCursor.new(@text, @text.size).insert_text chunk } unless @editor_stale
+      if @editor_stale
+        @streamed << chunk
+      else
+        loading { Crysterm::TextCursor.new(@text, @text.size).insert_text chunk }
+      end
       received_by(by) { emit Md::Event::StreamAppended, chunk }
     end
 
@@ -413,6 +417,8 @@ module Md
         @loading = false
       end
       @editor_stale = false
+      # The text holds it now: a second copy of a long stream is not kept.
+      @streamed = IO::Memory.new
     end
 
     # Saves to *path* (`#save`) and makes it the document's file: its key
