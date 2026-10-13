@@ -71,6 +71,12 @@ module Md
     end
 
     @replacing : Replacement?
+
+    # A match of `#each_match`'s: the match itself (for its groups) and
+    # where it starts and stops in the text, in characters (document
+    # positions). `Regex::MatchData#begin` would give these too, at a scan
+    # of the text from its start each time it is asked.
+    private record SearchMatch, data : Regex::MatchData, start : Int32, stop : Int32
     # The single-key handler on the prompt's field while the replace
     # question is up, and the key it took.
     @replace_key : EventHandler::Subscription?
@@ -232,15 +238,15 @@ module Md
       return unless (session = @replacing) && (regex = @search_regex) && @editor.selection?
       doc = @editor.document
       start = @editor.text_cursor.selection_start
-      return unless (match = regex.match(doc.to_plain_text, start)) && match.begin(0) == start
-      text = expand_replacement session.replacement, match
-      cursor = Crysterm::TextCursor.new(doc, start, match.end(0))
+      return unless (match = first_match(regex, doc.to_plain_text, start)) && match.start == start
+      text = expand_replacement session.replacement, match.data
+      cursor = Crysterm::TextCursor.new(doc, start, match.stop)
       cursor.insert_text text
       @editor.text_cursor = cursor
       session.count += 1
       # Past the wrap the start is ahead of the caret and moves with the
       # text before it.
-      session.origin += text.size - match[0].size if session.wrapped?
+      session.origin += text.size - (match.stop - start) if session.wrapped?
       edited
     end
 
@@ -262,18 +268,18 @@ module Md
         {ahead, behind}.each do |group|
           delta = 0
           group.each do |match|
-            replacement = expand_replacement session.replacement, match
-            cursor = Crysterm::TextCursor.new(doc, match.begin(0) + delta, match.end(0) + delta)
+            replacement = expand_replacement session.replacement, match.data
+            cursor = Crysterm::TextCursor.new(doc, match.start + delta, match.stop + delta)
             cursor.insert_text replacement
             last = cursor
-            delta += replacement.size - match[0].size
+            delta += replacement.size - (match.stop - match.start)
             session.count += 1
           end
         end
         nil
       end
       @editor.text_cursor = last if last
-      edited if session.found?
+      edited if last
       end_replace
     end
 
@@ -282,12 +288,12 @@ module Md
     # asked about — to the end, or up to where it started once it has
     # wrapped, and those from the top to where it started, empty once it
     # has wrapped.
-    private def matches_left(session : Replacement, regex : Regex, text : String) : {Array(Regex::MatchData), Array(Regex::MatchData)}
+    private def matches_left(session : Replacement, regex : Regex, text : String) : {Array(SearchMatch), Array(SearchMatch)}
       from = @editor.selection? ? @editor.text_cursor.selection_start : @editor.cursor_position
-      ahead = [] of Regex::MatchData
-      behind = [] of Regex::MatchData
+      ahead = [] of SearchMatch
+      behind = [] of SearchMatch
       each_match(regex, text) do |match|
-        start = match.begin(0)
+        start = match.start
         if start >= from
           ahead << match unless session.wrapped? && start >= session.origin
         elsif start < session.origin && !session.wrapped?
@@ -307,15 +313,15 @@ module Md
       text = doc.to_plain_text
       from = @editor.selection? ? @editor.text_cursor.selection_end : @editor.cursor_position
       match = first_match(regex, text, from)
-      match = nil if match && session.wrapped? && match.begin(0) >= session.origin
+      match = nil if match && session.wrapped? && match.start >= session.origin
       unless match
         return false if session.wrapped?
         session.wrapped = true
         match = first_match(regex, text)
-        return false unless match && match.begin(0) < session.origin
+        return false unless match && match.start < session.origin
         notice "Search hit BOTTOM, continuing at TOP"
       end
-      @editor.text_cursor = Crysterm::TextCursor.new(doc, match.begin(0), match.end(0))
+      @editor.text_cursor = Crysterm::TextCursor.new(doc, match.start, match.stop)
       session.found = true
       true
     end
@@ -335,22 +341,44 @@ module Md
       end
     end
 
-    # Yields the non-empty matches of *regex* in *text* from *from* on, in
-    # order and without overlap: what the highlight shows, and what a
-    # replace steps through (an empty match would be replaced at the same
-    # spot forever).
-    private def each_match(regex : Regex, text : String, from : Int32 = 0, & : Regex::MatchData ->) : Nil
-      pos = from
-      while match = regex.match(text, pos)
-        s = match.begin(0)
-        e = match.end(0)
-        yield match if e > s
-        pos = e > s ? e : s + 1
+    # Yields the non-empty matches of *regex* in *text* from character
+    # *from* on, in order and without overlap: what the highlight shows,
+    # and what a replace steps through (an empty match would be replaced at
+    # the same spot forever). The text is walked by byte offset and each
+    # match's character positions counted on from the last one's, as
+    # `Crysterm::TextDocument#find` walks: `Regex#match` from a character
+    # index and `MatchData#begin` each scan the text from its start once it
+    # has a non-ASCII character, which made a walk over the matches — at
+    # every edit, for the underlines — quadratic in the text.
+    private def each_match(regex : Regex, text : String, from : Int32 = 0, & : SearchMatch ->) : Nil
+      return unless pos = text.char_index_to_byte_index(from)
+      bytes = text.to_slice
+      # The last character position counted, and its byte offset.
+      mark, mark_byte = from, pos
+      while pos <= bytes.size && (match = regex.match_at_byte_index(text, pos))
+        s = match.byte_begin(0)
+        e = match.byte_end(0)
+        if e > s
+          start = mark + char_count(bytes, mark_byte, s)
+          mark, mark_byte = start + char_count(bytes, s, e), e
+          yield SearchMatch.new(match, start, mark)
+          pos = e
+        else
+          pos = s + (s < bytes.size ? Char::Reader.new(text, s).current_char_width : 1)
+        end
       end
     end
 
+    # The characters of UTF-8 *bytes* from offset *from* up to *to*: the
+    # bytes that start one.
+    private def char_count(bytes : Bytes, from : Int32, to : Int32) : Int32
+      count = 0
+      (from...to).each { |i| count += 1 unless bytes[i] & 0xC0 == 0x80 }
+      count
+    end
+
     # The first of `#each_match`'s matches, if any.
-    private def first_match(regex : Regex, text : String, from : Int32 = 0) : Regex::MatchData?
+    private def first_match(regex : Regex, text : String, from : Int32 = 0) : SearchMatch?
       each_match(regex, text, from) { |match| return match }
       nil
     end
@@ -479,7 +507,7 @@ module Md
       selections = [] of Crysterm::Widget::TextEdit::ExtraSelection
       each_match(regex, text) do |match|
         break if selections.size >= MAX_HIGHLIGHTS
-        selections << Crysterm::Widget::TextEdit::ExtraSelection.new(Crysterm::TextCursor.new(doc, match.begin(0), match.end(0)), format)
+        selections << Crysterm::Widget::TextEdit::ExtraSelection.new(Crysterm::TextCursor.new(doc, match.start, match.stop), format)
       end
       set_match_selections pane, selections
     end

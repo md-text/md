@@ -542,6 +542,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- With a search's matches underlined, every edit of a long document with a
+  non-ASCII character in it (a dash, an accent, the viewer's bullets) paid
+  for a rescan of the text from its start at each match, a lag at every key,
+  and Replace's `a` on thousands of matches took seconds to minutes. The
+  matches are found in one pass over the text now.
+- An edit made while a document was still streaming in on standard input
+  showed the paragraph the stream was in twice in the viewer once the next
+  lines arrived, and numbered the rest from the wrong line for Sync Cursor.
+  The viewer is now re-rendered as the stream so far, and the lines still
+  to come continue it.
 - With View → Watch File on, typing on within a second of a save made md
   take its own save for a change on disk and say "changed on disk; unsaved
   changes kept". The document now knows its file as it last wrote or read
