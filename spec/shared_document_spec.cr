@@ -215,3 +215,149 @@ describe "Md::App windows on one document" do
     Md::Documents.all.should be_empty
   end
 end
+
+# Two windows with documents of their own (two `with_app`s under one
+# application), the second opening files the first has open.
+private def with_side_by_side(path : String, &)
+  application = Crysterm::Application.new
+  with_app Md::Source.new(path: path), text: File.read(path), view: true do |a, first_window|
+    application.add first_window
+    with_app do |b, second_window|
+      application.add second_window
+      yield a, b
+    end
+  end
+  Md::Documents.all.should be_empty
+end
+
+describe "Md::App opening a file another window has open" do
+  it "joins it, unsaved edits and all, with a notice, and reads nothing from disk" do
+    path = tempfile "# Doc\n"
+    begin
+      with_side_by_side(path) do |a, b|
+        a.editor.cursor_position = 0
+        a.editor.insert_text "edited "
+        File.write path, "changed on disk\n"
+        b.open_file(path).should be_true
+        b.document.should be a.document
+        b.markdown.should eq "edited # Doc\n"
+        notice(b).should contain "unsaved changes from another window"
+        b.editor.insert_text "x"
+        a.markdown.should contain "x"
+      end
+    ensure
+      File.delete? path
+    end
+  end
+
+  it "joins through a symlink and a hard link" do
+    dir = File.tempname("md-spec-links")
+    Dir.mkdir dir
+    path = File.join(dir, "a.md")
+    File.write path, "# A\n"
+    File.symlink path, File.join(dir, "soft.md")
+    File.link path, File.join(dir, "hard.md")
+    begin
+      with_side_by_side(path) do |a, b|
+        b.open_file(File.join(dir, "soft.md")).should be_true
+        b.document.should be a.document
+        notice(b).should contain "also in another window"
+        b.open_file(File.join(dir, "hard.md")).should be_true # the same document: nowhere to go
+        b.document.should be a.document
+      end
+      with_side_by_side(File.join(dir, "hard.md")) do |a, b|
+        b.open_file(path).should be_true
+        b.document.should be a.document
+      end
+    ensure
+      FileUtils.rm_rf dir
+    end
+  end
+
+  it "asks nothing when leaving a document another window shows" do
+    path = tempfile "# Doc\n"
+    other = tempfile "# Other\n"
+    begin
+      with_side_by_side(path) do |a, b|
+        b.open_file(path)
+        a.editor.insert_text "x"
+        b.open_dropped(other).should be_true
+        question(b).should eq ""
+        b.source.path.should eq other
+        a.document.views.should eq [a]
+      end
+    ensure
+      File.delete? path
+      File.delete? other
+    end
+  end
+
+  it "leaves the other window on the document when File → Close closes it in one" do
+    path = tempfile "# Doc\n"
+    begin
+      with_side_by_side(path) do |a, b|
+        b.open_file(path)
+        a.editor.insert_text "x"
+        b.close_document
+        question(b).should eq ""
+        b.source.path.should be_nil
+        a.document.views.should eq [a]
+        a.markdown.should contain "x"
+      end
+    ensure
+      File.delete? path
+    end
+  end
+
+  it "goes to its place without re-reading when re-opening the window's own file" do
+    path = tempfile "# Doc\n"
+    begin
+      with_side_by_side(path) do |a, _|
+        a.editor.cursor_position = 0
+        a.editor.insert_text "edited "
+        File.write path, "on disk\n"
+        a.open_file(path).should be_true
+        question(a).should eq ""
+        a.markdown.should eq "edited # Doc\n"
+      end
+    ensure
+      File.delete? path
+    end
+  end
+
+  it "merges on Save As onto a file open and unmodified elsewhere" do
+    path = tempfile "one\ntwo\nthree\n"
+    begin
+      with_side_by_side(path) do |a, b|
+        a.show_pane(Md::App::Pane::Editor).focus
+        a.go_to_line 2
+        b.editor.insert_text "new text\n"
+        b.save_as(path).should be_true
+        File.read(path).should eq "new text\n"
+        a.document.should be b.document
+        a.markdown.should eq "new text\n"
+        a.editor.text_cursor.block_number.should eq 1 # line 2 kept, clamped
+        Md::Documents.find(path).should be b.document
+      end
+    ensure
+      File.delete? path
+      File.delete? "#{path}~"
+    end
+  end
+
+  it "refuses Save As onto a file modified elsewhere and writes nothing" do
+    path = tempfile "one\n"
+    begin
+      with_side_by_side(path) do |a, b|
+        a.editor.insert_text "x"
+        b.editor.insert_text "mine"
+        b.save_as(path).should be_false
+        notice(b).should contain "has unsaved changes in another window"
+        File.read(path).should eq "one\n"
+        b.source.path.should be_nil
+      end
+    ensure
+      File.delete? path
+    end
+  end
+end

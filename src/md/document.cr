@@ -20,6 +20,14 @@ module Md
     # — the file changed or removed on disk, an auto-save that failed — for
     # every window showing it.
     event DocumentNotice, text : String
+
+    # A *chunk* of a document streaming in on standard input arrived; each
+    # window appends it to its viewer.
+    event StreamAppended, chunk : String
+
+    # The stream ended, cut short by an error with *message*, or at its end
+    # when nil.
+    event StreamEnded, message : String?
   end
 
   # One open text and everything that belongs to the text rather than to a
@@ -43,6 +51,15 @@ module Md
   # it to, and the registry forgets it. What runs on a window's render fiber
   # (the watcher's events, the auto-save ticks) runs on the first view's,
   # the host's, and moves on when the host leaves.
+  #
+  # A document read from standard input streams in (`#start_stream`): a
+  # reader fiber takes the lines as they come and hands each to the host's
+  # render fiber, or to the next window's when the host's is gone, so the
+  # stream outlives the window that started it; every window on the
+  # document appends the chunk to its own viewer (`Event::StreamAppended`).
+  # The text is filled from what arrived only when a window first shows its
+  # editor (`#fill`), so a long stream into hidden editors costs nothing per
+  # chunk. The last window leaving abandons the stream.
   #
   # Edits reach the views through the text's `ContentsChanged`, the one
   # signal every edit sends, whichever view made it: the document counts
@@ -99,6 +116,20 @@ module Md
     # than every interval.
     @autosave_failed = false
 
+    # The text received from the stream, which the text is filled from when
+    # an editor is first shown (`#fill`).
+    @streamed = IO::Memory.new
+    # Whether the text has yet to be filled from the stream.
+    getter? editor_stale = false
+    # Whether the document is streaming in.
+    getter? streaming = false
+    # Whether the document was read from a stream at all (`#start_stream`):
+    # a chunk handed to any other document is not its to take.
+    getter? from_stream = false
+    # Set once the last window left a stream, so the lines the reader still
+    # brings are dropped (the read itself cannot be stopped).
+    @stream_abandoned = false
+
     # A document of *source* holding *text*, unmodified, with no undo
     # history.
     def initialize(@source : Source = Source.new, text : String = "")
@@ -108,9 +139,10 @@ module Md
       @watch_file.on_change { setup_watcher }
     end
 
-    # The document's Markdown source.
+    # The document's Markdown source: what the stream brought while the text
+    # has yet to be filled from it, the text otherwise.
     def markdown : String
-      @text.to_plain_text
+      @editor_stale ? @streamed.to_s : @text.to_plain_text
     end
 
     # The document's name for windows and notices: the file's name without
@@ -176,6 +208,8 @@ module Md
     # The end of the document: the watcher and the timer stop, the recovery
     # file goes when *clean*, and the registry forgets it.
     private def close(clean : Bool) : Nil
+      @stream_abandoned = true
+      @streaming = false
       stop_watcher
       stop_autosave
       drop_recovery if clean
@@ -230,9 +264,75 @@ module Md
     # formats only is no edit of the source.
     private def contents_changed(e : Crysterm::Event::ContentsChanged) : Nil
       return if @loading || e.kind.format?
+      @editor_stale = false
       @revision += 1
       @autosave_dirty = true
       emit Md::Event::DocumentEdited, @revision
+    end
+
+    # Reads *io* on a fiber of its own, line by line, handing each line to
+    # `#receive` on a window's render fiber — the host's, or the next
+    # window's when the host's is destroyed (`Window#post?`) — and ending
+    # with `#finish_stream`. The read stops at the next line once no window
+    # is left. The windows' viewers follow the tail (`App#stream`).
+    def start_stream(io : IO) : Nil
+      @from_stream = @streaming = @editor_stale = true
+      spawn name: "md-stream" do
+        message = nil
+        begin
+          io.each_line(chomp: false) do |line|
+            break unless deliver { receive line }
+          end
+        rescue ex : IO::Error
+          message = ex.message
+        end
+        deliver { finish_stream message }
+      end
+    end
+
+    # Posts *job* to the render fiber of the first view whose window takes
+    # it; false when none does (no view left, or the stream abandoned).
+    private def deliver(&job : ->) : Bool
+      return false if @stream_abandoned
+      @views.any? { |view| view.window.post?(&job) } # ameba:disable Style/VerboseBlock
+    end
+
+    # Takes a streamed *chunk* of Markdown into the document — into the text
+    # too when it was filled — and hands it to every window
+    # (`Event::StreamAppended`). Bytes that are not UTF-8 are replaced, with
+    # a notice. A chunk after the stream was abandoned is dropped.
+    def receive(chunk : String) : Nil
+      return if @stream_abandoned
+      unless (decoded = Source.decode chunk).same?(chunk)
+        notify "Invalid UTF-8 in #{name} replaced by �"
+        chunk = decoded
+      end
+      @streamed << chunk
+      loading { Crysterm::TextCursor.new(@text, @text.size).insert_text chunk } unless @editor_stale
+      emit Md::Event::StreamAppended, chunk
+    end
+
+    # The end of the stream, with the error *message* that cut it short:
+    # every window is told (`Event::StreamEnded`).
+    def finish_stream(message : String? = nil) : Nil
+      return if @stream_abandoned
+      @streaming = false
+      emit Md::Event::StreamEnded, message
+    end
+
+    # Fills the text from the stream, for *by*'s editor, now shown (a
+    # programmatic replace, no edit; *by*'s caret at the end, as a load
+    # leaves it). The other windows' editors show it too; their viewers
+    # already do.
+    def fill(by : App) : Nil
+      return unless @editor_stale
+      @loading = true
+      begin
+        by.editor.plain_text = @streamed.to_s
+      ensure
+        @loading = false
+      end
+      @editor_stale = false
     end
 
     # Saves to *path* (`#save`) and makes it the document's file: its key

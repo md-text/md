@@ -130,9 +130,9 @@ module Md
       confirm_discard do
         closed = source.name || "the new document"
         remember_position
-        if path = source.path
-          @back.reject! { |place| place.path == path }
-          @forward.reject! { |place| place.path == path }
+        if @document.key
+          @back.reject! { |place| here?(place) }
+          @forward.reject! { |place| here?(place) }
         end
         while target = @forward.pop?
           next unless path = target.path
@@ -242,7 +242,7 @@ module Md
         open_url target
         return
       end
-      confirm_discard do
+      confirm_open(target) do
         # A file that could not be read (its notice says so) has no
         # headings to land on.
         go_to_anchor fragment if open_file(target) && !fragment.empty?
@@ -283,7 +283,7 @@ module Md
     # Nil while the editor has yet to receive a streamed document, which has
     # no source positions to speak of.
     private def place : Place?
-      return if @editor_stale
+      return if @document.editor_stale?
       line, column = source_position
       Place.new source.path, line, column
     end
@@ -322,7 +322,7 @@ module Md
     # as it is; the place is still spent, so the next step leads somewhere.
     private def arrive(target : Place, &arrived : Bool ->) : Nil
       path = target.path
-      if path.nil? || path == source.path
+      if path.nil? || here?(target)
         go_to_line target.line, target.column
         arrived.call true
         return
@@ -337,6 +337,14 @@ module Md
         go_to_line target.line, target.column if opened
         arrived.call opened
       end
+    end
+
+    # Whether *place* is in the document this window shows: its file is the
+    # document's by canonical key (`Documents.key_for`), whatever path,
+    # symlink or case it was left by.
+    private def here?(place : Place) : Bool
+      return false unless (path = place.path) && (key = @document.key)
+      Documents.key_for(path) == key
     end
 
     # Keeps the Previous File and Next File entries enabled only while they

@@ -40,9 +40,6 @@ module Md
     # equal to the document's (`#enter_document`).
     @watch_file : Crysterm::Reactive::Property(Bool) = Crysterm::Reactive::Property.new(false)
     @watch_link : Crysterm::Reactive::PropertyLink?
-    # Set once a stream is abandoned for a file opened over it, so chunks
-    # still arriving from standard input no longer land in the document.
-    @stream_abandoned = false
     # The recent files and positions, when the app keeps them (the CLI does;
     # specs pass none).
     getter history : History?
@@ -95,9 +92,15 @@ module Md
     # stream being followed is abandoned, and the document left goes on in
     # the other windows showing it, if any. The position remembered for the
     # file, if any, is restored. Watch File carries over to the file opened.
+    # A file another window has open — through whatever path, symlink or
+    # hard link (`Documents.find`) — is not read again: this window joins
+    # that window's document, unsaved edits and all (`#join_document`).
     # Returns whether the file could be opened.
     def open_file(path : String) : Bool
       path = File.expand_path path
+      if open = Documents.find(path)
+        return join_document(path, open)
+      end
       raw = File.read(path) if File.exists?(path)
       text = raw.try { |read| Source.decode read }
       remember_position
@@ -123,6 +126,42 @@ module Md
       false
     end
 
+    # Opens *path* by showing *doc*, the document another window (or this
+    # one) has it open as: no read from disk and no recovery check, the
+    # text as it is in memory, with a notice saying when it has unsaved
+    # changes. The caret goes to the position the history remembers, or the
+    # top. The document this window already shows stays as it is — opening
+    # it again goes nowhere (File → Reload reads it again) — but a link to
+    # it still leaves a place on the trail.
+    private def join_document(path : String, doc : Document) : Bool
+      remember_position
+      push_leaving_place
+      return true if doc.same?(@document)
+      abandon_stream
+      switch_document doc
+      if File.exists?(path)
+        show_pane(Pane::Viewer).focus unless @viewer.visible?
+      else
+        show_pane(Pane::Editor).focus
+      end
+      restore_position
+      remember_position
+      refresh_status
+      notice(doc.text.modified? ? "#{doc.name}: unsaved changes from another window" : "Opened #{path} (also in another window)")
+      true
+    end
+
+    # Runs *action*, an opening of *path*, through the guard
+    # (`#confirm_discard`) — unless *path* is the document this window
+    # shows, which the opening does not leave.
+    private def confirm_open(path : String, &action : ->) : Nil
+      if Documents.find(path).same?(@document)
+        action.call
+      else
+        confirm_discard(&action)
+      end
+    end
+
     # Makes a blank new document, as `md` started with no file has (File →
     # Close with nothing ahead on the trail, `app_links.cr`): no name — Save
     # asks for one, the title and the status bar show none — nothing to
@@ -146,7 +185,7 @@ module Md
     # not a drop and is let be. Returns whether a file was opened.
     def open_dropped(pasted : String) : Bool
       return false unless path = dropped_path(pasted)
-      confirm_discard { open_file path }
+      confirm_open(path) { open_file path }
       true
     end
 
@@ -249,7 +288,6 @@ module Md
       @seen_revision = @document.revision
       @viewer.set_markdown markdown, keep_view: true
       @viewer_stale = false
-      @editor_stale = false
       text_changed
       highlight_matches_everywhere
       refresh_status
@@ -259,14 +297,14 @@ module Md
       false
     end
 
-    # Stops taking the stream's chunks into the document, once a file was
-    # opened over it (the reader fiber cannot be stopped; its chunks are
-    # dropped).
+    # Stops following the stream in this window, once another document is
+    # opened over it: the viewer no longer follows the tail and a pending
+    # `--line` gives way to the file's own position. The stream goes on for
+    # the other windows on it; the last one leaving abandons it
+    # (`Document#detach`).
     private def abandon_stream : Nil
-      return unless @streaming
-      @stream_abandoned = true
-      @streaming = false
-      @pending_line = nil # the file's own position counts now
+      return unless streaming?
+      @pending_line = nil
       @viewer.follow_tail = false
     end
 
@@ -284,7 +322,7 @@ module Md
     # caret while editing, the source of the viewer's while reading — what
     # the history and the Previous File stack (`app_links.cr`) record, and
     # `#go_to_line` takes back.
-    private def source_position : {Int32, Int32}
+    protected def source_position : {Int32, Int32}
       pos = @editor.focused? ? @editor.cursor_position : editor_position(@viewer.cursor_position)
       cursor = Crysterm::TextCursor.new(@document.text, pos)
       {cursor.block_number + 1, cursor.column_number + 1}
@@ -312,7 +350,7 @@ module Md
       entries = history.recent
       actions = entries.map do |entry|
         a = Crysterm::Action.new literal_label(entry.path)
-        a.on(Crysterm::Event::Triggered) { confirm_discard { open_file entry.path } }
+        a.on(Crysterm::Event::Triggered) { confirm_open(entry.path) { open_file entry.path } }
         tip a, "Open this file again, at the place left in it"
       end
       action.menu = actions

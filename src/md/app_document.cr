@@ -29,13 +29,24 @@ module Md
       subs.on(doc, Md::Event::DocumentRenamed) { @window.post { renamed } }
       subs.on(doc, Md::Event::DocumentNotice) { |e| @window.post { notice e.text } }
       subs.on(doc.text, Crysterm::Event::ModificationChanged) { @window.post { refresh_status } }
+      # The stream's chunks: at once in the host, whose render fiber took
+      # them; posted to the others, in order (a window's queue is FIFO).
+      subs.on(doc, Md::Event::StreamAppended) { |e| on_own_fiber { stream_appended e.chunk } }
+      subs.on(doc, Md::Event::StreamEnded) { |e| on_own_fiber { stream_ended e.message } }
       # View → Watch File is the document's: the entry's property follows
       # the document's, both ways.
       @watch_link = Crysterm::Reactive.link(doc.watch_file, @watch_file)
       subs.add doc.watch_file.on_change { refresh_status }
       @seen_revision = doc.revision
-      @editor_stale = false
-      @viewer.set_markdown markdown
+      if doc.streaming?
+        # Joining a stream: the viewer starts from what arrived so far and
+        # takes the rest as it comes, following the tail.
+        @viewer.set_markdown ""
+        @viewer.append_markdown markdown
+        @viewer.follow_tail = true
+      else
+        @viewer.set_markdown markdown
+      end
       @viewer_stale = false
       text_changed
       @document.views.each &.retitle
@@ -70,6 +81,17 @@ module Md
       apply_base_url
     end
 
+    # Runs *job* now when this window hosts the document (the stream's
+    # chunks arrive on the host's render fiber), else posts it to this
+    # window's.
+    private def on_own_fiber(&job : ->) : Nil
+      if @document.host.same?(self)
+        job.call
+      else
+        @window.post(&job)
+      end
+    end
+
     # Posts a catch-up with the document (`#document_changed`) to this
     # window's render fiber, unless one is posted already: a burst of edits
     # — a macro, a Replace All, Neovim's changes — costs one.
@@ -90,7 +112,6 @@ module Md
     protected def document_changed : Nil
       return if @seen_revision == @document.revision || @window.destroyed?
       @seen_revision = @document.revision
-      @editor_stale = false
       text_changed
       highlight_matches Pane::Editor
       if @viewer.visible? || @toc.visible?

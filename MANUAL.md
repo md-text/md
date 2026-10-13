@@ -443,27 +443,34 @@ as a table of contents jump lands.
 File → Open… (`Ctrl-O`) asks for a file name the way Save As does, with
 `Tab` completion, and opens it: an existing file in the viewer, a new name as
 an empty document in the editor. A document streaming in from standard input
-is left behind. File → Open Recent lists the files you opened before, most
+is left behind (it goes on streaming into any other window showing it). A
+file another md window has open — by whatever path, through a symbolic link
+or a hard link — is not read again: the window shows that window's document,
+unsaved edits included, and a notice says so. Opening the file the window
+already shows goes nowhere; File → Reload reads it again. File → Open Recent lists the files you opened before, most
 recent first; md also remembers where you were in each and lands there when
 you open it again. The list lives in `$XDG_STATE_HOME/md/history.json`
 (`~/.local/state/md/history.json`).
 
 File → Reload (`Ctrl-R`) re-reads the file from disk, keeping the viewer's
-place. View → Watch File (or `--watch` on the command line) does that for
+place, in every window showing the document. View → Watch File (or
+`--watch` on the command line) does that for
 you: the file is polled once a second and reloaded when another program
 changed it, so md beside an editor shows each save as it happens. While the
 editor holds unsaved changes the reload is skipped and a notice says the
 file changed on disk; a file removed keeps its text in md, with a notice,
 and is reloaded when it comes back. The status bar shows `(watching)` after
-the name.
+the name. Watch File is the document's: every window on it shows the same
+check, and a file opened over a watched one is watched too.
 
-File → Close closes the document, asking first about unsaved changes, and
+File → Close closes the document, asking first about unsaved changes (only
+when no other window shows it: the others keep it open), and
 takes it off the trail of files that Previous File and Next File retrace
 (see Following links); its place is remembered, as for any file left. The
 file Next File would have gone to opens in its place, where it was left;
 with none, a blank new document is left, as `md` starts without a file, and
 Previous File still leads back. A document being read from standard input
-stops being read.
+stops being read, unless another window shows it.
 
 ### Dropping a file
 
@@ -543,7 +550,10 @@ Discarding Changes turns the question off. A document shown in several
 windows (see Windows) is asked about once, in the last window on it:
 closing another window, or opening another file in it, loses nothing.
 Reloading drops the changes in every window, so it asks whenever there are
-some, and the question says how many windows show the document.
+some, and the question says how many windows show the document. Save As
+onto a file another window has open with unsaved changes writes nothing and
+says so; with none there, the file is written and that window shows this
+document from then on, its cursor on the same line.
 
 The View menu also has *Sync Cursor*: with it on, moving the cursor in the
 editor puts the viewer's cursor on the same place in the rendered document,
@@ -685,9 +695,11 @@ reloaded and watched (View → Watch File) for both at once, and it has one
 recovery file. Each window keeps its own cursor, scroll, panes and search.
 While two or more windows show a document they are named `README.md:1`,
 `README.md:2` in their titles and in the Window menu; a single window is
-plain `README.md` again. A window still reading a stream passes on what has
-arrived so far, as a document of its own; the rest of the stream keeps
-arriving in the window that reads it.
+plain `README.md` again. Opening a file another window has open (File →
+Open…, a link, Open Recent, a dropped file, Previous File) shows the same
+document as well. A document streaming in from standard input streams into
+every window on it, a new one starting from what has arrived, and goes on
+after the window that started it closes.
 
 The settings and the recent files are shared, written by the window that
 ends last. Window → Close Current (`Ctrl-W`, outside the editor, where

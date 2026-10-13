@@ -433,6 +433,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   the last window on a modified document asks about it when closed, quit or
   given another file; File → Reload asks whenever the document is modified,
   saying how many windows show it.
+- A file is one document however many windows open it, through whatever
+  path, symbolic link or hard link: opening a file another window has open
+  shows that window's document, unsaved edits included, instead of reading a
+  second copy; Save As onto a file open in another window takes that window
+  along when it has no unsaved changes and refuses when it has; a stream on
+  standard input streams live into every window on it, and on after the
+  window that started it closes. Opening the file the window already shows
+  no longer reads it again (File → Reload does).
 - View → Theme calls its first entry Terminal Default, where it was Terminal (Its
   Own Colors); it still draws the window in the terminal's own colors, and its
   mnemonic is still T.

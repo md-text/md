@@ -222,7 +222,7 @@ describe "Md::App file failures" do
       end
       with_app Md::Source.new(stdin: true), view: true do |app|
         app.stream IO::Memory.new("ok\nbad \xff\nend\n")
-        settle { !app.@streaming }
+        settle { !app.streaming? }
         app.markdown.should eq "ok\nbad \uFFFD\nend\n"
         notice(app).should eq " Invalid UTF-8 in stdin replaced by \uFFFD"
       end

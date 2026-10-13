@@ -108,11 +108,6 @@ module Md
     # editor edits, and its file. Other windows may show it too.
     getter document : Document
 
-    # Text received from the stream. The editor is filled from it only when it
-    # is shown (`@editor_stale`), so a long stream into a hidden editor costs
-    # nothing per chunk.
-    @streamed = IO::Memory.new
-    @editor_stale = false
     # The line a streamed document was asked to open on (`--line`), until the
     # stream has it (`#jump_to_pending_line`).
     @pending_line : Int32?
@@ -125,7 +120,6 @@ module Md
     # The subscriptions this window holds on its document, dropped when it
     # leaves it (`#leave_document`).
     @document_subscriptions = Crysterm::Subscriptions.new
-    getter? streaming : Bool = false
     # View → Sync Cursor; see the class comment. A reactive property, so
     # the menu entry binds to it (`#build_menus`); `#sync_cursor?` and
     # `#sync_cursor=` are its plain face.
@@ -234,7 +228,7 @@ module Md
       # refreshed. The keys (`#show_pane`) and the View menu (the panes'
       # `toggle_view_action`s) both show a pane through here.
       @editor.on(Crysterm::Event::Show) do
-        fill_editor if @editor_stale
+        fill_editor if @document.editor_stale?
         pane_shown
       end
       {@viewer, @toc}.each do |pane|
@@ -394,7 +388,7 @@ module Md
 
     # The document's current Markdown source.
     def markdown : String
-      @editor_stale ? @streamed.to_s : @document.markdown
+      @document.markdown
     end
 
     # The widget of *pane*.
@@ -662,15 +656,21 @@ module Md
     # showing it (`Document#save_as`; Watch File follows the document to
     # the new file). A save that fails (a directory that is not there, no
     # permission) leaves the document its old name, as Qt's editors set the
-    # current file only once written. A file another window has open as
-    # another document is not written over: its window would go on showing
-    # what the file no longer holds.
+    # current file only once written.
+    #
+    # A file another window has open as another document is written over
+    # only when that document has no unsaved changes, which the write would
+    # lose: then its windows come over to this document (`#merge`), so the
+    # file is one document again. With changes there, nothing is written.
     def save_as(path : String) : Bool
-      if (other = Documents.find(path)) && !other.same?(@document)
-        notice "#{other.name} is open in another window"
+      other = Documents.find(path)
+      other = nil if other.same?(@document)
+      if other && other.text.modified?
+        notice "#{other.name} has unsaved changes in another window"
         return false
       end
       failure = @document.save_as(path, @backup_file.value)
+      merge other if other
       renamed
       saved path, failure
     rescue ex : IO::Error
@@ -678,43 +678,70 @@ module Md
       false
     end
 
-    # Reads *io* in the background (`Window#pump`), line by line, feeding
-    # each line to `#receive` on the render fiber and ending with
-    # `#finish_stream`. The viewer follows the tail while it was already at
-    # the bottom, so new text scrolls into view until the reader scrolls up.
-    # A window destroyed under the stream ends the read, and Crysterm then
-    # runs *ended* at once on the reader fiber: the app is torn down by then,
-    # so nothing of it is touched.
-    def stream(io : IO) : Nil
-      @streaming = true
-      @editor_stale = true
-      @viewer.follow_tail = true
-      ended = ->(error : IO::Error?) do
-        unless @window.destroyed?
-          notice "Stream ended: #{error.message}" if error
-          finish_stream
-        end
+    # Brings the windows on *other* — an unmodified document of the file
+    # this one was just saved as — over to this document, each keeping its
+    # caret's line and column (clamped); *other*, left by its last window,
+    # closes, and this document takes the file's key in the registry.
+    private def merge(other : Document) : Nil
+      other.views.dup.each do |view|
+        line, column = view.source_position
+        view.switch_document @document
+        view.go_to_line line, column
       end
-      @window.pump(io, name: "md-stream", done: ended) { |line| receive line }
+      Documents.rekey @document, nil
     end
 
-    # Appends a streamed *chunk* of Markdown to the document — and to the
-    # editor's text when the editor is shown. The status bar's counts take
-    # the chunk in (`#text_appended`) rather than measure the whole text
-    # again, so a long stream costs each line its own length here too. Must
-    # run on the render fiber (see `Crysterm::Window#post`); a chunk that
-    # arrives after the window was destroyed is dropped.
+    # Whether the document is streaming in (`Document#streaming?`).
+    def streaming? : Bool
+      @document.streaming?
+    end
+
+    # Reads *io* into the document as it arrives (`Document#start_stream`),
+    # line by line, each line going to every window on the document. The
+    # viewer follows the tail while it was already at the bottom, so new
+    # text scrolls into view until the reader scrolls up.
+    def stream(io : IO) : Nil
+      @viewer.follow_tail = true
+      @document.start_stream io
+    end
+
+    # Takes a streamed *chunk* of Markdown into the document
+    # (`Document#receive`), which hands it to every window on it; this
+    # window, on its own render fiber, appends it at once
+    # (`#stream_appended`). A document that is no stream takes nothing.
     def receive(chunk : String) : Nil
-      return if @stream_abandoned || @window.destroyed?
-      unless (decoded = Source.decode chunk).same?(chunk)
-        notice "Invalid UTF-8 in #{document_name} replaced by �"
-        chunk = decoded
-      end
-      @streamed << chunk
+      @document.receive chunk if @document.from_stream?
+    end
+
+    # The end of the stream (`Document#finish_stream`), for every window on
+    # the document.
+    def finish_stream : Nil
+      @document.finish_stream if @document.from_stream?
+    end
+
+    # A streamed *chunk* for this window: appended to the viewer, and taken
+    # into the status bar's counts (`#text_appended`) rather than measured
+    # whole again, so a long stream costs each line its own length here
+    # too; a `--line` waiting for the chunk is taken.
+    private def stream_appended(chunk : String) : Nil
+      return if @window.destroyed?
       @viewer.append_markdown chunk
-      append_to_editor chunk unless @editor_stale
       text_appended chunk
       jump_to_pending_line if (line = @pending_line) && line > 0 && line_rendered?(line)
+      refresh_status
+    end
+
+    # The end of the stream for this window, with the error *message* that
+    # cut it short: whatever the stream left incomplete is flushed, and a
+    # `--line` the stream never reached, or that counts from the end, is
+    # taken now that the end is known.
+    private def stream_ended(message : String?) : Nil
+      return if @window.destroyed?
+      notice "Stream ended: #{message}" if message
+      @viewer.flush_markdown
+      @viewer.document.refresh_tocs
+      highlight_matches Pane::Viewer
+      jump_to_pending_line
       refresh_status
     end
 
@@ -731,30 +758,6 @@ module Md
       vdoc.blocks[index].source_line == line || !vdoc.next_source_line_after(index).nil?
     end
 
-    # Appends *chunk* to the editor's text at its end — an insertion, so a
-    # long stream costs each line its own length rather than the whole
-    # text's, and edits the user made meanwhile stay. Not a user edit: no
-    # re-render, and the document's clean state is kept (a stream is not a
-    # modification).
-    private def append_to_editor(chunk : String) : Nil
-      doc = @document.text
-      @document.loading { Crysterm::TextCursor.new(doc, doc.size).insert_text chunk }
-    end
-
-    # Flushes whatever the stream left incomplete; the end-of-stream signal.
-    # A `--line` the stream never reached, or that counts from the end, is
-    # taken now that the end is known. Nothing to do once the window is
-    # destroyed.
-    def finish_stream : Nil
-      return if @stream_abandoned || @window.destroyed?
-      @viewer.flush_markdown
-      @viewer.document.refresh_tocs
-      @streaming = false
-      highlight_matches Pane::Viewer
-      jump_to_pending_line
-      refresh_status
-    end
-
     # `--line` on a stream, once the line has arrived or the stream ended:
     # the editor is brought up to date first, as `#go_to_line` counts the
     # editor's lines (and follows the rest of the stream from then on), and
@@ -766,18 +769,15 @@ module Md
     private def jump_to_pending_line : Nil
       return unless line = @pending_line
       @pending_line = nil
-      fill_editor if @editor_stale
+      fill_editor if @document.editor_stale?
       go_to_line line
       @viewer.follow_tail = false
     end
 
-    # Brings the editor up to date with the streamed text: the document's
-    # text replaced, as a reset (`Document#replace`), the viewer already
-    # showing it.
+    # Brings the editor up to date with the streamed text (`Document#fill`),
+    # the viewer already showing it.
     private def fill_editor : Nil
-      @document.replace @streamed.to_s, by: self
-      @seen_revision = @document.revision
-      @editor_stale = false
+      @document.fill self
     end
 
     # An edit made in this window: the document now holds the truth; the
@@ -786,7 +786,6 @@ module Md
     # after they change the text); the other windows on the document catch
     # up through `#document_changed`.
     private def edited : Nil
-      @editor_stale = false
       @seen_revision = @document.revision
       text_changed
       highlight_matches Pane::Editor

@@ -11,8 +11,8 @@ module Md
     # back the last edit whichever window made it, and the document is
     # modified, saved, watched and auto-saved for both at once. Each window
     # keeps its own caret, scroll, panes and search; the new one starts
-    # where this one is. A window still reading a stream passes on the text
-    # read so far, a snapshot: the rest goes on arriving here alone.
+    # where this one is. A document still streaming in streams into both,
+    # and on after the window that started it closes.
     #
     # Windows on one document are named `README.md:1`, `README.md:2` in their
     # titles and in the Window menu (`#window_name`), plain `README.md` again
@@ -146,8 +146,7 @@ module Md
     #
     # The new window shows the panes this one shows, its caret, selection
     # and scroll where this window's are, and the focus in the same pane;
-    # from then on it moves on its own. A document still streaming in is
-    # handed over as the text read so far, in a document of its own.
+    # from then on it moves on its own.
     def new_window : App?
       if reason = @window_refusal
         notice "Cannot open a window: #{reason}"
@@ -155,12 +154,7 @@ module Md
       end
       window = @window_opener.call(title)
       begin
-        app = if streaming?
-                App.new(source, text: markdown, view: @viewer.visible?, window: window,
-                  history: @history, config: @config)
-              else
-                App.new(@document, view: @viewer.visible?, window: window, history: @history, config: @config)
-              end
+        app = App.new(@document, view: @viewer.visible?, window: window, history: @history, config: @config)
       rescue ex
         # The terminal window is open already; an App that failed to build
         # must not leave it behind, empty.
@@ -169,7 +163,7 @@ module Md
       end
       app.window_opener = @window_opener
       app.join exec_application
-      app.take_view_of self unless streaming?
+      app.take_view_of self
       app
     rescue ex
       notice "Cannot open a window: #{ex.message}"
