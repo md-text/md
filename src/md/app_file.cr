@@ -19,7 +19,8 @@ module Md
     # Watching polls the file (`Crysterm::FileWatcher`) and reloads it when
     # its contents changed on disk — unless the document holds unsaved
     # changes, in which case a notice says the file changed and the changes
-    # are kept. The viewer keeps its place through a reload, so
+    # are kept. A reload is an edit of what differs on disk, one undo step
+    # (`Document#reload`), and the viewer keeps its place through it, so
     # `md --watch notes.md` beside an editor shows each save where the
     # reader was. Watching is the document's (`Document#watch_file`): every
     # window on it shows the same check, and one watcher serves them all.
@@ -231,8 +232,10 @@ module Md
     # Re-reads the document's file from disk, keeping the reader's place;
     # unsaved changes are settled first (File → Reload, `Ctrl-R`) — whatever
     # other windows show the document, since the reload drops the changes in
-    # all of them. A document without a file (new, or streamed) has nothing
-    # to reload.
+    # all of them. That an undo takes the reload back, changes and all, does
+    # not spare the question, as it does not in Qt Creator: an undo is not
+    # where a reader looks for changes a reload dropped. A document without
+    # a file (new, or streamed) has nothing to reload.
     def reload : Nil
       unless path = source.path
         notice "No file to reload"
@@ -298,14 +301,15 @@ module Md
       end
     end
 
-    # Reads the document's file again (`Document#reload`), as a reset — no
-    # undo entry, the viewer keeping its place, every window's caret where
-    # it was (clamped). The document is then the file's, as after a save, so
-    # the recovery file of the edits given up goes too (`app_autosave.cr`):
-    # left behind, it would announce them as lost at the next open. The
-    # other windows on the document catch up on their own render fibers.
-    # Returns whether the file could be read; when not, its notice says so
-    # and the document stays as it was.
+    # Reads the document's file again (`Document#reload`), as an edit of
+    # what differs — one undo step, which `Ctrl-Z` takes back — the viewer
+    # keeping its place and every window's caret moving with the change as
+    # with any edit. The document is then the file's, unmodified, as after a
+    # save, so the recovery file of the edits given up goes too
+    # (`app_autosave.cr`): left behind, it would announce them as lost at
+    # the next open. The other windows on the document catch up on their
+    # own render fibers. Returns whether the file could be read; when not,
+    # its notice says so and the document stays as it was.
     private def reload_document : Bool
       @document.reload
       @seen_revision = @document.revision

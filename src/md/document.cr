@@ -3,14 +3,10 @@ module Md
   module Event
     include ::EventHandler
 
-    # The text was edited (by a key, an undo, Format, Replace, Neovim…) in
-    # any window: *revision* is the document's after the edit. Not emitted
-    # for a programmatic replace (`DocumentReset`).
+    # The text was edited (by a key, an undo, Format, Replace, Neovim, a
+    # reload from disk…) in any window: *revision* is the document's after
+    # the edit. Not emitted for a programmatic change (a load, a stream).
     event DocumentEdited, revision : Int64
-
-    # The text was replaced as a whole — a reload from disk — at *revision*;
-    # the carets were kept, clamped.
-    event DocumentReset, revision : Int64
 
     # The document has another name: a Save As, or an unnamed document saved
     # for the first time.
@@ -95,12 +91,12 @@ module Md
     # buffer for all of them (`#ensure_vi`); nil while none runs.
     getter vi : Crysterm::Neovim::Handler?
 
-    # Set while the text is replaced programmatically (a load, a reload, a
-    # stream filling it), so the resulting change is not taken for an edit.
+    # Set while the text is changed programmatically (a stream appending to
+    # it or filling it), so the resulting change is not taken for an edit.
     getter? loading = false
 
-    # Counts the edits — and the resets — since the document was made: a
-    # view that has caught up with revision N has nothing to do for it.
+    # Counts the edits since the document was made: a view that has caught
+    # up with revision N has nothing to do for it.
     getter revision : Int64 = 0_i64
 
     # View → Watch File, the document's (every window on it shows the same
@@ -276,24 +272,6 @@ module Md
       return unless handler = @vi
       handler.remove_view editor if handler.views.includes?(editor)
       @vi = nil unless handler.attached?
-    end
-
-    # Replaces the text as a whole, programmatically (a reload): not an
-    # edit (no undo entry, no `DocumentEdited`), the undo history cleared,
-    # the document unmodified. Every view's caret stays where it was,
-    # clamped to the new text, and the views are told
-    # (`Event::DocumentReset`).
-    def replace(text : String) : Nil
-      carets = @views.map { |view| {view, view.editor.cursor_position} }
-      @loading = true
-      begin
-        @text.set_plain_text text
-      ensure
-        @loading = false
-      end
-      carets.each { |view, caret| view.editor.cursor_position = caret.clamp(0, @text.size) }
-      @revision += 1
-      emit Md::Event::DocumentReset, @revision
     end
 
     # Runs the block as a programmatic change of the text (an append from a
@@ -476,13 +454,22 @@ module Md
       SaveFile.write path, markdown
     end
 
-    # Reads the document's file again, as a reset (`#replace`): the edits
-    # given up go, the undo history with them, every view keeping its place;
-    # the recovery file of those edits goes too, as after a save. Raises
-    # `IO::Error` when the file cannot be read, the document left as it was.
+    # Reads the document's file again and makes the text the file's by an
+    # edit of only what differs (`Crysterm::TextDocument#replace_plain_text`,
+    # as Qt Creator reloads): one undo step on top of the history, which
+    # stays, so an undo takes the reload back, unsaved edits given up with
+    # it included. Every view's caret and selection move with the change as
+    # with any edit — away from the changes they keep their place in the
+    # text — and the views catch up as after any edit
+    # (`Event::DocumentEdited`). The document is then the file's, unmodified
+    # — the state after the reload is the clean one, so undoing it makes the
+    # document modified again — and the recovery file of the edits given up
+    # goes, as after a save. Raises `IO::Error` when the file cannot be read,
+    # the document left as it was.
     def reload : Nil
       path = @source.path || raise ArgumentError.new("the document has no file")
-      replace Source.decode(File.read(path))
+      @text.replace_plain_text Source.decode(File.read(path))
+      @text.modified = false
       autosave_settled
     end
 

@@ -466,7 +466,13 @@ symbolic link, or by another case of its name on a case-insensitive volume
 `$XDG_STATE_HOME/md/history.json` (`~/.local/state/md/history.json`).
 
 File → Reload (`Ctrl-R`) re-reads the file from disk, keeping the viewer's
-place, in every window showing the document. View → Watch File (or
+place, in every window showing the document. A reload changes only what
+differs from the file, as one edit: each window's cursor stays where it was
+in the text unless the text under it changed, the document is then
+unmodified, and Edit → Undo (`Ctrl-Z`) takes the reload back — unsaved
+changes it dropped included, the document modified again — as in Qt
+Creator. Unsaved changes are still asked about before a reload. View →
+Watch File (or
 `--watch` on the command line) does that for
 you: the file is polled once a second and reloaded when another program
 changed it, so md beside an editor shows each save as it happens. While the

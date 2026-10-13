@@ -27,7 +27,6 @@ module Md
       join_link if Documents.window_link.linked?
       subs = @document_subscriptions
       subs.on(doc, Md::Event::DocumentEdited) { schedule_catch_up }
-      subs.on(doc, Md::Event::DocumentReset) { schedule_catch_up }
       subs.on(doc, Md::Event::DocumentRenamed) { @window.post { renamed } }
       subs.on(doc, Md::Event::DocumentNotice) { |e| @window.post { notice e.text } }
       subs.on(doc.text, Crysterm::Event::ModificationChanged) { @window.post { refresh_status } }
@@ -157,12 +156,12 @@ module Md
       end
     end
 
-    # Brings the window up to date with an edit or a reset made in another
-    # window (in this one, `#edited` and the reset's caller did it at once
-    # and nothing is left), as `#edited` brings it after its own: the
-    # viewer re-rendered, keeping the reader's place — now when it or the
-    # table of contents is shown, else when next shown — the search
-    # highlights, the measurements and the status.
+    # Brings the window up to date with an edit made in another window (in
+    # this one, `#edited` or the reload's caller did it at once and nothing
+    # is left), as `#edited` brings it after its own: the viewer
+    # re-rendered, keeping the reader's place — now when it or the table of
+    # contents is shown, else when next shown — the search highlights, the
+    # measurements and the status.
     protected def document_changed : Nil
       return if @seen_revision == @document.revision || @window.destroyed?
       edited

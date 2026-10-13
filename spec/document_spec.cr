@@ -22,25 +22,35 @@ describe Md::Document do
     doc.loading { Crysterm::TextCursor.new(doc.text, 0).insert_text "quiet " }
     doc.revision.should eq 1
     doc.text.modified?.should be_true
-    doc.replace "new"
-    doc.revision.should eq 2 # a reset counts, for the views to catch up
-    doc.text.modified?.should be_false
   end
 
-  it "reloads, keeping each view's caret clamped and clearing the shared undo" do
+  it "reloads as one undoable edit of what differs, each view's caret moving with it" do
     path = tempfile "one\ntwo\nthree\n"
     begin
       with_two_windows(Md::Source.new(path: path), "one\ntwo\nthree\n", view: false) do |a, b|
         a.editor.cursor_position = 4
         b.editor.cursor_position = 8
-        a.editor.insert_text "x"
-        File.write path, "ONE\nTWO\n"
+        a.editor.insert_text "x" # "one\nxtwo\nthree\n", a's caret at 5, b's at 9
+        revision = a.document.revision
+        File.write path, "one\nTWO\nthree\nfour\n"
         a.document.reload
-        a.markdown.should eq "ONE\nTWO\n"
-        a.editor.cursor_position.should eq 5
+        a.markdown.should eq "one\nTWO\nthree\nfour\n"
+        a.document.revision.should be > revision # an edit, for the views to catch up
+        # b's caret, away from the change, keeps its place (the start of
+        # "three"); a's, inside the text replaced, goes to its start.
         b.editor.cursor_position.should eq 8
+        a.editor.cursor_position.should eq 4
         a.document.text.modified?.should be_false
-        a.document.text.undo_available?.should be_false
+        # The history stays: an undo takes the reload back, the edit it
+        # dropped included, and makes the document modified again.
+        a.document.text.undo.should be_true
+        a.markdown.should eq "one\nxtwo\nthree\n"
+        a.document.text.modified?.should be_true
+        a.document.text.undo.should be_true
+        a.markdown.should eq "one\ntwo\nthree\n"
+        a.document.text.redo
+        a.document.text.redo
+        a.document.text.modified?.should be_false
       end
     ensure
       File.delete? path

@@ -66,7 +66,7 @@ describe "Md::App open" do
 end
 
 describe "Md::App reload" do
-  it "re-reads the file, keeping the viewer's place and the editor's caret" do
+  it "re-reads the file as an undoable edit, keeping the viewer's place and the editor's caret" do
     long = (1..60).map { |i| "Paragraph #{i}" }.join("\n\n") + "\n"
     path = tempfile long
     begin
@@ -84,9 +84,14 @@ describe "Md::App reload" do
         app.markdown.should contain "Paragraph one"
         app.viewer.document.plain_text.should contain "Paragraph one"
         app.viewer.scroll_position.should eq scroll
-        app.editor.cursor_position.should eq caret # the same offset, not the same text
+        app.editor.cursor_position.should eq caret + 2 # the same place in the text
         app.editor.document.modified?.should be_false
         notice(app).should contain "Reloaded #{path}"
+        # Ctrl-Z in the editor takes the reload back.
+        app.show_pane(Md::App::Pane::Editor).focus
+        press(window, Tput::Key::CtrlZ).accepted?.should be_true
+        app.markdown.should eq long
+        app.editor.document.modified?.should be_true
       end
     ensure
       File.delete? path
@@ -113,6 +118,9 @@ describe "Md::App watch" do
         File.write path, "second\n"
         settle { app.markdown == "second\n" }
         notice(app).should contain "changed on disk"
+        # An edit like any other: undoable, and the document unmodified.
+        app.document.text.modified?.should be_false
+        app.document.text.undo_available?.should be_true
 
         app.show_pane(Md::App::Pane::Editor).focus
         app.editor.cursor_position = 0

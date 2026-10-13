@@ -456,6 +456,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- File → Reload and View → Watch File's reload change only what differs
+  from the file on disk, as one edit, as Qt Creator's reload does, where
+  they replaced the whole text: the undo history stays and Undo takes the
+  reload back (the document modified again), and each window's cursor and
+  selection stay where they were in the text unless the text under them
+  changed, where they kept their offset. (With Crysterm's new
+  `TextDocument#replace_plain_text`.)
 - A file opened puts the editor's cursor at the top, as Qt's editors do,
   unless md remembers a place in it, where it was put at the end. Undo and
   redo of a format change (Format → Bold, a block's format) put the cursor
