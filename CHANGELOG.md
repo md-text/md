@@ -465,7 +465,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   two or more show the document, and only the last window on a modified
   document asks about it when closed, quit or given another file; File →
   Reload asks whenever the document is modified, saying how many windows
-  show it.
+  show it. A window in the background shows the other's edits as they are
+  made: md defaults Crysterm's `render.pause_when_unfocused` to off, which
+  had a terminal window not focused (Terminal.app, iTerm2…) paint nothing
+  until clicked.
 - A file is one document however many windows open it, through whatever
   path, symbolic link or hard link: opening a file another window has open
   shows that window's document, unsaved edits included, instead of reading a

@@ -717,7 +717,10 @@ plain `README.md` again. Opening a file another window has open (File →
 Open…, a link, Open Recent, a dropped file, Previous File) shows the same
 document as well. A document streaming in from standard input streams into
 every window on it, a new one starting from what has arrived, and goes on
-after the window that started it closes.
+after the window that started it closes. A window in the background keeps
+showing all of this as it happens: md turns off Crysterm's pause of
+unfocused windows (`render.pause_when_unfocused`, which a config file can
+turn back on).
 
 Window → Linking says how the windows on one document behave towards each
 other; the text, its undo and its modified state are one either way.

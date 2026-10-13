@@ -155,7 +155,10 @@ module Md
     # that does not fit its option — in a file, a variable or a flag — is an
     # `Error` saying which (Superconf names the source): md does not start on
     # a broken configuration, it says what is wrong.
+    #
+    # One of Crysterm's defaults is md's own first (`.apply_defaults`).
     def self.configure(file : String = path, argv : Array(String) = ARGV) : Nil
+      apply_defaults
       @@document.clear
       toolkit = toolkit_path
       Superconf.load_file toolkit if File.exists?(toolkit)
@@ -177,6 +180,19 @@ module Md
       @@dirty = false
     rescue ex : Superconf::Error
       raise Error.new(ex.message)
+    end
+
+    # Crysterm's options whose default md changes, as an application may
+    # (`Superconf.set_default`, which a file, a variable or a flag still
+    # overrides). `render.pause_when_unfocused` is off: Crysterm stops
+    # painting a terminal window that is not focused, to spare animations
+    # nobody looks at, and catches up when it is focused again — but an md
+    # window in the background is a page beside the one being typed in,
+    # showing edits made in another window on its document (`Document`), a
+    # stream arriving or a watched file reloaded, which must show as they
+    # happen.
+    def self.apply_defaults : Nil
+      Crysterm::Config.set_default "render.pause_when_unfocused", false
     end
 
     # The text of the config file *file*, or nil when there is none; a file
