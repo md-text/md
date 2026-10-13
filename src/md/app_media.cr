@@ -231,8 +231,7 @@ module Md
       end
     end
 
-    # Crysterm's name for the backend, with a mnemonic; each letter once in
-    # the submenu, `5` being Change for 5s'.
+    # What the entry for *backend* does, for its description.
     private def media_backend_tip(backend : MediaBackend) : String
       case backend
       in .auto?            then "Let Crysterm pick the best way this terminal draws images"
@@ -262,6 +261,8 @@ module Md
     # The Media Backend entries, in `MEDIA_BACKENDS` order (`#build_menus`).
     @media_actions = [] of Crysterm::Action
 
+    # Crysterm's name for the backend, with a mnemonic; each letter once in
+    # the submenu, `5` being Change for 5s'.
     private def media_backend_label(backend : MediaBackend) : String
       case backend
       in .auto?            then "&Auto (#{media_backend_label(Crysterm::Widget::Media.auto_type(tput: @window.tput).backend).delete('&')})"
