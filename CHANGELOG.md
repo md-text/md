@@ -542,6 +542,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- A new document without a name said a recovered copy existed when the
+  copy was the auto-save of an unnamed document in an md still running —
+  this one, or another started earlier. Copies whose md runs on are no
+  longer offered; only a session's leftovers are.
 - File → Open Recent was remade only in the window that opened a file or
   cleared the caches, so another window's menu missed the file just opened
   and still listed the files Options → Clear Caches… had forgotten. Every

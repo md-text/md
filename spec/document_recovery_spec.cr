@@ -31,4 +31,29 @@ describe "Md::Document recovery file" do
       File.delete? path
     end
   end
+
+  it "does not offer an unnamed copy of an md still running as one left behind" do
+    previous = ENV["XDG_STATE_HOME"]?
+    state = File.tempname("md-spec-state")
+    ENV["XDG_STATE_HOME"] = state
+    dir = Md::App.autosave_dir
+    begin
+      Dir.mkdir_p dir
+      # This process's own unnamed document's net, and a second one's.
+      File.write File.join(dir, "unnamed-20260101-120000-#{Process.pid}.md"), "mine\n"
+      File.write File.join(dir, "unnamed-20260101-120000-#{Process.pid}-2.md"), "mine too\n"
+      with_app do |app|
+        notice(app).should be_empty
+      end
+      ended = Process.new("true")
+      ended.wait
+      File.write File.join(dir, "unnamed-20260101-120001-#{ended.pid}.md"), "lost\n"
+      with_app do |app|
+        notice(app).should eq " Recovered copy exists in #{dir}"
+      end
+    ensure
+      previous ? (ENV["XDG_STATE_HOME"] = previous) : ENV.delete("XDG_STATE_HOME")
+      FileUtils.rm_rf state
+    end
+  end
 end

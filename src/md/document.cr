@@ -640,8 +640,11 @@ module Md
     # The notice for a recovery file newer than the document's file (or a
     # file that is not there): a session ended badly and the copy holds its
     # edits. For a new document without a name, the directory is looked at
-    # for unnamed copies left behind. Nil when there is nothing to say. Run
-    # when a document is first read from disk, never when a window joins it.
+    # for unnamed copies left behind — not those of an md still running,
+    # this one or another, whose pid the name holds
+    # (`Documents.unnamed_recovery_name`), as they are its documents' net,
+    # not a session's leftovers. Nil when there is nothing to say. Run when
+    # a document is first read from disk, never when a window joins it.
     def check_recovery : String?
       if path = @source.path
         copy = File.join(App.autosave_dir, App.recovery_name(path))
@@ -649,12 +652,23 @@ module Md
         return if (file = File.info?(path)) && file.modification_time >= info.modification_time
         "Recovered copy from #{info.modification_time.to_local.to_s("%Y-%m-%d %H:%M")} exists: #{copy}"
       elsif !@source.stdin?
-        copies = Dir.glob(File.join(App.autosave_dir, "unnamed-*.md"))
+        copies = Dir.glob(File.join(App.autosave_dir, "unnamed-*.md")).reject { |copy| live_copy? copy }
         return if copies.empty?
         "#{copies.size == 1 ? "Recovered copy exists" : "#{copies.size} recovered copies exist"} in #{App.autosave_dir}"
       end
     rescue IO::Error
       # A directory that cannot be read has no copies to offer.
+    end
+
+    # Whether the unnamed recovery file *copy* is an md's still running
+    # (`Documents.unnamed_recovery_name` puts the pid in its name): one
+    # whose pid runs a program of md's name — a pid that cannot be told
+    # one is taken for a session's leftover, the copy offered rather than
+    # hidden.
+    private def live_copy?(copy : String) : Bool
+      return false unless match = File.basename(copy).match(/\Aunnamed-\d{8}-\d{6}-(\d+)(?:-\d+)?\.md\z/)
+      pid = match[1].to_i64
+      pid == Process.pid || DocumentLock.process_name(pid) == DocumentLock.app_name
     end
   end
 end
