@@ -5,30 +5,33 @@ module Md
   # md opening the file knows (Qt's `QLockFile`, Vim's swap file, Emacs's
   # `.#FILE` lock): a small file in `.dir`, named after the file's key
   # (`App.recovery_name`, as the recovery files are), holding the process's
-  # pid, the application's name, the host's name and when it was taken —
-  # `QLockFile`'s lines, with the time after them.
+  # pid, its executable's name, the host's name and when it was taken —
+  # `QLockFile`'s first lines, with the time after them.
   #
   # The lock warns rather than blocks, as Qt Creator and Kate do: the
   # second md shows a notice and edits on (`Documents`). A lock is
   # created whole or not at all — written to a file of its own, then linked
   # to its name, which fails when the name is taken — so two processes
   # cannot both take it. A lock whose process is gone (a crash, a kill) is
-  # stale and replaced, as `QLockFile::removeStaleLockFile` does; one taken
-  # on another host is held, since whether its process lives cannot be
-  # told from here.
+  # stale and replaced, as `QLockFile::removeStaleLockFile` does — and so
+  # is one whose pid another program has taken since (after a reboot, say),
+  # told by the process's name, as `QLockFilePrivate::isProcessRunning`
+  # tells it; one taken on another host is held, since whether its process
+  # lives cannot be told from here.
   class DocumentLock
-    # The application name written in the lock, `QLockFile`'s second line.
-    APP_NAME = "md"
-
     # What a lock file says: the *pid* of the process holding it, its *host*
-    # and *app*, and when it was taken (nil when the line is missing or
-    # unreadable).
+    # and *app* (the executable's name), and when it was taken (nil when the
+    # line is missing or unreadable).
     record Info, pid : Int64, host : String, app : String, at : Time? do
       # Whether the process holding the lock may still have the file open:
-      # one on this host whose pid is alive, or one on another host, which
+      # one on this host whose pid is alive and still the program that took
+      # the lock (when its name can be told), or one on another host, which
       # cannot be looked at.
       def live? : Bool
-        host != DocumentLock.host_name || Process.exists?(pid)
+        return true unless host == DocumentLock.host_name
+        return false unless Process.exists?(pid)
+        name = DocumentLock.process_name(pid)
+        name.nil? || name == app
       end
 
       # Whether the lock is this process's own.
@@ -57,6 +60,30 @@ module Md
     # This host's name, as written in the locks.
     def self.host_name : String
       @@host_name ||= System.hostname
+    end
+
+    # This process's executable's name, written in its locks (`QLockFile`
+    # writes `processNameByPid` of its own pid): `md`, or whatever the
+    # binary is called.
+    def self.app_name : String
+      @@app_name ||= process_name(Process.pid) || "md"
+    end
+
+    # The name of the executable process *pid* runs, as
+    # `QLockFilePrivate::processNameByPid` tells it — `proc_name` on macOS,
+    # the base name of `/proc/PID/exe` on Linux — or nil where it cannot be
+    # told (another system, a process gone or not ours to look at).
+    def self.process_name(pid : Int64) : String?
+      {% if flag?(:darwin) %}
+        buffer = Bytes.new(1024)
+        size = LibProc.proc_name(pid.to_i32, buffer, buffer.size.to_u32)
+        String.new(buffer[0, size]) if size > 0
+      {% elsif flag?(:linux) %}
+        File.basename File.readlink("/proc/#{pid}/exe").chomp(" (deleted)")
+      {% else %}
+        nil
+      {% end %}
+    rescue File::Error
     end
 
     # The canonical key of the file locked (`Documents.key_for`).
@@ -144,7 +171,7 @@ module Md
     private def create : Bool
       Dir.mkdir_p File.dirname(@path)
       temporary = "#{@path}.#{Process.pid}.tmp"
-      File.write temporary, "#{Process.pid}\n#{APP_NAME}\n#{DocumentLock.host_name}\n#{Time.utc.to_rfc3339}\n"
+      File.write temporary, "#{Process.pid}\n#{DocumentLock.app_name}\n#{DocumentLock.host_name}\n#{Time.utc.to_rfc3339}\n"
       begin
         File.link temporary, @path
         true
@@ -155,4 +182,11 @@ module Md
       end
     end
   end
+
+  {% if flag?(:darwin) %}
+    # The process-information call of macOS's libproc (in libSystem).
+    lib LibProc
+      fun proc_name(pid : LibC::Int, buffer : Void*, size : UInt32) : LibC::Int
+    end
+  {% end %}
 end

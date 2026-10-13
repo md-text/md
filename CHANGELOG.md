@@ -542,6 +542,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- A file lock left by an md that ended badly (a crash, a power cut) whose
+  pid another program took after a reboot was taken for a live md's, and
+  the file was said to be open in another md for as long as that program
+  ran. A lock now names the program that took it, as Qt's `QLockFile`
+  does, and one whose pid runs another program is replaced.
 - An undo (or redo) back to the saved text left the auto-save recovery
   file of the edits undone in place, so md, ending badly afterwards, offered
   a recovered copy of edits the user had taken back. The recovery file goes

@@ -29,10 +29,11 @@ private def lock_file(dir : String, path : String) : String
   File.join dir, Md::App.recovery_name(Md::Documents.key_for(path))
 end
 
-# Writes a lock on *path* as the process *pid* on *host* would.
-private def write_lock(dir : String, path : String, pid : Int64, host = Md::DocumentLock.host_name)
+# Writes a lock on *path* as the process *pid* on *host*, running *app*,
+# would: by default the program *pid* runs, as its own lock would say.
+private def write_lock(dir : String, path : String, pid : Int64, host = Md::DocumentLock.host_name, app = Md::DocumentLock.process_name(pid) || "md")
   Dir.mkdir_p dir
-  File.write lock_file(dir, path), "#{pid}\nmd\n#{host}\n2026-01-01T00:00:00Z\n"
+  File.write lock_file(dir, path), "#{pid}\n#{app}\n#{host}\n2026-01-01T00:00:00Z\n"
 end
 
 # A pid no process has: one that has just ended.
@@ -52,13 +53,31 @@ describe Md::DocumentLock do
         lock.locked?.should be_true
         info = Md::DocumentLock.read(lock.path) || fail("no lock")
         info.pid.should eq Process.pid
-        info.app.should eq "md"
+        info.app.should eq Md::DocumentLock.app_name
         info.host.should eq Md::DocumentLock.host_name
         info.at.should_not be_nil
         lock.path.should eq lock_file(dir, path)
         Dir.children(dir).should eq [File.basename(lock.path)]
         lock.unlock
         File.exists?(lock.path).should be_false
+      ensure
+        File.delete? path
+      end
+    end
+  end
+
+  it "is stale when its pid is another program's now" do
+    with_lock_dir do |dir|
+      path = tempfile "a"
+      begin
+        # The parent process lives, but runs no program called md-elsewhere:
+        # the pid was reused (after a reboot, say), and the lock is replaced.
+        write_lock dir, path, Process.ppid, app: "md-elsewhere"
+        lock = Md::DocumentLock.new(Md::Documents.key_for(path))
+        lock.try_lock.should be_true
+        lock.holder.should be_nil
+        Md::DocumentLock.read(lock.path).try(&.pid).should eq Process.pid
+        lock.unlock
       ensure
         File.delete? path
       end
