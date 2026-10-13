@@ -9,6 +9,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- File → Export as HTML… and Export as Text… write what `md --export html`
+  and `--export text` print, for the text as it is now, to a file asked for
+  as Save As asks (the document's name with `.html` or `.txt` suggested,
+  `~/` expanded); the document keeps its name, and a file open in md is not
+  written over.
 - A link in the viewer to a program on this computer — an executable file,
   an `.app`, a `.command`, a `.desktop` entry and the like — was handed to
   `open` or `xdg-open`, which ran it. md now refuses it with a notice

@@ -588,6 +588,14 @@ items with their markers, quotes and nested items indented, tables drawn
 with box characters, a rule as a line 72 cells wide. Nothing else happens in
 this mode: no history, no log file.
 
+From inside md, File → Export as HTML… and Export as Text… write the same
+output for the text as it is now, saved or not, to a file asked for by
+name the way Save As asks — the document's name with `.html` or `.txt`
+filled in, a leading `~/` being your home directory. The document keeps its
+own name and file. An existing file is written over, as Save As writes,
+except one open in md (the document's own source, say), which is refused
+with a notice.
+
 ### Unsaved changes
 
 Quitting, opening another file or reloading with unsaved changes asks first:
@@ -842,7 +850,7 @@ command, and so is every key no entry has:
 
 | Commands | |
 | -------- | - |
-| `open`, `reload`, `close`, `previous-file`, `next-file`, `save`, `save-as`, `quit` | The File menu |
+| `open`, `reload`, `close`, `previous-file`, `next-file`, `save`, `save-as`, `export-html`, `export-text`, `quit` | The File menu |
 | `copy`, `copy-as-markdown`, `paste`, `paste-from-terminal`, `paste-from-command`, `paste-from-internal`, `find`, `find-backward`, `find-next`, `find-previous`, `replace`, `clear-search-highlights`, `command`, `go-to-line`, `next-heading`, `previous-heading`, `vi-mode` | The Edit menu, and `?` |
 | `bold`, `italic`, `code`, `code-block`, `indent`, `outdent`, `task`, `toggle-task`, `promote-heading`, `demote-heading`, `soft-wrap`, `hard-wrap`, `rewrap-paragraph`, `rewrap-document` | The Format menu (`soft-wrap` and `hard-wrap` turn their setting on or off) |
 | `editor`, `viewer`, `toc`, `bars`, `sync-cursor`, `highlight-line`, `line-numbers`, `viewer-line-numbers`, `center-text`, `horizontal-ruler`, `vertical-ruler`, `guides`, `images`, `media-trial` | The View menu's check entries: each turns its setting on or off |

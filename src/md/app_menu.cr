@@ -1,7 +1,7 @@
 module Md
   class App
     # The menu bar: File (open, the recent files, reload, close, the previous and
-    # the next file, save, quit), Edit (copy, paste and paste from a named
+    # the next file, save, export, quit), Edit (copy, paste and paste from a named
     # source, find, repeat the find, replace, go to a line, jump between
     # headings, Vi Mode, `app_vi.cr`), Format (the Markdown markup, `app_edit.cr`: the markup around text, then
     # indentation, the task boxes and the heading level, then the wrapping —
@@ -82,6 +82,9 @@ module Md
       file.add_separator
       named "save", tip file.add_action("&Save", shortcut: "Ctrl+S") { save }, "Write the document to its file"
       named "save-as", tip file.add_action("Save &As…") { save_as_prompt }, "Write the document to a file asked for by name, and keep that name"
+      # The document rendered, as `md --export` prints it (`app_export.cr`).
+      named "export-html", tip file.add_action("&Export as HTML…") { export_prompt "html" }, "Write the document rendered as HTML to a file asked for by name, as md --export html prints it"
+      named "export-text", tip file.add_action("Export as &Text…") { export_prompt "text" }, "Write the document as plain text, laid out as the viewer shows it, to a file asked for by name"
       file.add_separator
       # The same key as Crysterm's default quit key: the entry's shortcut
       # consumes it, so the default stands down and the one path — the
