@@ -95,7 +95,9 @@ module Md
     # or rule starts or interrupts (`#continues?`); a list item's lines
     # keep the marker and take the item's content indentation, a quote's
     # keep the `> `, and a code block, fenced or indented
-    # (`App.code_lines`), is not a paragraph. No line is broken where the
+    # (`App.code_lines`), is not a paragraph, nor is a link reference
+    # definition (`[id]: url`). A hard break (two spaces or a backslash
+    # ending a line) stays where it is. No line is broken where the
     # next would start with Markdown of its own — a `-`, `1.`, `#` or `>`
     # in the text — nor after a backslash, which would end the line in a
     # hard break (`.breakable?`). The caret keeps its place in
@@ -176,6 +178,11 @@ module Md
 
     # The blockquote markers a line starts with.
     QUOTE = /\A(?:[ \t]*>)*/
+
+    # A link reference definition's label, `[id]:`, opening a line (in a
+    # quote too): the definition, URL and title, is no paragraph text, and
+    # each is a line of its own that a rewrap leaves as it is.
+    LINK_DEFINITION = /\A(?:[ \t]*>)*[ \t]{0,3}\[(?:[^\]\\]|\\.)+\]:/
 
     # Markdown's indent unit for a line in no list: the four spaces of an
     # indented code block or a continuation paragraph.
@@ -641,7 +648,7 @@ module Md
       found = false
       i = 0
       while i < lines.size
-        if lines[i].blank? || code[first + i] || App.unbreakable_line?(lines[i])
+        if lines[i].blank? || code[first + i] || App.unbreakable_line?(lines[i]) || LINK_DEFINITION.matches?(lines[i])
           filled << lines[i]
           i += 1
           next
@@ -766,12 +773,19 @@ module Md
 
     # Whether line *below* continues the paragraph line *above* is in: both
     # are breakable text, in the same blockquote, and *below* starts nothing
-    # of its own (a list item would).
+    # of its own (a list item would). A link reference definition is no
+    # paragraph's (`[id]: url`, one to a line), and the text under an empty
+    # item (`- ` alone) is the item's only when indented to its content —
+    # otherwise the list has ended and the text is a paragraph after it.
     private def continues?(doc : Crysterm::TextDocument, above : Int32, below : Int32, code : Array(Bool)) : Bool
       a = doc.blocks[above].text
       b = doc.blocks[below].text
       return false if a.blank? || b.blank? || code[above] || code[below]
       return false if App.unbreakable_line?(a) || App.unbreakable_line?(b) || ListItem.parse(b)
+      return false if LINK_DEFINITION.matches?(a) || LINK_DEFINITION.matches?(b)
+      if (item = ListItem.parse(a)) && item.empty? && item.task.nil?
+        return false if App.indent_width(b.sub(QUOTE_MARKERS, "")) < item.inner_indent + item.marker.size + 1
+      end
       quote_depth(a) == quote_depth(b)
     end
 

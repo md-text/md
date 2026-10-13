@@ -851,5 +851,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `Enter` on a rule such as `* * *`, on a `- ` line in a code block, or on an
   item opening a fenced block (`` - ```sh ``) continued a list there; it is a
   plain newline on those lines now.
+- Format → Rewrap joined link reference definitions (`[a]: /x`) into one
+  line, which is then no definition, and text under an empty list item
+  (`- ` alone) into the item, where it is a paragraph after the list; both
+  are left as they are now, and an item whose marker stands alone over its
+  indented text (`-`) is refilled as `- text`, where it became `-text`.
 
 [Unreleased]: https://github.com/md-text/md/commits/main

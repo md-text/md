@@ -69,3 +69,16 @@ describe "Md::App editing, Rewrap and list items" do
     rewrapped("1.\n   aaaa\n").should eq "1. aaaa\n"
   end
 end
+
+describe "Md::App editing, Rewrap and what is no paragraph" do
+  it "leaves link reference definitions one to a line" do
+    rewrapped("[a]: /x\n[b]: /y 'Title'\ntext\n").should eq "[a]: /x\n[b]: /y 'Title'\ntext\n"
+    rewrapped("aaaa\n[b]: /y\n").should eq "aaaa\n[b]: /y\n"
+  end
+
+  it "joins no text to an empty item unless indented to the item's content" do
+    rewrapped("- \naaaa\n").should eq "- \naaaa\n"
+    rewrapped("> 1. \n> aaaa\n").should eq "> 1. \n> aaaa\n"
+    rewrapped("- \n  aaaa\n").should eq "- aaaa\n"
+  end
+end
