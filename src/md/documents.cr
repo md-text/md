@@ -148,6 +148,8 @@ module Md
         else
           doc.link.try &.dissolve
         end
+        # Vi Mode swaps between a Neovim per window and one per document.
+        doc.views.each &.relink_vi
         doc.notify "Windows on #{doc.name} are #{mode.linked? ? "linked" : "separate"}" if doc.views.size > 1
       end
     end

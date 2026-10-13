@@ -16,6 +16,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   entry, the search, Sync Cursor and the trail follow the window used last,
   and opening a file, a link, Previous File and File → Close move the whole
   group. Switching applies to every window at once.
+- In Vi Mode, linked windows share one Neovim with one buffer for their
+  document, keys from any of them editing it and `:w`/`:q` acting for the
+  window they were typed in; separate windows keep a Neovim each.
 - Project infrastructure: build system, specs, linting, continuous integration
   and release builds for Linux (x86_64, aarch64) and macOS (Intel, Apple Silicon).
 - Command line: `md [FILE | -]`, with `-` for standard input, `--help` and `--version`.

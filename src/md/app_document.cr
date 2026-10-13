@@ -60,6 +60,7 @@ module Md
     # the windows left on it renamed — their `:N` may go. From the window's
     # `Destroy`, and before a switch to another document.
     private def leave_document(clean : Bool = @started) : Nil
+      leave_shared_vi
       link.try &.remove(self)
       @document_subscriptions.off
       @watch_link.try &.dispose
@@ -91,6 +92,9 @@ module Md
       @document = doc
       @editor.document = doc.text
       enter_document
+      # A separate window's own Neovim follows the editor to the new text
+      # (Crysterm's `DocumentChanged`); a linked one joins the document's.
+      apply_vi_mode if vi_mode? && link
       apply_base_url
     end
 

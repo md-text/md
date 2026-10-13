@@ -91,6 +91,10 @@ module Md
     # Linked), nil while windows are separate.
     property link : ViewLink?
 
+    # The Neovim the linked windows on the document share in Vi Mode, one
+    # buffer for all of them (`#ensure_vi`); nil while none runs.
+    getter vi : Crysterm::Neovim::Handler?
+
     # Set while the text is replaced programmatically (a load, a reload, a
     # stream filling it), so the resulting change is not taken for an edit.
     getter? loading = false
@@ -212,6 +216,8 @@ module Md
     # The end of the document: the watcher and the timer stop, the recovery
     # file goes when *clean*, and the registry forgets it.
     private def close(clean : Bool) : Nil
+      @vi.try &.detach
+      @vi = nil
       @stream_abandoned = true
       @streaming = false
       stop_watcher
@@ -224,6 +230,30 @@ module Md
     private def rehost : Nil
       setup_watcher
       setup_autosave
+    end
+
+    # Puts *editor* on the document's shared Neovim (Vi Mode in linked
+    # windows): started with *args* and attached to *editor* when none runs,
+    # else joined as another view of its buffer
+    # (`Neovim::Handler#add_view`). Returns whether Neovim drives the
+    # editor now.
+    def ensure_vi(editor : Crysterm::Widget::PlainTextEdit, args : Array(String)) : Bool
+      if (handler = @vi) && handler.attached?
+        return handler.add_view(editor)
+      end
+      handler = Crysterm::Neovim::Handler.new
+      handler.args = args
+      return false unless handler.attach(editor)
+      @vi = handler
+      true
+    end
+
+    # Takes *editor* off the shared Neovim, if it is one of its views; the
+    # last view leaving ends it.
+    def release_vi(editor : Crysterm::Widget) : Nil
+      return unless handler = @vi
+      handler.remove_view editor if handler.views.includes?(editor)
+      @vi = nil unless handler.attached?
     end
 
     # Replaces the text as a whole, programmatically: not an edit (no undo

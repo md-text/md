@@ -28,6 +28,17 @@ module Md
     # (`Neovim::Handler#request_timeout`), or the editor's buffer closed in
     # Neovim (`:bw`), turns Vi Mode off.
     #
+    # Windows on one document each run a Neovim of their own while they are
+    # separate (Window → Linking), each taking the others' edits as outside
+    # changes, so `u` in one undoes an edit made in another as well; marks,
+    # registers and the jumplist are each window's. Linked windows share one
+    # Neovim and one buffer for their document (`Document#vi`), as Vim's
+    # windows on one buffer do: the keys of any of them go to it, and its
+    # cursor to the window they came from, which the others mirror. `:w`
+    # and `:q` act for the window whose keys typed them. Switching between
+    # the two restarts Neovim, its own undo history with it (the document's
+    # stays).
+    #
     # Turned on from the menu or by name, Vi Mode shows and focuses the
     # editor. The viewer's `:` stays md's command line, the viewer being no
     # text input. The line prompts keep plain editing: a question is answered in
@@ -35,8 +46,12 @@ module Md
     @vi_mode : Crysterm::Reactive::Property(Bool) = Crysterm::Reactive::Property.new(false)
     @vi_config : Crysterm::Reactive::Property(Bool) = Crysterm::Reactive::Property.new(false)
 
-    # The handler driving the editor while Vi Mode is on.
-    getter vi : Crysterm::Neovim::Handler = Crysterm::Neovim::Handler.new
+    # The handler driving the editor while Vi Mode is on in a separate
+    # window (`#vi` is the one in effect).
+    @own_vi : Crysterm::Neovim::Handler = Crysterm::Neovim::Handler.new
+    # The subscriptions to the handler in effect (`#follow_vi`).
+    @vi_subscriptions = Crysterm::Subscriptions.new
+    @followed_vi : Crysterm::Neovim::Handler?
 
     # The status bar's mode field, shown while Vi Mode is on; made in
     # `#initialize` with the other fields, once the window exists.
@@ -61,41 +76,110 @@ module Md
       @vi_config.value = value
     end
 
-    # Hooks the handler's events to md and the properties to the handler;
-    # the status bar's field goes in by `#build_status`.
+    # The handler driving the editor while Vi Mode is on: the document's,
+    # shared with the other windows on it, while linked; this window's own
+    # otherwise.
+    def vi : Crysterm::Neovim::Handler
+      (link && @document.vi) || @own_vi
+    end
+
+    # Hooks the properties to the handler; the status bar's field goes in
+    # by `#build_status`.
     private def wire_vi : Nil
       @vi_mode.on_change { apply_vi_mode }
       @vi_config.on_change { apply_vi_mode if vi_mode? }
-      @vi.on(Crysterm::Event::ViModeChanged) { refresh_status }
-      @vi.on(Crysterm::Event::ViCommandLineChanged) { refresh_status }
-      @vi.on(Crysterm::Event::ViMessageChanged) { |e| e.text.try { |text| notice text } }
-      @vi.on(Crysterm::Event::ViWriteRequested) { |e| vi_write e.path, e.rename }
-      @vi.on(Crysterm::Event::ViQuitRequested) { |e| vi_quit e.bang, e.all }
+      follow_vi
+    end
+
+    # Hooks the events of the handler in effect (`#vi`) to md, once per
+    # handler: from `#wire_vi`, and whenever Vi Mode is applied, since
+    # linking, a switch of document or another window's Neovim changes which
+    # handler that is. The events of a shared handler come on the render
+    # fiber of the window whose keys caused them, so this window's part is
+    # posted to its own; a `:w` or `:q` is the active window's alone.
+    private def follow_vi : Nil
+      handler = vi
+      return if handler.same?(@followed_vi)
+      @vi_subscriptions.off
+      @followed_vi = handler
+      subs = @vi_subscriptions
+      subs.on(handler, Crysterm::Event::ViModeChanged) { vi_post { refresh_status } }
+      subs.on(handler, Crysterm::Event::ViCommandLineChanged) { vi_post { refresh_status } }
+      subs.on(handler, Crysterm::Event::ViMessageChanged) { |e| e.text.try { |text| vi_post { notice text } } }
+      subs.on(handler, Crysterm::Event::ViWriteRequested) { |e| vi_write e.path, e.rename if vi_active?(handler) }
+      subs.on(handler, Crysterm::Event::ViQuitRequested) { |e| vi_quit e.bang, e.all if vi_active?(handler) }
       # Neovim ended under the editor: the editor is its own again.
-      @vi.on(Crysterm::Event::ProcessExited) do
-        @vi_mode.value = false
-        notice "Neovim ended; Vi Mode is off"
+      subs.on(handler, Crysterm::Event::ProcessExited) do
+        vi_post do
+          @vi_mode.value = false
+          notice "Neovim ended; Vi Mode is off"
+        end
       end
       # The editor's buffer closed in Neovim (`:bw`), or Neovim failing or
       # not answering a call: the handler has let go of the editor.
-      @vi.on(Crysterm::Event::ViDetached) do |e|
-        @vi_mode.value = false
-        notice "#{e.reason}; Vi Mode is off"
+      subs.on(handler, Crysterm::Event::ViDetached) do |e|
+        vi_post do
+          @vi_mode.value = false
+          notice "#{e.reason}; Vi Mode is off"
+        end
       end
     end
 
-    # Attaches the handler to the editor, or detaches it, as the property
-    # says; a Neovim that cannot start turns the property back off.
+    # Runs *job* now for this window's own handler, else posts it to this
+    # window's render fiber (a shared handler's event came from another's).
+    private def vi_post(&job : ->) : Nil
+      if @followed_vi.same?(@own_vi)
+        job.call
+      else
+        @window.post(&job)
+      end
+    end
+
+    # Whether this window's editor is the one *handler*'s keys came from
+    # last (its only view, for a handler of one window).
+    private def vi_active?(handler : Crysterm::Neovim::Handler) : Bool
+      (handler.active_widget || handler.widget).same?(@editor)
+    end
+
+    # Attaches a handler to the editor, or lets go of it, as the property
+    # says: this window's own while separate, the document's shared one
+    # while linked (`Document#ensure_vi`), joined as one more view of the
+    # buffer when another window started it. A Neovim that cannot start
+    # turns the property back off.
     private def apply_vi_mode : Nil
-      @vi.detach
+      leave_shared_vi
+      @own_vi.detach
       if vi_mode?
-        @vi.args = vi_args
-        unless @vi.attach(@editor)
+        started = if link
+                    @document.ensure_vi(@editor, vi_args)
+                  else
+                    @own_vi.args = vi_args
+                    @own_vi.attach(@editor)
+                  end
+        unless started
           notice "Cannot start Neovim (#{Crysterm::Neovim.executable}); Vi Mode is off"
           @vi_mode.value = false
         end
       end
+      follow_vi
       refresh_status
+    end
+
+    # Vi Mode across a switch of Window → Linking: the Neovim in effect
+    # changes (`Documents.link_windows`).
+    protected def relink_vi : Nil
+      if vi_mode?
+        apply_vi_mode
+      else
+        follow_vi
+      end
+    end
+
+    # Takes this window's editor off the document's shared handler, if it is
+    # a view of it (Vi Mode turned off, the windows separated, another
+    # document shown); the last view's leaving ends that Neovim.
+    protected def leave_shared_vi : Nil
+      @document.release_vi @editor
     end
 
     # Neovim's arguments: `--clean` unless the user's config is wanted.
@@ -163,7 +247,8 @@ module Md
 
     # The mode field's text: Neovim's mode while Vi Mode is on.
     private def vi_mode_text : String
-      @vi.attached? ? @vi.mode.label : ""
+      handler = vi
+      handler.attached? ? handler.mode.label : ""
     end
 
     # The Edit and Options entries (`#build_menus`).

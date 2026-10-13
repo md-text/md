@@ -131,7 +131,8 @@ module Md
       @overwrite_button.text = @editor.overwrite_mode? ? "OVR" : "INS"
       @mouse_button.text = "#{mouse_icon}=#{@mouse_mode.value.vi_value}"
       @vi_field.text = vi_mode_text
-      @vi_field.visible = @vi.attached? unless @vi_field.visible? == @vi.attached?
+      attached = vi.attached?
+      @vi_field.visible = attached unless @vi_field.visible? == attached
       refresh_menus
     end
 
@@ -161,7 +162,7 @@ module Md
     # streaming in, or watched on disk.
     private def name_text : String
       # Vi Mode's command line while one is typed (`app_vi.cr`).
-      if line = @vi.command_line
+      if line = vi.command_line
         return line
       end
       name = source.name || "[No Name]"

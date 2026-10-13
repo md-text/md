@@ -402,6 +402,16 @@ the extra window is closed and a file it loaded dropped, unless modified.
 The viewer's `:` stays md's command line
 (the viewer is no text input), and the line prompts keep plain editing.
 
+Windows on one document (see Windows) each run a Neovim of their own while
+they are separate: each takes the others' edits as changes from outside, so
+`u` in one undoes an edit made in another too, and marks, registers and the
+jumplist are each window's. Linked windows share one Neovim and one buffer
+for their document, as Vim's windows on one buffer do: keys typed in any of
+them edit it, its cursor goes to the window you type in, `:w` saves from
+there and `:q` closes that window alone. Switching Window → Linking
+restarts Neovim, and its own undo history with it; the document's undo
+(`Ctrl-Z` outside Vi Mode) stays.
+
 ### Searching and jumping
 
 Searching works like a pager's: `/` asks for a pattern and finds it forward
