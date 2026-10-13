@@ -156,6 +156,11 @@ module Md
       @text = Crysterm::TextDocument.new text
       @key = @source.path.try { |path| Documents.key_for path }
       @text.on(Crysterm::Event::ContentsChanged) { |e| contents_changed e }
+      # Back to unmodified — an undo or redo onto the saved state as much
+      # as a save or a reload — leaves no unsaved edits for a recovery file
+      # to keep, so it goes (Qt Creator's `IDocument::removeAutoSaveFile` on
+      # a document no longer modified).
+      @text.on(Crysterm::Event::ModificationChanged) { |e| autosave_settled unless e.modified }
       @watch_file.on_change { setup_watcher }
     end
 
@@ -589,8 +594,9 @@ module Md
       @autosave_failed = true
     end
 
-    # The document is on disk as the user wants it (a save, a reload): the
-    # recovery file has nothing to add and goes.
+    # The document is on disk as the user wants it (a save, a reload, an
+    # undo back to the saved text): the recovery file has nothing to add
+    # and goes.
     private def autosave_settled : Nil
       @autosave_dirty = false
       drop_recovery

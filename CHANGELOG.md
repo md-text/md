@@ -542,6 +542,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- An undo (or redo) back to the saved text left the auto-save recovery
+  file of the edits undone in place, so md, ending badly afterwards, offered
+  a recovered copy of edits the user had taken back. The recovery file goes
+  whenever the document is unmodified again, as Qt Creator's auto-save file
+  does, and is written anew by the next edit.
 - File → Open Recent and the remembered positions knew a file by its
   absolute path, so a file opened through a symbolic link and through its
   real path (or by another case of its name on a case-insensitive volume)
