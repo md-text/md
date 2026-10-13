@@ -576,6 +576,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- A picture the viewer shows with terminal graphics (kitty, sixel, iTerm2
+  inline images, w3m, Überzug) covered a menu opened over it from the menu
+  bar, a torn-off menu or a dialog; what is opened over a picture now stays
+  on top of it, and the picture comes back whole when it closes. (Fixed in
+  Crysterm, which md builds against.)
 - A notice in the status bar hid Vi Mode's command line while it lasted, and
   came back after a question asked in the bar; it now ends when the bar is
   put to either use.
