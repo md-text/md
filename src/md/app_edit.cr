@@ -8,10 +8,19 @@ module Md
   # calling the base); a handler subscribed on the widget would not do,
   # since the editor's own handling runs whether or not an earlier handler
   # accepted the key. `App#markdown_key` is the filter (`app_edit.cr`).
+  #
+  # `#passed_on` names keys the editor leaves alone altogether, neither
+  # taking nor accepting them, so they go on to the window's shortcuts —
+  # Qt's `QKeyEvent::ignore`, which hands the key to the parent: md's own
+  # Ctrl shortcuts while Neovim, in Vi Mode, is in Normal mode
+  # (`App#vi_keeps?`), which the plain editor would otherwise act on
+  # (`Ctrl-W` kills a word).
   class MarkdownEdit < Crysterm::Widget::PlainTextEdit
     property key_filter : Proc(Crysterm::Event::KeyPress, Bool)?
+    property passed_on : Proc(Crysterm::Event::KeyPress, Bool)?
 
     def _listener(e : Crysterm::Event::KeyPress)
+      return if (passed = @passed_on) && passed.call(e)
       if (filter = @key_filter) && !read_only? && filter.call(e)
         e.accept
         return

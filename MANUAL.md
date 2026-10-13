@@ -370,7 +370,12 @@ status bar, Find, Format and the other menus work on the text as before.
 The function keys and the `Alt` chords are not Neovim's: they stay md's
 (`F1`–`F6`, `F10` for the menus, `Alt-W`, `Alt-K`, the menus'
 `Alt` letters), while the `Ctrl` keys are Neovim's in the editor
-(`Ctrl-R` redoes, `Ctrl-B` pages up), so Bold is reached by the menu.
+(`Ctrl-R` redoes, `Ctrl-B` pages up), so Bold is reached by the menu —
+except, in Normal mode, `Ctrl-Q` (Quit), `Ctrl-S` (Save), `Ctrl-N`
+(Window → New) and `Ctrl-W` (Window → Close Current), which Vim has no use
+for in md's one-window Neovim (`Ctrl-Q` repeats `Ctrl-V`, `Ctrl-N` repeats
+`j`). In Insert mode they are Neovim's too: `Ctrl-W` deletes a word,
+`Ctrl-N` completes.
 
 The status bar shows the mode left of the position — `NORMAL`, `INSERT`,
 `VISUAL`, `V-LINE`, `REPLACE`, `COMMAND` — and the command line in

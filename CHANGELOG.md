@@ -439,6 +439,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   every window at once: linking puts each document's windows where the one
   used last is, separating leaves each where it is with its own copy of
   the trail.
+- In Vi Mode's Normal mode, `Ctrl-Q`, `Ctrl-S`, `Ctrl-N` and `Ctrl-W` are
+  md's Quit, Save, Window → New and Window → Close Current, where Neovim
+  took them (`Ctrl-Q` showed `V-BLOCK`); in Insert mode they stay Neovim's.
 - In Vi Mode, linked windows share one Neovim with one buffer for their
   document, as Vim's windows on one buffer do: keys from any of them edit
   it, its cursor goes to the window typed in, and `:w`/`:q` act for that
