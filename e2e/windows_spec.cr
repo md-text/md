@@ -11,6 +11,11 @@ require "file_utils"
 # that closes windows before its question is answered.
 #
 # Run with `make e2e`, which builds `bin/md` first; skipped without tmux.
+# `MD_E2E_BIN` names another binary to drive (a build of one's own, while
+# others use `bin/md`).
+
+# The binary driven.
+private MD_BIN = ENV["MD_E2E_BIN"]?.presence || File.expand_path("../bin/md", __DIR__)
 
 # A tmux server of its own, with md started in its first window.
 private class Session
@@ -24,7 +29,7 @@ private class Session
     Dir.mkdir_p File.join(@dir, "state")
     File.write File.join(@dir, "config", "md", "config.yml"), config if config
     File.write file, text
-    md = File.expand_path("../bin/md", __DIR__)
+    md = MD_BIN
     env = "XDG_STATE_HOME=#{@dir}/state XDG_CONFIG_HOME=#{@dir}/config XDG_CACHE_HOME=#{@dir}/cache"
     tmux "new-session", "-d", "-s", "e2e", "-x", "100", "-y", "30", "env #{env} #{md} --edit #{file}"
     tmux "set", "-g", "focus-events", "on"
@@ -106,7 +111,7 @@ private def with_session(text = "# Title\n\none\ntwo\nthree\nfour\nfive\n", conf
 end
 
 describe "md windows in a real terminal" do
-  unless Process.find_executable("tmux") && File.exists?(File.expand_path("../bin/md", __DIR__))
+  unless Process.find_executable("tmux") && File.exists?(MD_BIN)
     pending "needs tmux and bin/md (make e2e builds it)"
     next
   end
@@ -148,6 +153,30 @@ describe "md windows in a real terminal" do
       session.keys 1, "n"
       session.settle { session.tmux("list-sessions").empty? } # md ended, and tmux with it
       File.read(session.file).should_not contain "X"
+    end
+  end
+
+  it "gives up no window's unsaved changes to a q at a dialog in another window" do
+    with_session(config: "md:\n  dialog_style: \"Modal\"\n") do |session|
+      other = File.join(session.dir, "other.md")
+      File.write other, "other\n"
+      session.new_window
+      session.select 1
+      session.keys 1, "C-o"
+      session.settle { session.capture(1).includes?("Open") }
+      session.keys 1, other, "Enter"
+      session.settle { session.capture(1).includes?("other") }
+      session.keys 1, "F1", "Y" # the editor: other.md has unsaved changes
+      session.settle { session.capture(1).includes?("Yother") }
+      session.select 0
+      session.keys 0, "F2", ":" # the viewer's command line
+      session.keys 0, "clear-caches", "Enter"
+      session.settle { session.capture(0).includes?("Clear the recent files") }
+      # `q` is Crysterm's default quit key too, and the dialog takes no `q`.
+      session.keys 0, "q"
+      sleep 500.milliseconds
+      session.windows.should eq [0, 1]
+      session.capture(1).should contain "Yother"
     end
   end
 end
