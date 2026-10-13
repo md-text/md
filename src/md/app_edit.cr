@@ -1318,8 +1318,15 @@ module Md
 
     # The fence lines *open* and *close* (nil for none) taken out of
     # *doc*, each with its line break; the editor's caret, or selection,
-    # kept on the same text.
+    # kept on the same text. A fence on a list item's own line (`- ``` `)
+    # goes alone, the item's marker kept, its code then the item's text.
     private def unfence(doc : Crysterm::TextDocument, open : Int32, close : Int32?) : Nil
+      opening = doc.blocks[open]
+      if !FENCE.matches?(opening.text) && (item = ListItem.parse(opening.text))
+        spans = [{opening.position + item.prefix_size, opening.position + opening.text.size, ""}]
+        close.try { |line| spans << line_span(doc, line) }
+        return replace_spans doc, spans
+      end
       if close && close == open + 1 && close == doc.block_count - 1
         # An empty block ending the document: the two fences go as one span,
         # with the break before them, where two would overlap on it.

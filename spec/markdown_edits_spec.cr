@@ -96,3 +96,13 @@ describe "Md::App editing, Hard Wrap" do
     end
   end
 end
+
+describe "Md::App editing, Code Block" do
+  it "takes a fence on a list item's own line off, keeping the item" do
+    with_app text: "- ```sh\n  code\n  ```\n", view: false do |app|
+      place app, 1, 3
+      app.toggle_code_block.should be_true
+      app.markdown.should eq "- \n  code\n"
+    end
+  end
+end

@@ -889,5 +889,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   the start of a new line, making it a list item, a heading or a quote; it
   breaks at an earlier space now, as Rewrap does. (With Crysterm's new
   `hard_wrap_breakable?`.)
+- Format → Code Block in a fenced block opened on a list item's line
+  (`` - ```sh ``) took the whole line off, the item's marker with it; it takes
+  off the fence alone now, the code staying the item's.
 
 [Unreleased]: https://github.com/md-text/md/commits/main
