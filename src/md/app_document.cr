@@ -11,10 +11,10 @@ module Md
     # (Crysterm patches every view of a text), and the rest — the viewer
     # re-rendered, the search highlights, the status — is posted to this
     # window's render fiber, once a frame however many edits came
-    # (`#document_changed`). Crysterm's `TextChanged` comes only from the
-    # view that edited; md does not rely on it for the other windows, so a
-    # toolkit that sent it to every view, as Qt's does, would change
-    # nothing here (the revision check makes the second notice a no-op).
+    # (`#document_changed`). Crysterm's `TextChanged`, which every view of
+    # the text sends, as Qt's do, comes to this window's editor on the
+    # fiber of the window that edited, so md follows only its editor's
+    # `TextEdited`, the editing window's alone (`#wire_panes`).
 
     # Makes this window a view on its document (from `#initialize`, and
     # after a switch, `#switch_document`): attached, joined to the

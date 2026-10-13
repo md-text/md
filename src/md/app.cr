@@ -302,8 +302,19 @@ module Md
 
     # The panes' own events: edits re-render, carets follow, the outline
     # jumps and tracks the viewer's document.
+    #
+    # An edit is followed from the editor's `TextEdited`, which only the
+    # editor whose user (or Neovim) made the edit emits, on the fiber that
+    # made it, so the window that edited updates at once. Not from its
+    # `TextChanged`: Crysterm, as Qt, sends that from every view of the
+    # document, a peer window's from inside the editing window's edit, and
+    # for every `TextCursor` step of md's own commands, which report
+    # themselves once (`#edited`). Every other change (an undo or a redo in
+    # the editor, another window's edit) reaches the window through the
+    # document (`#document_changed`), posted to its own render fiber, run
+    # before its next frame.
     private def wire_panes : Nil
-      @editor.on(Crysterm::Event::TextChanged) { edited unless @document.loading? }
+      @editor.on(Crysterm::Event::TextEdited) { edited unless @document.loading? }
       # The focused pane leads; the other pane's caret, set programmatically
       # to follow, reports a move too, which this guard keeps from bouncing.
       # The table of contents follows the leading pane's caret too: the
@@ -816,9 +827,10 @@ module Md
 
     # An edit made in this window: the document now holds the truth; the
     # viewer follows, now or when it is next shown. Run at once in the
-    # window that edited (its editor's `TextChanged`, and md's own edits
-    # after they change the text); the other windows on the document catch
-    # up through `#document_changed`.
+    # window that edited (its editor's `TextEdited`, and md's own edits
+    # after they change the text); the other windows on the document, and
+    # this one after an undo or a redo, catch up through
+    # `#document_changed`.
     private def edited : Nil
       @seen_revision = @document.revision
       text_changed

@@ -615,3 +615,35 @@ describe "Md::App windows coming and going" do
     end
   end
 end
+
+describe "Md::App windows on one document following an edit" do
+  it "updates the window that edited at once and the other on its own fiber" do
+    with_two_windows do |a, b|
+      told = 0
+      b.editor.on(Crysterm::Event::TextChanged) { told += 1 }
+      a.show_pane(Md::App::Pane::Editor).focus
+      a.editor.cursor_position = a.editor.document.size
+      a.editor.insert_text "\n## Two\n"
+      # Crysterm tells B's editor of the edit, as Qt does, on A's fiber;
+      # B's window takes it up on its own, after the edit.
+      told.should eq 1
+      a.@seen_revision.should eq a.document.revision
+      b.@seen_revision.should_not eq a.document.revision
+      settle { b.@seen_revision == a.document.revision }
+      settle { b.viewer.document.outline.size == 2 }
+    end
+  end
+
+  it "brings the window that undid an edit up to date" do
+    with_two_windows do |a, b|
+      a.show_pane(Md::App::Pane::Editor).focus
+      a.editor.cursor_position = a.editor.document.size
+      a.editor.insert_text "\n## Two\n"
+      a.viewer.document.outline.size.should eq 2
+      a.editor._listener Crysterm::Event::KeyPress.new('\0', Tput::Key::CtrlZ)
+      a.markdown.should_not contain "## Two"
+      settle { a.viewer.document.outline.size == 1 }
+      settle { b.viewer.document.outline.size == 1 }
+    end
+  end
+end
