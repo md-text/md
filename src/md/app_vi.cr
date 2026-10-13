@@ -5,9 +5,7 @@ module Md
     # done with the real engine). The editor keeps its document, so the
     # viewer, the status bar, Format, Find and the rest work on it as
     # before; the keys go to Neovim, except the function keys and the `Alt`
-    # combinations, which stay md's menus and shortcuts, and in Normal mode
-    # the `Ctrl` shortcuts of Quit, Save and the Window menu
-    # (`VI_KEPT_KEYS`). `u` and `Ctrl-R`
+    # combinations, which stay md's menus and shortcuts. `u` and `Ctrl-R`
     # are Neovim's undo and redo (`Ctrl-Z`, the editor's undo otherwise, is
     # Neovim's key too); an edit md makes — Format, Replace, a paste —
     # reaches Neovim as an outside edit, and `u` undoes it as well.
@@ -78,31 +76,6 @@ module Md
       @vi_config.value = value
     end
 
-    # md's Ctrl shortcuts kept from Neovim in its Normal mode: Quit, Save,
-    # Window → New and Window → Close Current, whose keys Vim has no use for
-    # in md's one-window, one-buffer Neovim (`Ctrl-Q` is `Ctrl-V` again,
-    # `Ctrl-S` nothing, `Ctrl-N` `j` again, `Ctrl-W` the prefix of window
-    # commands). Neovim's own Normal-mode keys that matter — `Ctrl-R` redo,
-    # `Ctrl-V` visual block, `Ctrl-O` the jumplist, `Ctrl-F`/`Ctrl-B` paging
-    # — stay Neovim's, and in Insert mode and the others every Ctrl key is
-    # Neovim's (`Ctrl-W` deletes a word, `Ctrl-N` completes).
-    VI_KEPT_KEYS = {Tput::Key::CtrlQ, Tput::Key::CtrlS, Tput::Key::CtrlN, Tput::Key::CtrlW}
-
-    # Whether *e* is one of md's shortcuts that *handler*'s Neovim, in Normal
-    # mode, leaves to md (`VI_KEPT_KEYS`).
-    def self.vi_keeps?(handler : Crysterm::Neovim::Handler, e : Crysterm::Event::KeyPress) : Bool
-      handler.attached? && handler.mode.normal? && VI_KEPT_KEYS.includes?(e.key)
-    end
-
-    # The keys *handler* lets on to the editor and the window instead of
-    # Neovim: Crysterm's (function keys, `Alt` combinations) and md's kept
-    # shortcuts in Normal mode (`.vi_keeps?`).
-    def self.vi_pass_through(handler : Crysterm::Neovim::Handler) : Proc(Crysterm::Event::KeyPress, Bool)
-      ->(e : Crysterm::Event::KeyPress) do
-        Crysterm::Neovim::Handler.default_pass_through?(e) || vi_keeps?(handler, e)
-      end
-    end
-
     # The handler driving the editor while Vi Mode is on: the document's,
     # shared with the other windows on it, while linked; this window's own
     # otherwise — and while Vi Mode is off here, so a linked window not in
@@ -115,8 +88,6 @@ module Md
     # Hooks the properties to the handler; the status bar's field goes in
     # by `#build_status`.
     private def wire_vi : Nil
-      @own_vi.pass_through = App.vi_pass_through(@own_vi)
-      @editor.passed_on = ->(e : Crysterm::Event::KeyPress) { vi_mode? && App.vi_keeps?(vi, e) }
       @vi_mode.on_change { apply_vi_mode }
       @vi_config.on_change { apply_vi_mode if vi_mode? }
       follow_vi

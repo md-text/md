@@ -265,7 +265,6 @@ module Md
       end
       handler = Crysterm::Neovim::Handler.new
       handler.args = args
-      handler.pass_through = App.vi_pass_through(handler)
       return false unless handler.attach(editor)
       @vi = handler
       true

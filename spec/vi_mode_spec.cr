@@ -215,44 +215,4 @@ describe "Md::App Vi Mode" do
       app.vi.attached?.should be_true
     end
   end
-
-  it "keeps md's Ctrl-Q, Ctrl-S, Ctrl-N and Ctrl-W in Normal mode, and gives every Ctrl key to Neovim in Insert mode" do
-    path = tempfile "one two\n"
-    begin
-      with_app Md::Source.new(path: path), text: "one two\n", view: false do |app, window|
-        app.window_opener = ->(title : String) { headless_window.tap(&.title=(title)) }
-        app.vi_mode = true
-        app.editor.focused?.should be_true
-        vi_type window, "A three<Esc>"
-        app.markdown.should eq "one two three\n"
-        # Normal mode: md's.
-        press window, Tput::Key::CtrlS
-        File.read(path).should eq "one two three\n"
-        other = (press(window, Tput::Key::CtrlN); Md::App.instances.find { |a| !a.same?(app) }) || fail("no window was opened")
-        begin
-          vi_field(app).text.should eq "NORMAL"
-          other.show_pane(Md::App::Pane::Editor).focus
-          other.vi_mode = true                 # the config would have turned it on there too
-          press other.window, Tput::Key::CtrlW # closes that window, not a word
-          other.window.destroyed?.should be_true
-        ensure
-          other.window.destroy
-        end
-        vi_type window, "A four<Esc>"
-        press window, Tput::Key::CtrlQ
-        question(app).should start_with "Save changes to"
-        answer app, 'c'
-        vi_field(app).text.should eq "NORMAL" # not V-BLOCK
-        # Insert mode: Neovim's (Ctrl-W deletes the word before the caret).
-        vi_type window, "A"
-        press window, Tput::Key::CtrlW
-        vi_type window, "<Esc>"
-        app.markdown.should eq "one two three \n"
-        window.destroyed?.should be_false
-      end
-    ensure
-      File.delete? path
-      File.delete? "#{path}~"
-    end
-  end
 end
