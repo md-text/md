@@ -1,3 +1,5 @@
+require "digest/sha256"
+
 module Md
   class App
     # Two safety nets for the text in the editor, after emacs' two: a backup
@@ -23,7 +25,9 @@ module Md
     # than beside the file, so a project directory is not littered. A named
     # document's is its absolute path with `/` escaped as `%2F` (and `%` as
     # `%25`, so the name reads back to the path): `/home/u/notes.md`
-    # recovers from `%2Fhome%2Fu%2Fnotes.md`. A document without a name — a
+    # recovers from `%2Fhome%2Fu%2Fnotes.md` — unless that name is too long
+    # for a file name (`RECOVERY_NAME_MAX`), when it is a digest of the whole
+    # and the escaped path's end. A document without a name — a
     # new one, or standard input, which md edits like anything else —
     # recovers from `unnamed-<date>-<time>-<pid>.md` (`-2`, `-3`… added
     # for another document's taken in the same second). A save makes the
@@ -54,10 +58,32 @@ module Md
       File.join History.state_dir, "autosave"
     end
 
+    # The longest recovery (and lock, `DocumentLock`) file name, in bytes:
+    # a file system's `NAME_MAX` is 255, and the temporary files the
+    # atomic writes rename into place (`SaveFile`, the lock's) add to the
+    # name.
+    RECOVERY_NAME_MAX = 191
+
     # The name a recovery file for *path* has in `.autosave_dir`: the
-    # absolute path, percent-escaped so it is one file name.
+    # absolute path, percent-escaped so it is one file name. A name longer
+    # than `RECOVERY_NAME_MAX` (a deep path) would be refused by the file
+    # system, so the auto-save and the document's lock would silently never
+    # happen: it is then the first 16 hex digits of the escaped path's
+    # SHA-256, a `-`, and as much of the escaped path's end as fits —
+    # unique, the same every time, and still showing the file's name. It
+    # cannot be taken for a short one, which always starts with `%2F`.
     def self.recovery_name(path : String) : String
-      File.expand_path(path).gsub('%', "%25").gsub('/', "%2F")
+      escaped = File.expand_path(path).gsub('%', "%25").gsub('/', "%2F")
+      return escaped if escaped.bytesize <= RECOVERY_NAME_MAX
+      digest = Digest::SHA256.hexdigest(escaped)[0, 16]
+      room = RECOVERY_NAME_MAX - digest.bytesize - 1
+      chars = escaped.chars
+      start, bytes = chars.size, 0
+      while start > 0 && bytes + chars[start - 1].bytesize <= room
+        start -= 1
+        bytes += chars[start].bytesize
+      end
+      "#{digest}-#{chars[start..].join}"
     end
 
     def autosave? : Bool

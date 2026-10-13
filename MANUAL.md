@@ -681,7 +681,8 @@ only when you save, the way vim's swap file and emacs' `#file#` work. The
 recovery files live in `$XDG_STATE_HOME/md/autosave/`
 (`~/.local/state/md/autosave/`), named after the file's absolute path with
 `/` escaped as `%2F` (`/home/u/notes.md` recovers from
-`%2Fhome%2Fu%2Fnotes.md`); a document without a name, such as one piped in
+`%2Fhome%2Fu%2Fnotes.md`; a path too long for a file name gives a digest
+of it followed by its end, `…-%2Fnotes.md`); a document without a name, such as one piped in
 on standard input and then edited, is kept as `unnamed-<date>-<time>-<pid>.md`
 (with `-2`, `-3`… for another document's from the same second). A document
 shown in several windows has one recovery file and one backup.

@@ -542,6 +542,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- A document deep enough that its escaped path was longer than a file name
+  may be was never auto-saved ("File name too long") and never locked
+  against a second md. Such a recovery or lock file is now named by a digest
+  of the path and the path's end.
+- A file dropped on a VTE terminal (GNOME Terminal, Tilix…) did not open
+  when its name held a quote, which VTE pastes as `'\''`.
 - `md --export html` wrote a fenced code block as a `<pre>` per line, which
   a browser showed as lines set apart by blank space; a block is one `<pre>`
   now.
