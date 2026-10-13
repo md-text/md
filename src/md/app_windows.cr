@@ -96,15 +96,12 @@ module Md
       @@window_refusal
     end
 
-    # Puts this app in the process's list and takes it out when its window
-    # goes, saving what a window's end saves (`#finish`) and remaking every
-    # window's list (from `#initialize`, once the menus exist).
-    private def register_window : Nil
-      @window_refusal = App.window_refusal
-      App.instances << self
-      # A close (`Window#close`: Close Current, Quit, the terminal window shut)
-      # tells before the teardown, while the panes still have their sizes.
-      @window.on(Crysterm::Event::WindowClosed) { finish }
+    # Takes this app out of the process when its window goes: out of the
+    # list, its end saved (`#finish`), its document left, every window's
+    # list remade. Subscribed in `#initialize` before the window becomes a
+    # view on its document, so a constructor that fails after that, its
+    # window destroyed by the caller (Window → New), leaves no view behind.
+    private def watch_destroy : Nil
       @window.on(Crysterm::Event::Destroy) do
         App.instances.delete self
         forget_active
@@ -112,6 +109,17 @@ module Md
         leave_document
         App.refresh_window_menus
       end
+    end
+
+    # Puts this app in the process's list and remakes every window's list
+    # (from `#initialize`, once the menus exist); `#watch_destroy` takes it
+    # out again.
+    private def register_window : Nil
+      @window_refusal = App.window_refusal
+      App.instances << self
+      # A close (`Window#close`: Close Current, Quit, the terminal window shut)
+      # tells before the teardown, while the panes still have their sizes.
+      @window.on(Crysterm::Event::WindowClosed) { finish }
       App.refresh_window_menus
     end
 

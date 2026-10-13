@@ -286,6 +286,47 @@ describe "Md::App linked windows" do
     end
   end
 
+  it "keeps one group of three windows through repeated switches of Window → Linking" do
+    with_two_windows(text: LONG, view: false) do |a, b|
+      c = a.new_window || fail("no window was opened")
+      begin
+        10.times do |i|
+          {a, b, c}[i % 3].window_link = Md::App::WindowLink::Linked
+          link = a.link || fail("not linked")
+          link.views.size.should eq 3
+          {a, b, c}.each(&.link.should(be(link)))
+          link.views.should contain link.leader
+          {a, b, c}[(i + 1) % 3].window_link = Md::App::WindowLink::Separate
+          {a, b, c}.each(&.link.should(be_nil))
+        end
+        Md::App.instances.size.should eq 3
+        a.document.views.size.should eq 3
+        a.document.handlers(Md::Event::DocumentEdited).size.should eq 3
+      ensure
+        c.window.destroy
+      end
+    end
+  end
+
+  it "keeps the group, the windows and the document's listeners bounded as linked windows come and go" do
+    with_two_windows(text: LONG, view: false, linked: true) do |a, b|
+      edited = a.document.handlers(Md::Event::DocumentEdited).size
+      10.times do |i|
+        c = a.new_window || fail("no window was opened")
+        press c.window, Tput::Key::Down if i.even? # c leads when it goes
+        (a.link || fail("not linked")).views.should eq [a, b, c]
+        c.window.destroy
+        link = a.link || fail("not linked")
+        link.views.should eq [a, b]
+        link.views.should contain link.leader
+      end
+      Md::App.instances.should eq [a, b]
+      a.document.views.size.should eq 2
+      a.document.handlers(Md::Event::DocumentEdited).size.should eq edited
+      Md::App.last_active.try(&.window.destroyed?).should_not be_true
+    end
+  end
+
   it "starts linked from the config" do
     with_config("md:\n  window_link: linked\n") do
       with_app config: true do |app|

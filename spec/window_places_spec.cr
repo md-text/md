@@ -105,6 +105,19 @@ describe Md::WindowPlaces do
     Md::WindowPlaces.on_screen?({100, -10, 400, 300}, [SCREEN]).should be_true
     Md::WindowPlaces.on_screen?({100, -30, 400, 300}, [SCREEN]).should be_false
   end
+
+  it "gives up on the displays when osascript does not answer in time" do
+    Md::WindowPlaces.desktop_screens(timeout: 1.nanosecond).should be_nil
+  end
+
+  it "drops frames no display could have from a store edited by hand, overflowing nothing" do
+    with_places do |_, path|
+      File.write path, "terminal.app:\n  2: [1000, 0, 2147483000, 2000]\n  3: [1000, 2147483000, 640, 2147483000]\n"
+      loaded = Md::WindowPlaces.load(path)
+      loaded.frame_for("terminal.app", 2).should be_nil
+      loaded.frame_for("terminal.app", 3).should be_nil
+    end
+  end
 end
 
 describe "Md::App Remember Positions" do

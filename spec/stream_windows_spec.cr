@@ -187,4 +187,59 @@ describe "Md::App windows on a stream" do
     end
     Md::Documents.all.should be_empty
   end
+  it "takes nothing of the stream into a window that opened another file meanwhile" do
+    path = tempfile "# File\n"
+    application = Crysterm::Application.new
+    begin
+      with_app Md::Source.new(stdin: true), view: true do |a, first_window|
+        application.add first_window
+        a.window_opener = recording_opener
+        b = a.new_window || fail("no window was opened")
+        begin
+          a.document.start_stream IO::Memory.new # streaming; its end comes later
+          # Taken in on a's fiber: b gets the chunk and the end by post…
+          a.receive "# Late\n\n"
+          a.finish_stream
+          # …and opens a file before its render fiber took them.
+          b.open_file(path).should be_true
+          settle { a.viewer.document.outline.size == 1 && !a.streaming? }
+          sleep 50.milliseconds
+          b.viewer.document.outline.map(&.text).should eq ["File"]
+          b.viewer.follow_tail?.should be_false
+        ensure
+          b.window.destroy
+        end
+      end
+    ensure
+      File.delete? path
+    end
+    Md::Documents.all.should be_empty
+  end
+
+  it "posts another window one job for any number of chunks, so taking them in never waits on its queue" do
+    reader, writer = IO.pipe
+    application = Crysterm::Application.new
+    with_app Md::Source.new(stdin: true), view: true do |a, first_window|
+      application.add first_window
+      a.window_opener = recording_opener
+      b = a.new_window || fail("no window was opened")
+      begin
+        a.document.start_stream reader
+        waited = false
+        spawn { waited = true }
+        # More chunks than a window's queue holds, taken in on a's fiber.
+        2000.times { |i| a.receive "line #{i}\n" }
+        waited.should be_false # nothing blocked on b's queue
+        writer.close
+        settle { !b.streaming? }
+        settle { b.viewer.document.to_plain_text.includes?("line 1999") }
+        b.markdown.should eq (0...2000).join { |i| "line #{i}\n" }
+      ensure
+        b.window.destroy
+      end
+    end
+    Md::Documents.all.should be_empty
+  ensure
+    reader.try &.close
+  end
 end

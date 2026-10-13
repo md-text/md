@@ -78,9 +78,11 @@ module Md
 
     # The handler driving the editor while Vi Mode is on: the document's,
     # shared with the other windows on it, while linked; this window's own
-    # otherwise.
+    # otherwise — and while Vi Mode is off here, so a linked window not in
+    # Vi Mode shows none of the shared Neovim's mode, command line or
+    # messages, and is not turned off (with a notice) when it ends.
     def vi : Crysterm::Neovim::Handler
-      (link && @document.vi) || @own_vi
+      (link && @document.vi if vi_mode?) || @own_vi
     end
 
     # Hooks the properties to the handler; the status bar's field goes in
@@ -177,8 +179,16 @@ module Md
 
     # Takes this window's editor off the document's shared handler, if it is
     # a view of it (Vi Mode turned off, the windows separated, another
-    # document shown); the last view's leaving ends that Neovim.
+    # document shown, the window destroyed); the last view's leaving ends
+    # that Neovim. The subscriptions to it go too (`#follow_vi` makes them
+    # again for the handler then in effect): the shared handler outlives a
+    # window that leaves it, which it would otherwise keep, destroyed, and
+    # keep telling.
     protected def leave_shared_vi : Nil
+      unless @followed_vi.same?(@own_vi)
+        @vi_subscriptions.off
+        @followed_vi = nil
+      end
       @document.release_vi @editor
     end
 

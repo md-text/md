@@ -144,6 +144,9 @@ module Md
     # in whichever window, takes them (`#drain_stream`).
     @stream_pending = Deque(String).new
     @stream_end : Tuple(String?)? = nil
+    # Whether the stream brought bytes that were not UTF-8 yet, so the
+    # notice is given once, not for every line holding some.
+    @stream_scrubbed = false
 
     # The window on whose render fiber the stream's chunk or end is being
     # taken in just now (`#receive`, `#finish_stream`): its handlers of
@@ -369,11 +372,13 @@ module Md
     # too when it was filled — and hands it to every window
     # (`Event::StreamAppended`), at once in *by*, on whose render fiber it
     # arrived (`#receiver`). Bytes that are not UTF-8 are replaced, with a
-    # notice. A chunk after the stream was abandoned is dropped.
+    # notice the first time. A chunk after the stream was abandoned is
+    # dropped.
     def receive(chunk : String, by : App? = nil) : Nil
       return if @stream_abandoned
       unless (decoded = Source.decode chunk).same?(chunk)
-        notify "Invalid UTF-8 in #{name} replaced by �"
+        notify "Invalid UTF-8 in #{name} replaced by �" unless @stream_scrubbed
+        @stream_scrubbed = true
         chunk = decoded
       end
       @streamed << chunk
@@ -505,10 +510,11 @@ module Md
     # is what the document already holds (our own save) or the document
     # holds unsaved changes, which are kept with a notice. A file removed is
     # said so, its text kept to be saved again; it is reloaded if it comes
-    # back. A change the watcher posted before Watch File was turned off is
-    # let be. On the host's render fiber; every view hears of it.
+    # back. A change the watcher posted before Watch File was turned off,
+    # or before the document closed, is let be. On the host's render fiber;
+    # every view hears of it.
     private def file_changed(path : String) : Nil
-      return unless @watch_file.value && path == @source.path
+      return if @views.empty? || !@watch_file.value || path != @source.path
       unless File.exists?(path)
         notify "#{path} was removed from disk; the text is kept"
         return

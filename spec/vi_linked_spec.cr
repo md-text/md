@@ -139,10 +139,10 @@ describe "Md::App Vi Mode in windows on one document" do
     end
   end
 
-  # Fails until Crysterm's `TextEditing#swap_document` reports the caret it
-  # rewinds (Qt's `setContent` emits `cursorPositionChanged`): C's first key
-  # reports that stale move, and the handler's caret push lands inside the
-  # `gg` it splits.
+  # Crysterm's `TextEditing#swap_document` reports the caret it rewinds at
+  # once (Qt's `setContent` emits `cursorPositionChanged`); were it left to
+  # C's first key, the handler's caret push would land inside the `gg` it
+  # splits.
   it "takes the first keys typed in a window that joined from another document" do
     first = tempfile "one\n"
     second = tempfile "two\n"
@@ -198,6 +198,41 @@ describe "Md::App Vi Mode in windows on one document" do
       settle { !a.vi_mode? && !b.vi_mode? }
       settle { notice(a).includes?("Vi Mode is off") && notice(b).includes?("Vi Mode is off") }
       a.document.vi.should be_nil
+    end
+  end
+
+  it "leaves no subscription of a closed window on the shared Neovim, however many come and go" do
+    with_two_windows(text: "one\n", view: false, linked: true) do |a, b|
+      vi_on a, b
+      shared = a.vi
+      listeners = shared.handlers(Crysterm::Event::ViModeChanged).size
+      5.times do
+        c = a.new_window || fail("no window was opened")
+        c.show_pane(Md::App::Pane::Editor).focus
+        c.vi_mode = true
+        c.vi.should be shared
+        c.window.destroy
+      end
+      a.vi.should be shared
+      shared.views.should eq [a.editor, b.editor]
+      shared.handlers(Crysterm::Event::ViModeChanged).size.should eq listeners
+      shared.handlers(Crysterm::Event::ProcessExited).size.should eq listeners
+      Md::App.instances.size.should eq 2
+    end
+  end
+
+  it "shows nothing of the shared Neovim in a linked window not in Vi Mode, nor ends anything there" do
+    with_two_windows(text: "one\n", view: false, linked: true) do |a, b|
+      a.show_pane(Md::App::Pane::Editor).focus
+      a.vi_mode = true
+      b.vi.should_not be a.vi
+      b.refresh_status
+      vi_field(b).visible?.should be_false
+      pid = (a.vi.client || fail("no Neovim")).pid
+      Process.signal Signal::KILL, pid
+      settle { !a.vi_mode? && notice(a).includes?("Vi Mode is off") }
+      sleep 50.milliseconds
+      notice(b).to_s.includes?("Vi Mode is off").should be_false
     end
   end
 

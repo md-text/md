@@ -70,14 +70,21 @@ module Md
       (FIRST + 1..).find! { |number| !taken.includes?(number) }
     end
 
+    # The largest coordinate or size a frame may have, in points: past it a
+    # frame is not one a display has (a store edited by hand), and its
+    # AppleScript bounds (`x + width`) could overflow in Crysterm.
+    MAX_COORDINATE = 1 << 20
+
     # The frame window *number* had when last closed under *launcher*, or nil
-    # when none was recorded, it is the first window, or the frame is on no
-    # display now (`.screens`; displays that cannot be listed count as none,
-    # so a window is never put where it may not be seen).
+    # when none was recorded, it is the first window, the frame is not one a
+    # display could have (`MAX_COORDINATE`), or it is on no display now
+    # (`.screens`; displays that cannot be listed count as none, so a window
+    # is never put where it may not be seen).
     def frame_for(launcher : String, number : Int32) : Frame?
       return if number == FIRST
       values = @frames[launcher]?.try(&.[number]?) || return
       return unless values.size == 4 && values[2] > 0 && values[3] > 0
+      return unless values.all? { |value| -MAX_COORDINATE <= value <= MAX_COORDINATE }
       frame = {values[0], values[1], values[2], values[3]}
       frame if (screens = WindowPlaces.screens.call) && WindowPlaces.on_screen?(frame, screens)
     end
@@ -114,9 +121,12 @@ module Md
     # Whether *frame*'s title strip — its top 20 points, where the window is
     # grabbed to move it — overlaps one of *screens*: a window there can be
     # seen and moved back. A frame on a display since removed overlaps none.
+    # Summed in 64 bits: a store edited by hand to hold frames near
+    # `Int32::MAX` overflows no sum, and leaves Window → New working.
     def self.on_screen?(frame : Frame, screens : Array(Frame)) : Bool
-      x, y, width, _ = frame
-      screens.any? do |left, top, across, down|
+      x, y, width, _ = frame.map(&.to_i64)
+      screens.any? do |screen|
+        left, top, across, down = screen.map(&.to_i64)
         x < left + across && x + width > left && y < top + down && y + 20 > top
       end
     end
@@ -124,12 +134,21 @@ module Md
     # The displays' frames, from AppKit's `NSScreen.screens` through
     # JavaScript for Automation (which needs no Automation permission),
     # turned to the top-left origin AppleScript's window bounds use; nil
-    # off macOS or when `osascript` fails.
-    def self.desktop_screens : Array(Frame)?
+    # off macOS, or when `osascript` fails or gives no answer within
+    # *timeout* (it is killed then): Window → New waits on it.
+    def self.desktop_screens(timeout : Time::Span = 3.seconds) : Array(Frame)?
       {% if flag?(:darwin) %}
         output = IO::Memory.new
-        status = Process.run("osascript", ["-l", "JavaScript", "-e", SCREENS_SCRIPT], output: output, error: Process::Redirect::Close)
-        return unless status.success?
+        process = Process.new("osascript", ["-l", "JavaScript", "-e", SCREENS_SCRIPT], output: output, error: Process::Redirect::Close)
+        done = Channel(Process::Status).new 1
+        spawn(name: "md window places: displays") { done.send process.wait }
+        status = select
+        when finished = done.receive then finished
+        when timeout(timeout)
+          process.signal Signal::KILL rescue nil
+          nil
+        end
+        return unless status.try &.success?
         frames = output.to_s.lines.compact_map do |line|
           values = line.split(',').map(&.strip.to_i?)
           next unless values.size == 4 && values.none?(Nil)

@@ -117,6 +117,12 @@ module Md
     # (`#document_changed`), and whether a catch-up is posted already.
     @seen_revision = 0_i64
     @catch_up_posted = false
+    # The stream's chunks and end that arrived for this window on another
+    # window's render fiber, waiting for the job posted to its own
+    # (`#stream_arrived`), and whether that job is posted.
+    @stream_inbox = [] of String
+    @stream_inbox_end : Tuple(String?)? = nil
+    @stream_posted = false
     # The subscriptions this window holds on its document, dropped when it
     # leaves it (`#leave_document`).
     @document_subscriptions = Crysterm::Subscriptions.new
@@ -263,6 +269,7 @@ module Md
       wire_linking
 
       Pane.each { |pane| widget(pane).hide }
+      watch_destroy
       enter_document
       stream(stream) if stream
       show_pane(view ? Pane::Viewer : Pane::Editor).focus

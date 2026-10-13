@@ -221,10 +221,13 @@ describe "Md::App file failures" do
         notice(app).should eq " Invalid UTF-8 in #{File.basename(path)} replaced by \uFFFD"
       end
       with_app Md::Source.new(stdin: true), view: true do |app|
-        app.stream IO::Memory.new("ok\nbad \xff\nend\n")
+        notices = 0
+        app.document.on(Md::Event::DocumentNotice) { notices += 1 }
+        app.stream IO::Memory.new("ok\nbad \xff\nend \xfe\n")
         settle { !app.streaming? }
-        app.markdown.should eq "ok\nbad \uFFFD\nend\n"
+        app.markdown.should eq "ok\nbad \uFFFD\nend \uFFFD\n"
         notice(app).should eq " Invalid UTF-8 in stdin replaced by \uFFFD"
+        notices.should eq 1 # once, not for every line
       end
     ensure
       File.delete? path

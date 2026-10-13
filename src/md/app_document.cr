@@ -30,10 +30,9 @@ module Md
       subs.on(doc, Md::Event::DocumentRenamed) { @window.post { renamed } }
       subs.on(doc, Md::Event::DocumentNotice) { |e| @window.post { notice e.text } }
       subs.on(doc.text, Crysterm::Event::ModificationChanged) { @window.post { refresh_status } }
-      # The stream's chunks: at once in the window whose render fiber took
-      # them; posted to the others, in order (a window's queue is FIFO).
-      subs.on(doc, Md::Event::StreamAppended) { |e| on_own_fiber { stream_appended e.chunk } }
-      subs.on(doc, Md::Event::StreamEnded) { |e| on_own_fiber { stream_ended e.message } }
+      # The stream's chunks and end (`#stream_arrived`).
+      subs.on(doc, Md::Event::StreamAppended) { |e| stream_arrived e.chunk }
+      subs.on(doc, Md::Event::StreamEnded) { |e| stream_arrived ended: {e.message} }
       # View → Watch File is the document's: the entry's property follows
       # the document's, both ways.
       @watch_link = Crysterm::Reactive.link(doc.watch_file, @watch_file)
@@ -66,6 +65,10 @@ module Md
       leave_shared_vi
       link.try &.remove(self)
       @document_subscriptions.off
+      # What the stream brought for this window and its render fiber has not
+      # taken in yet is the document's, not the next one's.
+      @stream_inbox.clear
+      @stream_inbox_end = nil
       @watch_link.try &.dispose
       @watch_link = nil
       doc = @document
@@ -106,13 +109,38 @@ module Md
       apply_base_url
     end
 
-    # Runs *job* now when the stream's chunk arrived on this window's render
-    # fiber (`Document#receiver`), else posts it to this window's.
-    private def on_own_fiber(&job : ->) : Nil
+    # A streamed *chunk*, or the stream's end (*ended*, holding the error
+    # message that cut it short), for this window: taken in at once when it
+    # arrived on this window's render fiber (`Document#receiver`), else kept
+    # in the inbox and taken in by one job posted to this window's fiber
+    # however many arrive before it runs (`#take_stream`) — a window taking
+    # a fast stream in posts each of the others one job, not one a line, and
+    # never waits on a full queue of theirs, which could be waiting on its.
+    private def stream_arrived(chunk : String? = nil, ended : Tuple(String?)? = nil) : Nil
+      @stream_inbox << chunk if chunk
+      @stream_inbox_end = ended if ended
       if @document.receiver.same?(self)
-        job.call
-      else
-        @window.post(&job)
+        take_stream
+      elsif !@stream_posted
+        @stream_posted = true
+        @window.post do
+          @stream_posted = false
+          take_stream
+        end
+      end
+    end
+
+    # Takes in what the inbox holds, in the order it arrived: the chunks at
+    # once (`#stream_appended`), then the end (`#stream_ended`).
+    private def take_stream : Nil
+      unless @stream_inbox.empty?
+        chunks = @stream_inbox.size == 1 ? @stream_inbox.first : @stream_inbox.join
+        @stream_inbox.clear
+        stream_appended chunks
+      end
+      if ended = @stream_inbox_end
+        @stream_inbox_end = nil
+        stream_ended ended[0]
       end
     end
 

@@ -515,3 +515,75 @@ describe "Md::App watching a file shown in two windows" do
     end
   end
 end
+
+# What a window leaves behind on the document it showed and in the process:
+# nothing, however many windows came and went.
+private def footprint(doc : Md::Document)
+  {
+    doc.views.size,
+    doc.text.handlers(Crysterm::Event::ContentsChanged).size,
+    doc.text.handlers(Crysterm::Event::ModificationChanged).size,
+    doc.handlers(Md::Event::DocumentEdited).size,
+    doc.handlers(Md::Event::DocumentNotice).size,
+    doc.handlers(Md::Event::StreamAppended).size,
+    doc.watch_file.handlers(Crysterm::Event::ReactiveChanged).size,
+    Md::App.instances.size,
+    Md::Documents.all.size,
+  }
+end
+
+describe "Md::App windows coming and going" do
+  {false, true}.each do |linked|
+    it "leaves no view, handler, window or document behind#{linked ? " (linked)" : ""}" do
+      path = tempfile "# Doc\n"
+      other = tempfile "# Other\n"
+      begin
+        with_two_windows(Md::Source.new(path: path), "# Doc\n", linked: linked) do |a, b|
+          doc = a.document
+          b.window.destroy
+          before = footprint(doc)
+          quits = a.exec_application.handlers(Crysterm::Event::AboutToQuit).size
+          6.times do
+            c = a.new_window || fail("no window was opened")
+            c.editor.insert_text "x"
+            c.open_file(other).should be_true unless linked
+            c.previous_file.should be_true unless linked
+            c.window.destroy
+          end
+          a.document.should be doc
+          footprint(doc).should eq before
+          a.exec_application.handlers(Crysterm::Event::AboutToQuit).size.should eq quits
+          doc.views.should eq [a]
+          doc.link.try(&.views).try(&.should eq [a])
+        end
+      ensure
+        File.delete? path
+        File.delete? other
+      end
+    end
+  end
+
+  it "leaves no stream handlers behind on a stream's document" do
+    reader, writer = IO.pipe
+    begin
+      with_two_windows(Md::Source.new(stdin: true), "") do |a, b|
+        a.stream reader
+        b.window.destroy
+        doc = a.document
+        before = footprint(doc)
+        4.times do
+          c = a.new_window || fail("no window was opened")
+          writer.puts "line"
+          c.window.destroy
+        end
+        footprint(doc).should eq before
+        writer.close
+        settle { !doc.streaming? }
+        a.markdown.should eq "line\n" * 4
+      end
+    ensure
+      reader.close
+      writer.close
+    end
+  end
+end
