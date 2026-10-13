@@ -191,13 +191,15 @@ module Md
       refresh_status
     end
 
-    # Format → Text Width → To Last Guide: the width set to the column of the
-    # rightmost guide pulled onto the focused pane (the editor while
-    # editing, the viewer otherwise) — where the text is to end — so a guide
-    # dragged to a good place becomes the width, as a design tool's margin
-    # guide does. The two bound guides are not candidates: they are the
-    # width. A notice without a guide to go by, or with the guides hidden.
-    # Returns whether the width was set.
+    # Format → Text Width → To Last Guide: the width set by the rightmost
+    # guide pulled onto the focused pane (the editor while editing, the
+    # viewer otherwise) so that the text ends just left of it — the guide
+    # becomes the text's right edge (Crysterm draws that edge in the column
+    # after the text, the width plus one), as a design tool's margin guide
+    # does. The two bound guides are not candidates: they are the width. A
+    # notice without a guide to go by, with the guides hidden, or with the
+    # guide in the first column, which leaves no room for text. Returns
+    # whether the width was set.
     def text_width_to_last_guide : Bool
       pane = @editor.focused? ? @editor : @viewer
       unless @guides.value
@@ -208,8 +210,12 @@ module Md
         notice "No guide to set the width by: pull one off the column ruler"
         return false
       end
-      self.text_width = column
-      notice "Text width #{column}, to the last guide"
+      if column < 2
+        notice "No room for text left of a guide in column #{column}"
+        return false
+      end
+      self.text_width = column - 1
+      notice "Text width #{column - 1}, ending at the last guide"
       true
     end
 

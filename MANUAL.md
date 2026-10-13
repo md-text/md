@@ -615,9 +615,9 @@ edge and the pane scrolls sideways. *Text Width* caps the width the text is
 laid out in — 72, 80, 100 or 120 columns, or *Unlimited* — so a line does
 not run the whole width of a wide terminal; it applies to both panes, which
 keeps them reading side by side under Sync Cursor. *To Last Guide*, below
-the widths, sets it to the column of the rightmost guide you pulled onto
-the editor while editing, the viewer otherwise (see Guides), so a guide
-dragged to a good place becomes the width. *Center Document* puts the
+the widths, sets it so the text ends just left of the rightmost guide you
+pulled onto the editor while editing, the viewer otherwise (see Guides): a
+guide dragged to a good place becomes the text's right edge. *Center Document* puts the
 capped column in the middle of a wider pane rather than at its left edge.
 
 Two more measure it. *Rulers* puts a column ruler along the top row of each

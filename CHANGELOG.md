@@ -542,6 +542,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Format → Text Width → To Last Guide set the width to the guide's column,
+  so the text ran one column past the guide; it now ends just left of it.
 - A file with Windows (CRLF) line endings kept a carriage return at the end
   of every line of the text, so nothing anchored to a line's end matched:
   a code fence never closed (everything after the first code block was

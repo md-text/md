@@ -108,11 +108,14 @@ describe "Md::App guides" do
       app.viewer.add_guide 52
       app.editor.add_guide 40
       app.text_width_to_last_guide.should be_true
-      app.text_width.should eq 52 # the viewer's rightmost
-      app.viewer.line_wrap_column.should eq 52
+      app.text_width.should eq 51 # ending just left of the viewer's rightmost
+      app.viewer.line_wrap_column.should eq 51
       app.show_pane(Md::App::Pane::Editor).focus
       entry.trigger
-      app.text_width.should eq 40 # the editor's, while editing
+      app.text_width.should eq 39 # the editor's, while editing
+      app.editor.guides = [1]
+      app.text_width_to_last_guide.should be_false
+      notice(app).should contain "No room for text"
     end
   end
 
