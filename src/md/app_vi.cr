@@ -106,7 +106,15 @@ module Md
       @followed_vi = handler
       subs = @vi_subscriptions
       subs.on(handler, Crysterm::Event::ViModeChanged) { vi_post { refresh_status } }
-      subs.on(handler, Crysterm::Event::ViCommandLineChanged) { vi_post { refresh_status } }
+      # A command line typed (`:`, `/`) is the name field's, which a notice
+      # up in the bar covers: the notice ends there, as a Qt application
+      # clears a status message when the bar is put to another use.
+      subs.on(handler, Crysterm::Event::ViCommandLineChanged) do
+        vi_post do
+          @main.status_bar.clear_message if handler.command_line
+          refresh_status
+        end
+      end
       subs.on(handler, Crysterm::Event::ViMessageChanged) { |e| e.text.try { |text| vi_post { notice text } } }
       subs.on(handler, Crysterm::Event::ViWriteRequested) { |e| vi_write e.path, e.rename if vi_active?(handler) }
       subs.on(handler, Crysterm::Event::ViQuitRequested) { |e| vi_quit e.bang, e.all if vi_active?(handler) }

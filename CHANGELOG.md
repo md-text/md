@@ -570,6 +570,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- A notice in the status bar hid Vi Mode's command line while it lasted, and
+  came back after a question asked in the bar; it now ends when the bar is
+  put to either use.
 - Format → Text Width → To Last Guide set the width to the guide's column,
   so the text ran one column past the guide; it now ends just left of it.
 - A file with Windows (CRLF) line endings kept a carriage return at the end

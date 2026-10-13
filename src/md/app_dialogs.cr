@@ -129,8 +129,11 @@ module Md
     # once it is answered or given up (`#wire_prompt_bar`), the way an
     # editor's command line appears over a full-screen view. The bar is
     # shown after the prompt opens: opening cancels a question still up,
-    # whose end would hide the bar again.
+    # whose end would hide the bar again. A notice up in the bar ends with
+    # the question (`StatusBar#clear_message`): the bar is put to another
+    # use, and the notice is not to come back over the fields afterwards.
     private def status_prompt(label : String, value : String, completer : Proc(String, Array(String))? = @main.status_bar.line_prompt.completer, &callback : String? ->) : Nil
+      @main.status_bar.clear_message
       @main.status_bar.prompt(label, value, completer: completer, &callback)
       @main.status_bar.show unless @bars.value
     end
