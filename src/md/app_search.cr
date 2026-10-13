@@ -95,6 +95,9 @@ module Md
     # question is up, and the key it took.
     @replace_key : EventHandler::Subscription?
     @replace_answer : String?
+    # The wrap-around said with the next question, which takes the status
+    # bar a notice would show in (`#ask_replace`).
+    @replace_wrapped = false
 
     # Asks for a pattern (`#ask_text`) and searches for it; an empty or
     # cancelled answer searches nothing.
@@ -216,7 +219,11 @@ module Md
     # `""`. A key typed before the question is up goes into the editor.
     private def ask_replace : Nil
       prompt = @main.status_bar.line_prompt
-      status_prompt("Replace? (y)es (n)o (a)ll (q)uit (l)ast ", "") { |text| replace_answered text }
+      # A wrap-around is said in the question itself, as Vim shows its
+      # message above the prompt: a notice would end as the question opens.
+      wrapped = @replace_wrapped ? "Search hit BOTTOM, continuing at TOP. " : ""
+      @replace_wrapped = false
+      status_prompt("#{wrapped}Replace? (y)es (n)o (a)ll (q)uit (l)ast ", "") { |text| replace_answered text }
       field = prompt.field
       @replace_key = field.on(Crysterm::Event::KeyPress) do |e|
         next if e.key || !e.char.in?('y', 'n', 'a', 'q', 'l')
@@ -337,7 +344,7 @@ module Md
         session.wrapped = true
         match = first_match(regex, text)
         return false unless match && match.start < session.origin
-        notice "Search hit BOTTOM, continuing at TOP"
+        @replace_wrapped = true
       end
       @editor.text_cursor = Crysterm::TextCursor.new(doc, match.start, match.stop)
       session.found = true

@@ -33,7 +33,7 @@ describe "Md::App replace origin" do
       a.editor.text_cursor.selection_start.should eq 6
       answer a, 'y' # "foo 2", where it began: the new text is past the start
       answer a, 'y' # "foo 3"
-      notice(a).should contain "Search hit BOTTOM, continuing at TOP"
+      question(a).should start_with "Search hit BOTTOM, continuing at TOP. Replace?"
       answer a, 'y' # "foo 1"; the next one is "xfoo 2", where it began
       a.main.status_bar.prompting?.should be_false
       notice(a).should contain "3 replacements"

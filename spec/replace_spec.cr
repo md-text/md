@@ -54,7 +54,7 @@ describe "Md::App replace" do
       app.editor.selected_text.should eq "needle"
       app.editor.text_cursor.block_number.should eq 10
       key app, 'y'
-      notice(app).should contain "Search hit BOTTOM, continuing at TOP"
+      question(app).should start_with "Search hit BOTTOM, continuing at TOP. Replace?"
       app.editor.text_cursor.block_number.should eq 2
       key app, 'a'
       app.main.status_bar.prompting?.should be_false
