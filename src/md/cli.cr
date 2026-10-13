@@ -39,7 +39,7 @@ module Md
     OPTIONS = [
       Option.new("--version", "Print the version and exit", short: "-V"),
       Option.new("--help", "Show this help and exit", short: "-h"),
-      Option.new("--verbose", "Be more verbose (with --help, also list the\nCrysterm toolkit options)", short: "-v"),
+      Option.new("--verbose", "Be more verbose (with --help, also list the\nsettings and the Crysterm toolkit options)", short: "-v"),
       Option.new("--watch", "Reload FILE as it changes on disk (View → Watch File)", short: "-w"),
       Option.new("--line", "Open on source line N, like +N (past the end,\nthe last line), instead of the remembered position", short: "-l", argument: "N"),
       Option.new("--view", "Open the viewer, even on a new FILE"),
@@ -120,24 +120,8 @@ module Md
       # an `ArgumentError` is the app's own and is reported as such below.
       app = begin
         options = parse(args)
-        stdout.puts "md #{VERSION}" if options.version?
-        if options.help?
-          stdout.puts help
-          if options.verbose?
-            # The settings first, as md's own, then the toolkit's without them.
-            stdout.puts
-            stdout.puts Config.help
-            stdout.puts
-            stdout.puts Crysterm.toolkit_options_help(except: OWN_FLAGS + Config.flags.to_set)
-          end
-        end
-        return 0 if options.help? || options.version?
-        if kind = options.generate
-          stdout << Manual.generate(kind)
-          return 0
-        end
-        if format = options.export
-          return export(options.positional, format, stdin, stdout)
+        if status = print_only(options, stdin, stdout)
+          return status
         end
 
         source = Source.resolve(options.positional, stdin.tty?)
@@ -163,6 +147,43 @@ module Md
       # `exec` raises it, so the report lands on the shell screen.
       stderr.puts "md: internal error: #{ex.inspect_with_backtrace}"
       1
+    end
+
+    # What *options* print in place of opening a window — the version, the
+    # help, a generated man page or completion script, an export — and the
+    # exit status, or nil when they open one. A reader that stops reading
+    # (`md --export html big.md | head`) ends it quietly, with the status of
+    # a filter killed by `SIGPIPE` (128 + 13), as a C filter ends: Crystal
+    # ignores the signal, so the write raises instead, which would have been
+    # reported as an internal error. The output is flushed here, so a write
+    # held in the buffer fails here too rather than at exit.
+    private def self.print_only(options : Options, stdin : IO, stdout : IO) : Int32?
+      status = if options.help? || options.version?
+                 stdout.puts "md #{VERSION}" if options.version?
+                 print_help stdout, options.verbose? if options.help?
+                 0
+               elsif kind = options.generate
+                 stdout << Manual.generate(kind)
+                 0
+               elsif format = options.export
+                 export(options.positional, format, stdin, stdout)
+               end
+      stdout.flush if status
+      status
+    rescue ex : IO::Error
+      raise ex unless ex.os_error == Errno::EPIPE
+      141
+    end
+
+    # `--help`: md's usage text; with *verbose*, the settings next, as md's
+    # own, then the toolkit's options without them.
+    private def self.print_help(stdout : IO, verbose : Bool) : Nil
+      stdout.puts help
+      return unless verbose
+      stdout.puts
+      stdout.puts Config.help
+      stdout.puts
+      stdout.puts Crysterm.toolkit_options_help(except: OWN_FLAGS + Config.flags.to_set)
     end
 
     # Parses *args* into `Options`. A usage error — an unknown option, a
