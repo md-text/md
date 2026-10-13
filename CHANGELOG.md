@@ -542,6 +542,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- `md --help`, `--generate` or `--export` piped into a reader that stops
+  early (`md --export html big.md | head`) printed an internal error with a
+  backtrace. md now stops quietly there, with the status of a filter killed
+  by `SIGPIPE`.
+- Options → Load Config… and Save Config As… took a typed `~/md.yml` as a
+  directory named `~` in the working directory, which Save Config As
+  created. `~` is the home directory now, as in File → Open….
+- The manual's example config file set `mouse_mode: Off`, which YAML reads
+  as a boolean, so md refused to start on it; the example quotes the value.
 - A new document without a name said a recovered copy existed when the
   copy was the auto-save of an unnamed document in an md still running —
   this one, or another started earlier. Copies whose md runs on are no

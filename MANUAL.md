@@ -823,14 +823,14 @@ command, and so is every key no entry has:
 | `bold`, `italic`, `code`, `code-block`, `indent`, `outdent`, `task`, `toggle-task`, `promote-heading`, `demote-heading`, `soft-wrap`, `hard-wrap`, `rewrap-paragraph`, `rewrap-document` | The Format menu (`soft-wrap` and `hard-wrap` turn their setting on or off) |
 | `editor`, `viewer`, `toc`, `bars`, `sync-cursor`, `highlight-line`, `line-numbers`, `viewer-line-numbers`, `center-text`, `horizontal-ruler`, `vertical-ruler`, `guides`, `images`, `media-trial`, `link-double-click`, `watch-file` | The View menu's check entries: each turns its setting on or off |
 | `overwrite-mode`, `confirm-discard`, `autosave`, `backup-file`, `resizable-panes`, `reduced-motion`, `detachable-menus`, `vi-config`, `load-config`, `save-config`, `save-config-as`, `clear-caches` | The Options menu |
-| `new-window`, `close-window`, `manual`, `about` | The Window and Help menus |
+| `new-window`, `close-window`, `remember-window-positions`, `manual`, `about` | The Window and Help menus |
 | `toggle-editor`, `toggle-viewer`, `toggle-toc`, `toggle-bars`, `cycle-mouse-mode`, `cycle-theme`, `suspend`, `resize-panes` | `F1`–`F6`, `Ctrl-Z` and `Alt-R` |
 
 A choice among several is named after its submenu and the choice:
 `theme-breeze-dark`, `text-width-80` (`text-width-off` for none,
 `text-width-to-last-guide`), `color-depth-xterm256`, `hyperlinks-auto`,
 `dialog-style-modal`, `mouse-all`, `clipboard-terminal`,
-`tooltips-status-bar`, `media-backend-kitty`. A command that cannot run
+`tooltips-status-bar`, `media-backend-kitty`, `window-link-linked`. A command that cannot run
 now — an entry the menu shows disabled — says so, as does a name md does
 not know.
 
@@ -864,7 +864,7 @@ cat ~/.config/md/config.yml
 md:
   text_width: 80
   vertical_ruler: true
-  mouse_mode: Off
+  mouse_mode: "off"
 colors:
   theme: breeze-light
 ```
@@ -883,8 +883,8 @@ Entries md does not know are kept across a rewrite, so an older md does not
 shed a newer one's settings; a broken file stops md with a message naming the
 entry, as does a file that is not a mapping of option groups or a value that
 fits no option, given anywhere. One YAML caution: write a value that YAML reads as a boolean, such as
-Terminal Links' `off`, in quotes (`hyperlinks: "off"`); md's own writes
-quote every word.
+the mouse mode's or Terminal Links' `off`, in quotes (`mouse_mode: "off"`,
+`hyperlinks: "off"`), or md stops on it; md's own writes quote every word.
 
 The Options menu reaches the file directly: *Save Config* writes it now,
 without waiting for the exit; *Save Config As…* asks for a file name, the
