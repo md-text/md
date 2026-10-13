@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- View → Pause When Unfocused (`render.pause_when_unfocused`, off in md):
+  a window stops painting while its terminal window is not focused.
 - View → Media Backend → None (`media.backend: None`) draws no images and
   fetches none; an image with a title shows the picture glyph and the title
   where its picture would be. Link and image titles are now kept when a

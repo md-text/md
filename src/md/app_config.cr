@@ -54,6 +54,7 @@ module Md
       link @hyperlinks, "render.hyperlinks"
       link @reduced_motion, "render.reduced_motion"
       link @tear_off_menus, "menu.tear_off"
+      link @pause_when_unfocused, "render.pause_when_unfocused"
       link @link_double_click, "md.link_double_click"
       link @open_local_programs, "md.open_local_programs"
       link @vi_config, "md.vi_config"

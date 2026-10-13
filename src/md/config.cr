@@ -119,9 +119,10 @@ module Md
   # as the user asked for them, and are recorded as picks.
   module Config
     # The Crysterm options md's menus offer — the theme, the media backend,
-    # the color depth, the terminal links, reduced motion (No Animations) and detachable
-    # menus — which `.reset` puts back with the `md.*` options (specs).
-    CRYSTERM_KEYS = ["colors.theme", "media.backend", "colors.depth", "render.hyperlinks", "render.reduced_motion", "menu.tear_off"]
+    # the color depth, the terminal links, reduced motion (No Animations),
+    # detachable menus and the pause of unfocused windows — which `.reset`
+    # puts back with the `md.*` options (specs).
+    CRYSTERM_KEYS = ["colors.theme", "media.backend", "colors.depth", "render.hyperlinks", "render.reduced_motion", "menu.tear_off", "render.pause_when_unfocused"]
 
     # Whether any option changed since the last load at start or save to
     # the config file, so a quiet exit skips the write.

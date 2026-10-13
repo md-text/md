@@ -51,6 +51,14 @@ module Md
     # end; the ordinary menus are unchanged. Turning the option off hides
     # the torn-off menus, and turning it on again brings them back where
     # they were (Crysterm's option watcher does both).
+    # View → Pause When Unfocused (`#pause_when_unfocused?`,
+    # `render.pause_when_unfocused`): whether a window stops painting while
+    # its terminal window is not focused, catching up when it is focused
+    # again — work saved on what nobody looks at. md turns it off by default
+    # (`Config.apply_defaults`): a window in the background is a page beside
+    # the one being typed in, showing another window's edits, a stream or a
+    # watched file as they come. It needs focus reports, which the
+    # terminal sends while the mouse is reported (`window.send_focus`).
     alias ColorDepth = Crysterm::ColorDepth
     alias Hyperlinks = Crysterm::AutoToggle
 
@@ -64,6 +72,7 @@ module Md
     @hyperlinks : Crysterm::Reactive::Property(Hyperlinks) = Crysterm::Reactive::Property.new(Crysterm::Config.render_hyperlinks)
     @reduced_motion : Crysterm::Reactive::Property(Bool) = Crysterm::Reactive::Property.new(Crysterm::Config.render_reduced_motion)
     @tear_off_menus : Crysterm::Reactive::Property(Bool) = Crysterm::Reactive::Property.new(Crysterm::Config.menu_tear_off)
+    @pause_when_unfocused : Crysterm::Reactive::Property(Bool) = Crysterm::Reactive::Property.new(Crysterm::Config.render_pause_when_unfocused)
     @link_double_click : Crysterm::Reactive::Property(Bool) = Crysterm::Reactive::Property.new(false)
 
     def color_depth : ColorDepth
@@ -105,6 +114,16 @@ module Md
       @reduced_motion.value = value
     end
 
+    def pause_when_unfocused? : Bool
+      @pause_when_unfocused.value
+    end
+
+    # Pauses the window's painting while its terminal window is unfocused,
+    # or keeps it painting (View → Pause When Unfocused).
+    def pause_when_unfocused=(value : Bool) : Bool
+      @pause_when_unfocused.value = value
+    end
+
     def tear_off_menus? : Bool
       @tear_off_menus.value
     end
@@ -134,6 +153,12 @@ module Md
       # The menus read the option live, and Crysterm repaints the open ones.
       @tear_off_menus.on_change { Crysterm::Config.menu_tear_off = @tear_off_menus.value }
       @link_double_click.on_change { @viewer.double_click_links = @link_double_click.value }
+      # The window took the option when it was made; a change is put on it,
+      # and on the option for the windows made after.
+      @pause_when_unfocused.on_change do
+        Crysterm::Config.render_pause_when_unfocused = @pause_when_unfocused.value
+        @window.pause_when_unfocused = @pause_when_unfocused.value
+      end
     end
 
     # Puts the hyperlink policy on the window — which took the option as its

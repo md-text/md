@@ -781,8 +781,10 @@ document as well. A document streaming in from standard input streams into
 every window on it, a new one starting from what has arrived, and goes on
 after the window that started it closes. A window in the background keeps
 showing all of this as it happens: md turns off Crysterm's pause of
-unfocused windows (`render.pause_when_unfocused`, which a config file can
-turn back on).
+unfocused windows, which View → Pause When Unfocused
+(`render.pause_when_unfocused`) turns back on — a window then stops
+painting while its terminal window is not focused and catches up when it
+is, saving the work on what nobody looks at.
 
 Window → Linking says how the windows on one document behave towards each
 other; the text, its undo and its modified state are one either way.
@@ -879,7 +881,7 @@ Viewer), Center Document, Rulers (Horizontal and Vertical), Guides,
 Images, Links → Double-click to Open and Open Local Programs, Dialog Style, Ask Before Discarding
 Changes, Auto-Save, Keep a Backup File, the mouse mode, the clipboard mode,
 Resizable Panes, Tooltips, the theme and Crysterm's own Color Depth, Links, Media
-Backend, No Animations, Detachable Menus, Vi Mode: Use Neovim Config, Window → Linking and Window → Remember Positions — and the pane sizes are kept across runs in
+Backend, Pause When Unfocused, No Animations, Detachable Menus, Vi Mode: Use Neovim Config, Window → Linking and Window → Remember Positions — and the pane sizes are kept across runs in
 `$XDG_CONFIG_HOME/md/config.yml` (`~/.config/md/config.yml`), written when
 md quits if anything changed. Watch File is not kept: like `--watch`, it is
 for the run at hand.

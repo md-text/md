@@ -149,6 +149,8 @@ module Md
       @media_actions = build_media_menu view
       # One more of Crysterm's options (`app_toolkit.cr`); `L` is free here.
       @color_depth_actions = add_choices(view, "Co&lor Depth", "color-depth", COLOR_DEPTHS, @color_depth, "How many colors the window is drawn with: the terminal's, or a depth of your choosing", ->color_depth_tip(ColorDepth)) { |depth| color_depth_label depth }
+      # Crysterm's `render.pause_when_unfocused` (`app_toolkit.cr`).
+      add_toggle view, "&Pause When Unfocused", "pause-when-unfocused", @pause_when_unfocused, "Stop painting this window while its terminal window is not focused, catching up when it is; off, a window in the background shows edits from another window, a stream or a watched file as they come"
       view.add_separator
       add_choices(view, "&Dialog Style", "dialog-style", DialogStyle.values, @dialog_style, option_tip("md.dialog_style"), ->dialog_style_tip(DialogStyle)) { |style| dialog_style_label style }
       # Where these descriptions show (`app_tips.cr`), beside how questions
