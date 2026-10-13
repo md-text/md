@@ -16,8 +16,10 @@ module Md
   #
   # The registry also holds what is one per process rather than one per
   # window: the files backed up this session (`.backup`), the names of
-  # unnamed documents' recovery files (`.unnamed_recovery_name`) and how
-  # windows on one document behave (`.window_link`).
+  # unnamed documents' recovery files (`.unnamed_recovery_name`), how
+  # windows on one document behave (`.window_link`) and the locks telling
+  # other md processes which files this one has open (`DocumentLock`,
+  # `.lock_holder`).
   module Documents
     # Every document with a window on it, in the order they were first shown.
     class_getter all = [] of Document
@@ -26,6 +28,10 @@ module Md
 
     # The keys of the files backed up this session (`FILE~`, `.backup`).
     @@backed_up = Set(String).new
+
+    # Each named document's lock (`DocumentLock`), by the document's
+    # `object_id`: taken, or found held by another md.
+    @@locks = {} of UInt64 => DocumentLock
 
     # The canonical key of *path*: the real path of an existing file; for a
     # file that does not exist yet, the real path of its directory joined
@@ -78,22 +84,55 @@ module Md
       if key = doc.key
         @@by_key[key] ||= doc
       end
+      lock doc
     end
 
-    # Takes *doc* out of the registry: its last view left.
+    # Takes *doc* out of the registry: its last view left, and its lock goes.
     def self.forget(doc : Document) : Nil
       @@all.delete doc
       @@by_key.reject! { |_, held| held.same? doc }
+      unlock doc
     end
 
     # Moves *doc* from the key *old* to its current one: it was saved under
     # another name, or a new file was written for the first time (its real
-    # path resolves now).
+    # path resolves now). The lock moves with it.
     def self.rekey(doc : Document, old : String?) : Nil
       @@by_key.delete(old) if old && @@by_key[old]?.try(&.same?(doc))
       if (key = doc.key) && @@all.includes?(doc)
         @@by_key[key] ||= doc
+        lock doc
       end
+    end
+
+    # The other md process holding the lock on *doc*'s file
+    # (`DocumentLock#holder`), or nil when this process holds it or there
+    # is none.
+    def self.lock_holder(doc : Document) : DocumentLock::Info?
+      @@locks[doc.object_id]?.try &.holder
+    end
+
+    # Locks *doc*'s file for the process (`DocumentLock`), giving up the
+    # lock on a file it had before; when another md process has the file
+    # open, every window on *doc* is told, once the window is set up
+    # (posted, as a window opening the file subscribes to the document's
+    # notices after registering it). Only a process that keeps state
+    # between runs — a window on *doc* with a history, as md started from
+    # the command line has — leaves locks: specs and other embedders do not.
+    private def self.lock(doc : Document) : Nil
+      return unless (key = doc.key) && doc.views.any?(&.history)
+      return if @@locks[doc.object_id]?.try(&.key) == key
+      unlock doc
+      lock = @@locks[doc.object_id] = DocumentLock.new(key)
+      return if lock.try_lock
+      return unless holder = lock.holder
+      text = "#{doc.name} is open in another md (#{holder.holder}); saving here overwrites its changes"
+      doc.host.try &.window.post { doc.notify text }
+    end
+
+    # Gives up *doc*'s lock, if it has one.
+    private def self.unlock(doc : Document) : Nil
+      @@locks.delete(doc.object_id).try &.unlock
     end
 
     # Copies *path* to `path~` before the first save of the session writes
@@ -128,6 +167,8 @@ module Md
       @@all.clear
       @@by_key.clear
       @@backed_up.clear
+      @@locks.each_value &.unlock
+      @@locks.clear
       @@window_link = App::WindowLink::Separate
     end
 

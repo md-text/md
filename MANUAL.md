@@ -684,6 +684,18 @@ recovery file is newer than the file, a notice names the copy; open it
 (File → Open… takes the path) or copy it over the file to get the edits
 back. A new document is told of unnamed copies left behind.
 
+Two md processes on one file know of each other: each leaves a lock for
+the files it has open in `$XDG_STATE_HOME/md/locks/`
+(`~/.local/state/md/locks/`), named as the recovery files are and holding
+its process id, host and the time. A second md opening a file the first
+has open, or saving another file under its name, says so in a notice —
+`README.md is open in another md (pid 1234); saving here overwrites its
+changes` — and lets you go on: whichever saves last wins. A lock goes when
+the last window on its file closes or md exits, moves with Save As, and one
+whose process is gone (a crash) is replaced; one taken on another host
+sharing the directory counts as held, since md cannot tell whether that
+process lives. Options → Clear Caches leaves the locks alone.
+
 ### Clearing the caches
 
 Options → Clear Caches… forgets, after asking, everything md keeps for

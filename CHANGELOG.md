@@ -9,6 +9,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- A file open in one md process and opened in another went unnoticed, the
+  last save winning. Each md now leaves a lock for the files it has open in
+  `$XDG_STATE_HOME/md/locks/` (its pid, host and the time, after Qt's
+  `QLockFile`), and a second md opening such a file, or saving to one by
+  Save As, says so in a notice ("README.md is open in another md (pid
+  1234); saving here overwrites its changes") and edits on, as Qt Creator
+  and Kate warn. A lock goes when its file's last window does or md exits,
+  moves with Save As, and one left by a process that is gone is replaced.
 - Project infrastructure: build system, specs, linting, continuous integration
   and release builds for Linux (x86_64, aarch64) and macOS (Intel, Apple Silicon).
 - Command line: `md [FILE | -]`, with `-` for standard input, `--help` and `--version`.
