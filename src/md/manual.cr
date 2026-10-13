@@ -38,7 +38,7 @@ module Md
       {"Ctrl-L", "Go to a source line (asks for the number; Edit -> Go to Line)."},
       {":, Alt-K", "The command line: a command's name runs it, Tab completing it, and a number goes to that source line (`:' outside the editor; Edit -> Run md Command)."},
       {"Alt-Down, Alt-Up, ], [", "Jump to the next and the previous heading (] and [ outside the editor)."},
-      {"Backspace, Alt-Left, Alt-Right", "Back to the file you were in before the last link or open, where you left it (Backspace outside the editor; File -> Previous File), and on to the next again (File -> Next File)."},
+      {"Backspace, Alt-Left, Alt-Right", "Back to the file you were in before the last link or open, where you left it (Backspace outside the editor; File -> Previous File), and on to the next again (File -> Next File); in the editor and the viewer Alt-Left and Alt-Right move by word instead."},
       {"Alt-R", "Resize the panes from the keyboard (when Options -> Resizable Panes is on): Left and Right move the divider next to the pane, Enter or Escape return."},
       {"Alt-W", "Soft Wrap in the editor on and off (Format -> Soft Wrap)."},
       {"Enter", "In the editor, on a list item: continue the list; on an empty item, end it."},
@@ -133,20 +133,22 @@ module Md
         end
         io << <<-'ROFF'
           .PP
-          The Edit, Format, View, Options and Window menu choices are options too, listed under
-          SETTINGS below. Crysterm, the toolkit md is built on, takes options of
-          its own (\fB\-\-colors\-theme\fR, \fB\-\-colors\-stylesheet\fR,
-          \fB\-\-log\-file\fR and more) on the same command line, each also
-          settable in \fI~/.config/md/config.yml\fR, in
-          \fI~/.config/crysterm/config.yml\fR or by a \fBCRYSTERM_*\fR environment
+          The Edit, Format, View, Options and Window menu choices are options
+          too, listed under SETTINGS below. Crysterm, the toolkit md is built
+          on, takes options of its own (\fB\-\-colors\-theme\fR,
+          \fB\-\-colors\-stylesheet\fR, \fB\-\-log\-file\fR and more) on the
+          same command line, each also settable in
+          \fI~/.config/md/config.yml\fR, in \fI~/.config/crysterm/config.yml\fR
+          or by a \fBCRYSTERM_*\fR environment
           variable; \fBmd \-\-help \-\-verbose\fR lists them.
           ROFF
         io << '\n'
         io << ".SH SETTINGS\n"
         io << <<-'ROFF'
-          The choices made in the Edit, Format, View, Options and Window menus are kept across runs in
-          \fI~/.config/md/config.yml\fR (see FILES), and each is an option of
-          Crysterm's configuration registry: a key in that file, an environment
+          The choices made in the Edit, Format, View, Options and Window menus
+          are kept across runs in \fI~/.config/md/config.yml\fR (see FILES),
+          and each is an option of Crysterm's configuration registry: a key in
+          that file, an environment
           variable and a command-line option, the later winning, with a pick in a
           menu recorded at once. A value given on the command line or in the
           environment is for that run and is not written to the file. A boolean
@@ -183,11 +185,12 @@ module Md
           .SH FILES
           .TP
           .I $XDG_CONFIG_HOME/md/config.yml
-          The Edit, Format, View, Options and Window choices and the pane sizes, kept across runs
-          (\fI~/.config/md/config.yml\fR by default): YAML with one mapping per
-          option group, \fBmd\fR for md's own settings and Crysterm's groups for
-          its options, written when md quits if anything changed and by Options
-          \-> Save Config. Entries md does not know are kept.
+          The Edit, Format, View, Options and Window choices and the pane
+          sizes, kept across runs (\fI~/.config/md/config.yml\fR by default):
+          YAML with one mapping per option group, \fBmd\fR for md's own settings
+          and Crysterm's groups for its options, written when md quits if
+          anything changed and by Options \-> Save Config. Entries md does not
+          know are kept.
           .TP
           .I $XDG_STATE_HOME/md/history.json
           The recently opened files and the position in each
@@ -338,8 +341,9 @@ module Md
       line.starts_with?('.') || line.starts_with?('\'') ? "\\&#{line}" : line
     end
 
-    # *text* on lines of at most *width* characters (roff joins them back
-    # into a paragraph; a long source line is a style warning to `mandoc`).
+    # *text* on lines of at most *width* bytes (roff joins them back into a
+    # paragraph; a source line longer than 80 bytes is a style warning to
+    # `mandoc`, which counts an em dash as the three bytes it is).
     # Every line is guarded: a word such as `'set` landing first on a line
     # would otherwise start a request and vanish with the rest of the line.
     # Public for the spec that pins this.
@@ -349,7 +353,7 @@ module Md
       text.split(' ') do |word|
         if line.empty?
           line = word
-        elsif line.size + 1 + word.size <= width
+        elsif line.bytesize + 1 + word.bytesize <= width
           line += " #{word}"
         else
           lines << line

@@ -268,8 +268,8 @@ module Md
       @@dirty = false
     end
 
-    # The `md.*` options, in registration order — the settings section of
-    # the help and the man page.
+    # The `md.*` options, in key order (as `Superconf.each` gives them) —
+    # the settings section of the help, the man page and the completions.
     def self.options : Array(Superconf::AbstractOption)
       found = [] of Superconf::AbstractOption
       Superconf.each { |option| found << option if option.key.starts_with?("md.") }
@@ -282,9 +282,10 @@ module Md
     # else it can be set.
     def self.help : String
       banner = <<-BANNER
-        Settings: the Edit, Format, View, Options and Window menu choices. Each can also be set in
-        #{path.sub(Path.home.to_s, "~")} or by an MD_* environment variable; a pick in
-        a menu is kept there (Options → Save Config).
+        Settings: the Edit, Format, View, Options and Window menu choices.
+        Each can also be set in #{path.sub(Path.home.to_s, "~")} or by an
+        MD_* environment variable; a pick in a menu is kept there (Options →
+        Save Config).
         BANNER
       Crysterm.options_help banner, options
     end
