@@ -89,7 +89,7 @@ jobs:
         if: matrix.os == 'linux'
         run: |
           docker run --rm -v "$PWD/..:/src" -w "/src/${PWD##*/}" "crystallang/crystal:$CRYSTAL_VERSION-alpine" sh -ec '
-            apk add --no-cache unibilium-dev
+            apk add --no-cache unibilium-dev file
             shards install --production
             mkdir -p bin
             crystal build --release --no-debug --static -Dwithout_readline -o bin/md src/bin/md.cr
