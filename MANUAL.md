@@ -588,9 +588,13 @@ read whether or not it is a terminal, as any filter does. The document goes
 through the same rendering the viewer uses: `html` is an HTML body fragment
 (no `<html>`/`<head>` wrapper, as pandoc without `--standalone`), `text` is
 the viewer's text without its styling — paragraphs spaced as on screen, list
-items with their markers, quotes and nested items indented, tables drawn
-with box characters, a rule as a line 72 cells wide. Nothing else happens in
-this mode: no history, no log file.
+items with their markers, a GFM alert's lines with its title chip (`ℹ NOTE`),
+quotes and nested items indented, tables drawn with box characters, a rule
+as a line 72 cells wide. In `html` a GFM alert is the
+`<div class="markdown-alert …">` github.com writes, its title first, and
+two quotes a blank line apart are two `<blockquote>`s, as Markdown
+renderers write them. Nothing else happens in this mode: no history, no
+log file.
 
 From inside md, File → Export as HTML… and Export as Text… write the same
 output for the text as it is now, saved or not, to a file asked for by

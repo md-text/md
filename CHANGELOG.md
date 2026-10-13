@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- `md --export html` writes a GFM alert (`> [!NOTE]` …) as github.com
+  renders it, a `<div class="markdown-alert markdown-alert-note">` with its
+  title, and `--export text` starts its lines with the title chip the viewer
+  shows (`ℹ NOTE`).
 - View → Pause When Unfocused (`render.pause_when_unfocused`, off in md):
   a window stops painting while its terminal window is not focused.
 - View → Media Backend → None (`media.backend: None`) draws no images and
@@ -634,6 +638,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   against.)
 - `md --export text` wrote a horizontal rule as blank lines, which read as
   one more paragraph gap; it is a line of the rule glyph now, 72 wide.
+- `md --export html` wrote two quotes a blank line apart as one
+  `<blockquote>`, and a quote's paragraphs as lines of one paragraph; they
+  are two blockquotes and separate paragraphs now, as cmark-gfm writes them.
+  (Fixed in Crysterm, which md builds against.)
 - With Options → Clipboard on Command and `xclip` the command found, a copy
   hung md until something else was copied, xclip leaving a process behind
   that held its output open. (Fixed in Crysterm, which md builds against.)

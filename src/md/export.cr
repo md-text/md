@@ -8,7 +8,8 @@ module Md
   # fragment, as pandoc without `--standalone` prints) or the plain text
   # (`TextDocument#to_plain_text`) laid out as the viewer lays it out — the
   # blank rows of the block margins between paragraphs, list items with
-  # their markers, quotes and nested items indented — with no markup in it.
+  # their markers, GFM alerts with their title chips, quotes and nested
+  # items indented — with no markup in it.
   module Export
     # The formats, as `--export` names them.
     FORMATS = {"html", "text"}
@@ -40,7 +41,9 @@ module Md
     # The document's blocks as the viewer paints them, less the styling. A
     # horizontal rule is a line of the viewer's rule glyph (`RULE_WIDTH`
     # wide), the separator the reader sees, where its empty text would be a
-    # blank line that reads as one more paragraph gap.
+    # blank line that reads as one more paragraph gap. A GFM alert's block
+    # starts with the alert's title chip (`ℹ NOTE `), where the viewer
+    # paints it.
     private def self.text(doc : Crysterm::TextDocument) : String
       rule = Crysterm::Glyphs.str(Crysterm::Glyphs::Role::LineHorizontal, Crysterm::Glyphs::Tier::Unicode) * RULE_WIDTH
       # Items are numbered per list instance, in document order, as the
@@ -56,6 +59,8 @@ module Md
             items[lf.object_id] = n + 1
             io << INDENT * (lf.indent - 1)
             io << lf.marker(n, checked: bf.checked?, task: bf.task?)
+          elsif kind = bf.alert_kind
+            io << kind.marker
           end
           io << (bf.horizontal_rule? ? rule : block.text) << '\n'
           bf.bottom_margin.times { io << '\n' }
