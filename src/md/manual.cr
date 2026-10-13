@@ -329,10 +329,30 @@ module Md
     end
 
     # *text* for roff: its backslashes and hyphens escaped (a hyphen in roff
-    # is a typographic one), the arrow of the menu paths as roff draws it,
-    # and a leading dot or quote kept from being read as a request.
+    # is a typographic one), the arrow of the menu paths and the dashes as
+    # roff draws them, any other character outside ASCII as its Unicode
+    # escape (`\[u00E9]`) — a man page's source is ASCII, and `mandoc`
+    # measures a line with its non-ASCII characters so escaped — and a
+    # leading dot or quote kept from being read as a request.
     private def self.roff(text : String) : String
-      guard text.gsub('\\', "\\\\").gsub('-', "\\-").gsub('→', "\\(->")
+      escaped = String.build do |io|
+        text.each_char do |char|
+          case char
+          when '\\' then io << "\\\\"
+          when '-'  then io << "\\-"
+          when '→'  then io << "\\(->"
+          when '—'  then io << "\\(em"
+          when '–'  then io << "\\(en"
+          else
+            if char.ascii?
+              io << char
+            else
+              io << "\\[u" << char.ord.to_s(16).upcase.rjust(4, '0') << ']'
+            end
+          end
+        end
+      end
+      guard escaped
     end
 
     # *line* kept from being read as a roff request: one starting with a dot
@@ -343,7 +363,8 @@ module Md
 
     # *text* on lines of at most *width* bytes (roff joins them back into a
     # paragraph; a source line longer than 80 bytes is a style warning to
-    # `mandoc`, which counts an em dash as the three bytes it is).
+    # `mandoc`). *text* is roff already (`.roff`), all ASCII, so its bytes
+    # are what `mandoc` counts.
     # Every line is guarded: a word such as `'set` landing first on a line
     # would otherwise start a request and vanish with the rest of the line.
     # Public for the spec that pins this.

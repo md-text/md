@@ -31,4 +31,13 @@ describe Md::Manual do
       line.bytesize.should be <= 80
     end
   end
+
+  it "writes the man page's source in ASCII, which mandoc's lint passes without a warning" do
+    page = Md::Manual.man
+    page.each_char.reject(&.ascii?).to_a.should be_empty
+    next unless mandoc = Process.find_executable("mandoc")
+    lint = IO::Memory.new
+    Process.run(mandoc, ["-T", "lint", "-W", "style"], input: IO::Memory.new(page), output: lint, error: lint)
+    lint.to_s.should eq ""
+  end
 end
