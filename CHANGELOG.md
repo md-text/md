@@ -897,5 +897,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Format → Code Block in a fenced block opened on a list item's line
   (`` - ```sh ``) took the whole line off, the item's marker with it; it takes
   off the fence alone now, the code staying the item's.
+- Format → Bold, Italic and Code with the caret in no word — on an empty
+  line, or on a task item's `- [ ]` — wrapped the nearest word before it,
+  however many lines up; they put the pair at the caret now. (Fixed in
+  Crysterm, which md builds against.)
 
 [Unreleased]: https://github.com/md-text/md/commits/main

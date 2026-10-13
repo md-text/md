@@ -106,3 +106,16 @@ describe "Md::App editing, Code Block" do
     end
   end
 end
+
+describe "Md::App editing, Bold" do
+  it "wraps no word of another line when the caret is in none" do
+    with_app text: "plain\n\n- [ ] x\n", view: false do |app|
+      place app, 2, 3
+      app.toggle_bold
+      app.markdown.should eq "plain\n\n- [**** ] x\n"
+      place app, 1, 0
+      app.toggle_bold
+      app.markdown.lines[0].should eq "plain"
+    end
+  end
+end
