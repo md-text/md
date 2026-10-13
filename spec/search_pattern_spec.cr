@@ -24,4 +24,15 @@ describe "Md::App search pattern" do
       app.editor.extra_selections.size.should eq 2    # and "# Alpha"
     end
   end
+
+  it "counts no escaped letter as uppercase, as Vim's smartcase does" do
+    with_app Md::Source.new, text: PATTERN_DOC, view: false do |app, _|
+      app.editor.focus
+      app.search("\\Dalpha").should be_true # \D is a class: still case-insensitive
+      app.editor.selected_text.should eq " Alpha"
+      app.search("\\x{4C}pha").should be_true   # the C an escape takes in braces does not count
+      app.editor.selected_text.should eq "lpha" # \x{4C}, an L, matching the l
+      app.search("\\x{4C}PHA").should be_false  # PHA does
+    end
+  end
 end

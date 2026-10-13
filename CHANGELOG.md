@@ -542,6 +542,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- A search's smartcase took an escape such as `\S`, `\W` or `\D` for an
+  uppercase letter, so `/\Dfoo` matched case exactly. As in Vim, a letter
+  after a backslash, or in the braces an escape takes (`\x{4C}`), does not
+  count now.
 - A search's `^` and `$` matched only at the start and end of the whole
   document, so `/^## ` found no heading but one on the first line, and
   Replace and the match underlines had the same blind spot. They match at

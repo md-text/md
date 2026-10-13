@@ -511,18 +511,41 @@ module Md
 
     # The regular expression for *pattern*: the pattern itself when it is
     # one, the pattern as literal text when it is not (an unbalanced `(`
-    # finds a `(`), case-insensitive unless it has an uppercase letter.
-    # `^` and `$` match at the start and end of every line, as vi's do and
-    # as Qt's `QTextDocument::find` matches them in each block, not of the
-    # whole text only.
+    # finds a `(`), case-insensitive unless it has an uppercase letter
+    # (`#smartcase_sensitive?`). `^` and `$` match at the start and end of
+    # every line, as vi's do and as Qt's `QTextDocument::find` matches them
+    # in each block, not of the whole text only.
     private def compile_pattern(pattern : String) : Regex
       options = Regex::Options::MULTILINE_ONLY
-      options |= Regex::Options::IGNORE_CASE unless pattern.each_char.any?(&.uppercase?)
+      options |= Regex::Options::IGNORE_CASE unless smartcase_sensitive?(pattern)
       begin
         Regex.new(pattern, options)
       rescue ArgumentError
         Regex.new(Regex.escape(pattern), options)
       end
+    end
+
+    # Whether *pattern* has an uppercase letter, so it keeps its case (vi's
+    # `smartcase`). As in Vim, a letter after a backslash does not count —
+    # `\S`, `\W` and `\D` are classes, not capitals — nor does what an
+    # escape takes in braces (`\p{Lu}`, `\x{1F600}`).
+    private def smartcase_sensitive?(pattern : String) : Bool
+      chars = pattern.chars
+      i = 0
+      while i < chars.size
+        c = chars[i]
+        if c == '\\'
+          i += 2
+          if chars[i]? == '{'
+            i = (chars.index('}', i) || chars.size) + 1
+          end
+        elsif c.uppercase?
+          return true
+        else
+          i += 1
+        end
+      end
+      false
     end
   end
 end
