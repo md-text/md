@@ -53,10 +53,11 @@ describe "Md::App media backend" do
       entries[1].separator?.should be_true
       # Auto names what it detects here, by the entry's own label.
       entries[2].text.should match /\A&Auto \((Sub-Cell Glyphs|ANSI, One Cell per Pixel|Kitty Graphics|iTerm2 Inline Images|Sixel)\)\z/
-      entries[3].separator?.should be_true # Auto alone, then the cell grid
+      entries[3].text.should eq "Non&e"
+      entries[4].separator?.should be_true # Auto and None, then the cell grid
       backends = backend_entries(app)
       backends.size.should eq Backend.values.size
-      backends.map(&.text).skip(1).should eq [
+      backends.map(&.text).skip(2).should eq [
         "A&NSI, One Cell per Pixel", "ANSI, &True Color", "ANSI, 25&6 Colors", "ANSI, &16 Colors", "ANSI, &8 Colors",
         "Sub-Cell &Glyphs", "Solid &Blocks", "Unicode &Half Blocks", "Unicode &Quadrants",
         "Unicode Se&xtants", "Unicode &Octants", "Braille &Dots", "ASCII &Contours",
@@ -75,9 +76,10 @@ describe "Md::App media backend" do
     end
   end
 
-  it "disables the backends this terminal cannot drive, Auto never" do
+  it "disables the backends this terminal cannot drive, Auto and None never" do
     with_media_app do |app, window|
       entry(app, Backend::Auto).enabled?.should be_true
+      entry(app, Backend::None).enabled?.should be_true
       entry(app, Backend::Ansi).enabled?.should be_true
       entry(app, Backend::GlyphAscii).enabled?.should be_true
       entry(app, Backend::Regis).enabled?.should be_false # nothing detects them

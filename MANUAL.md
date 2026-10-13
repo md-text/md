@@ -251,7 +251,11 @@ octants, braille dots; ASCII contours), the terminal's own graphics (Sixel,
 ReGIS, Kitty, iTerm2, Tektronix 4014) and the external overlays
 (w3mimgdisplay, Überzug). The entries your terminal cannot drive are
 disabled — ReGIS and Tektronix always, since nothing detects them, the
-overlays without their helper program. A pick takes effect at once: Crysterm
+overlays without their helper program. None, below Auto, draws no images
+and fetches none: an image with a title (`![alt](picture.png "title")`)
+shows the picture glyph and the title where its picture would be, above
+the row with the glyph and the alt text, and one without a title is that
+row alone. A pick takes effect at once: Crysterm
 drops the images it drew under the old backend and draws them again with the
 new one, and the status bar says which is on. Check Change for 5s, above
 Auto, to try a backend instead of keeping it: the pick switches for

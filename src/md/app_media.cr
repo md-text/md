@@ -10,7 +10,11 @@ module Md
     # terminal cannot, rather than quietly downgrading), so the menu disables
     # the entries this terminal cannot drive — ReGIS and Tektronix always,
     # since nothing detects them, the overlays without their helper program —
-    # and Auto never. Setting the property sets Crysterm's
+    # and Auto never. None, below Auto, draws no images at all and fetches
+    # and decodes none (Crysterm's `Media.disabled?`): a picture's place holds
+    # the picture glyph and the image's title (`![alt](src "title")`) when it
+    # has one, over the row with the glyph and the alt text, which is all an
+    # image without a title shows. Setting the property sets Crysterm's
     # `media.backend` option, and Crysterm rebuilds the media it resolved
     # under the old setting: the viewer's pictures and every widget's CSS
     # `background-image` layer are dropped and come back for the new backend
@@ -43,13 +47,13 @@ module Md
     # settings, by the name `--media-backend` spells it.
     alias MediaBackend = Crysterm::Widget::Media::Backend
 
-    # The backends offered, in menu order: Auto, then grouped by how
+    # The backends offered, in menu order: Auto and None, then grouped by how
     # the pixels reach the window (`Media::Family`) — the cell grid, the
     # ANSI variants before the glyph ones; the terminal's own graphics,
     # Tektronix among them as the terminal draws that too; the external
     # overlays. The menu puts a separator between the groups.
     MEDIA_BACKENDS = [
-      MediaBackend::Auto,
+      MediaBackend::Auto, MediaBackend::None,
       MediaBackend::Ansi, MediaBackend::AnsiTrueColor, MediaBackend::AnsiC256, MediaBackend::AnsiC16, MediaBackend::AnsiC8,
       MediaBackend::Glyph, MediaBackend::GlyphBlock, MediaBackend::GlyphHalf, MediaBackend::GlyphQuadrant,
       MediaBackend::GlyphSextant, MediaBackend::GlyphOctant, MediaBackend::GlyphBraille, MediaBackend::GlyphAscii,
@@ -219,7 +223,7 @@ module Md
       entries
     end
 
-    # The menu's groups: Auto alone, the cell grid, what the terminal
+    # The menu's groups: Auto and None, the cell grid, what the terminal
     # itself draws (in-band graphics and the Tektronix window), the external
     # overlays.
     private def media_group(backend : MediaBackend) : Int32
@@ -235,6 +239,7 @@ module Md
     private def media_backend_tip(backend : MediaBackend) : String
       case backend
       in .auto?            then "Let Crysterm pick the best way this terminal draws images"
+      in .none?            then "Draw no images and fetch none: an image shows its title, if it has one, in the picture's place"
       in .ansi?            then "Draw images as colored cells, one per pixel, at the terminal's color depth"
       in .ansi_true_color? then "Draw images as colored cells in true color"
       in .ansi_c256?       then "Draw images as colored cells from the 256-color palette"
@@ -266,6 +271,7 @@ module Md
     private def media_backend_label(backend : MediaBackend) : String
       case backend
       in .auto?            then "&Auto (#{media_backend_label(Crysterm::Widget::Media.auto_type(tput: @window.tput).backend).delete('&')})"
+      in .none?            then "Non&e"
       in .ansi?            then "A&NSI, One Cell per Pixel"
       in .ansi_true_color? then "ANSI, &True Color"
       in .ansi_c256?       then "ANSI, 25&6 Colors"

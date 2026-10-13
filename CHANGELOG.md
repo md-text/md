@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- View → Media Backend → None (`media.backend: None`) draws no images and
+  fetches none; an image with a title shows the picture glyph and the title
+  where its picture would be. Link and image titles are now kept when a
+  document is read, and `--export html` and Markdown write them back.
 - File → Export as HTML… and Export as Text… write what `md --export html`
   and `--export text` print, for the text as it is now, to a file asked for
   as Save As asks (the document's name with `.html` or `.txt` suggested,
