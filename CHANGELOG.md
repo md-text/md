@@ -542,6 +542,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- `md --export html` wrote a fenced code block as a `<pre>` per line, which
+  a browser showed as lines set apart by blank space; a block is one `<pre>`
+  now.
 - With Options → Clipboard on Command and `xclip` the command found, a copy
   hung md until something else was copied, xclip leaving a process behind
   that held its output open. (Fixed in Crysterm, which md builds against.)
