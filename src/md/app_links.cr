@@ -128,9 +128,9 @@ module Md
     # goes to the history, as when any file is left.
     def close_document : Nil
       confirm_discard do
-        closed = @source.name || "the new document"
+        closed = source.name || "the new document"
         remember_position
-        if path = @source.path
+        if path = source.path
           @back.reject! { |place| place.path == path }
           @forward.reject! { |place| place.path == path }
         end
@@ -206,9 +206,9 @@ module Md
     # once another is opened over it, so it leaves no place to come back to;
     # the trail behind it stays, as it does behind the blank document File →
     # Close leaves (`#close_document`).
-    private def leave_document : Nil
+    private def push_leaving_place : Nil
       return if @retracing
-      push place if @source.path
+      push place if source.path
     end
 
     # Puts the viewer on heading *name* — on its top row, as a browser lands
@@ -272,7 +272,7 @@ module Md
 
     # The directory relative links count from.
     private def link_base : String
-      (path = @source.path) ? File.dirname(path) : Dir.current
+      (path = source.path) ? File.dirname(path) : Dir.current
     end
 
     private def markdown_file?(path : String) : Bool
@@ -285,7 +285,7 @@ module Md
     private def place : Place?
       return if @editor_stale
       line, column = source_position
-      Place.new @source.path, line, column
+      Place.new source.path, line, column
     end
 
     # Puts *here* on the Previous File stack — once, when it is already on
@@ -322,7 +322,7 @@ module Md
     # as it is; the place is still spent, so the next step leads somewhere.
     private def arrive(target : Place, &arrived : Bool ->) : Nil
       path = target.path
-      if path.nil? || path == @source.path
+      if path.nil? || path == source.path
         go_to_line target.line, target.column
         arrived.call true
         return

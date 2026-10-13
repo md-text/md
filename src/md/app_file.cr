@@ -17,23 +17,29 @@ module Md
     # Discarding Changes turns the guard off for those who save by habit.
     #
     # Watching polls the file (`Crysterm::FileWatcher`) and reloads it when
-    # its contents changed on disk — unless the editor holds unsaved changes,
-    # in which case a notice says the file changed and the changes are kept.
-    # The viewer keeps its place through a reload, so `md --watch notes.md`
-    # beside an editor shows each save where the reader was.
+    # its contents changed on disk — unless the document holds unsaved
+    # changes, in which case a notice says the file changed and the changes
+    # are kept. The viewer keeps its place through a reload, so
+    # `md --watch notes.md` beside an editor shows each save where the
+    # reader was. Watching is the document's (`Document#watch_file`): every
+    # window on it shows the same check, and one watcher serves them all.
+    #
+    # A document shown in several windows is lost only with the last of
+    # them: opening another file in one window, closing it, asks nothing
+    # while another window shows the document. Reloading drops the edits
+    # for every window, so it asks whenever there are some.
 
-    # How often a watched file is polled, unless `#watch_interval` says.
-    WATCH_INTERVAL = 1.second
-
-    # The polling interval of the watcher started next (specs shorten it).
-    property watch_interval : Time::Span = WATCH_INTERVAL
+    # The polling interval of the watcher this window starts for its
+    # document, as its host (specs shorten it).
+    property watch_interval : Time::Span = Document::WATCH_INTERVAL
 
     # Options → Ask Before Discarding Changes. A reactive property, so the
     # menu entry binds to it.
     @confirm_discard : Crysterm::Reactive::Property(Bool) = Crysterm::Reactive::Property.new(true)
-    # View → Watch File. Likewise; `#watch_file=` is its plain face.
+    # View → Watch File. Likewise; `#watch_file=` is its plain face. Kept
+    # equal to the document's (`#enter_document`).
     @watch_file : Crysterm::Reactive::Property(Bool) = Crysterm::Reactive::Property.new(false)
-    @watcher : Crysterm::FileWatcher?
+    @watch_link : Crysterm::Reactive::PropertyLink?
     # Set once a stream is abandoned for a file opened over it, so chunks
     # still arriving from standard input no longer land in the document.
     @stream_abandoned = false
@@ -57,8 +63,8 @@ module Md
       @watch_file.value
     end
 
-    # Starts or stops following the document's file (View → Watch File). It
-    # takes effect through the property's change handler (`#setup_file`).
+    # Starts or stops following the document's file (View → Watch File), in
+    # every window on it (`Document#setup_watcher`).
     def watch_file=(value : Bool) : Bool
       @watch_file.value = value
     end
@@ -86,22 +92,21 @@ module Md
     # Makes *path* the document: an existing file is read and shown in the
     # viewer (shown and focused if it was hidden), a file that does not exist
     # yet is a new, empty document in the editor (shown and focused). A
-    # stream being followed is abandoned. The position remembered for the
-    # file, if any, is restored. Returns whether the file could be opened.
+    # stream being followed is abandoned, and the document left goes on in
+    # the other windows showing it, if any. The position remembered for the
+    # file, if any, is restored. Watch File carries over to the file opened.
+    # Returns whether the file could be opened.
     def open_file(path : String) : Bool
       path = File.expand_path path
       raw = File.read(path) if File.exists?(path)
       text = raw.try { |read| Source.decode read }
       remember_position
-      leave_document
+      push_leaving_place
       abandon_stream
-      drop_recovery
-      @source = Source.new path: path
-      retitle
-      apply_base_url
-      load text || ""
-      @editor.document.modified = false
-      text_changed
+      doc = Document.new Source.new(path: path), text || ""
+      doc.watch_file.value = watch_file?
+      switch_document doc
+      @editor.cursor_position = doc.text.size
       if text
         show_pane(Pane::Viewer).focus unless @viewer.visible?
       else
@@ -109,10 +114,9 @@ module Md
       end
       restore_position
       remember_position # the file just opened leads the recent list
-      setup_file
       refresh_status
       notice(text ? "Opened #{path}#{" (invalid UTF-8 replaced by �)" unless text.same?(raw)}" : "New file #{path}")
-      check_recovery
+      doc.check_recovery.try { |found| notice found }
       true
     rescue ex : IO::Error
       notice "Cannot open #{path}: #{Md.error_text(ex)}"
@@ -122,19 +126,14 @@ module Md
     # Makes a blank new document, as `md` started with no file has (File →
     # Close with nothing ahead on the trail, `app_links.cr`): no name — Save
     # asks for one, the title and the status bar show none — nothing to
-    # watch, no recovery file yet (the one of the document left goes), and a
-    # stream being followed is abandoned. The editor is shown and focused to
-    # take the text; the other panes stay as they were.
+    # watch, no recovery file yet (the one of the document left goes,
+    # unless another window still shows it), and a stream being followed is
+    # abandoned. The editor is shown and focused to take the text; the other
+    # panes stay as they were.
     private def blank_document : Nil
       abandon_stream
-      drop_recovery
-      @source = Source.new
-      retitle
-      apply_base_url
-      load ""
-      @editor.document.modified = false
+      switch_document Document.new
       show_pane(Pane::Editor).focus
-      setup_file
       refresh_status
     end
 
@@ -169,23 +168,28 @@ module Md
     end
 
     # Re-reads the document's file from disk, keeping the reader's place;
-    # unsaved changes are settled first (File → Reload, `Ctrl-R`). A document
-    # without a file (new, or streamed) has nothing to reload.
+    # unsaved changes are settled first (File → Reload, `Ctrl-R`) — whatever
+    # other windows show the document, since the reload drops the changes in
+    # all of them. A document without a file (new, or streamed) has nothing
+    # to reload.
     def reload : Nil
-      unless path = @source.path
+      unless path = source.path
         notice "No file to reload"
         return
       end
-      confirm_discard { notice "Reloaded #{path}" if reload_from path }
+      confirm_discard(last_view_only: false) { notice "Reloaded #{path}" if reload_document }
     end
 
     # Runs *action*, once unsaved changes are out of the way: at once when
     # there are none (or the guard is off), otherwise after the user chose
     # to save them or to drop them — a saved document is one the action can
     # replace. Cancel, or a save that did not happen, leaves everything as it
-    # was.
-    def confirm_discard(&action : ->) : Nil
-      unless @confirm_discard.value && @editor.document.modified?
+    # was. With *last_view_only*, an action that only takes this window off
+    # the document (an open, a close) asks only when no other window shows
+    # it: the changes are not lost while one does.
+    def confirm_discard(last_view_only : Bool = true, &action : ->) : Nil
+      at_stake = @confirm_discard.value && @document.text.modified? && (!last_view_only || last_view?)
+      unless at_stake
         action.call
         return
       end
@@ -207,9 +211,11 @@ module Md
 
     # The unsaved-changes question (`#ask_choice`): three buttons in a
     # dialog, or `(y)es, (n)o, (c)ancel` at the prompt; a dismissal is a
-    # Cancel. The answer goes to *block*.
+    # Cancel. The answer goes to *block*. The question says how many windows
+    # show the document when it is more than this one.
     private def ask_discard(&block : DiscardAnswer ->) : Nil
-      question = "Save changes to #{@source.name || "the new document"}?"
+      windows = @document.views.size
+      question = "Save changes to #{source.name || "the new document"}#{" (open in #{windows} windows)" if windows > 1}?"
       ask_choice(question, [{"Save", "(y)es"}, {"Don't save", "(n)o"}, {"Cancel", "(c)ancel"}]) do |index|
         block.call(case index
         when 0 then DiscardAnswer::Save
@@ -223,74 +229,34 @@ module Md
     # once the document is saved; a save that did not happen (the prompt
     # cancelled, a write error) runs nothing.
     private def save_then(&block : ->) : Nil
-      if @source.path
+      if source.path
         block.call if save
       else
         save_as_prompt { |saved| block.call if saved }
       end
     end
 
-    # Reads *path* into the document as a reset — no undo entry, the viewer
-    # keeping its place, the editor's caret where it was (clamped). The
-    # document is then the file's, as after a save, so the recovery file
-    # of the edits given up goes too (`app_autosave.cr`): left behind, it
-    # would announce them as lost at the next open. Returns whether the
-    # file could be read; when not, its notice says so and the document
-    # stays as it was.
-    private def reload_from(path : String) : Bool
-      text = Source.decode File.read(path)
-      caret = @editor.cursor_position
-      @loading = true
-      @editor.plain_text = text
-      @loading = false
-      @editor.cursor_position = caret.clamp(0, @editor.document.size)
-      @viewer.set_markdown text, keep_view: true
+    # Reads the document's file again (`Document#reload`), as a reset — no
+    # undo entry, the viewer keeping its place, every window's caret where
+    # it was (clamped). The document is then the file's, as after a save, so
+    # the recovery file of the edits given up goes too (`app_autosave.cr`):
+    # left behind, it would announce them as lost at the next open. The
+    # other windows on the document catch up on their own render fibers.
+    # Returns whether the file could be read; when not, its notice says so
+    # and the document stays as it was.
+    private def reload_document : Bool
+      @document.reload
+      @seen_revision = @document.revision
+      @viewer.set_markdown markdown, keep_view: true
       @viewer_stale = false
       @editor_stale = false
-      @editor.document.modified = false
-      autosave_settled
       text_changed
       highlight_matches_everywhere
       refresh_status
       true
     rescue ex : IO::Error
-      notice "Cannot reload #{path}: #{Md.error_text(ex)}"
+      notice "Cannot reload #{source.path}: #{Md.error_text(ex)}"
       false
-    end
-
-    # Points the watcher at the document's file, or takes it down: run when
-    # the file or the setting changes.
-    private def setup_file : Nil
-      @watcher.try &.stop
-      @watcher = nil
-      path = @source.path
-      return unless @watch_file.value && path
-      watcher = Crysterm::FileWatcher.new @watch_interval, window: @window
-      watcher.on(Crysterm::Event::FileChanged) { |e| file_changed e.path }
-      watcher.add_path path
-      @watcher = watcher
-    end
-
-    # The watched file changed on disk: reload it, unless the text on disk
-    # is what the editor already holds (our own save) or the editor holds
-    # unsaved changes, which are kept with a notice. A file removed is
-    # said so, its text kept to be saved again; it is reloaded if it comes
-    # back. A change the watcher posted before Watch File was turned off
-    # is let be.
-    private def file_changed(path : String) : Nil
-      return unless @watch_file.value && path == @source.path
-      unless File.exists?(path)
-        notice "#{path} was removed from disk; the text is kept"
-        return
-      end
-      if @editor.document.modified?
-        notice "#{path} changed on disk; unsaved changes kept"
-        return
-      end
-      return if Source.decode(File.read(path)) == markdown
-      notice "Reloaded #{path} (changed on disk)" if reload_from path
-    rescue IO::Error
-      # A file mid-rewrite; the next change is polled.
     end
 
     # Stops taking the stream's chunks into the document, once a file was
@@ -308,7 +274,7 @@ module Md
     # there is a file and a history: the editor's caret while editing, the
     # source of the viewer's while reading.
     def remember_position : Nil
-      return unless (history = @history) && (path = @source.path)
+      return unless (history = @history) && (path = source.path)
       line, column = source_position
       history.touch path, line, column, !@editor.focused?
       refresh_recent_menu
@@ -320,14 +286,14 @@ module Md
     # `#go_to_line` takes back.
     private def source_position : {Int32, Int32}
       pos = @editor.focused? ? @editor.cursor_position : editor_position(@viewer.cursor_position)
-      cursor = Crysterm::TextCursor.new(@editor.document, pos)
+      cursor = Crysterm::TextCursor.new(@document.text, pos)
       {cursor.block_number + 1, cursor.column_number + 1}
     end
 
     # Puts the panes where the history remembers the document's file, when
     # it does.
     private def restore_position : Nil
-      return unless (history = @history) && (path = @source.path)
+      return unless (history = @history) && (path = source.path)
       return unless entry = history.entry(path)
       go_to_line entry.line, entry.column if entry.line > 1 || entry.column > 1
     end

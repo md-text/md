@@ -46,8 +46,8 @@ module Md
       {"Alt-X", "Tick or untick a list item's task box, or give it a ticked one, a line of text becoming an item (Format -> Toggle Task Checkbox; Format -> As a Task, a check entry, adds and removes the box)."},
       {"Ctrl-Up, Ctrl-Down", "Promote or demote the heading of the caret's section, from the heading or anywhere in its text, a heading in a list item (- ## Title) keeping its marker, and a task item's (- [ ] Title over ===, or ---) its box, down to level 2 (Format -> Promote Heading, Demote Heading)."},
       {"Alt-Q", "Refill the paragraph at the caret, or the selected paragraphs, to the wrap column (the text width, or 80); Format -> Rewrap -> Document refills every paragraph."},
-      {"Ctrl-N", "Open another md window on this document, in a new terminal window (Window -> New)."},
-      {"Ctrl-W", "Outside the editor, close this window, asking first when its changes are unsaved; closing the last window quits (Window -> Close Current)."},
+      {"Ctrl-N", "Open another md window on this document (the same text, edited in either), in a new terminal window (Window -> New)."},
+      {"Ctrl-W", "Outside the editor, close this window, asking first only when it is the last window on a document with unsaved changes; closing the last window quits (Window -> Close Current)."},
       {"Ctrl-Q, q", "Quit, closing every window (q anywhere but in the editor); each window asks first when its changes are unsaved."},
       {"Vi Mode", "With Edit -> Vi Mode (Neovim) on, the editor's keys are an embedded Neovim's, but for the function keys and the Alt chords, which stay md's; the status bar shows Neovim's mode and command line. :w saves, :w FILE writes a copy to FILE (a document without a name takes FILE's), :saveas FILE saves as FILE, :q closes the window (asking about unsaved changes), :q! closes it without asking, :qa quits, and :wq, :x and ZZ save and close."},
     ]

@@ -61,7 +61,7 @@ describe "Md::App clear caches" do
           recent.enabled?.should be_false
           app.soft_wrap?.should be_false # the config is not a cache
           settle { File.exists? own }    # the document's own copy comes back
-          app.finish_autosave
+          app.document.finish_autosave
 
           app.clear_caches.should eq({0, 0})
           notice(app).should eq " Cleared 0 recent files, 0 recovery files"

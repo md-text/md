@@ -108,8 +108,8 @@ describe "Md::App auto-save" do
           # A tick posted to the render fiber and still queued when the
           # timer stops is dropped there: queue one, with no yield before
           # the stop, so it runs after it.
-          (app.@autosave_timer || fail("no timer")).emit Crysterm::Event::Tick
-          app.finish_autosave
+          (app.document.@autosave_timer || fail("no timer")).emit Crysterm::Event::Tick
+          app.document.finish_autosave
           File.exists?(copy).should be_false
           app.editor.insert_text "late"
           sleep 100.milliseconds
@@ -152,7 +152,7 @@ describe "Md::App auto-save" do
         copies.size.should eq 1
         copies[0].should match /^unnamed-\d{8}-\d{6}-#{Process.pid}\.md$/
         File.read(File.join(dir, copies[0])).should eq "unsaved"
-        app.finish_autosave
+        app.document.finish_autosave
         Dir.children(dir).should be_empty
       end
     end
@@ -175,23 +175,30 @@ describe "Md::App auto-save" do
     end
   end
 
-  it "keeps the recovery file another window on the same file still needs" do
+  it "keeps one recovery file for a document shown in two windows until the last closes" do
     with_state_home do |_dir|
       path = tempfile "text\n"
       begin
         with_app Md::Source.new(path: path), text: "text\n", view: true do |one|
-          with_app Md::Source.new(path: path), text: "text\n", view: true do |two|
+          one.window_opener = ->(title : String) { headless_window.tap(&.title=(title)) }
+          two = one.new_window || fail("no window was opened")
+          begin
+            two.document.should be one.document
             one.autosave_interval = 20.milliseconds
-            two.autosave_interval = 20.milliseconds
+            two.recovery_path.should eq one.recovery_path
             edit two, "two "
-            copy = two.recovery_path
+            copy = one.recovery_path
             settle { File.exists?(copy) && File.read(copy) == "two text\n" }
             edit one, "one "
-            settle { File.read(copy) == "one text\n" } # the same file: the last writer's
+            settle { File.read(copy) == "one two text\n" } # one text, one copy
+            # A window closing while another shows the document keeps it.
+            two.window.close
+            two.window.destroyed?.should be_true
+            File.exists?(copy).should be_true
             one.save.should be_true
-            settle { File.exists?(copy) && File.read(copy) == "two text\n" } # the other window's edits, written again
-            two.save.should be_true
-            File.exists?(copy).should be_false # nobody needs it now
+            File.exists?(copy).should be_false
+          ensure
+            two.window.destroy
           end
         end
       ensure
@@ -211,7 +218,7 @@ describe "Md::App auto-save" do
         Dir.exists?(dir).should be_false
         app.autosave = true
         settle { Dir.exists?(dir) && !Dir.children(dir).empty? }
-        app.finish_autosave
+        app.document.finish_autosave
       end
     end
   end

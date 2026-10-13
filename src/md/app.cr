@@ -104,7 +104,9 @@ module Md
     getter editor : MarkdownEdit
     getter viewer : Crysterm::Widget::TextBrowser
     getter toc : Crysterm::Widget::TocView
-    getter source : Source
+    # The document this window shows (`document.cr`): its text, which the
+    # editor edits, and its file. Other windows may show it too.
+    getter document : Document
 
     # Text received from the stream. The editor is filled from it only when it
     # is shown (`@editor_stale`), so a long stream into a hidden editor costs
@@ -116,9 +118,13 @@ module Md
     @pending_line : Int32?
     # The viewer was not re-rendered after the last edit (it was hidden).
     @viewer_stale = false
-    # Set while the editor's text is replaced programmatically, so the
-    # resulting `TextChanged` is not mistaken for a user edit.
-    @loading = false
+    # The document's revision this window has caught up with
+    # (`#document_changed`), and whether a catch-up is posted already.
+    @seen_revision = 0_i64
+    @catch_up_posted = false
+    # The subscriptions this window holds on its document, dropped when it
+    # leaves it (`#leave_document`).
+    @document_subscriptions = Crysterm::Subscriptions.new
     getter? streaming : Bool = false
     # View → Sync Cursor; see the class comment. A reactive property, so
     # the menu entry binds to it (`#build_menus`); `#sync_cursor?` and
@@ -161,11 +167,32 @@ module Md
     # instead of the remembered position: the user asked, so the history
     # does not get a say; on a stream, once the line has arrived
     # (`#jump_to_pending_line`).
-    def initialize(@source : Source, text : String = "", stream : IO? = nil,
-                   view : Bool = !stream.nil? || !text.empty?, window : Crysterm::Window? = nil,
-                   @history : History? = nil, @config : Bool = false, watch : Bool = false,
-                   line : Int32? = nil)
-      @window = App.titled_window window, title
+    #
+    # The window shows a new `Document` of its own, made from *source* and
+    # *text*; a window on a document already open is made with the
+    # document (`App.new(document, ...)`).
+    def self.new(source : Source = Source.new, text : String = "", stream : IO? = nil,
+                 view : Bool = !stream.nil? || !text.empty?, window : Crysterm::Window? = nil,
+                 history : History? = nil, config : Bool = false, watch : Bool = false,
+                 line : Int32? = nil) : App
+      decoded = Source.decode text
+      document = Document.new(source, decoded)
+      document.watch_file.value = watch
+      new(document, view: view, stream: stream, window: window, history: history, config: config,
+        line: line, scrubbed: !decoded.same?(text))
+    end
+
+    # Builds the user interface on *document*, as the other constructor
+    # does, the document's text being the initial Markdown: a window joining
+    # a document other windows show (Window → New), or showing one made
+    # beforehand (`CLI`). *scrubbed* says the text had bytes that were not
+    # UTF-8, for the notice.
+    def initialize(@document : Document, view : Bool = true, stream : IO? = nil,
+                   window : Crysterm::Window? = nil, @history : History? = nil, @config : Bool = false,
+                   line : Int32? = nil, scrubbed : Bool = false)
+      # Titled for the document alone: the window's number on it, if any,
+      # comes with the attach (`#enter_document`).
+      @window = App.titled_window window, "#{@document.name} • MD"
       @window.always_propagated_chars << 'q'
 
       @main = Crysterm::Widget::MainWindow.new parent: @window
@@ -179,7 +206,7 @@ module Md
       @overwrite_button = Crysterm::Widget::ToolButton.new text: "INS", width: 5
       @mouse_button = Crysterm::Widget::ToolButton.new text: "M=a", width: 7
 
-      @editor = MarkdownEdit.new input_on_focus: true
+      @editor = MarkdownEdit.new input_on_focus: true, document: @document.text
       @viewer = Crysterm::Widget::TextBrowser.new input_on_focus: true
       @toc = Crysterm::Widget::TocView.new document: @viewer.document
       @splitter = Crysterm::Widget::Splitter.new
@@ -194,8 +221,10 @@ module Md
       # Close Current go through, and Crysterm's default quit keys); with
       # unsaved changes the guard refuses and asks the user, closing the
       # window on their answer — the last window's close ends the app.
+      # Only the last window on a document asks: closing any other loses
+      # nothing, the document living on in the windows left.
       @window.on(Crysterm::Event::CloseRequest) do |e|
-        next unless @confirm_discard.value && @editor.document.modified?
+        next unless @confirm_discard.value && @document.text.modified? && last_view?
         e.ignore
         confirm_discard { @window.close }
       end
@@ -231,10 +260,6 @@ module Md
       @bars.on_change { apply_bars }
       @editor.on(Crysterm::Event::LineNumbersChanged) { |e| @line_numbers.value = e.visible }
       @viewer.on(Crysterm::Event::LineNumbersChanged) { |e| @viewer_line_numbers.value = e.visible }
-      @watch_file.on_change do
-        setup_file
-        refresh_status
-      end
       wire_theme
       wire_media
       wire_toolkit
@@ -243,8 +268,7 @@ module Md
       wire_vi
 
       Pane.each { |pane| widget(pane).hide }
-      decoded = Source.decode text
-      load decoded unless decoded.empty?
+      enter_document
       stream(stream) if stream
       show_pane(view ? Pane::Viewer : Pane::Editor).focus
       build_menus
@@ -265,15 +289,14 @@ module Md
         go_to_line line
       end
       refresh_recent_menu
-      self.watch_file = watch
-      notice "Invalid UTF-8 in #{document_name} replaced by �" unless decoded.same?(text)
+      notice "Invalid UTF-8 in #{document_name} replaced by �" if scrubbed
       wire_autosave
     end
 
     # The panes' own events: edits re-render, carets follow, the outline
     # jumps and tracks the viewer's document.
     private def wire_panes : Nil
-      @editor.on(Crysterm::Event::TextChanged) { edited unless @loading }
+      @editor.on(Crysterm::Event::TextChanged) { edited unless @document.loading? }
       # The focused pane leads; the other pane's caret, set programmatically
       # to follow, reports a move too, which this guard keeps from bouncing.
       # The table of contents follows the leading pane's caret too: the
@@ -322,19 +345,20 @@ module Md
       window
     end
 
-    # The terminal's title: the document's name (`#document_name`), then
-    # the program's — `README.md • MD`, or `[No Name] • MD` for a document without one, as
-    # Vim names it. Crysterm sends it on any terminal (one without titles
-    # ignores it) and puts the terminal's own title back when md hands the
-    # terminal back, at exit and while suspended.
+    # The terminal's title: the window's name (`#window_name`), then the
+    # program's — `README.md • MD`, or `[No Name] • MD` for a document
+    # without one, as Vim names it; `README.md:2 • MD` while another window
+    # shows the document too. Crysterm sends it on any terminal (one without
+    # titles ignores it) and puts the terminal's own title back when md
+    # hands the terminal back, at exit and while suspended.
     def title : String
-      "#{document_name} • MD"
+      "#{window_name} • MD"
     end
 
-    # Names the document anew wherever it is named, after `@source`
-    # changed: the terminal's title, and the entry for this window in the
-    # Window menu of every window.
-    private def retitle : Nil
+    # Names the window anew wherever it is named, after its document or the
+    # number of windows on it changed: the terminal's title, and the entry
+    # for this window in the Window menu of every window.
+    protected def retitle : Nil
       @window.title = title
       App.refresh_window_menus
     end
@@ -345,16 +369,32 @@ module Md
     # line or expanded by File → Open), `stdin` for a stream, or
     # `[No Name]`. The status bar shows the whole path.
     def document_name : String
-      if path = @source.path
-        File.basename path
-      else
-        @source.name || "[No Name]"
-      end
+      @document.name
+    end
+
+    # This window's name: the document's (`#document_name`), with the
+    # window's number on the document after a colon while two or more
+    # windows show it — `README.md:1`, `README.md:2`, as Vim and Emacs tell
+    # the windows on one buffer apart.
+    def window_name : String
+      (number = @document.number(self)) ? "#{document_name}:#{number}" : document_name
+    end
+
+    # Where the document comes from (`Document#source`).
+    def source : Source
+      @document.source
+    end
+
+    # Whether no other window shows this window's document: closing the
+    # window, or opening another document in it, loses the document's
+    # unsaved changes only then.
+    def last_view? : Bool
+      @document.views.size <= 1
     end
 
     # The document's current Markdown source.
     def markdown : String
-      @editor_stale ? @streamed.to_s : @editor.value
+      @editor_stale ? @streamed.to_s : @document.markdown
     end
 
     # The widget of *pane*.
@@ -580,21 +620,26 @@ module Md
     # a backup the first time (`app_autosave.cr`). Without a file name (a
     # new or streamed document) nothing is written yet: `#save_as_prompt`
     # asks for one, and the save follows the answer.
+    #
+    # The document is saved for every window showing it: one write, one
+    # backup, the modified flag cleared in each; the notice is this
+    # window's, which took the action.
     def save : Bool
-      unless path = @source.path
+      unless path = source.path
         save_as_prompt
         return false
       end
-      backup_failure = backup path
-      SaveFile.write path, markdown
-      @editor.document.modified = false
-      autosave_settled
-      refresh_status
-      notice(backup_failure ? "Saved #{path} (#{backup_failure})" : "Saved #{path}")
-      true
+      saved path, @document.save(@backup_file.value)
     rescue ex : IO::Error
       notice "Cannot save #{path}: #{Md.error_text(ex)}"
       false
+    end
+
+    # A save's end: the status and the notice, naming a backup that failed.
+    private def saved(path : String, backup_failure : String?) : Bool
+      refresh_status
+      notice(backup_failure ? "Saved #{path} (#{backup_failure})" : "Saved #{path}")
+      true
     end
 
     # Asks for a file name (`#ask_text`, in place of the status bar or in
@@ -602,7 +647,7 @@ module Md
     # (`#save_as`); a cancelled or empty answer saves nothing. *done* hears
     # whether a save happened.
     def save_as_prompt(&done : Bool ->) : Nil
-      ask_text("Save as: ", @source.path || "") do |answer|
+      ask_text("Save as: ", source.path || "") do |answer|
         path = answer.try &.strip
         done.call(path && !path.empty? ? save_as(path) : false)
       end
@@ -613,22 +658,24 @@ module Md
       save_as_prompt { }
     end
 
-    # Saves to *path* and makes it the document's file. A save that fails
-    # (a directory that is not there, no permission) leaves the document
-    # its old name, as Qt's editors set the current file only once written.
+    # Saves to *path* and makes it the document's file, in every window
+    # showing it (`Document#save_as`; Watch File follows the document to
+    # the new file). A save that fails (a directory that is not there, no
+    # permission) leaves the document its old name, as Qt's editors set the
+    # current file only once written. A file another window has open as
+    # another document is not written over: its window would go on showing
+    # what the file no longer holds.
     def save_as(path : String) : Bool
-      previous = @source
-      @source = Source.new path: path
-      unless save
-        @source = previous
+      if (other = Documents.find(path)) && !other.same?(@document)
+        notice "#{other.name} is open in another window"
         return false
       end
-      retitle
-      apply_base_url
-      # Watch File follows the document: the watcher on the old path is
-      # replaced by one on the new (`app_file.cr`).
-      setup_file
-      true
+      failure = @document.save_as(path, @backup_file.value)
+      renamed
+      saved path, failure
+    rescue ex : IO::Error
+      notice "Cannot save #{path}: #{Md.error_text(ex)}"
+      false
     end
 
     # Reads *io* in the background (`Window#pump`), line by line, feeding
@@ -690,12 +737,8 @@ module Md
     # re-render, and the document's clean state is kept (a stream is not a
     # modification).
     private def append_to_editor(chunk : String) : Nil
-      doc = @editor.document
-      was_modified = doc.modified?
-      @loading = true
-      Crysterm::TextCursor.new(doc, doc.size).insert_text chunk
-      @loading = false
-      doc.modified = was_modified
+      doc = @document.text
+      @document.loading { Crysterm::TextCursor.new(doc, doc.size).insert_text chunk }
     end
 
     # Flushes whatever the stream left incomplete; the end-of-stream signal.
@@ -728,31 +771,23 @@ module Md
       @viewer.follow_tail = false
     end
 
-    # Replaces the editor text as a reset, not an edit: no undo entry, and no
-    # re-render of the viewer (which already shows this text).
-    private def load(text : String) : Nil
-      @loading = true
-      @editor.plain_text = text
-      @loading = false
-      @editor_stale = false
-      @streamed.clear
-      @viewer.set_markdown text
-      @viewer_stale = false
-      text_changed
-    end
-
-    # Brings the editor up to date with the streamed text.
+    # Brings the editor up to date with the streamed text: the document's
+    # text replaced, as a reset (`Document#replace`), the viewer already
+    # showing it.
     private def fill_editor : Nil
-      @loading = true
-      @editor.plain_text = @streamed.to_s
-      @loading = false
+      @document.replace @streamed.to_s, by: self
+      @seen_revision = @document.revision
       @editor_stale = false
     end
 
-    # A user edit: the editor now holds the truth; the viewer follows, now or
-    # when it is next shown.
+    # An edit made in this window: the document now holds the truth; the
+    # viewer follows, now or when it is next shown. Run at once in the
+    # window that edited (its editor's `TextChanged`, and md's own edits
+    # after they change the text); the other windows on the document catch
+    # up through `#document_changed`.
     private def edited : Nil
       @editor_stale = false
+      @seen_revision = @document.revision
       text_changed
       highlight_matches Pane::Editor
       if @viewer.visible? || @toc.visible?

@@ -164,10 +164,10 @@ module Md
       if line = @vi.command_line
         return line
       end
-      name = @source.name || "[No Name]"
+      name = source.name || "[No Name]"
       if streaming?
         "#{name} (streaming)"
-      elsif @watcher
+      elsif @document.watching?
         "#{name} (watching)"
       else
         name

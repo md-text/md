@@ -28,6 +28,36 @@ def with_app(source = Md::Source.new, text = "", view = !text.empty?, config = f
   end
 end
 
+# A Window → New opener that hands out headless windows, recording them
+# in *opened*.
+def recording_opener(opened = [] of Crysterm::Window)
+  ->(title : String) do
+    window = headless_window
+    window.title = title
+    opened << window
+    window
+  end
+end
+
+# Two windows on one document, the way Window → New makes them: an App on
+# *source* and *text* under one shared `Crysterm::Application`, and a second
+# from its `#new_window`. Both are destroyed after the block, and then no
+# document may be left in the registry.
+def with_two_windows(source = Md::Source.new(path: "doc.md"), text = "# Doc\n\nText.\n", view = true, &)
+  application = Crysterm::Application.new
+  with_app source, text: text, view: view do |a, window|
+    application.add window
+    a.window_opener = recording_opener
+    b = a.new_window || fail("no window was opened")
+    begin
+      yield a, b
+    ensure
+      b.window.destroy
+    end
+  end
+  Md::Documents.all.should be_empty
+end
+
 # Runs the block with the configuration loaded as md loads it at start —
 # from a config file holding *yaml* (none when nil) in a scratch
 # `XDG_CONFIG_HOME`, so `Md::Config.path` is the scratch file, and from

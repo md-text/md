@@ -1,17 +1,26 @@
 module Md
   class App
     # Windows: several md windows in one process, each a terminal window of
-    # its own with its own document, editor and unsaved-changes guard — the
-    # Window menu, after `QMdiArea`'s. Window → New (`Ctrl-N`) asks
-    # Crysterm for another terminal window (`Crysterm::Window.open`: the
+    # its own — the Window menu, after `QMdiArea`'s. Window → New (`Ctrl-N`)
+    # asks Crysterm for another terminal window (`Crysterm::Window.open`: the
     # emulator md runs in is told to open one — kitty, Terminal.app, a tmux
     # window inside tmux…, `Crysterm::Terminal`) and builds a second `App`
-    # on it, showing what this window shows now: the same file, the editor's
-    # text as it stands, the viewer when the viewer is shown here. From then
-    # on the two are independent: an edit in one is not in the other until
-    # saved and reloaded (View → Watch File in the other does that), each
-    # asks about its own unsaved changes, and the history and the settings
-    # are shared and written by whichever window ends last (`#finish`).
+    # on it, a second view on this window's document (`Document`), the way
+    # Qt Creator, Kate and Emacs show one buffer in two windows: the text is
+    # one, so an edit in either window is in both, one undo history takes
+    # back the last edit whichever window made it, and the document is
+    # modified, saved, watched and auto-saved for both at once. Each window
+    # keeps its own caret, scroll, panes and search; the new one starts
+    # where this one is. A window still reading a stream passes on the text
+    # read so far, a snapshot: the rest goes on arriving here alone.
+    #
+    # Windows on one document are named `README.md:1`, `README.md:2` in their
+    # titles and in the Window menu (`#window_name`), plain `README.md` again
+    # once one is left. Closing a window asks about unsaved changes only when
+    # it is the last on its document; quitting asks once per document, in
+    # the last window on it, as Qt's `QApplication::closeAllWindows` does.
+    # The history and the settings are shared and written by whichever
+    # window ends last (`#finish`).
     #
     # The new window joins the running application (`Application#show`), so
     # the loop runs until the last window is gone: Window → Close Current
@@ -91,6 +100,7 @@ module Md
       @window.on(Crysterm::Event::Destroy) do
         App.instances.delete self
         finish
+        leave_document
         App.refresh_window_menus
       end
       App.refresh_window_menus
@@ -106,8 +116,8 @@ module Md
     end
 
     # What the end of a window saves, once: the auto-save stopped and its
-    # recovery file dropped, the history with the position, the config file
-    # when anything changed. From the window's close or the application's
+    # recovery file dropped when this is the last window on the document,
+    # the history with the position, the config file when anything changed. From the window's close or the application's
     # quit, before the teardown; from the window's `Destroy` as the last
     # resort (a direct destroy, as a spec's), when the pane sizes are gone
     # with the panes and are left as they were (`#record_pane_sizes`); and
@@ -117,7 +127,9 @@ module Md
     private def finish : Nil
       return if @finished || !@started
       @finished = true
-      finish_autosave
+      # The last window on the document ends its auto-save; the others
+      # leave it to the windows still showing it.
+      @document.finish_autosave if last_view?
       save_history
       save_config
     end
@@ -126,17 +138,16 @@ module Md
     # Set once the window is on screen (`#run`, `#join`).
     @started = false
 
-    # Window → New (`Ctrl-N`): opens a terminal window and an `App`
-    # on it showing this document as it stands (see above), joined to the
-    # running application. Returns the new app, or nil with a notice saying
-    # why there is none: the session cannot open windows, or the emulator
-    # would not (the window did not start in time, say).
+    # Window → New (`Ctrl-N`): opens a terminal window and an `App` on it,
+    # a view on this window's document (see above), joined to the running
+    # application. Returns the new app, or nil with a notice saying why
+    # there is none: the session cannot open windows, or the emulator would
+    # not (the window did not start in time, say).
     #
-    # Unsaved edits travel, as a second `QMainWindow` on the same document
-    # would show them: the new window gets the text with the edits in it,
-    # flagged modified, so its own guard asks before they are lost. What a
-    # window still reading a stream passes on is the text read so far, a
-    # snapshot: the rest of the stream goes on arriving here alone.
+    # The new window shows the panes this one shows, its caret, selection
+    # and scroll where this window's are, and the focus in the same pane;
+    # from then on it moves on its own. A document still streaming in is
+    # handed over as the text read so far, in a document of its own.
     def new_window : App?
       if reason = @window_refusal
         notice "Cannot open a window: #{reason}"
@@ -144,8 +155,12 @@ module Md
       end
       window = @window_opener.call(title)
       begin
-        app = App.new(@source, text: markdown, view: @viewer.visible?, window: window,
-          history: @history, config: @config)
+        app = if streaming?
+                App.new(source, text: markdown, view: @viewer.visible?, window: window,
+                  history: @history, config: @config)
+              else
+                App.new(@document, view: @viewer.visible?, window: window, history: @history, config: @config)
+              end
       rescue ex
         # The terminal window is open already; an App that failed to build
         # must not leave it behind, empty.
@@ -153,17 +168,33 @@ module Md
         raise ex
       end
       app.window_opener = @window_opener
-      # Text not saved here is not saved there either: the new window's own
-      # guard must ask before it is lost, and its flag must say so.
-      if @editor.document.modified?
-        app.editor.document.modified = true
-        app.refresh_status
-      end
       app.join exec_application
+      app.take_view_of self unless streaming?
       app
     rescue ex
       notice "Cannot open a window: #{ex.message}"
       nil
+    end
+
+    # Starts this window where *other*, on the same document, is: the same
+    # panes shown and focused, the editor's caret, selection and scroll, the
+    # viewer's caret and scroll, and Sync Cursor (Window → New).
+    protected def take_view_of(other : App) : Nil
+      Pane.each do |pane|
+        if other.widget(pane).visible?
+          show_pane pane
+        else
+          hide_pane pane
+        end
+      end
+      @sync_cursor.value = other.sync_cursor?
+      @editor.text_cursor = other.editor.text_cursor
+      @editor.scroll_cursor_to_row other.editor.cursor_viewport_row
+      @viewer.text_cursor = other.viewer.text_cursor
+      @viewer.scroll_cursor_to_row other.viewer.cursor_viewport_row
+      focused = Pane.values.find { |pane| other.widget(pane).focused? }
+      widget(focused).focus if focused
+      refresh_status
     end
 
     # Puts this app's window on screen in *application*, running or not
@@ -198,7 +229,7 @@ module Md
     private def activate_window(app : App) : Nil
       unless app.same? self
         app.window.activate
-        notice "#{app.document_name} is in another terminal window" unless app.window.screen.same? @window.screen
+        notice "#{app.window_name} is in another terminal window" unless app.window.screen.same? @window.screen
       end
       App.refresh_window_menus
     end
@@ -209,18 +240,18 @@ module Md
     private def build_window_menu(bar : Crysterm::Widget::MenuBar) : Nil
       menu = bar.add_menu "Wi&ndow"
       @new_window_action = named "new-window", tip menu.add_action("&New", shortcut: "Ctrl+N") { new_window },
-        "Open this document in another md window, in a new terminal window"
+        "Open this document in another md window, in a new terminal window: the same text, edited in either"
       # The editor's `Ctrl-W` kills a word, so the key works outside it.
       named "close-window", tip menu.add_action("&Close Current", shortcut: "Ctrl+W") { close_window },
-        "Close this window, asking about unsaved changes; the last window closing quits md"
+        "Close this window, asking about unsaved changes when no other window shows the document; the last window closing quits md"
       menu.add_separator
       menu.on(Crysterm::Event::AboutToShow) { refresh_window_menu }
       @window_menu = menu
     end
 
     # Remakes the list of windows in this window's menu — one check entry
-    # per open window, named by its document (`#document_name`, the title
-    # without its ` • MD`), this one checked — and
+    # per open window, named as its title names it (`#window_name`, the
+    # title without its ` • MD`), this one checked — and
     # enables New as the session allows.
     def refresh_window_menu : Nil
       return unless menu = @window_menu
@@ -228,8 +259,8 @@ module Md
       @window_entries.each { |entry| menu.remove_action entry }
       group = Crysterm::ActionGroup.new
       @window_entries = App.instances.map do |app|
-        entry = Crysterm::Action.new literal_label(app.document_name), checkable: true
-        tip entry, (app.same?(self) ? "This window" : "Bring the window showing #{app.document_name} to the front, where the terminal allows")
+        entry = Crysterm::Action.new literal_label(app.window_name), checkable: true
+        tip entry, (app.same?(self) ? "This window" : "Bring the window showing #{app.window_name} to the front, where the terminal allows")
         entry.checked = app.same? self
         group.add_action entry
         entry.on(Crysterm::Event::Triggered) { activate_window app }

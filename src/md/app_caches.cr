@@ -54,8 +54,8 @@ module Md
       # The document's own copy went with the rest: forgotten here, so it
       # is written afresh, which the next tick does, finding the document
       # edited since its last write.
-      drop_recovery
-      @autosave_dirty = true
+      @document.drop_recovery
+      @document.mark_for_autosave
       remove_entries App.cache_dir, empty: Crysterm::Config.log_file
       refresh_recent_menu
       notice "Cleared #{recent} recent file#{"s" unless recent == 1}, #{recovery} recovery file#{"s" unless recovery == 1}"

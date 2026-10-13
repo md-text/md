@@ -96,8 +96,8 @@ runs too.
 | `Alt-X`            | Tick or untick a list item's task box, or give it a ticked one, a line of text becoming an item (Format → Toggle Task Checkbox; Format → As a Task, a check entry, adds and removes the box) |
 | `Ctrl-Up`, `Ctrl-Down` | Promote or demote the heading of the caret's section, from the heading or anywhere in its text (Format → Promote Heading, Demote Heading) |
 | `Alt-Q`            | Refill the paragraph at the caret, or the selected paragraphs, to the wrap column (Format → Rewrap → Paragraph; Rewrap → Document refills them all) |
-| `Ctrl-N`           | Open a new window on this document, in a new terminal window (Window → New) |
-| `Ctrl-W`           | Outside the editor, close this window, asking first when its changes are unsaved; the last window's close quits (Window → Close Current) |
+| `Ctrl-N`           | Open another window on this document (the same text, edited in either), in a new terminal window (Window → New) |
+| `Ctrl-W`           | Outside the editor, close this window, asking first only when it is the last window on a document with unsaved changes; the last window's close quits (Window → Close Current) |
 | `Ctrl-Q`           | Quit: closes every window (`q` too, anywhere but in the editor; File → Quit); each window asks first when its changes are unsaved |
 
 The menus show these keys next to their entries, spelled as
@@ -539,7 +539,11 @@ file.
 Quitting, opening another file or reloading with unsaved changes asks first:
 *Save*, *Don't save* or *Cancel*. Saving a document without a name asks for
 one, and the action goes ahead once the save is done. Options → Ask Before
-Discarding Changes turns the question off.
+Discarding Changes turns the question off. A document shown in several
+windows (see Windows) is asked about once, in the last window on it:
+closing another window, or opening another file in it, loses nothing.
+Reloading drops the changes in every window, so it asks whenever there are
+some, and the question says how many windows show the document.
 
 The View menu also has *Sync Cursor*: with it on, moving the cursor in the
 editor puts the viewer's cursor on the same place in the rendered document,
@@ -641,7 +645,8 @@ recovery files live in `$XDG_STATE_HOME/md/autosave/`
 `/` escaped as `%2F` (`/home/u/notes.md` recovers from
 `%2Fhome%2Fu%2Fnotes.md`); a document without a name, such as one piped in
 on standard input and then edited, is kept as `unnamed-<date>-<time>-<pid>.md`
-(with `-2`, `-3`… for another window's from the same second).
+(with `-2`, `-3`… for another document's from the same second). A document
+shown in several windows has one recovery file and one backup.
 Saving or quitting normally removes the recovery file, so whatever remains
 in the directory is what some session lost. When you open a file whose
 recovery file is newer than the file, a notice names the copy; open it
@@ -662,11 +667,8 @@ choices, not a cache, and stay.
 ### Windows
 
 Window → New (`Ctrl-N`) opens another md window on the document you
-are looking at — the same file, with the editor's text as it stands,
-unsaved edits included and flagged as unsaved there too, and the viewer
-shown if it is shown here — in a new terminal window. A window still
-reading a stream passes on what has arrived so far; the rest of the stream
-keeps arriving in the window that reads it. md asks
+are looking at, in a new terminal window, starting where this window is:
+the same panes, the cursor and the scroll in the same places. md asks
 the terminal emulator it is running in for one: kitty, Alacritty, WezTerm,
 foot, xterm, Konsole and GNOME Terminal, Terminal.app and iTerm2 on macOS
 (`$TERMINAL` names another), or a new tmux or screen window inside a
@@ -675,20 +677,30 @@ a console, SSH without tmux, an emulator md cannot drive — has the entry
 disabled, and `Ctrl-N` says why. The new window is the emulator's default
 size, or this window's where the emulator takes a size.
 
-The windows are independent from then on: an edit in one reaches the other
-only through a save (View → Watch File in the other picks it up), and each
-asks about its own unsaved changes. The settings and the recent files are
-shared, written by the window that ends last. Window → Close Current
-(`Ctrl-W`, outside the editor, where `Ctrl-W` kills a word) closes the
-window you are in alone, after its unsaved-changes question; in the last
-window it is Quit. File → Quit (`Ctrl-Q`, `q`) closes every window, each
-asking about its own changes first, so a window with changes stays until
-you answer. The Window menu lists the open windows by their documents' names, the one you
-are in checked; picking another makes it the active window — raised, when
-the two share a terminal; otherwise a notice says it is in another terminal
-window, since one terminal cannot raise another. Terminal.app keeps a
-closed window on screen with "[Process completed]" when its profile says
-so.
+The two windows show one document, as two windows on one buffer do in Vim,
+Emacs, Kate or Qt Creator: an edit in either is in both, editor and viewer,
+as you type; Undo in either takes back the last edit, whichever window
+made it, with the cursor on the change; the document is modified, saved,
+reloaded and watched (View → Watch File) for both at once, and it has one
+recovery file. Each window keeps its own cursor, scroll, panes and search.
+While two or more windows show a document they are named `README.md:1`,
+`README.md:2` in their titles and in the Window menu; a single window is
+plain `README.md` again. A window still reading a stream passes on what has
+arrived so far, as a document of its own; the rest of the stream keeps
+arriving in the window that reads it.
+
+The settings and the recent files are shared, written by the window that
+ends last. Window → Close Current (`Ctrl-W`, outside the editor, where
+`Ctrl-W` kills a word) closes the window you are in alone, asking about
+unsaved changes only when no other window shows the document; in the last
+window it is Quit. File → Quit (`Ctrl-Q`, `q`) closes every window, asking
+about each modified document once, in the last window on it, so a window
+with changes stays until you answer. The Window menu lists the open windows
+by their names, the one you are in checked; picking another makes it the
+active window — raised, when the two share a terminal; otherwise a notice
+says it is in another terminal window, since one terminal cannot raise
+another. Terminal.app keeps a closed window on screen with "[Process
+completed]" when its profile says so.
 
 ### Help
 

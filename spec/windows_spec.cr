@@ -4,16 +4,6 @@ require "./spec_helper"
 # headless windows a stubbed opener hands out, under one shared
 # `Crysterm::Application`.
 
-# An opener that records the headless windows it handed out.
-private def recording_opener(opened)
-  ->(title : String) do
-    window = headless_window
-    window.title = title
-    opened << window
-    window
-  end
-end
-
 private def window_menu(app)
   menu(app, 5)
 end
@@ -33,30 +23,32 @@ describe "Md::App windows" do
       other = app.new_window || fail("no window was opened")
       begin
         other.window.should be opened.first
-        other.window.title.should eq "doc.md • MD"
+        other.window.title.should eq "doc.md:2 • MD"
+        window.title.should eq "doc.md:1 • MD"
         # Joined to the running application, on screen and reading input.
         other.window.application.should be application
         application.windows.should eq [window, other.window]
         other.window.screen.listening?.should be_true
-        # The same document, as it stands here, in the same pane.
-        other.source.path.should eq app.source.path
-        other.markdown.should eq app.markdown
+        # The same document, in the same pane.
+        other.document.should be app.document
+        other.editor.document.should be app.editor.document
         other.visible_panes.should eq [Md::App::Pane::Viewer]
-        # Both windows list both, each with its own checked.
-        window_menu(app).actions.map(&.text).should eq ["&New", "&Close Current", "", "doc.md", "doc.md"]
+        # Both windows list both, numbered, each with its own checked.
+        window_menu(app).actions.map(&.text).should eq ["&New", "&Close Current", "", "doc.md:1", "doc.md:2"]
         window_menu(app).actions[3..].map(&.checked?).should eq [true, false]
         window_menu(other).actions[3..].map(&.checked?).should eq [false, true]
-        # Independent: an edit in one is not in the other.
+        # One text: an edit in one is in the other.
         other.editor.insert_text "More"
-        app.markdown.should_not contain "More"
-        other.editor.document.modified = false # so the close below has nothing to ask
+        app.markdown.should contain "More"
 
-        # Closing the other closes it alone, and the lists follow.
+        # Closing the other closes it alone, without asking: the document
+        # lives on here; the lists and the title follow.
         other.close_window
         other.window.destroyed?.should be_true
         window.destroyed?.should be_false
         application.windows.should eq [window]
         window_menu(app).actions.map(&.text).should eq ["&New", "&Close Current", "", "doc.md"]
+        window.title.should eq "doc.md • MD"
         Md::App.instances.should contain app
         Md::App.instances.should_not contain other
       ensure
@@ -81,8 +73,10 @@ describe "Md::App windows" do
       saved = File.tempname("md-spec-windows", ".md")
       begin
         app.save_as(saved).should be_true
-        window_menu(app).actions[3..].map(&.text).should eq [File.basename(saved), "doc.md"]
-        window_menu(other).actions[3..].map(&.text).should eq [File.basename(saved), "doc.md"]
+        names = ["#{File.basename(saved)}:1", "#{File.basename(saved)}:2"]
+        window_menu(app).actions[3..].map(&.text).should eq names
+        settle { other.window.title == "#{names[1]} • MD" }
+        window_menu(other).actions[3..].map(&.text).should eq names
         other.close_window
       ensure
         other.window.destroy
@@ -91,8 +85,8 @@ describe "Md::App windows" do
     end
   end
 
-  it "opens the new window on unsaved text as unsaved, so its own guard asks too" do
-    with_app Md::Source.new(path: "doc.md"), text: "A\n", view: true do |app|
+  it "shares the unsaved state, and only the last window on the document asks" do
+    with_app Md::Source.new(path: "doc.md"), text: "A\n", view: true do |app, window|
       app.window_opener = recording_opener([] of Crysterm::Window)
       app.editor.cursor_position = 0 # a load leaves the caret at the end
       app.editor.insert_text "changed "
@@ -101,7 +95,9 @@ describe "Md::App windows" do
         other.markdown.should eq "changed A\n"
         other.editor.document.modified?.should be_true
         other.main.status_bar.permanent_widgets[4].as(Crysterm::Widget::Label).text.should eq "✎ modified"
-        other.close_window
+        app.close_window # another window shows the document: nothing to ask
+        window.destroyed?.should be_true
+        other.close_window # the last: asks
         question(other).should start_with "Save changes to"
         answer other, 'n'
         other.window.destroyed?.should be_true
@@ -177,7 +173,7 @@ describe "Md::App windows" do
       other = app.new_window || fail("no window was opened")
       begin
         window_menu(app).actions[4].trigger
-        notice(app).should contain "a.md is in another terminal window"
+        notice(app).should contain "a.md:2 is in another terminal window"
         window_menu(app).actions[3..].map(&.checked?).should eq [true, false] # the checks stay with each window's own
         window_menu(app).actions[3].trigger                                   # this one: nothing to do
         window_menu(app).actions[3..].map(&.checked?).should eq [true, false]

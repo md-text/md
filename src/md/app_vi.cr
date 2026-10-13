@@ -117,11 +117,11 @@ module Md
     # (Vim's 'cpoptions' `F`); a document without a name asks for one (File
     # → Save As).
     private def vi_write(path : String?, rename : Bool) : Nil
-      if path && (rename || @source.path.nil?)
+      if path && (rename || source.path.nil?)
         save_as path
       elsif path
         vi_write_copy path
-      elsif @source.path
+      elsif source.path
         save
       else
         @vi_naming = true
@@ -137,7 +137,7 @@ module Md
     # `:w FILE` on a named document: the text goes to *path*, and the
     # document keeps its name, its file and its unsaved state.
     private def vi_write_copy(path : String) : Nil
-      SaveFile.write path, markdown
+      @document.write_copy path
       notice "Wrote a copy to #{path}"
     rescue ex : IO::Error
       notice "Cannot write #{path}: #{Md.error_text(ex)}"

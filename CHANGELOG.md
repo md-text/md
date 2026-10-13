@@ -421,6 +421,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Windows on one document share it, as two windows on one buffer do in Vim,
+  Emacs, Kate or Qt Creator: Window → New shows the same text, where it
+  showed a copy, so an edit in either window is in both as it is typed, Undo
+  in either takes back the last edit whichever window made it, and the
+  modified state, saving, reloading, View → Watch File, the auto-save
+  recovery file and the backup are the document's. Each window keeps its own
+  cursor, scroll, panes and search, starting where the window it was opened
+  from is. The windows are named `README.md:1`, `README.md:2` in their
+  titles and the Window menu while two or more show the document, and only
+  the last window on a modified document asks about it when closed, quit or
+  given another file; File → Reload asks whenever the document is modified,
+  saying how many windows show it.
 - View → Theme calls its first entry Terminal Default, where it was Terminal (Its
   Own Colors); it still draws the window in the terminal's own colors, and its
   mnemonic is still T.
@@ -462,6 +474,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Format edits (Bold, a list's indent, Rewrap…) and Replace did not mark the
+  document for the next auto-save, which only typed edits did; every edit
+  does now.
 - A heading in a list item (`- ## Title`, `1. # Title`, at any depth, in a
   quote too) was no heading to md, and `- Title` over a `---` indented to the
   item's text was taken for a rule, where CommonMark and markd read a setext
