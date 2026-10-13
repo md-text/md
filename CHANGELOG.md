@@ -834,5 +834,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   last line made the paragraph a heading; and a line it ended after a
   backslash ended in a hard line break. Such a word now stays with the one
   before it.
+- Format → Rewrap joined a line ending in a hard line break (two spaces or a
+  backslash) to the next, losing the break; the break stays where it is now,
+  and only the words after it flow on.
+- `Enter` on a rule such as `* * *`, on a `- ` line in a code block, or on an
+  item opening a fenced block (`` - ```sh ``) continued a list there; it is a
+  plain newline on those lines now.
 
 [Unreleased]: https://github.com/md-text/md/commits/main

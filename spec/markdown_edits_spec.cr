@@ -53,3 +53,12 @@ describe "Md::App editing, Rewrap" do
     rewrapped("aaaa bbbb cccc dd\\\\ eeee\n").should eq "aaaa bbbb cccc dd\\\\\neeee\n"
   end
 end
+
+describe "Md::App editing, Rewrap and hard breaks" do
+  it "keeps a hard line break, two spaces or a backslash, where it is, the words after it flowing on" do
+    rewrapped("aaaa bbbb  \ncccc\ndddd\n").should eq "aaaa bbbb  \ncccc dddd\n"
+    rewrapped("aaaa\\\nbbbb cccc dddd eeee ffff\n").should eq "aaaa\\\nbbbb cccc dddd eeee\nffff\n"
+    rewrapped("- aaaa  \n  bbbb\n  cccc\n").should eq "- aaaa  \n  bbbb cccc\n"
+    rewrapped("> aaaa  \n> bbbb\n> cccc\n").should eq "> aaaa  \n> bbbb cccc\n"
+  end
+end

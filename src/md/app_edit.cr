@@ -786,34 +786,60 @@ module Md
     # line as fit; a word longer than the line has one to itself. No line
     # is broken where the next would start with Markdown of its own
     # (`.breakable?`): the word that would, a `-` or a `#` in the text,
-    # stays with the one before it.
+    # stays with the one before it. A line ending in a hard break — two
+    # spaces or a backslash — still ends there, its break kept, and the
+    # words after it flow on from the next line.
     private def fill(lines : Array(String), column : Int32) : Array(String)
       first = lines[0]
-      head = (item = ListItem.parse(first)) ? first[0, item.prefix_size] : (QUOTE_LEAD.match(first).try(&.[0]) || "")
+      item = ListItem.parse(first)
+      head = item ? first[0, item.prefix_size] : (QUOTE_LEAD.match(first).try(&.[0]) || "")
       rest = App.continuation_prefix(first)
-      words = [] of String
-      ([first[head.size..]] + lines[1..].map(&.sub(QUOTE_LEAD, ""))).join(' ').split.each do |word|
-        if (last = words.last?) && !App.breakable?(last, word)
-          words[-1] = "#{last} #{word}"
+      out = [] of String
+      start = 0
+      lines.each_with_index do |line, i|
+        last = i == lines.size - 1
+        next unless last || App.hard_break?(line)
+        texts = (start..i).map { |k| k == 0 ? first[head.size..] : lines[k].sub(QUOTE_LEAD, "") }
+        segment = fill_words(start == 0 ? head : rest, rest, texts.join(' ').split, column)
+        segment[-1] += "  " if !last && line.ends_with?("  ")
+        out.concat segment
+        start = i + 1
+      end
+      out
+    end
+
+    # *words* laid out from *head* on, a line starting with *rest* taking
+    # each word that does not fit the line before (see `#fill`).
+    private def fill_words(head : String, rest : String, words : Array(String), column : Int32) : Array(String)
+      units = [] of String
+      words.each do |word|
+        if (last = units.last?) && !App.breakable?(last, word)
+          units[-1] = "#{last} #{word}"
         else
-          words << word
+          units << word
         end
       end
       out = [] of String
       current = head
       empty = true
-      words.each do |word|
+      units.each do |unit|
         if empty
-          current += word
+          current += unit
           empty = false
-        elsif current.size + 1 + word.size <= column
-          current += " #{word}"
+        elsif current.size + 1 + unit.size <= column
+          current += " #{unit}"
         else
           out << current
-          current = "#{rest}#{word}"
+          current = "#{rest}#{unit}"
         end
       end
       out << current
+    end
+
+    # Whether *line* of a paragraph ends in a hard line break: two spaces
+    # or more, or a backslash (not one escaped by another).
+    def self.hard_break?(line : String) : Bool
+      line.ends_with?("  ") || (line.size - line.rstrip('\\').size).odd?
     end
 
     # Where the caret at *offset* of *before* lands in *after*, the same
