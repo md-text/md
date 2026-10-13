@@ -30,6 +30,27 @@ module Md
       return if App.unbreakable?(document, document.block_at(cursor_position).index)
       App.continuation_prefix(line)
     end
+
+    # Whether the hard wrap may break *line* at the space at *index*: not
+    # where the carried line would start with Markdown of its own, nor
+    # after a backslash (`App.breakable?`), as Rewrap does. The word at the
+    # line's end is still being typed, so one that could grow into such a
+    # word — digits before their `.`, the start of a fence or a rule — is
+    # not carried alone either.
+    def hard_wrap_breakable?(line : String, index : Int32) : Bool
+      head = line[0, index].rstrip(' ')
+      before = head[((head.rindex(' ') || -1) + 1)..]
+      tail = line[index..].lstrip(' ')
+      if space = tail.index(' ')
+        App.breakable?(before, tail[0, space])
+      else
+        App.breakable?(before, tail) && !TYPED_BLOCK_WORD.matches?(tail)
+      end
+    end
+
+    # A word at the end of the line that typing on could make a
+    # `App::BLOCK_WORD`.
+    TYPED_BLOCK_WORD = /\A(?:\d{1,9}|`{1,2}|~{1,2}|_{1,2})\z/
   end
 
   class App

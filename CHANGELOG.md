@@ -885,5 +885,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   (`- ` alone) into the item, where it is a paragraph after the list; both
   are left as they are now, and an item whose marker stands alone over its
   indented text (`-`) is refilled as `- text`, where it became `-text`.
+- Format → Hard Wrap could carry a `-`, `#`, `>` or `1.` typed in the text to
+  the start of a new line, making it a list item, a heading or a quote; it
+  breaks at an earlier space now, as Rewrap does. (With Crysterm's new
+  `hard_wrap_breakable?`.)
 
 [Unreleased]: https://github.com/md-text/md/commits/main

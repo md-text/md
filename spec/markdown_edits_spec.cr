@@ -82,3 +82,17 @@ describe "Md::App editing, Rewrap and what is no paragraph" do
     rewrapped("- \n  aaaa\n").should eq "- aaaa\n"
   end
 end
+
+describe "Md::App editing, Hard Wrap" do
+  it "starts no carried line with Markdown of its own, nor one a word being typed could become" do
+    {"- x", "# x", "> x", "12. x"}.each do |typed|
+      with_app text: "aaaa bbbb cccc dddd\n", view: false do |app, window|
+        app.hard_wrap = true
+        app.text_width = 20
+        place app, 0, 19
+        " #{typed}".each_char { |char| press window, char }
+        app.markdown.should eq "aaaa bbbb cccc\ndddd #{typed}\n"
+      end
+    end
+  end
+end
