@@ -32,12 +32,12 @@ describe "Help menu" do
     end
   end
 
-  it "Manual opens the README's usage chapters as the document" do
+  it "Manual opens MANUAL.md as the document" do
     with_cache_home do
       with_app do |app, _window|
         app.main.menu_bar.menus.last.actions[0].trigger
         app.source.path.should eq Md::App.manual_path
-        app.markdown.should start_with "# md\n"
+        app.markdown.should start_with "# md manual\n"
         app.markdown.should contain "\n## Usage\n"
         app.markdown.should contain "\n### Help\n"
         app.markdown.should_not contain "## Installation"

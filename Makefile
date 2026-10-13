@@ -3,7 +3,7 @@
 #   make            build a development binary in bin/md
 #   make release    build an optimized binary in bin/md
 #   make test       run the specs
-#   make lint       run ameba and check the formatting
+#   make lint       run ameba (its Lint/Formatting rule checks the formatting)
 #   make check      test + lint
 #   make man        generate the man page, share/man/man1/md.1
 #   make completions
@@ -11,7 +11,7 @@
 #   make install    install bin/md into $(PREFIX)/bin  (default /usr/local),
 #                   the man page and the completions under $(PREFIX)/share
 #
-# Requires Crystal >= 1.21 and the unibilium library; see README.md.
+# Requires Crystal >= 1.21 and the unibilium library; see CONTRIBUTING.md.
 
 PREFIX   ?= /usr/local
 DESTDIR  ?=
@@ -58,11 +58,10 @@ test: lib
 # Ameba ships no prebuilt binary; it is compiled from the development dependency.
 bin/ameba: lib
 	@mkdir -p bin
-	crystal build -o $@ lib/ameba/bin/ameba.cr
+	crystal build -o $@ lib/ameba/src/cli.cr
 
 lint: bin/ameba
 	bin/ameba
-	crystal tool format --check
 
 format:
 	crystal tool format

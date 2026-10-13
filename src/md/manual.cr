@@ -14,7 +14,7 @@ module Md
     # reproducible builds do. The man page is dated with it.
     BUILD_EPOCH = {{ (env("SOURCE_DATE_EPOCH") || `date +%s`).strip }}.to_i64
 
-    # The keys, as the man page lists them (the README's table, in short).
+    # The keys, as the man page lists them (the manual's table, in short).
     KEYS = [
       {"F1, F2, F3", "Show and focus the editor, the viewer or the table of contents; hide it when it is already focused (the last pane stays)."},
       {"F4", "Hide the menu bar and the status bar, or show them again (View -> Menu and Status Bars); the entries' keys keep working while they are hidden."},
@@ -52,30 +52,13 @@ module Md
       {"Vi Mode", "With Edit -> Vi Mode (Neovim) on, the editor's keys are an embedded Neovim's, but for the function keys and the Alt chords, which stay md's; the status bar shows Neovim's mode and command line. :w saves, :w FILE writes a copy to FILE (a document without a name takes FILE's), :saveas FILE saves as FILE, :q closes the window (asking about unsaved changes), :q! closes it without asking, :qa quits, and :wq, :x and ZZ save and close."},
     ]
 
-    # The README, read when the binary is built: the user's manual Help →
+    # MANUAL.md, read when the binary is built: the user's manual Help →
     # Manual shows (`.markdown`).
-    README = {{ read_file("#{__DIR__}/../../README.md") }}
+    MANUAL = {{ read_file("#{__DIR__}/../../MANUAL.md") }}
 
-    # The manual as Markdown, for Help → Manual: the README's opening
-    # paragraphs and its Usage chapter, the parts about using md; the
-    # project's status, its badges and the chapters on installing, building
-    # and developing it are left out. One text with the README, so the two
-    # never disagree.
+    # The manual as Markdown, for Help → Manual.
     def self.markdown : String
-      String.build do |io|
-        # Before the first chapter: the opening, without the status note and
-        # the badges.
-        opening = true
-        keep = true
-        README.each_line(chomp: false) do |line|
-          if line.starts_with?("## ")
-            opening = false
-            keep = line.starts_with?("## Usage")
-          end
-          next if opening && (line.starts_with?('>') || line.starts_with?("[!["))
-          io << line if keep
-        end
-      end.gsub(/\n{3,}/, "\n\n")
+      MANUAL
     end
 
     # *value* checked against `KINDS`: a usage error otherwise.

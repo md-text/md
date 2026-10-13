@@ -9,22 +9,6 @@ permissions:
   contents: read
 
 jobs:
-  lint:
-    name: Lint
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      # install-crystal installs packages without refreshing the package
-      # index, which fails when the runner image's index has gone stale.
-      - name: Update package index
-        run: sudo apt-get update -y
-      - uses: crystal-lang/install-crystal@v1
-      - name: Install dependencies
-        run: shards install
-      # Ameba, then the format check; both in the one target.
-      - name: Lint
-        run: make lint
-
   test:
     name: Test (${{ matrix.runner }}, Crystal ${{ matrix.crystal }})
     runs-on: ${{ matrix.runner }}
@@ -39,6 +23,17 @@ jobs:
             crystal: nightly
     steps:
       - uses: actions/checkout@v4
+
+      # shard.override.yml builds against unreleased Crysterm, Tput,
+      # Superconf, event_handler and pnggif checkouts beside this one.
+      - name: Check out sibling dependencies
+        run: |
+          cd ..
+          git clone https://github.com/crystallabs/crysterm crysterm2
+          git clone https://github.com/crystallabs/tput.cr
+          git clone https://github.com/crystallabs/superconf.cr
+          git clone https://github.com/crystallabs/event_handler
+          git clone https://github.com/crystallabs/pnggif
 
       - name: Update package index (Linux)
         if: runner.os == 'Linux'
@@ -65,6 +60,9 @@ jobs:
 
       - name: Build
         run: shards build
+
+      - name: Lint
+        run: make lint
 
       # The binary starts and exits without a terminal, and renders without one.
       - name: Smoke test

@@ -67,6 +67,17 @@ jobs:
         with:
           ref: ${{ env.TAG || github.ref }}
 
+      # shard.override.yml builds against unreleased Crysterm, Tput,
+      # Superconf, event_handler and pnggif checkouts beside this one.
+      - name: Check out sibling dependencies
+        run: |
+          cd ..
+          git clone https://github.com/crystallabs/crysterm crysterm2
+          git clone https://github.com/crystallabs/tput.cr
+          git clone https://github.com/crystallabs/superconf.cr
+          git clone https://github.com/crystallabs/event_handler
+          git clone https://github.com/crystallabs/pnggif
+
       # The build runs in the Crystal Alpine image via docker so that the
       # binary is fully static, independent of the runner's architecture
       # (Alpine containers cannot host GitHub's JavaScript actions on arm64).
@@ -76,7 +87,7 @@ jobs:
       - name: Build static binary (Linux)
         if: matrix.os == 'linux'
         run: |
-          docker run --rm -v "$PWD:/app" -w /app "crystallang/crystal:$CRYSTAL_VERSION-alpine" sh -ec '
+          docker run --rm -v "$PWD/..:/src" -w "/src/${PWD##*/}" "crystallang/crystal:$CRYSTAL_VERSION-alpine" sh -ec '
             apk add --no-cache unibilium-dev
             shards install --production
             mkdir -p bin
@@ -121,7 +132,7 @@ jobs:
           version="${TAG:-v$(sed -n 's/^version: *//p' shard.yml)}"
           name="md-${version}-${{ matrix.os }}-${{ matrix.arch }}"
           mkdir "$name"
-          cp bin/md README.md LICENSE CHANGELOG.md "$name/"
+          cp bin/md README.md MANUAL.md LICENSE CHANGELOG.md "$name/"
           # The man page and the shell completions, printed by the binary
           # just built, in the layout they are installed in under a prefix
           # (`cp -r share /usr/local/`).
