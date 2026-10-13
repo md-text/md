@@ -144,8 +144,9 @@ module Md
 
     # The choices take effect when they change, whoever changed them (a
     # menu entry bound to the property, a setter, the settings restored at
-    # start). The defaults are the panes' own, so nothing is applied until
-    # a choice differs from them.
+    # start). Nothing is applied until a choice changes: the defaults are
+    # the panes' own, but for Center Document's, which only matters once a
+    # Text Width is set, and setting one applies it too.
     private def wire_view : Nil
       @soft_wrap.on_change do
         @editor.wrap_content = @soft_wrap.value
