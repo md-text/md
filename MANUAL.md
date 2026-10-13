@@ -98,7 +98,7 @@ runs too.
 | `Alt-Q`            | Refill the paragraph at the caret, or the selected paragraphs, to the wrap column (Format → Rewrap → Paragraph; Rewrap → Document refills them all) |
 | `Ctrl-N`           | Open another window on this document (the same text, edited in either), in a new terminal window (Window → New) |
 | `Ctrl-W`           | Outside the editor, close this window, asking first only when it is the last window on a document with unsaved changes; the last window's close quits (Window → Close Current) |
-| `Ctrl-Q`           | Quit: closes every window (`q` too, anywhere but in the editor; File → Quit); each window asks first when its changes are unsaved |
+| `Ctrl-Q`           | Quit: closes every window (`q` too, anywhere but in the editor; File → Quit); a document with unsaved changes is asked about once, in the last window on it |
 
 The menus show these keys next to their entries, spelled as
 Qt does (`Ctrl+O`), and the right end of the menu bar names the keys that
@@ -383,7 +383,8 @@ the undo history afresh, in Neovim as in the editor. `:w` saves, `:w
 FILE` writes a copy to FILE and keeps the document's name, as Vim does
 (a document without a name takes FILE's), `:saveas FILE` (or `:file
 FILE` and `:w`) saves as FILE, `:q` closes the window as Window → Close
-Current does, asking about unsaved changes, `:q!` closes it without asking,
+Current does, asking about unsaved changes when no other window shows
+the document, `:q!` closes it without asking,
 `:qa` (`:qa!`) quits, and `:wq`, `:x` and `ZZ` save, then close — a new
 document once it is named in the Save As question, staying open when
 that is cancelled.
@@ -453,9 +454,9 @@ as a table of contents jump lands.
 File → Open… (`Ctrl-O`) asks for a file name the way Save As does, with
 `Tab` completion, and opens it: an existing file in the viewer, a new name as
 an empty document in the editor. A document streaming in from standard input
-is left behind (it goes on streaming into any other window showing it). A
-file another md window has open — by whatever path, through a symbolic link
-or a hard link — is not read again: the window shows that window's document,
+is left behind (it goes on streaming into any other window that keeps it
+open). A file another md window has open — by whatever path, through a
+symbolic link or a hard link — is not read again: the window shows that window's document,
 unsaved edits included, and a notice says so. Opening the file the window
 already shows goes nowhere; File → Reload reads it again. File → Open Recent lists the files you opened before, most
 recent first; md also remembers where you were in each and lands there when
@@ -467,20 +468,22 @@ place, in every window showing the document. View → Watch File (or
 `--watch` on the command line) does that for
 you: the file is polled once a second and reloaded when another program
 changed it, so md beside an editor shows each save as it happens. While the
-editor holds unsaved changes the reload is skipped and a notice says the
+document holds unsaved changes (made in any window on it) the reload is skipped and a notice says the
 file changed on disk; a file removed keeps its text in md, with a notice,
 and is reloaded when it comes back. The status bar shows `(watching)` after
 the name. Watch File is the document's: every window on it shows the same
-check, and a file opened over a watched one is watched too.
+check, and a file read in over a watched one is watched too (a file another
+window has open already is watched as that window has it).
 
 File → Close closes the document, asking first about unsaved changes (only
-when no other window shows it: the others keep it open), and
+when no other window keeps it open; windows linked to this one close it
+too, see Windows), and
 takes it off the trail of files that Previous File and Next File retrace
 (see Following links); its place is remembered, as for any file left. The
 file Next File would have gone to opens in its place, where it was left;
 with none, a blank new document is left, as `md` starts without a file, and
 Previous File still leads back. A document being read from standard input
-stops being read, unless another window shows it.
+stops being read, unless another window keeps it open.
 
 ### Dropping a file
 
@@ -514,7 +517,9 @@ Next File (`Alt-Right`) undoes a Previous File. Opening a file from File →
 Open… or Open Recent over the one shown is a step as well; a jump within the
 document — a `#heading` link, the table of contents — is not, since the
 entries lead to files. Going back to another file asks about unsaved changes
-like any open. In the editor and the viewer `Alt-Left` and `Alt-Right` keep
+like any open. Each window retraces a trail of its own; linked windows
+(Window → Linking) share one, and a step in any of them takes the whole
+group (see Windows). In the editor and the viewer `Alt-Left` and `Alt-Right` keep
 moving the cursor by word, so the menu and `Backspace` are the way back from
 there.
 
@@ -558,7 +563,9 @@ Quitting, opening another file or reloading with unsaved changes asks first:
 one, and the action goes ahead once the save is done. Options → Ask Before
 Discarding Changes turns the question off. A document shown in several
 windows (see Windows) is asked about once, in the last window on it:
-closing another window, or opening another file in it, loses nothing.
+closing another window, or opening another file in it, loses nothing —
+except that opening another file in a linked window (Window → Linking)
+takes every window of its group along, so it asks.
 Reloading drops the changes in every window, so it asks whenever there are
 some, and the question says how many windows show the document. Save As
 onto a file another window has open with unsaved changes writes nothing and
@@ -677,9 +684,10 @@ back. A new document is told of unnamed copies left behind.
 
 Options → Clear Caches… forgets, after asking, everything md keeps for
 itself between runs: the recent files and the positions remembered in them
-(File → Open Recent goes empty), the auto-save recovery files — the
-current document's too, which is written again at the next auto-save while
-the document is modified — and the contents of `$XDG_CACHE_HOME/md`
+(File → Open Recent goes empty), the auto-save recovery files — those of
+the documents open too, each written again at the next auto-save while it
+is modified — the positions Window → Remember Positions keeps, and the
+contents of `$XDG_CACHE_HOME/md`
 (`~/.cache/md`), where Crysterm's log goes while md runs. A notice says
 how many recent files and recovery files went. The settings are your
 choices, not a cache, and stay.

@@ -1,8 +1,9 @@
 module Md
-  # The documents open in the process (Qt Creator's `DocumentModel`): one
-  # `Document` per file, however many windows show it, so a window opening
-  # a file another window has open joins that window's document, unsaved
-  # edits and all, instead of reading a second copy from disk.
+  # The documents open in the process (Qt Creator's `DocumentModel`, with
+  # `DocumentManager::filePathKey` for `.key_for`): one `Document` per
+  # file, however many windows show it, so a window opening a file another
+  # window has open joins that window's document, unsaved edits and all,
+  # instead of reading a second copy from disk.
   #
   # A file is known by its key (`.key_for`): the canonical path —
   # `File.realpath`, which resolves symlinks and, on macOS, gives an
@@ -14,8 +15,9 @@ module Md
   # Window → New.
   #
   # The registry also holds what is one per process rather than one per
-  # window: the files backed up this session (`.backup`) and the names of
-  # unnamed documents' recovery files (`.unnamed_recovery_name`).
+  # window: the files backed up this session (`.backup`), the names of
+  # unnamed documents' recovery files (`.unnamed_recovery_name`) and how
+  # windows on one document behave (`.window_link`).
   module Documents
     # Every document with a window on it, in the order they were first shown.
     class_getter all = [] of Document

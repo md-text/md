@@ -26,8 +26,10 @@ module Md
     #
     # A document shown in several windows is lost only with the last of
     # them: opening another file in one window, closing it, asks nothing
-    # while another window shows the document. Reloading drops the edits
-    # for every window, so it asks whenever there are some.
+    # while another window shows the document — unless the windows are
+    # linked (Window → Linking), when the whole group leaves it and the
+    # question is asked. Reloading drops the edits for every window, so it
+    # asks whenever there are some.
 
     # The polling interval of the watcher this window starts for its
     # document, as its host (specs shorten it).
@@ -68,9 +70,11 @@ module Md
 
     # Quits: closes every window (`app_windows.cr`), each through its own
     # guard — the window asks its handlers (`Window#try_close`) and ours
-    # asks the user when changes are unsaved, closing after their answer, so
-    # a window with changes stays until its question is answered. The last
-    # window's close ends the loop. With one window, the one question.
+    # asks the user when the window is the last on a document with unsaved
+    # changes, closing after their answer, so such a window stays until its
+    # question is answered while the others on the document close without
+    # one (Qt's `QApplication::closeAllWindows`). The last window's close
+    # ends the loop. With one window, the one question.
     def quit : Nil
       App.instances.dup.each &.close_window
     end

@@ -17,7 +17,8 @@ module Md
     # nothing here (the revision check makes the second notice a no-op).
 
     # Makes this window a view on its document (from `#initialize`, and
-    # after a switch, `#switch_document`): attached and subscribed, its
+    # after a switch, `#switch_document`): attached, joined to the
+    # document's linked group while windows are linked, and subscribed, its
     # Watch File entry tied to the document's, the viewer rendered from the
     # text, the measurements and the title fresh.
     private def enter_document : Nil

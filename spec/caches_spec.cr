@@ -73,6 +73,25 @@ describe "Md::App clear caches" do
     end
   end
 
+  it "forgets the windows' remembered positions" do
+    with_xdg_dirs do
+      previous = Md::WindowPlaces.shared
+      places = Md::WindowPlaces.new(Md::WindowPlaces.default_path)
+      places.record "terminal.app", 2, {10, 20, 300, 200}
+      places.save.should be_true
+      Md::WindowPlaces.shared = places
+      begin
+        with_app do |app|
+          app.clear_caches
+          File.exists?(Md::WindowPlaces.default_path).should be_false
+          places.frames("terminal.app").should be_empty
+        end
+      ensure
+        Md::WindowPlaces.shared = previous
+      end
+    end
+  end
+
   it "has every open document write its recovery file again, not only this window's" do
     with_xdg_dirs do |autosave_dir, _, _|
       with_app do |one|

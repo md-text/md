@@ -26,7 +26,7 @@ module Md
     # recovers from `%2Fhome%2Fu%2Fnotes.md`. A document without a name — a
     # new one, or standard input, which md edits like anything else —
     # recovers from `unnamed-<date>-<time>-<pid>.md` (`-2`, `-3`… added
-    # for another window's taken in the same second). A save makes the
+    # for another document's taken in the same second). A save makes the
     # recovery file redundant and removes it, as does a clean exit, so what
     # is left in the directory after a crash or a kill is just what was
     # lost. Opening a file whose recovery file is newer than the file gets a
@@ -84,7 +84,8 @@ module Md
     end
 
     # Changes how often the text is looked at; a running timer is restarted
-    # on the new interval.
+    # on the new interval — the host's, which the document's timer counts
+    # by (`Document#setup_autosave`).
     def autosave_interval=(span : Time::Span) : Time::Span
       @autosave_interval = span
       @document.setup_autosave if @document.autosaving?

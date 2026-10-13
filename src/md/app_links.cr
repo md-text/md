@@ -27,11 +27,12 @@ module Md
     # the file and the caret's source position in it, put back through
     # `#go_to_line`; going to another file passes the guard like any open. A
     # jump within the document (a `#heading` link, the table of contents) is
-    # not a step: Previous File leads to a file, as its name says. The stack
-    # is md's, not the viewer's: the editor is the source of truth, and the
-    # viewer's own history would only swap the viewer's document, so the
-    # viewer's link following is turned off (`open_links = false`) and it is
-    # left with the event.
+    # not a step: Previous File leads to a file, as its name says. The
+    # stacks are the window's own, or its group's while windows are linked
+    # (`#trail`). They are md's, not the viewer's: the document is the
+    # source of truth, and the viewer's own history would only swap the
+    # viewer's document, so the viewer's link following is turned off
+    # (`open_links = false`) and it is left with the event.
     #
     # File → Close (`#close_document`) takes the document off the trail, as
     # closing a tab takes it out of a browser's tab strip: the document goes

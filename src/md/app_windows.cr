@@ -10,8 +10,9 @@ module Md
     # one, so an edit in either window is in both, one undo history takes
     # back the last edit whichever window made it, and the document is
     # modified, saved, watched and auto-saved for both at once. Each window
-    # keeps its own caret, scroll, panes and search; the new one starts
-    # where this one is. A document still streaming in streams into both,
+    # keeps its own caret, scroll, panes and search, unless windows are
+    # linked (Window → Linking, `app_linking.cr`); the new one starts where
+    # this one is. A document still streaming in streams into both,
     # and on after the window that started it closes.
     #
     # Windows on one document are named `README.md:1`, `README.md:2` in their
@@ -171,7 +172,7 @@ module Md
     #
     # The new window shows the panes this one shows, its caret, selection
     # and scroll where this window's are, and the focus in the same pane;
-    # from then on it moves on its own.
+    # from then on it moves on its own, unless windows are linked.
     def new_window : App?
       if reason = @window_refusal
         notice "Cannot open a window: #{reason}"

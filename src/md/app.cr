@@ -10,11 +10,14 @@ module Md
   # one is, chosen by the `Source` (editor for a new document, viewer for a
   # file or a stream).
   #
-  # The editor is the source of truth: the viewer is re-rendered from its text
-  # on every edit (lazily, when the viewer or table of contents is hidden) and
-  # the table of contents tracks the viewer's document. A streamed document
-  # (`#stream`) goes to the viewer chunk by chunk, following the tail, and is
-  # loaded into the editor only when the editor is first shown.
+  # The window is a view on a `Document` (`document.cr`, `app_document.cr`),
+  # the source of truth, which other windows may show too (`Documents`): the
+  # editor edits its text, the viewer is re-rendered from it on every edit,
+  # made in this window or another (lazily, when the viewer or table of
+  # contents is hidden), and the table of contents tracks the viewer's
+  # document. A streamed document (`#stream`) goes to the viewer chunk by
+  # chunk, following the tail, and is loaded into the editor only when the
+  # editor is first shown.
   #
   # The status bar (`app_status.cr`) shows the document's name, position,
   # size, encoding and modified state, and holds two toggles: the editor's
@@ -61,8 +64,9 @@ module Md
   # `app_media.cr`, Crysterm's other options in the menus in
   # `app_toolkit.cr`, the entries' descriptions (View → Tooltips) in
   # `app_tips.cr`, the settings' link to the config file in `app_config.cr`,
-  # Options → Clear Caches… in `app_caches.cr` and the other windows of the
-  # process in `app_windows.cr`.
+  # Options → Clear Caches… in `app_caches.cr`, the other windows of the
+  # process in `app_windows.cr` and how windows on one document follow each
+  # other (Window → Linking) in `app_linking.cr`.
   #
   # Keys: `F1`/`F2`/`F3` show and focus the editor/viewer/table of contents,
   # or hide it when it is already focused; `F4` hides the menu bar and the
@@ -83,7 +87,8 @@ module Md
   # the pager keys `/`, `?`, `n`, `N`, `:`, `[`, `]` and `q` do the same
   # (`q` is Crysterm's default quit key as well, kept live while a pane
   # reads input; the editor consumes the `q` it inserts). Quitting closes
-  # every window, each through its own unsaved-changes guard.
+  # every window, each modified document asked about once, in the last
+  # window on it (`app_windows.cr`).
   class App
     # The three panes of the central area, in layout order.
     enum Pane
@@ -284,8 +289,8 @@ module Md
         restore_position
       elsif stream
         # A stream has none of its lines yet: the jump waits for the line
-        # (`#receive`) or the stream's end (`#finish_stream`), as `less +N`
-        # on a pipe waits.
+        # (`#stream_appended`) or the stream's end (`#stream_ended`), as
+        # `less +N` on a pipe waits.
         @pending_line = line
       else
         go_to_line line

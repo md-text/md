@@ -107,6 +107,15 @@ module Md
       result
     end
 
+    # The file the store is kept in.
+    getter path : String
+
+    # Forgets every recorded frame (Options → Clear Caches…, which removes
+    # the file); a window closing afterwards records its own afresh.
+    def clear : Nil
+      @frames.clear
+    end
+
     # Writes the store to `path`, whole (`SaveFile`), making the directory
     # as needed. Returns false instead of raising: a position is not worth
     # an error, and this runs as a window closes.

@@ -25,7 +25,9 @@ module Md
     # menus (`app_toolkit.cr`), the config file's entries
     # (`app_config.cr`) and Clear Caches…,
     # `app_caches.cr`), Window (another window on the document, this one
-    # closed, the open windows to switch between, `app_windows.cr`) and Help
+    # closed, Linking (`app_linking.cr`) and Remember Positions
+    # (`window_places.cr`), the open windows to switch between,
+    # `app_windows.cr`) and Help
     # (the manual and About, `app_help.cr`), so
     # every setting is reachable from the keyboard through the menus as
     # well, `Alt+F`/`Alt+E`/`Alt+M`/`Alt+V`/`Alt+O`/`Alt+N`/`Alt+P` opening them

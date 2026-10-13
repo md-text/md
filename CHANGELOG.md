@@ -9,16 +9,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- Window → Linking (`md.window_link`): Separate Views, the default, keeps
-  each window on a document with its own cursor, scroll, search and trail;
-  Linked (Mirrored) makes them act as the panes of one window — the cursor
-  and selection, the scroll, the viewer's place, the table of contents'
-  entry, the search, Sync Cursor and the trail follow the window used last,
-  and opening a file, a link, Previous File and File → Close move the whole
-  group. Switching applies to every window at once.
-- In Vi Mode, linked windows share one Neovim with one buffer for their
-  document, keys from any of them editing it and `:w`/`:q` acting for the
-  window they were typed in; separate windows keep a Neovim each.
 - Project infrastructure: build system, specs, linting, continuous integration
   and release builds for Linux (x86_64, aarch64) and macOS (Intel, Apple Silicon).
 - Command line: `md [FILE | -]`, with `-` for standard input, `--help` and `--version`.
@@ -163,10 +153,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   file under `$XDG_STATE_HOME/md/autosave/` (`~/.local/state/md/autosave/`),
   never to the file itself — named after the file's absolute path with `/`
   escaped as `%2F`, or `unnamed-<date>-<time>-<pid>.md` for a document
-  without a name, standard input included (`-2`, `-3`… for another window's
-  started in the same second) — and removes it on a save or a normal exit,
-  so the directory holds only what a crash lost, though not while another
-  window on the same file still has unsaved edits of its own in it; opening
+  without a name, standard input included (`-2`, `-3`… for another
+  document's started in the same second) — and removes it on a save or a
+  normal exit, so the directory holds only what a crash lost, though not
+  while another window still shows the document; opening
   a file whose copy is newer than it gets a notice naming the copy. An
   auto-save the timer had queued when md quit is dropped, where it could
   write the recovery file again after the exit removed it.
@@ -341,15 +331,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   document's directory, a remote one is fetched in the background. Off
   (`md.images`, `MD_IMAGES`, `--no-md-images`), that row is all there is.
 - Window menu (`Alt-N`): New (`Ctrl-N`) opens another md window on the
-  document as it stands — unsaved edits included and flagged as such, a stream
-  as far as it has been read — in a new terminal window asked of the emulator md runs in
+  document in a new terminal window asked of the emulator md runs in
   (Terminal.app and iTerm2 on macOS; kitty, Alacritty, WezTerm, foot, xterm,
   Konsole and GNOME Terminal; a tmux or screen window inside one); Close
   Current (`Ctrl-W`) closes the one you are in after its unsaved-changes
   question, the last one quitting; the open windows are listed by title to
-  switch between. Quit closes every window, each asking about its own
-  changes. Where no window can be opened the entry is disabled and the key
-  says why.
+  switch between. Quit closes every window. Where no window can be opened
+  the entry is disabled and the key says why.
 - Options → Detachable Menus (`menu.tear_off`, `--menu-tear-off`): every menu
   carries a grab strip (`⠿⠿⠿`) in the middle of its top border and another in
   the middle of its bottom border, after GNOME 2's tear-off menus; dragging
@@ -435,9 +423,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   started in never moved — and sized as it was, on macOS with Terminal.app
   or iTerm2 (Crysterm's `Window.open(frame:)` and `Window#frame_geometry`,
   through AppleScript). The frames are kept per emulator in
-  `$XDG_STATE_HOME/md/windows.yml`, and one on no display now is not used.
+  `$XDG_STATE_HOME/md/windows.yml`, which Options → Clear Caches… empties;
+  one on no connected display is not used.
   Elsewhere the window manager places the windows and the entry is disabled,
   saying why.
+- Window → Linking (`window-link`, `md.window_link`): Separate Views, the
+  default, keeps each window on a document with its own cursor, scroll,
+  search and trail of files; Linked (Mirrored) makes them act as the panes
+  of one window — the cursor and selection, the scroll (the same first
+  line, however tall each window is), the viewer's place, the table of
+  contents' entry, the search and Sync Cursor follow the window used last,
+  the trail is the group's, and opening a file, following a link, Previous
+  File and File → Close take the whole group along, asking about unsaved
+  changes first since no window keeps the document. Switching applies to
+  every window at once: linking puts each document's windows where the one
+  used last is, separating leaves each where it is with its own copy of
+  the trail.
+- In Vi Mode, linked windows share one Neovim with one buffer for their
+  document, as Vim's windows on one buffer do: keys from any of them edit
+  it, its cursor goes to the window typed in, and `:w`/`:q` act for that
+  window (`:q` closing it alone). Separate windows keep a Neovim each, and
+  switching Window → Linking restarts Neovim, the document's own undo
+  history staying.
 
 ### Changed
 
@@ -447,12 +454,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   in either takes back the last edit whichever window made it, and the
   modified state, saving, reloading, View → Watch File, the auto-save
   recovery file and the backup are the document's. Each window keeps its own
-  cursor, scroll, panes and search, starting where the window it was opened
-  from is. The windows are named `README.md:1`, `README.md:2` in their
-  titles and the Window menu while two or more show the document, and only
-  the last window on a modified document asks about it when closed, quit or
-  given another file; File → Reload asks whenever the document is modified,
-  saying how many windows show it.
+  cursor, scroll, panes and search (unless linked, Window → Linking),
+  starting where the window it was opened from is. The windows are named
+  `README.md:1`, `README.md:2` in their titles and the Window menu while
+  two or more show the document, and only the last window on a modified
+  document asks about it when closed, quit or given another file; File →
+  Reload asks whenever the document is modified, saying how many windows
+  show it.
 - A file is one document however many windows open it, through whatever
   path, symbolic link or hard link: opening a file another window has open
   shows that window's document, unsaved edits included, instead of reading a
@@ -460,9 +468,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   along when it has no unsaved changes and refuses when it has; a stream on
   standard input streams live into every window on it, and on after the
   window that started it closes. Opening the file the window already shows
-  no longer reads it again (File → Reload does).
-  The first save of a new file that has since become another window's file
-  (a symlink made to it, another case of its name) is a Save As onto it.
+  no longer reads it again (File → Reload does). The first save of a new
+  file that has since become another window's file (a symlink made to it,
+  another case of its name) is a Save As onto it.
 - View → Theme calls its first entry Terminal Default, where it was Terminal (Its
   Own Colors); it still draws the window in the terminal's own colors, and its
   mnemonic is still T.

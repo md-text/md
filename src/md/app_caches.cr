@@ -5,7 +5,8 @@ module Md
     # Options → Clear Caches…: what md keeps for itself between runs, as
     # opposed to the user's choices (the config file, which stays) — the history
     # of recent files and positions (`History`, File → Open Recent), the
-    # auto-save recovery files (`App.autosave_dir`) and the cache
+    # auto-save recovery files (`App.autosave_dir`), the windows'
+    # remembered positions (`WindowPlaces`) and the cache
     # directory (`App.cache_dir`), where Crysterm's log goes while md runs
     # (`CLI.log_to_file`) — emptied in one go, after a question. Qt-world
     # applications offer "Clear Recent Files" or "Clear History"; this one
@@ -59,10 +60,21 @@ module Md
         doc.drop_recovery
         doc.mark_for_autosave
       end
+      forget_window_places
       remove_entries App.cache_dir, empty: Crysterm::Config.log_file
       refresh_recent_menu
       notice "Cleared #{recent} recent file#{"s" unless recent == 1}, #{recovery} recovery file#{"s" unless recovery == 1}"
       {recent, recovery}
+    end
+
+    # Removes the windows' remembered positions (Window → Remember
+    # Positions): the file, and the process's store when it is that file's.
+    private def forget_window_places : Nil
+      path = WindowPlaces.default_path
+      File.delete? path
+      WindowPlaces.shared.clear if WindowPlaces.shared.path == path
+    rescue IO::Error
+      # A file that will not go is left; its positions are only a nicety.
     end
 
     # Removes what is in *dir*, if it exists, and returns how many entries

@@ -224,15 +224,17 @@ module Md
     end
 
     # The end of the net, the session having ended the way the user meant
-    # it to: the timer stops and the recovery file goes (from the last
-    # window's end, `App#finish`, and the document's close).
+    # it to: the timer stops and the recovery file goes (from `App#finish`,
+    # once every window on the document has ended, as a quit may exit
+    # without the windows leaving it).
     def finish_autosave : Nil
       stop_autosave
       drop_recovery
     end
 
-    # The end of the document: the watcher and the timer stop, the recovery
-    # file goes when *clean*, and the registry forgets it.
+    # The end of the document: the shared Neovim ends, the stream is
+    # abandoned, the watcher and the timer stop, the recovery file goes when
+    # *clean*, and the registry forgets it.
     private def close(clean : Bool) : Nil
       @vi.try &.detach
       @vi = nil
