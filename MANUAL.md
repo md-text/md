@@ -423,7 +423,8 @@ restarts Neovim, and its own undo history with it; the document's undo
 ### Searching and jumping
 
 Searching works like a pager's: `/` asks for a pattern and finds it forward
-from the cursor, `?` backward, `n` repeats the search and `N` goes the other
+from the cursor, `?` backward (to the start of a match the cursor is
+in, as in vi), `n` repeats the search and `N` goes the other
 way (in the editor, where those are letters to type, use `Ctrl-F`, `Ctrl-G`
 and `Alt-G` instead; they work everywhere). The pane you are in is searched:
 the Markdown source in the editor, the rendered text in the viewer (or from

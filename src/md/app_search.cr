@@ -139,7 +139,10 @@ module Md
     # The search step in *w* (the editor or the viewer; untyped so each gets
     # its own compilation): the next match from the caret — past the
     # selection when the caret sits on a match — or, wrapping around, from
-    # the document's far end, selected and scrolled into view.
+    # the document's far end, selected and scrolled into view. Backward it
+    # is the last match starting before the caret, one the caret is inside
+    # included (`TextDocument#find`, as Vim's `?`), searched from the
+    # selection's start so a selected match steps to the one before it.
     private def find_in(w, regex : Regex, backward : Bool) : Bool
       doc = w.document
       from = if backward

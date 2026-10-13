@@ -461,6 +461,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- A backward search (`?`, `N` after `/`) skipped a match the cursor was
+  inside and went to the one before it; it now finds that match, from its
+  start, as Vim's `?` and Qt's backward find do, and steps back from there
+  one match at a time.
 - View → Terminal Links is now Options → Links, and View → Watch File is
   Options → Watch File: how links are followed and whether the file is
   reloaded are behavior, not a view, so they sit in Options with the mouse,
