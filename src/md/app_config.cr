@@ -116,12 +116,12 @@ module Md
     end
 
     # The file a Load Config or Save Config As answer names, or nil for none:
-    # a leading `~` is the home directory, as Tab completes it and as Qt's
-    # file dialog expands one typed in, rather than a directory of that
-    # name, which the save would have created in the working directory.
+    # a leading `~` is the home directory (`.typed_path`, as File → Open…
+    # takes it), not a directory of that name, which the save would have
+    # created in the working directory.
     private def config_answer(answer : String?) : String?
       path = answer.try &.strip
-      File.expand_path(path, home: true) if path && !path.empty?
+      App.typed_path(path) if path && !path.empty?
     end
 
     # Puts the pane sizes, as they are now, into their option, for a write —
