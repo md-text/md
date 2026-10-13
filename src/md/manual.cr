@@ -203,6 +203,10 @@ module Md
           .I $XDG_STATE_HOME/md/autosave/
           The recovery files auto-save writes, removed on a save or a clean exit.
           .TP
+          .I $XDG_STATE_HOME/md/locks/
+          The locks of the files an md has open, so that another md opening one
+          says so; each goes when its file is closed.
+          .TP
           .I FILE~
           The backup of a file as it was before the session's first save of it.
           .TP

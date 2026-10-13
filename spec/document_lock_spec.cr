@@ -3,15 +3,18 @@ require "./spec_helper"
 # `Md::DocumentLock`: the mark an md process leaves on a file it has open,
 # and the notice another md gives on finding it (`Md::Documents`).
 
-# Runs the block with `XDG_STATE_HOME` pointing at a fresh directory, so the
+# Runs the block with locking on (`Md::Documents.locking?`, as the CLI
+# turns it on) and `XDG_STATE_HOME` pointing at a fresh directory, so the
 # locks go to a scratch `locks` directory, which it yields.
 private def with_lock_dir(&)
   dir = File.tempname("md-spec-locks")
   previous = ENV["XDG_STATE_HOME"]?
   ENV["XDG_STATE_HOME"] = dir
+  Md::Documents.locking = true
   begin
     yield Md::DocumentLock.dir
   ensure
+    Md::Documents.locking = false
     if previous
       ENV["XDG_STATE_HOME"] = previous
     else
@@ -37,11 +40,6 @@ private def dead_pid : Int64
   process = Process.new("true")
   process.wait
   process.pid
-end
-
-# A scratch history, so the windows keep state and lock their files.
-private def scratch_history : Md::History
-  Md::History.new(File.tempname("md-spec-history", ".json"))
 end
 
 describe Md::DocumentLock do
@@ -136,7 +134,7 @@ describe "Two md processes on one file" do
       path = tempfile "# A\n"
       begin
         write_lock dir, path, Process.ppid
-        with_app Md::Source.new(path: path), text: "# A\n", history: scratch_history do |app|
+        with_app Md::Source.new(path: path), text: "# A\n" do |app|
           settle { notice(app).includes?("open in another md") }
           notice(app).should eq " #{File.basename(path)} is open in another md (pid #{Process.ppid}); saving here overwrites its changes"
           Md::Documents.lock_holder(app.document).try(&.pid).should eq Process.ppid
@@ -154,7 +152,7 @@ describe "Two md processes on one file" do
       path = tempfile "# A\n"
       begin
         write_lock dir, path, Process.ppid
-        with_app history: scratch_history do |app|
+        with_app do |app|
           app.open_file(path).should be_true
           settle { notice(app).includes?("open in another md") }
         end
@@ -169,7 +167,7 @@ describe "Two md processes on one file" do
       path = tempfile "# A\n"
       begin
         write_lock dir, path, dead_pid
-        with_app Md::Source.new(path: path), text: "# A\n", history: scratch_history do |app|
+        with_app Md::Source.new(path: path), text: "# A\n" do |app|
           Md::Documents.lock_holder(app.document).should be_nil
           Md::DocumentLock.read(lock_file(dir, path)).try(&.pid).should eq Process.pid
           notice(app).should_not contain "another md"
@@ -185,7 +183,7 @@ describe "Two md processes on one file" do
       path = tempfile "# A\n"
       application = Crysterm::Application.new
       begin
-        with_app Md::Source.new(path: path), text: "# A\n", history: scratch_history do |a, window|
+        with_app Md::Source.new(path: path), text: "# A\n" do |a, window|
           application.add window
           a.window_opener = recording_opener
           File.exists?(lock_file(dir, path)).should be_true
@@ -201,8 +199,9 @@ describe "Two md processes on one file" do
     end
   end
 
-  it "leaves no lock for a window without a history" do
+  it "leaves no lock while locking is off, as for a spec or an embedder" do
     with_lock_dir do |dir|
+      Md::Documents.locking = false
       path = tempfile "# A\n"
       begin
         with_app Md::Source.new(path: path), text: "# A\n" do
@@ -221,7 +220,7 @@ describe "Two md processes on one file" do
       taken = tempfile nil
       begin
         write_lock dir, taken, Process.ppid
-        with_app Md::Source.new(path: path), text: "# A\n", history: scratch_history do |app|
+        with_app Md::Source.new(path: path), text: "# A\n" do |app|
           app.save_as(other).should be_true
           File.exists?(lock_file(dir, path)).should be_false
           Md::DocumentLock.read(lock_file(dir, other)).try(&.pid).should eq Process.pid
@@ -242,7 +241,7 @@ describe "Two md processes on one file" do
     with_lock_dir do |dir|
       path = tempfile nil
       begin
-        with_app history: scratch_history do |app|
+        with_app do |app|
           Dir.exists?(dir).should be_false
           app.save_as(path).should be_true
           Md::DocumentLock.read(lock_file(dir, path)).try(&.pid).should eq Process.pid

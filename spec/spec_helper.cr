@@ -8,6 +8,14 @@ require "yaml"
 # terminal delivers them, the status bar's prompt answered and read, the
 # unsaved-changes dialog chosen from, and a scratch file.
 
+# Every spec's state and cache — the history, the recovery files, the
+# locks, the log, the manual's copy — go to scratch directories, never the
+# user's; a spec needing its own points the variable elsewhere and back.
+SPEC_XDG_HOME = File.tempname("md-spec-xdg")
+ENV["XDG_STATE_HOME"] = File.join(SPEC_XDG_HOME, "state")
+ENV["XDG_CACHE_HOME"] = File.join(SPEC_XDG_HOME, "cache")
+at_exit { FileUtils.rm_rf SPEC_XDG_HOME }
+
 def headless_window
   Crysterm::Window.new input: IO::Memory.new, output: IO::Memory.new, width: 100, height: 30
 end

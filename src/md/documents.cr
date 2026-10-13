@@ -29,6 +29,12 @@ module Md
     # The keys of the files backed up this session (`FILE~`, `.backup`).
     @@backed_up = Set(String).new
 
+    # Whether the documents' files are locked for the process
+    # (`DocumentLock`), so another md opening one is told: on for md run from
+    # the command line (`CLI`), off for specs and other embedders, which
+    # leave no locks behind in the user's state directory.
+    class_property? locking = false
+
     # Each named document's lock (`DocumentLock`), by the document's
     # `object_id`: taken, or found held by another md.
     @@locks = {} of UInt64 => DocumentLock
@@ -116,11 +122,11 @@ module Md
     # lock on a file it had before; when another md process has the file
     # open, every window on *doc* is told, once the window is set up
     # (posted, as a window opening the file subscribes to the document's
-    # notices after registering it). Only a process that keeps state
-    # between runs — a window on *doc* with a history, as md started from
-    # the command line has — leaves locks: specs and other embedders do not.
+    # notices after registering it). Only while `.locking?` — md started
+    # from the command line — are locks left: specs and other embedders
+    # leave none.
     private def self.lock(doc : Document) : Nil
-      return unless (key = doc.key) && doc.views.any?(&.history)
+      return unless @@locking && (key = doc.key)
       return if @@locks[doc.object_id]?.try(&.key) == key
       unlock doc
       lock = @@locks[doc.object_id] = DocumentLock.new(key)

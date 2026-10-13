@@ -269,6 +269,7 @@ module Md
     # line. The app is built on *window* when there is one.
     private def self.launch(source : Source, options : Options, stdin : IO, window : Crysterm::Window?) : App
       history = History.load
+      Documents.locking = true
       view = options.view
       line = options.line
       if source.stdin?
