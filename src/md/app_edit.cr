@@ -38,7 +38,8 @@ module Md
     # no Markdown mode of its own.
     #
     # Lists. `Enter` on a list item — `- `, `* `, `+ `, `1. ` or `1) `, a
-    # task `- [ ] ` or `- [x] `, indented or inside a blockquote `> ` — with
+    # task `- [ ] ` or `- [x] `, indented or inside a blockquote `> ` (not
+    # in a code block, nor a rule like `* * *`) — with
     # the caret past the marker continues the list: a new line with the same
     # indentation and marker, the number one higher and the task box empty,
     # taking along whatever followed the caret. On an empty item, the marker
@@ -895,14 +896,18 @@ module Md
     # `Enter` on a list item with the caret past the marker: the item
     # continued below, or the list ended when the item is empty. Returns
     # whether that was the case; a selection is left to the editor, which
-    # replaces it with the newline.
+    # replaces it with the newline, and so is a line that only looks like
+    # an item: a rule (`* * *`), a code block's line, an item opening a
+    # fenced block (`- ``` `), whose next line is code.
     private def continue_list : Bool
       return false if @editor.selection?
       cursor = @editor.text_cursor
       block = cursor.block
       item = ListItem.parse(block.text) || return false
       return false if cursor.position_in_block < item.prefix_size
+      return false if RULE.matches?(block.text) || (item.task.nil? && FENCE.matches?(item.text))
       doc = @editor.document
+      return false if App.code_lines(doc, line = block.block_number)[line]
       if item.empty?
         # The marker goes, and the indentation with it; the quote stays.
         cursor = Crysterm::TextCursor.new(doc, block.position, block.position + block.size)
