@@ -224,13 +224,16 @@ module Md
     # The one file path *pasted* spells, or nil when it does not. A bare
     # path comes shell-escaped — a backslash before each space, quote,
     # parenthesis or other character the shell would read — and the
-    # backslashes come off.
+    # backslashes come off. A single-quoted one (VTE's) spells a quote in
+    # the name as `'\''`, closing the quotes around an escaped one.
     private def dropped_path(pasted : String) : String?
       text = pasted.strip
       return if text.empty? || text.includes?('\n')
       if text.starts_with?("file://")
         text = URI.decode(URI.parse(text).path)
-      elsif (text.starts_with?('\'') && text.ends_with?('\'')) || (text.starts_with?('"') && text.ends_with?('"'))
+      elsif text.size > 1 && text.starts_with?('\'') && text.ends_with?('\'')
+        text = text[1...-1].gsub("'\\''", "'")
+      elsif text.size > 1 && text.starts_with?('"') && text.ends_with?('"')
         text = text[1...-1]
       else
         text = text.gsub(/\\(.)/) { $1 }
