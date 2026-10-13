@@ -392,7 +392,7 @@ describe "Md::App menus" do
       app.main.menu_bar.menus.size.should eq 7
       menu(app, 0).actions.map(&.text).should eq ["&Open…", "Open &Recent", "Reloa&d", "&Close", "", "&Previous File", "&Next File", "", "&Save", "Save &As…", "", "&Quit"]
       menu(app, 0).actions[1].enabled?.should be_false # no history, nothing recent
-      menu(app, 4).actions.map(&.text).should eq ["&Overwrite Mode", "&Ask Before Discarding Changes", "A&uto-Save", "&Keep a Backup File", "&Mouse", "&Clipboard", "Resi&zable Panes", "No An&imations", "D&etachable Menus", "Vi Mode: Use &Neovim Config", "", "&Load Config…", "&Save Config", "Sa&ve Config As…", "", "Clea&r Caches…"]
+      menu(app, 4).actions.map(&.text).should eq ["&Overwrite Mode", "&Ask Before Discarding Changes", "A&uto-Save", "Keep a &Backup File", "&Watch File", "&Mouse", "&Clipboard", "Lin&ks", "Resi&zable Panes", "No An&imations", "D&etachable Menus", "Vi Mode: Use &Neovim Config", "", "&Load Config…", "&Save Config", "Sa&ve Config As…", "", "Clea&r Caches…"]
       menu(app, 2).actions.map(&.text).should eq ["&Bold", "&Italic", "&Code", "Code B&lock", "", "I&ndent", "&Outdent", "", "As a &Task", "Toggle Task Chec&kbox", "", "&Promote Heading", "&Demote Heading", "", "&Soft Wrap", "&Hard Wrap", "Te&xt Width", "Re&wrap (to 80 Columns)"]
       menu(app, 3).actions.map(&.text).should contain "The&me" # with the other appearance choices
     end
@@ -439,7 +439,7 @@ describe "Md::App menus" do
   it "sets the overwrite and mouse modes from the Options menu, in step with the status bar" do
     with_app do |app|
       overwrite, confirm = menu(app, 4).actions[0, 2]
-      mouse = menu(app, 4).actions[4]
+      mouse = menu(app, 4).actions[5]
       confirm.checked?.should be_true
       confirm.trigger
       app.confirm_discard?.should be_false

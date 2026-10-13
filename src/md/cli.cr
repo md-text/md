@@ -40,7 +40,7 @@ module Md
       Option.new("--version", "Print the version and exit", short: "-V"),
       Option.new("--help", "Show this help and exit", short: "-h"),
       Option.new("--verbose", "Be more verbose (with --help, also list the\nsettings and the Crysterm toolkit options)", short: "-v"),
-      Option.new("--watch", "Reload FILE as it changes on disk (View → Watch File)", short: "-w"),
+      Option.new("--watch", "Reload FILE as it changes on disk (Options → Watch File)", short: "-w"),
       Option.new("--line", "Open on source line N, like +N (past the end,\nthe last line), instead of the remembered position", short: "-l", argument: "N"),
       Option.new("--view", "Open the viewer, even on a new FILE"),
       Option.new("--edit", "Open the editor, even on an existing FILE"),

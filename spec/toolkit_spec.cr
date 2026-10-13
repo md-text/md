@@ -1,6 +1,6 @@
 require "./spec_helper"
 
-# View → Color Depth, View → Terminal Links and Options → No Animations:
+# View → Color Depth, Options → Links and Options → No Animations:
 # Crysterm's own options in the menus, kept with the other settings.
 
 private def submenu(app, index, text) : Array(Crysterm::Action)
@@ -34,7 +34,7 @@ describe "Md::App toolkit options" do
 
   it "offers the hyperlink policies and tells the window" do
     with_app do |app, window|
-      entries = submenu(app, 3, "Terminal Lin&ks")
+      entries = submenu(app, 4, "Lin&ks")
       entries.map(&.text).should eq ["&Auto (No)", "Al&ways", "&Never", "", "Double-click to &Open"]
       entries[0, 3].map(&.checked?).should eq [true, false, false]
       app.viewer.links_enabled?.should be_true
@@ -62,7 +62,7 @@ describe "Md::App toolkit options" do
     with_app Md::Source.new(path: "doc.md"), text: "See [the site](https://example.com).\n", view: true do |app|
       opened = [] of String
       app.url_opener = ->(url : String) { opened << url; nil }
-      toggle = submenu(app, 3, "Terminal Lin&ks").last
+      toggle = submenu(app, 4, "Lin&ks").last
       toggle.checked?.should be_false
       app.viewer.double_click_links?.should be_false
       toggle.trigger
@@ -71,6 +71,26 @@ describe "Md::App toolkit options" do
       app.link_double_click = false
       toggle.checked?.should be_false
       app.viewer.double_click_links?.should be_false
+    end
+  end
+
+  it "keeps Links and Watch File in Options, behavior rather than a view" do
+    with_app do |app|
+      view = menu(app, 3).actions.map(&.text)
+      view.should_not contain "Lin&ks"
+      view.should_not contain "Terminal Lin&ks"
+      view.should_not contain "&Watch File"
+      watch = menu(app, 4).actions.find!(&.text.==("&Watch File"))
+      watch.name.should eq "watch-file"
+      watch.trigger
+      app.watch_file?.should be_true
+      watch.checked?.should be_true
+      # Options' opening brings the Auto entry up to the detection, as
+      # View's did.
+      entries = submenu(app, 4, "Lin&ks")
+      entries[0].text = "stale"
+      menu(app, 4).emit Crysterm::Event::AboutToShow
+      entries[0].text.should eq "&Auto (No)"
     end
   end
 

@@ -1,6 +1,6 @@
 require "./spec_helper"
 
-# `Md::Document`'s watcher (View → Watch File) and the document's own
+# `Md::Document`'s watcher (Options → Watch File) and the document's own
 # writes of its file.
 
 describe "Md::Document watching its file" do

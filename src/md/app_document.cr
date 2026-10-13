@@ -33,7 +33,7 @@ module Md
       # The stream's chunks and end (`#stream_arrived`).
       subs.on(doc, Md::Event::StreamAppended) { |e| stream_arrived e.chunk }
       subs.on(doc, Md::Event::StreamEnded) { |e| stream_arrived ended: {e.message} }
-      # View → Watch File is the document's: the entry's property follows
+      # Options → Watch File is the document's: the entry's property follows
       # the document's, both ways.
       @watch_link = Crysterm::Reactive.link(doc.watch_file, @watch_file)
       subs.add doc.watch_file.on_change { refresh_status }

@@ -17,7 +17,8 @@ module Md
     # a theme as a plainer terminal would. Crysterm redraws the whole window
     # at the new depth on the next frame.
     #
-    # View → Terminal Links (`#hyperlinks`, `render.hyperlinks`): whether
+    # Options → Links (`#hyperlinks`, `render.hyperlinks`; behavior, not a
+    # view, so with the mouse and the clipboard rather than in View): whether
     # the links in the viewer are also the terminal's own hyperlinks (OSC 8),
     # clickable or hoverable where the terminal does that — on where the
     # terminal is known to support them, the default; always, trusting the
@@ -79,7 +80,7 @@ module Md
       @hyperlinks.value
     end
 
-    # Sets the terminal hyperlink policy (View → Terminal Links).
+    # Sets the terminal hyperlink policy (Options → Links).
     def hyperlinks=(policy : Hyperlinks) : Hyperlinks
       @hyperlinks.value = policy
     end
@@ -93,7 +94,7 @@ module Md
     end
 
     # Makes a double click, or a single one, follow a link in the viewer
-    # (View → Terminal Links → Double-click to Open).
+    # (Options → Links → Double-click to Open).
     def link_double_click=(value : Bool) : Bool
       @link_double_click.value = value
     end
@@ -179,13 +180,13 @@ module Md
     # The Color Depth entries, in `COLOR_DEPTHS` order (`#build_menus`).
     @color_depth_actions = [] of Crysterm::Action
 
-    # The Terminal Links entries, in `Hyperlinks` order (`#build_menus`).
+    # The Links entries, in `Hyperlinks` order (`#build_menus`).
     @hyperlinks_actions = [] of Crysterm::Action
 
-    # Brings the Auto entries' labels — Color Depth's, Terminal Links' and
-    # Media Backend's (`app_media.cr`) — up to what the detection says now
-    # (from View's `AboutToShow`): the terminal's answers come in after the
-    # menus are built.
+    # Brings the Auto entries' labels — Color Depth's, Links' and Media
+    # Backend's (`app_media.cr`) — up to what the detection says now (from
+    # View's and Options' `AboutToShow`): the terminal's answers come in
+    # after the menus are built.
     private def refresh_detected_labels : Nil
       @color_depth_actions[COLOR_DEPTHS.index!(ColorDepth::Auto)]?.try &.text = color_depth_label(ColorDepth::Auto)
       @hyperlinks_actions[Hyperlinks::Auto.value]?.try &.text = hyperlinks_label(Hyperlinks::Auto)

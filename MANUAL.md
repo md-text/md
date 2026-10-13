@@ -276,7 +276,7 @@ cell can only be the terminal's own foreground on its background or the
 two swapped: Crysterm draws a light-backed cell on a dark terminal (or a
 dark one on a light terminal, by the background the terminal reports) in
 reverse video, which is how a light theme comes out black on white rather
-than in the terminal's defaults. View → Terminal Links is whether the
+than in the terminal's defaults. Options → Links is whether the
 links in the viewer are also the terminal's own hyperlinks, to click or
 hover where the terminal does that: Auto, which says in parentheses
 whether md found the terminal to support them (Yes or No), turns
@@ -479,7 +479,7 @@ differs from the file, as one edit: each window's cursor stays where it was
 in the text unless the text under it changed, the document is then
 unmodified, and Edit → Undo (`Ctrl-Z`) takes the reload back — unsaved
 changes it dropped included, the document modified again — as in Qt
-Creator. Unsaved changes are still asked about before a reload. View →
+Creator. Unsaved changes are still asked about before a reload. Options →
 Watch File (or
 `--watch` on the command line) does that for
 you: the file is polled once a second and reloaded when another program
@@ -743,7 +743,7 @@ The two windows show one document, as two windows on one buffer do in Vim,
 Emacs, Kate or Qt Creator: an edit in either is in both, editor and viewer,
 as you type; Undo in either takes back the last edit, whichever window
 made it, with the cursor on the change; the document is modified, saved,
-reloaded and watched (View → Watch File) for both at once, and it has one
+reloaded and watched (Options → Watch File) for both at once, and it has one
 recovery file. Each window keeps its own cursor, scroll, panes and search.
 While two or more windows show a document they are named `README.md:1`,
 `README.md:2` in their titles and in the Window menu; a single window is
@@ -829,8 +829,8 @@ command, and so is every key no entry has:
 | `open`, `reload`, `close`, `previous-file`, `next-file`, `save`, `save-as`, `quit` | The File menu |
 | `copy`, `copy-as-markdown`, `paste`, `paste-from-terminal`, `paste-from-command`, `paste-from-internal`, `find`, `find-backward`, `find-next`, `find-previous`, `replace`, `clear-search-highlights`, `command`, `go-to-line`, `next-heading`, `previous-heading`, `vi-mode` | The Edit menu, and `?` |
 | `bold`, `italic`, `code`, `code-block`, `indent`, `outdent`, `task`, `toggle-task`, `promote-heading`, `demote-heading`, `soft-wrap`, `hard-wrap`, `rewrap-paragraph`, `rewrap-document` | The Format menu (`soft-wrap` and `hard-wrap` turn their setting on or off) |
-| `editor`, `viewer`, `toc`, `bars`, `sync-cursor`, `highlight-line`, `line-numbers`, `viewer-line-numbers`, `center-text`, `horizontal-ruler`, `vertical-ruler`, `guides`, `images`, `media-trial`, `link-double-click`, `watch-file` | The View menu's check entries: each turns its setting on or off |
-| `overwrite-mode`, `confirm-discard`, `autosave`, `backup-file`, `resizable-panes`, `reduced-motion`, `detachable-menus`, `vi-config`, `load-config`, `save-config`, `save-config-as`, `clear-caches` | The Options menu |
+| `editor`, `viewer`, `toc`, `bars`, `sync-cursor`, `highlight-line`, `line-numbers`, `viewer-line-numbers`, `center-text`, `horizontal-ruler`, `vertical-ruler`, `guides`, `images`, `media-trial` | The View menu's check entries: each turns its setting on or off |
+| `overwrite-mode`, `confirm-discard`, `autosave`, `backup-file`, `watch-file`, `link-double-click`, `resizable-panes`, `reduced-motion`, `detachable-menus`, `vi-config`, `load-config`, `save-config`, `save-config-as`, `clear-caches` | The Options menu |
 | `new-window`, `close-window`, `remember-window-positions`, `manual`, `about` | The Window and Help menus |
 | `toggle-editor`, `toggle-viewer`, `toggle-toc`, `toggle-bars`, `cycle-mouse-mode`, `cycle-theme`, `suspend`, `resize-panes` | `F1`–`F6`, `Ctrl-Z` and `Alt-R` |
 
@@ -848,9 +848,9 @@ The choices made in the Edit, Format, View, Options and Window menus — Vi Mode
 Wrap, Text Width, Menu and
 Status Bars, Sync Cursor, Highlight Line, Line Numbers (Editor and
 Viewer), Center Document, Rulers (Horizontal and Vertical), Guides,
-Images, Terminal Links → Double-click to Open, Dialog Style, Ask Before Discarding
+Images, Links → Double-click to Open, Dialog Style, Ask Before Discarding
 Changes, Auto-Save, Keep a Backup File, the mouse mode, the clipboard mode,
-Resizable Panes, Tooltips, the theme and Crysterm's own Color Depth, Terminal Links, Media
+Resizable Panes, Tooltips, the theme and Crysterm's own Color Depth, Links, Media
 Backend, No Animations, Detachable Menus, Vi Mode: Use Neovim Config, Window → Linking and Window → Remember Positions — and the pane sizes are kept across runs in
 `$XDG_CONFIG_HOME/md/config.yml` (`~/.config/md/config.yml`), written when
 md quits if anything changed. Watch File is not kept: like `--watch`, it is
@@ -891,7 +891,7 @@ Entries md does not know are kept across a rewrite, so an older md does not
 shed a newer one's settings; a broken file stops md with a message naming the
 entry, as does a file that is not a mapping of option groups or a value that
 fits no option, given anywhere. One YAML caution: write a value that YAML reads as a boolean, such as
-the mouse mode's or Terminal Links' `off`, in quotes (`mouse_mode: "off"`,
+the mouse mode's or Links' `off`, in quotes (`mouse_mode: "off"`,
 `hyperlinks: "off"`), or md stops on it; md's own writes quote every word.
 
 The Options menu reaches the file directly: *Save Config* writes it now,

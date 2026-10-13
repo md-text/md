@@ -274,7 +274,7 @@ describe "Md::App auto-save" do
       with_app config: true do |app|
         options = app.main.menu_bar.menus[4]
         autosave = options.actions.find { |a| a.text == "A&uto-Save" } || fail("no Auto-Save entry")
-        backup = options.actions.find { |a| a.text == "&Keep a Backup File" } || fail("no backup entry")
+        backup = options.actions.find { |a| a.text == "Keep a &Backup File" } || fail("no backup entry")
         autosave.checked?.should be_true
         backup.checked?.should be_true
         autosave.trigger

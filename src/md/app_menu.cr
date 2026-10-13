@@ -13,14 +13,14 @@ module Md
     # width's centering, rulers and guides — the
     # theme the window is drawn in, whether and how images are drawn (Images
     # and Media Backend, with its Change for 5s trial, `app_media.cr`), the
-    # color depth and the links
-    # (Terminal Links, with Double-click to Open, `app_toolkit.cr`), how questions are asked
-    # (Dialog Style, `app_dialogs.cr`), where the entries' descriptions show
-    # (Tooltips, `app_tips.cr`) and whether the file is watched) and
+    # color depth (`app_toolkit.cr`), how questions are asked
+    # (Dialog Style, `app_dialogs.cr`) and where the entries' descriptions show
+    # (Tooltips, `app_tips.cr`)) and
     # Options (the two
     # modes the status bar toggles — overwrite mode and the mouse mode — the
     # unsaved-changes guard, auto-save and the backup file
-    # (`app_autosave.cr`), the clipboard mode, whether the panes resize
+    # (`app_autosave.cr`), whether the file is watched, the clipboard mode,
+    # the links (Links, with Double-click to Open, `app_toolkit.cr`), whether the panes resize
     # (`app_panes.cr`), No Animations (reduced motion) and detachable
     # menus (`app_toolkit.cr`), the config file's entries
     # (`app_config.cr`) and Clear Caches…,
@@ -143,18 +143,13 @@ module Md
       # Change for 5s trial (`app_media.cr`); `I` is free here.
       add_toggle view, "&Images", "images", @images, option_tip("md.images")
       @media_actions = build_media_menu view
-      # Two more of Crysterm's options (`app_toolkit.cr`); `L` and `K` are
-      # free here.
+      # One more of Crysterm's options (`app_toolkit.cr`); `L` is free here.
       @color_depth_actions = add_choices(view, "Co&lor Depth", "color-depth", COLOR_DEPTHS, @color_depth, "How many colors the window is drawn with: the terminal's, or a depth of your choosing", ->color_depth_tip(ColorDepth)) { |depth| color_depth_label depth }
-      # Never turns the viewer's links off altogether; Double-click to Open
-      # is how a click follows one (`app_toolkit.cr`).
-      @hyperlinks_actions = add_choices(view, "Terminal Lin&ks", "hyperlinks", Hyperlinks.values, @hyperlinks, "Whether the viewer's links are the terminal's own hyperlinks too, to click or hover", ->hyperlinks_tip(Hyperlinks), [toggle_action("Double-click to &Open", "link-double-click", @link_double_click, option_tip("md.link_double_click"))]) { |policy| hyperlinks_label policy }
       view.add_separator
       add_choices(view, "&Dialog Style", "dialog-style", DialogStyle.values, @dialog_style, option_tip("md.dialog_style"), ->dialog_style_tip(DialogStyle)) { |style| dialog_style_label style }
       # Where these descriptions show (`app_tips.cr`), beside how questions
       # are asked; `o` is free, `t` being the table of contents'.
       add_choices(view, "T&ooltips", "tooltips", Tooltips.values, @tooltips, option_tip("md.tooltips"), ->tooltips_tip(Tooltips)) { |mode| tooltips_label mode }
-      add_toggle view, "&Watch File", "watch-file", @watch_file, "Reload the file whenever it changes on disk, for this run"
       # The Auto entries name what the detection says, which a probe
       # answered after the menus were built may have changed.
       view.on(Crysterm::Event::AboutToShow) { refresh_detected_labels }
@@ -166,12 +161,21 @@ module Md
       options.add_action tip(overwrite, "Type over the editor's text rather than insert; Insert toggles it there")
       add_toggle options, "&Ask Before Discarding Changes", "confirm-discard", @confirm_discard, option_tip("md.confirm_discard")
       add_toggle options, "A&uto-Save", "autosave", @autosave, option_tip("md.autosave")
-      add_toggle options, "&Keep a Backup File", "backup-file", @backup_file, option_tip("md.backup_file")
+      add_toggle options, "Keep a &Backup File", "backup-file", @backup_file, option_tip("md.backup_file")
+      # How md treats the file, with the saving entries above: behavior,
+      # not a view of it; `W` is free.
+      add_toggle options, "&Watch File", "watch-file", @watch_file, "Reload the file whenever it changes on disk, for this run"
       add_choices(options, "&Mouse", "mouse", MouseMode.values, @mouse_mode, option_tip("md.mouse_mode"), ->mouse_tip(MouseMode)) { |mode| mouse_label mode }
       # The Command entry names the command found, and cannot be picked when
       # there is none.
       clipboard = add_choices(options, "&Clipboard", "clipboard", ClipboardMode.values, @clipboard_mode, option_tip("md.clipboard_mode"), ->clipboard_tip(ClipboardMode)) { |mode| clipboard_label mode }
       clipboard[ClipboardMode::Command.value].enabled = !self.clipboard.copy_command.nil?
+      # What the viewer's links are and how they are followed, beside how
+      # the mouse and the clipboard serve md (`app_toolkit.cr`): Never
+      # turns them off altogether, Double-click to Open is how a click
+      # follows one. `K` is free, Keep a Backup File having taken `B`.
+      @hyperlinks_actions = add_choices(options, "Lin&ks", "hyperlinks", Hyperlinks.values, @hyperlinks, "What the viewer's links are — the terminal's own hyperlinks too, to click or hover, or none — and how they are followed", ->hyperlinks_tip(Hyperlinks), [toggle_action("Double-click to &Open", "link-double-click", @link_double_click, option_tip("md.link_double_click"))]) { |policy| hyperlinks_label policy }
+      options.on(Crysterm::Event::AboutToShow) { refresh_detected_labels }
       # Whether the dividers between the panes move (`app_panes.cr`); `z`
       # is free, as `r` is not.
       add_toggle options, "Resi&zable Panes", "resizable-panes", @resizable_panes, option_tip("md.resizable_panes")

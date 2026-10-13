@@ -30,7 +30,7 @@ module Md
   # window (Qt Creator's `Core::IDocument`, Kate's `KTextEditor::Document`):
   # the Markdown source — a `Crysterm::TextDocument`, with its undo history
   # and its modified flag — the file it is read from and saved to, the
-  # watcher that follows the file (View → Watch File), and the auto-save
+  # watcher that follows the file (Options → Watch File), and the auto-save
   # and recovery file that guard its unsaved edits (`app_autosave.cr`).
   #
   # Each md window (`App`) is a view on one document: its editor edits the
@@ -137,7 +137,7 @@ module Md
     # up with revision N has nothing to do for it.
     getter revision : Int64 = 0_i64
 
-    # View → Watch File, the document's (every window on it shows the same
+    # Options → Watch File, the document's (every window on it shows the same
     # check); `#setup_watcher` follows it.
     getter watch_file : Crysterm::Reactive::Property(Bool) = Crysterm::Reactive::Property.new(false)
 

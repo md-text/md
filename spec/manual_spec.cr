@@ -27,7 +27,7 @@ describe Md::Manual do
     end
     man.should contain "$XDG_STATE_HOME/md/history.json"
     man.should contain "$XDG_CACHE_HOME/md/md.log"
-    man.should contain "View \\(-> Watch File"
+    man.should contain "Options \\(-> Watch File"
     man.should contain ".SH SETTINGS\n"
     man.should contain "\\fB\\-\\-md\\-text\\-width\\fR \\fIVALUE\\fR (\\fBMD_TEXT_WIDTH\\fR, \\fImd.text_width\\fR)"
     man.should contain "$XDG_CONFIG_HOME/md/config.yml"

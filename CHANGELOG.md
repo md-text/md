@@ -461,6 +461,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- View → Terminal Links is now Options → Links, and View → Watch File is
+  Options → Watch File: how links are followed and whether the file is
+  reloaded are behavior, not a view, so they sit in Options with the mouse,
+  the clipboard and the saving entries. Their commands (`hyperlinks-auto`,
+  `link-double-click`, `watch-file`) and settings (`render.hyperlinks`,
+  `md.link_double_click`) are unchanged; Keep a Backup File's mnemonic is
+  now `B`, giving Links its `K`.
 - File → Reload and View → Watch File's reload change only what differs
   from the file on disk, as one edit, as Qt Creator's reload does, where
   they replaced the whole text: the undo history stays and Undo takes the

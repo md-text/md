@@ -46,8 +46,6 @@ module Superconf
     description: "View → Menu and Status Bars: show the menu bar and the status bar (F4 hides and shows them together)"
   option "md.images", true, env: "MD_IMAGES",
     description: "View → Images: draw the document's images in the viewer with the Media Backend, above the row with the picture glyph and the alt text"
-  option "md.link_double_click", false, env: "MD_LINK_DOUBLE_CLICK",
-    description: "View → Terminal Links → Double-click to Open: follow a link in the viewer on a double click rather than a single one"
   option "md.dialog_style", Md::App::DialogStyle::LinePrompt, env: "MD_DIALOG_STYLE",
     description: "View → Dialog Style: how a question is asked, in place of the status bar (line_prompt) or in a dialog (modal)"
   option "md.tooltips", Md::App::Tooltips::StatusBar, env: "MD_TOOLTIPS",
@@ -65,6 +63,8 @@ module Superconf
     description: "Options → Mouse: when the mouse serves md, after vi's mouse option (all|normal|insert|off); off leaves it to the terminal"
   option "md.clipboard_mode", Md::App::ClipboardMode::Terminal, env: "MD_CLIPBOARD_MODE",
     description: "Options → Clipboard: where a copy goes and a paste comes from (terminal|command|internal)"
+  option "md.link_double_click", false, env: "MD_LINK_DOUBLE_CLICK",
+    description: "Options → Links → Double-click to Open: follow a link in the viewer on a double click rather than a single one"
   option "md.resizable_panes", true, env: "MD_RESIZABLE_PANES",
     description: "Options → Resizable Panes: let the dividers between the panes move"
   # Window.

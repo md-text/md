@@ -4,7 +4,7 @@ module Md
     # `Ctrl-O`, asked for like Save As, `app_dialogs.cr`), closing it for
     # the next on the trail or a blank one (File → Close, `app_links.cr`),
     # re-reading it from disk (File → Reload, `Ctrl-R`) and following it as
-    # other programs rewrite it (View → Watch File, `--watch`), the guard
+    # other programs rewrite it (Options → Watch File, `--watch`), the guard
     # that asks before unsaved changes are lost, and the history of recent
     # files and positions (`History`, File → Open Recent).
     #
@@ -39,7 +39,7 @@ module Md
     # Options → Ask Before Discarding Changes. A reactive property, so the
     # menu entry binds to it.
     @confirm_discard : Crysterm::Reactive::Property(Bool) = Crysterm::Reactive::Property.new(true)
-    # View → Watch File. Likewise; `#watch_file=` is its plain face. Kept
+    # Options → Watch File. Likewise; `#watch_file=` is its plain face. Kept
     # equal to the document's (`#enter_document`).
     @watch_file : Crysterm::Reactive::Property(Bool) = Crysterm::Reactive::Property.new(false)
     @watch_link : Crysterm::Reactive::PropertyLink?
@@ -63,7 +63,7 @@ module Md
       @watch_file.value
     end
 
-    # Starts or stops following the document's file (View → Watch File), in
+    # Starts or stops following the document's file (Options → Watch File), in
     # every window on it (`Document#setup_watcher`).
     def watch_file=(value : Bool) : Bool
       @watch_file.value = value
