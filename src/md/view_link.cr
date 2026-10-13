@@ -36,7 +36,9 @@ module Md
       @views << @leader
     end
 
-    # Makes *app* the leader and has the others mirror it.
+    # Makes *app*, a window of the group, the leader: what it moves from
+    # now on is what the others mirror (`#publish`). A window outside the
+    # group is ignored.
     def leader=(app : App) : App
       return app if app.same?(@leader) || !@views.includes?(app)
       @leader = app

@@ -46,16 +46,24 @@ module Md
 
     # The open document of *path*, if any: the one with its key, or else the
     # one whose file is the same file (a hard link, a bind mount). Unnamed
-    # and standard-input documents are never found by a path.
+    # and standard-input documents are never found by a path. A file that
+    # cannot be looked at (a directory without search permission on its
+    # way) matches by key only, and so does a document whose file cannot.
     def self.find(path : String) : Document?
       if held = @@by_key[key_for(path)]?
         return held
       end
-      return unless info = File.info?(path, follow_symlinks: true)
+      return unless info = file_info(path)
       @@all.find do |doc|
-        (other = doc.source.path) && (other_info = File.info?(other, follow_symlinks: true)) &&
-          info.same_file?(other_info)
+        (other = doc.source.path) && (other_info = file_info(other)) && info.same_file?(other_info)
       end
+    end
+
+    # *path*'s file, links followed, or nil when it is not there or cannot
+    # be looked at (`File.info?` raises for the latter).
+    private def self.file_info(path : String) : File::Info?
+      File.info?(path, follow_symlinks: true)
+    rescue File::Error
     end
 
     # Puts *doc* in the registry, from its first view (`Document#attach`).

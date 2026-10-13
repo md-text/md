@@ -54,6 +54,31 @@ describe Md::Documents do
     end
   end
 
+  it "matches a file it cannot look at by key only, raising nothing" do
+    dir = File.tempname("md-spec-keys")
+    locked = File.join(dir, "locked")
+    Dir.mkdir_p locked
+    path = File.join(dir, "a.md")
+    File.write path, "a"
+    File.link path, File.join(dir, "b.md")
+    File.chmod locked, 0o000
+    begin
+      with_app Md::Source.new(path: File.join(locked, "x.md")) do |hidden|
+        with_app Md::Source.new(path: path), text: "a" do |app|
+          Md::Documents.find(File.join(locked, "y.md")).should be_nil
+          Md::Documents.find(path).should be app.document
+          # The hard link is looked for past the document whose file
+          # cannot be looked at.
+          Md::Documents.find(File.join(dir, "b.md")).should be app.document
+          Md::Documents.find(File.join(locked, "x.md")).should be hidden.document
+        end
+      end
+    ensure
+      File.chmod locked, 0o755
+      FileUtils.rm_rf dir
+    end
+  end
+
   it "never matches unnamed or stdin documents by path" do
     with_app do |app|
       Md::Documents.all.should eq [app.document]

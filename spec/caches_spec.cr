@@ -73,6 +73,26 @@ describe "Md::App clear caches" do
     end
   end
 
+  it "has every open document write its recovery file again, not only this window's" do
+    with_xdg_dirs do |autosave_dir, _, _|
+      with_app do |one|
+        with_app do |two|
+          one.autosave_interval = 20.milliseconds
+          two.autosave_interval = 20.milliseconds
+          one.editor.insert_text "one"
+          two.editor.insert_text "two"
+          settle { File.exists?(one.recovery_path) && File.exists?(two.recovery_path) }
+          one.clear_caches
+          Dir.children(autosave_dir).should be_empty
+          settle { File.exists?(one.recovery_path) && File.exists?(two.recovery_path) }
+          File.read(two.recovery_path).should eq "two"
+          one.document.finish_autosave
+          two.document.finish_autosave
+        end
+      end
+    end
+  end
+
   it "asks first from Options → Clear Caches…, and clears nothing on no" do
     with_xdg_dirs do |autosave_dir, _, history_path|
       Dir.mkdir_p autosave_dir

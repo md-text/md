@@ -137,6 +137,13 @@ module Md
     # Set once the last window left a stream, so the lines the reader still
     # brings are dropped (the read itself cannot be stopped).
     @stream_abandoned = false
+    # The lines the reader brought that no window has taken in yet, and the
+    # end of the stream once read (with the error message that cut it short,
+    # or nil): kept here, not in the job posted for them, so a job dropped
+    # with a window destroyed before it ran loses nothing — the next job,
+    # in whichever window, takes them (`#drain_stream`).
+    @stream_pending = Deque(String).new
+    @stream_end : Tuple(String?)? = nil
 
     # A document of *source* holding *text*, unmodified, with no undo
     # history.
@@ -193,16 +200,18 @@ module Md
     # document now). The last view leaving closes the document — dropping
     # the recovery file when *clean*, the session having ended the way the
     # user meant it to — and the host leaving hands the watcher and the timer
-    # to the next view.
+    # to the next view. What the stream brought and no window took in yet
+    # — its job may have gone with the window — goes to the views left.
     def detach(app : App, clean : Bool = true) : Nil
       return unless index = @views.index(&.same?(app))
       @views.delete_at index
       @numbers.delete app
       if @views.empty?
         close clean
-      elsif index == 0
-        rehost
+        return
       end
+      rehost if index == 0
+      deliver unless @stream_pending.empty? && @stream_end.nil?
     end
 
     # The end of the net, the session having ended the way the user meant
@@ -220,6 +229,8 @@ module Md
       @vi = nil
       @stream_abandoned = true
       @streaming = false
+      @stream_pending.clear
+      @stream_end = nil
       stop_watcher
       stop_autosave
       drop_recovery if clean
@@ -256,21 +267,16 @@ module Md
       @vi = nil unless handler.attached?
     end
 
-    # Replaces the text as a whole, programmatically: not an edit (no undo
-    # entry, no `DocumentEdited`), the undo history cleared, the document
-    # unmodified. Every view's caret stays where it was, clamped to the new
-    # text — except *by*'s, when given, which is left at the end, as a load
-    # into one editor leaves it — and the views are told
+    # Replaces the text as a whole, programmatically (a reload): not an
+    # edit (no undo entry, no `DocumentEdited`), the undo history cleared,
+    # the document unmodified. Every view's caret stays where it was,
+    # clamped to the new text, and the views are told
     # (`Event::DocumentReset`).
-    def replace(text : String, by : App? = nil) : Nil
-      carets = @views.compact_map { |view| {view, view.editor.cursor_position} unless view.same?(by) }
+    def replace(text : String) : Nil
+      carets = @views.map { |view| {view, view.editor.cursor_position} }
       @loading = true
       begin
-        if by
-          by.editor.plain_text = text
-        else
-          @text.set_plain_text text
-        end
+        @text.set_plain_text text
       ensure
         @loading = false
       end
@@ -307,28 +313,50 @@ module Md
     # Reads *io* on a fiber of its own, line by line, handing each line to
     # `#receive` on a window's render fiber — the host's, or the next
     # window's when the host's is destroyed (`Window#post?`) — and ending
-    # with `#finish_stream`. The read stops at the next line once no window
-    # is left. The windows' viewers follow the tail (`App#stream`).
+    # with `#finish_stream`. The lines wait in the document until a window
+    # takes them (`#drain_stream`), so a window destroyed with them still
+    # queued loses none. The read stops at the next line once no window is
+    # left. The windows' viewers follow the tail (`App#stream`).
     def start_stream(io : IO) : Nil
       @from_stream = @streaming = @editor_stale = true
       spawn name: "md-stream" do
         message = nil
         begin
           io.each_line(chomp: false) do |line|
-            break unless deliver { receive line }
+            break if @stream_abandoned
+            @stream_pending << line
+            break unless deliver
           end
         rescue ex : IO::Error
           message = ex.message
         end
-        deliver { finish_stream message }
+        unless @stream_abandoned
+          @stream_end = {message}
+          deliver
+        end
       end
     end
 
-    # Posts *job* to the render fiber of the first view whose window takes
-    # it; false when none does (no view left, or the stream abandoned).
-    private def deliver(&job : ->) : Bool
+    # Posts `#drain_stream` to the render fiber of the first view whose
+    # window takes it; false when none does (no view left, or the stream
+    # abandoned).
+    private def deliver : Bool
       return false if @stream_abandoned
-      @views.any? { |view| view.window.post?(&job) } # ameba:disable Style/VerboseBlock
+      @views.any? { |view| view.window.post? { drain_stream } }
+    end
+
+    # Takes in, on a window's render fiber, what the stream brought that no
+    # window took in yet: each line (`#receive`), then the end, once read
+    # (`#finish_stream`). A job finding nothing left — an earlier one took
+    # it — does nothing.
+    private def drain_stream : Nil
+      while line = @stream_pending.shift?
+        receive line
+      end
+      if ended = @stream_end
+        @stream_end = nil
+        finish_stream ended[0]
+      end
     end
 
     # Takes a streamed *chunk* of Markdown into the document — into the text

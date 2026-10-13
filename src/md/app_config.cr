@@ -56,10 +56,12 @@ module Md
       link @tear_off_menus, "menu.tear_off"
       link @link_double_click, "md.link_double_click"
       link @vi_config, "md.vi_config"
-      link @vi_mode, "md.vi_mode"
       # Without the config, the windows of a process still share one choice
       # (`Documents.window_link`), which the option's default must not undo.
+      # Ahead of Vi Mode, so a linked start runs the document's shared
+      # Neovim alone, not a Neovim of the window's own replaced at once.
       link @window_link, "md.window_link" if @config
+      link @vi_mode, "md.vi_mode"
       link @remember_window_positions, "md.remember_window_positions"
       # The pane sizes are not a property: applied from the option now and,
       # with the configuration kept, whenever it changes (a file loaded);

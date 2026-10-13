@@ -98,11 +98,14 @@ module Md
     end
 
     # Wires the net, once the panes and the settings are in place: the
-    # setting starts and stops the document's timer, and a leftover recovery
-    # file for a document just read is noticed (a window joining a document
-    # another window shows has heard of it there).
+    # setting starts and stops the document's timer — started again now on
+    # the settings read, when this window hosts it, as the attach started it
+    # on the defaults — and a leftover recovery file for a document just
+    # read is noticed (a window joining a document another window shows has
+    # heard of it there).
     private def wire_autosave : Nil
       @autosave.on_change { @document.setup_autosave }
+      @document.setup_autosave if @document.host.same?(self)
       @document.check_recovery.try { |found| notice found } if last_view?
     end
   end

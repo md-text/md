@@ -737,7 +737,7 @@ window it is Quit. File → Quit (`Ctrl-Q`, `q`) closes every window, asking
 about each modified document once, in the last window on it, so a window
 with changes stays until you answer. The Window menu lists the open windows
 by their names, the one you are in checked; picking another makes it the
-active window — raised, when the two share a terminal; otherwise a notice
+active window (and, while windows are linked, the one the others follow) — raised, when the two share a terminal; otherwise a notice
 says it is in another terminal window, since one terminal cannot raise
 another. Terminal.app keeps a closed window on screen with "[Process
 completed]" when its profile says so.

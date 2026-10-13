@@ -107,6 +107,9 @@ module Md
       @window.on(Crysterm::Event::WindowClosed) { finish }
       @window.on(Crysterm::Event::Destroy) do
         App.instances.delete self
+        # A window gone is no group's next leader, and is not kept alive by
+        # being the last one used.
+        App.last_active = nil if App.last_active.same?(self)
         finish
         leave_document
         App.refresh_window_menus
@@ -124,9 +127,12 @@ module Md
     end
 
     # What the end of a window saves, once: the auto-save stopped and its
-    # recovery file dropped when this is the last window on the document,
-    # the history with the position, the config file when anything changed. From the window's close or the application's
-    # quit, before the teardown; from the window's `Destroy` as the last
+    # recovery file dropped once every window on the document has ended
+    # (the others still show it until then; at a quit, which may exit
+    # without tearing the windows down, each ends in turn and the last
+    # one drops it), the history with the position, the config file when
+    # anything changed. From the window's close or the application's quit,
+    # before the teardown; from the window's `Destroy` as the last
     # resort (a direct destroy, as a spec's), when the pane sizes are gone
     # with the panes and are left as they were (`#record_pane_sizes`); and
     # from `#run` after the loop ended. Whichever comes first — and only for
@@ -136,14 +142,18 @@ module Md
       return if @finished || !@started
       @finished = true
       record_window_place
-      # The last window on the document ends its auto-save; the others
-      # leave it to the windows still showing it.
-      @document.finish_autosave if last_view?
+      @document.finish_autosave if @document.views.all?(&.finished?)
       save_history
       save_config
     end
 
     @finished = false
+
+    # Whether the window's end was saved (`#finish`).
+    def finished? : Bool
+      @finished
+    end
+
     # Set once the window is on screen (`#run`, `#join`).
     @started = false
 
@@ -230,9 +240,12 @@ module Md
     # Makes *app*'s window the active one (Window menu). On a shared
     # terminal (tmux windows are not shared; stacked windows on one terminal
     # are) that raises it; otherwise it is in its own terminal window, which
-    # a notice says. The checks go back to each window's own entry.
+    # a notice says. The window picked is the one used last, and leads its
+    # group while windows are linked (Window → Linking), as input in it
+    # would make it. The checks go back to each window's own entry.
     private def activate_window(app : App) : Nil
       unless app.same? self
+        app.became_active
         app.window.activate
         notice "#{app.window_name} is in another terminal window" unless app.window.screen.same? @window.screen
       end

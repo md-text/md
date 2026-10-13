@@ -12,9 +12,9 @@ module Md
     # goes further, so it says so, with an ellipsis, and asks first
     # (`#ask_choice`, `app_dialogs.cr`).
     #
-    # The current document's recovery file goes with the others: it is
-    # written again at the next auto-save tick while the document is
-    # modified, so nothing is lost that is not in the editor. The log file
+    # The open documents' recovery files go with the others: each is
+    # written again at its next auto-save tick while its document is
+    # modified, so nothing is lost that is not in an editor. The log file
     # is emptied rather than removed, since Crysterm holds it open (in
     # append mode, so later lines land in the emptied file); anything else
     # in the cache directory is removed. Only md's own directories are
@@ -51,11 +51,14 @@ module Md
         history.save
       end
       recovery = remove_entries App.autosave_dir
-      # The document's own copy went with the rest: forgotten here, so it
-      # is written afresh, which the next tick does, finding the document
-      # edited since its last write.
-      @document.drop_recovery
-      @document.mark_for_autosave
+      # The open documents' own copies — this window's and every other
+      # window's — went with the rest: forgotten, so each is written
+      # afresh, which its next tick does, finding the document edited since
+      # its last write.
+      Documents.all.each do |doc|
+        doc.drop_recovery
+        doc.mark_for_autosave
+      end
       remove_entries App.cache_dir, empty: Crysterm::Config.log_file
       refresh_recent_menu
       notice "Cleared #{recent} recent file#{"s" unless recent == 1}, #{recovery} recovery file#{"s" unless recovery == 1}"

@@ -75,10 +75,11 @@ module Md
     # when no other window shows it — and becomes a view on *doc*, its
     # editor on *doc*'s text (Qt's `setDocument`, which puts the caret at
     # the start and tells Neovim, when Vi Mode is on, to follow). Linked
-    # windows go together (`ViewLink#move`).
+    # windows go together (`ViewLink#move`) — a window alone in its group
+    # too, so the group's trail goes with it.
     protected def switch_document(doc : Document) : Nil
       return if doc.same?(@document)
-      if (link = self.link) && link.views.size > 1
+      if link = self.link
         link.move doc, self
       else
         move_to doc

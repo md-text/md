@@ -361,3 +361,48 @@ describe "Md::App opening a file another window has open" do
     end
   end
 end
+
+describe "Md::App linked windows switching documents" do
+  it "keeps the group's trail when a window left alone in its group opens a file" do
+    first = tempfile "# First\n"
+    second = tempfile "# Second\n"
+    begin
+      with_two_windows(Md::Source.new(path: first), "# First\n", linked: true) do |a, b|
+        a.window.close
+        b.open_file(second).should be_true
+        b.previous_file_available?.should be_true
+      end
+    ensure
+      File.delete? first
+      File.delete? second
+    end
+  end
+
+  it "keeps the saving window's trail when Save As takes another linked group in" do
+    path = tempfile "# Other\n"
+    left = tempfile "# Left\n"
+    fresh = File.tempname("md-spec", ".md")
+    begin
+      with_side_by_side(path) do |a, b|
+        a.window_link = Md::App::WindowLink::Linked
+        b.open_file(left).should be_true
+        b.open_file(fresh).should be_true
+        b.previous_file_available?.should be_true
+        a.previous_file_available?.should be_false
+        b.editor.insert_text "mine\n"
+        b.save_as(path).should be_true
+        a.document.should be b.document
+        b.link.should be a.link
+        b.previous_file_available?.should be_true
+        a.previous_file_available?.should be_true
+      ensure
+        Md::Documents.link_windows Md::App::WindowLink::Separate
+      end
+    ensure
+      File.delete? path
+      File.delete? "#{path}~"
+      File.delete? left
+      File.delete? fresh
+    end
+  end
+end

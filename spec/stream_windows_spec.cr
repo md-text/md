@@ -65,6 +65,29 @@ describe "Md::App windows on a stream" do
     end
   end
 
+  it "loses no line still queued in the window that closes" do
+    application = Crysterm::Application.new
+    with_app Md::Source.new(stdin: true), view: true do |a, first_window|
+      application.add first_window
+      a.window_opener = recording_opener
+      b = a.new_window || fail("no window was opened")
+      begin
+        a.stream IO::Memory.new("# One\n\n# Two\n\n# Three\n\n")
+        # The reader posts every line and the end to the host's queue, and
+        # the host goes before its render fiber took them.
+        Fiber.yield
+        a.window.destroy
+        b.document.host.should be b
+        settle { !b.streaming? }
+        b.markdown.should eq "# One\n\n# Two\n\n# Three\n\n"
+        settle { b.viewer.document.outline.size == 3 }
+      ensure
+        b.window.destroy
+      end
+      Md::Documents.all.should be_empty
+    end
+  end
+
   it "stops reading for a document no window shows any more" do
     reader, writer = IO.pipe
     with_app Md::Source.new(stdin: true), view: true do |app|

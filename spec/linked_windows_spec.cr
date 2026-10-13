@@ -191,6 +191,34 @@ describe "Md::App linked windows" do
       b.window.close
       (a.link || fail("not linked")).leader.should be a
       (a.link || fail("not linked")).views.should eq [a]
+      Md::App.last_active.should be_nil # a closed window is not kept as the last used
+    end
+  end
+
+  it "makes the window picked in the Window menu the leader" do
+    with_two_windows(text: LONG, view: false, linked: true) do |a, b|
+      press a.window, Tput::Key::Down
+      link = a.link || fail("not linked")
+      link.leader.should be a
+      window_menu(a).actions.find! { |entry| entry.text == b.window_name }.trigger
+      link.leader.should be b
+      Md::App.last_active.should be b
+    end
+  end
+
+  it "shares a search that finds nothing, and a cleared highlight" do
+    with_two_windows(text: LONG, view: false, linked: true) do |a, b|
+      a.editor.focus
+      press a.window, Tput::Key::Down
+      a.search("Line 7 ").should be_true
+      a.window.repaint
+      settle { b.search_pattern == "Line 7 " && b.@highlighting }
+      a.search("nowhere").should be_false
+      a.window.repaint
+      settle { b.search_pattern == "nowhere" }
+      a.clear_search_highlight
+      a.window.repaint
+      settle { !b.@highlighting }
     end
   end
 

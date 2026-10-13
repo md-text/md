@@ -92,6 +92,8 @@ module Md
       @search_regex = compile_pattern pattern
       @highlighting = true
       highlight_matches_everywhere
+      # Linked windows take the search even when no match moved the caret.
+      mark_view_moved
       find_next
     end
 
@@ -382,6 +384,7 @@ module Md
     def clear_search_highlight : Nil
       @highlighting = false
       Pane.each { |pane| set_match_selections pane, [] of Crysterm::Widget::TextEdit::ExtraSelection }
+      mark_view_moved # linked windows clear theirs too
     end
 
     # Forgets the search: no highlight, no pattern for `n` to repeat.

@@ -287,6 +287,9 @@ describe "Md::App auto-save" do
       with_app config: true do |app|
         app.autosave?.should be_false
         app.backup_file?.should be_false
+        # The timer the document's first view started on the defaults
+        # follows the settings read.
+        app.document.autosaving?.should be_false
       end
     end
   end

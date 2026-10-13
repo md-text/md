@@ -90,8 +90,9 @@ module Md
       @window.on(Crysterm::Event::Rendered) { publish_view }
     end
 
-    # This window took input: it is the last active, and its group's leader.
-    private def became_active : Nil
+    # This window took input, or was picked in the Window menu: it is the
+    # last active, and its group's leader.
+    protected def became_active : Nil
       App.last_active = self
       link.try &.leader = self
     end
