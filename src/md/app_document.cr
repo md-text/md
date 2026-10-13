@@ -159,20 +159,13 @@ module Md
 
     # Brings the window up to date with an edit or a reset made in another
     # window (in this one, `#edited` and the reset's caller did it at once
-    # and nothing is left): the viewer re-rendered, keeping the reader's
-    # place — now when it or the table of contents is shown, else when next
-    # shown — the search highlights, the measurements and the status.
+    # and nothing is left), as `#edited` brings it after its own: the
+    # viewer re-rendered, keeping the reader's place — now when it or the
+    # table of contents is shown, else when next shown — the search
+    # highlights, the measurements and the status.
     protected def document_changed : Nil
       return if @seen_revision == @document.revision || @window.destroyed?
-      @seen_revision = @document.revision
-      text_changed
-      highlight_matches Pane::Editor
-      if @viewer.visible? || @toc.visible?
-        render_viewer
-      else
-        @viewer_stale = true
-      end
-      refresh_status
+      edited
     end
 
     # The document has another name (a Save As here or in another window):

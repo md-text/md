@@ -242,4 +242,18 @@ describe "Md::App windows on a stream" do
   ensure
     reader.try &.close
   end
+  it "takes a backlog of lines in as one chunk" do
+    application = Crysterm::Application.new
+    with_app Md::Source.new(stdin: true), view: true do |a, first_window|
+      application.add first_window
+      chunks = 0
+      a.document.on(Md::Event::StreamAppended) { chunks += 1 }
+      # The reader brings every line before the render fiber runs a job.
+      a.stream IO::Memory.new((0...100).join { |i| "line #{i}\n" })
+      settle { !a.streaming? }
+      chunks.should eq 1
+      a.markdown.should eq (0...100).join { |i| "line #{i}\n" }
+    end
+    Md::Documents.all.should be_empty
+  end
 end

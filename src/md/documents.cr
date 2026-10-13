@@ -25,7 +25,7 @@ module Md
     @@by_key = {} of String => Document
 
     # The keys of the files backed up this session (`FILE~`, `.backup`).
-    class_getter backed_up = Set(String).new
+    @@backed_up = Set(String).new
 
     # The canonical key of *path*: the real path of an existing file; for a
     # file that does not exist yet, the real path of its directory joined

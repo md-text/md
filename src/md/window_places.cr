@@ -35,6 +35,7 @@ module Md
     # The number of the window md was started in, which is never moved.
     FIRST = 1
 
+    # The file the store is kept in.
     getter path : String
 
     # The displays' frames, in the frames' coordinates, or nil when they
@@ -106,9 +107,6 @@ module Md
       end
       result
     end
-
-    # The file the store is kept in.
-    getter path : String
 
     # Forgets every recorded frame (Options → Clear Caches…, which removes
     # the file); a window closing afterwards records its own afresh.

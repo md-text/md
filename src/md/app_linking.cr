@@ -122,10 +122,12 @@ module Md
       @@used.delete self
     end
 
-    # Notes a move the link mirrors — unless it is a mirror being applied —
-    # and asks for a frame, after which it is published.
+    # Notes a move the link mirrors and asks for a frame, after which it is
+    # published — in a group's leader alone, the only window that publishes
+    # (input makes a window the leader before its moves come): a separate
+    # window, or one applying a mirror, notes nothing.
     protected def mark_view_moved : Nil
-      return if @mirroring
+      return if @mirroring || !link.try(&.leader.same?(self))
       @view_moved = true
       @window.update
     end
@@ -162,8 +164,9 @@ module Md
       begin
         @sync_cursor.value = leader.sync_cursor?
         adopt_search leader
-        @editor.text_cursor = leader.editor.text_cursor
-        @editor.scroll_position_to_row leader.editor.top_position
+        caret = leader.editor.text_cursor
+        mirror_caret @editor, caret.position, caret.anchor
+        mirror_top @editor, leader.editor.top_position
         mirror_viewer leader
         track_toc
         refresh_navigation
@@ -183,17 +186,34 @@ module Md
     # leader could not move (it was hidden there) follows this viewer.
     private def mirror_viewer(leader : App) : Nil
       if @sync_cursor.value && leader.editor.focused?
-        @viewer.text_cursor = Crysterm::TextCursor.new(@viewer.document, viewer_position(@editor.cursor_position))
-        @viewer.scroll_cursor_to_row leader.editor.cursor_viewport_row
+        mirror_caret @viewer, viewer_position(@editor.cursor_position)
+        row = leader.editor.cursor_viewport_row
+        @viewer.scroll_cursor_to_row row unless @viewer.cursor_viewport_row == row
         return
       end
       same = leader.viewer.document.size == @viewer.document.size && leader.viewer.width == @viewer.width
       map = ->(pos : Int32) { same ? pos : viewer_position(leader.editor_position(pos)) }
-      @viewer.text_cursor = Crysterm::TextCursor.new(@viewer.document, map.call(leader.viewer.cursor_position))
-      @viewer.scroll_position_to_row map.call(leader.viewer.top_position)
+      mirror_caret @viewer, map.call(leader.viewer.cursor_position)
+      mirror_top @viewer, map.call(leader.viewer.top_position)
       return if !@sync_cursor.value || leader.editor.visible?
-      @editor.text_cursor = Crysterm::TextCursor.new(@document.text, editor_position(@viewer.cursor_position))
+      mirror_caret @editor, editor_position(@viewer.cursor_position)
       align_rows @viewer, @editor
+    end
+
+    # Puts *widget*'s caret at *position*, selecting from *anchor*, unless
+    # it is there already: setting it again would scroll and repaint the
+    # widget for nothing, as most mirrors would (a key moves one pane's
+    # caret, and the other panes' stay).
+    private def mirror_caret(widget : Crysterm::Widget::TextEdit | Crysterm::Widget::PlainTextEdit, position : Int32, anchor : Int32 = position) : Nil
+      selection = anchor == position ? nil : (Math.min(anchor, position)...Math.max(anchor, position))
+      return if widget.cursor_position == position && widget.selection_range == selection
+      widget.text_cursor = Crysterm::TextCursor.new(widget.document, anchor, position)
+    end
+
+    # Scrolls *widget* so its first line starts at *position*, unless it
+    # does already (a scroll repaints the widget whether or not it moved).
+    private def mirror_top(widget : Crysterm::Widget::TextEdit | Crysterm::Widget::PlainTextEdit, position : Int32) : Nil
+      widget.scroll_position_to_row position unless widget.top_position == position
     end
 
     # Takes *leader*'s search — the pattern, its direction and whether its

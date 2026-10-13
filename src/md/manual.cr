@@ -197,7 +197,8 @@ module Md
           .I $XDG_STATE_HOME/md/windows.yml
           Where each window Window \-> New opened was when last closed, per
           terminal emulator, for Window \-> Remember Positions
-          (\fI~/.local/state/md/windows.yml\fR by default).
+          (\fI~/.local/state/md/windows.yml\fR by default); Options \-> Clear
+          Caches removes it.
           .TP
           .I $XDG_STATE_HOME/md/autosave/
           The recovery files auto-save writes, removed on a save or a clean exit.

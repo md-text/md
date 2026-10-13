@@ -111,19 +111,18 @@ module Md
       subs.on(handler, Crysterm::Event::ViWriteRequested) { |e| vi_write e.path, e.rename if vi_active?(handler) }
       subs.on(handler, Crysterm::Event::ViQuitRequested) { |e| vi_quit e.bang, e.all if vi_active?(handler) }
       # Neovim ended under the editor: the editor is its own again.
-      subs.on(handler, Crysterm::Event::ProcessExited) do
-        vi_post do
-          @vi_mode.value = false
-          notice "Neovim ended; Vi Mode is off"
-        end
-      end
+      subs.on(handler, Crysterm::Event::ProcessExited) { vi_ended "Neovim ended" }
       # The editor's buffer closed in Neovim (`:bw`), or Neovim failing or
       # not answering a call: the handler has let go of the editor.
-      subs.on(handler, Crysterm::Event::ViDetached) do |e|
-        vi_post do
-          @vi_mode.value = false
-          notice "#{e.reason}; Vi Mode is off"
-        end
+      subs.on(handler, Crysterm::Event::ViDetached) { |e| vi_ended e.reason }
+    end
+
+    # The handler let go of the editor, for *reason*: Vi Mode goes off, and
+    # a notice says why (on this window's render fiber, `#vi_post`).
+    private def vi_ended(reason : String) : Nil
+      vi_post do
+        @vi_mode.value = false
+        notice "#{reason}; Vi Mode is off"
       end
     end
 

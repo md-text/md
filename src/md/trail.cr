@@ -6,14 +6,12 @@ module Md
   # came from.
   class Trail
     # The places Previous File goes back to, the last left last.
-    getter back = [] of App::Place
+    getter back : Array(App::Place)
     # The places Next File goes forward to again, the last undone last.
-    getter forward = [] of App::Place
+    getter forward : Array(App::Place)
 
-    def initialize
-    end
-
-    def initialize(@back : Array(App::Place), @forward : Array(App::Place))
+    # A trail of *back* and *forward*, empty by default.
+    def initialize(@back = [] of App::Place, @forward = [] of App::Place)
     end
 
     # A trail with the same places, to go on apart from this one (linked

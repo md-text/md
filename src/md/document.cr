@@ -321,12 +321,13 @@ module Md
       emit Md::Event::DocumentEdited, @revision
     end
 
-    # Reads *io* on a fiber of its own, line by line, handing each line to
+    # Reads *io* on a fiber of its own, line by line, handing the lines to
     # `#receive` on a window's render fiber — the host's, or the next
     # window's when the host's is destroyed (`Window#post?`) — and ending
     # with `#finish_stream`. The lines wait in the document until a window
     # takes them (`#drain_stream`), so a window destroyed with them still
-    # queued loses none. The read stops at the next line once no window is
+    # queued loses none, and a window busy while many came takes them in
+    # one chunk. The read stops at the next line once no window is
     # left. The windows' viewers follow the tail (`App#stream`).
     def start_stream(io : IO) : Nil
       @from_stream = @streaming = @editor_stale = true
@@ -357,12 +358,16 @@ module Md
     end
 
     # Takes in, on *view*'s render fiber, what the stream brought that no
-    # window took in yet: each line (`#receive`), then the end, once read
-    # (`#finish_stream`). A job finding nothing left — an earlier one took
-    # it — does nothing.
+    # window took in yet: the lines, joined into one chunk (`#receive`) —
+    # one append to each viewer and one status refresh for a backlog, not
+    # one a line, which made a fast stream ten times slower — then the end,
+    # once read (`#finish_stream`). A job finding nothing left — an earlier
+    # one took it — does nothing.
     private def drain_stream(view : App) : Nil
-      while line = @stream_pending.shift?
-        receive line, view
+      unless @stream_pending.empty?
+        chunk = @stream_pending.size == 1 ? @stream_pending.first : @stream_pending.join
+        @stream_pending.clear
+        receive chunk, view
       end
       if ended = @stream_end
         @stream_end = nil

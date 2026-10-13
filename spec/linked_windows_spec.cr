@@ -327,6 +327,27 @@ describe "Md::App linked windows" do
     end
   end
 
+  it "leaves a pane nothing moved in alone when it mirrors" do
+    with_two_windows(text: PARAGRAPHS, view: false, linked: true) do |a, b|
+      [a, b].each(&.show_pane(Md::App::Pane::Viewer))
+      a.editor.focus
+      press a.window, Tput::Key::Up
+      a.window.repaint
+      settle { b.editor.cursor_position == a.editor.cursor_position }
+      b.window.repaint
+      scrolls = 0
+      b.viewer.on(Crysterm::Event::Scroll) { scrolls += 1 }
+      5.times do
+        press a.window, Tput::Key::Up
+        a.window.repaint
+        caret = a.editor.cursor_position
+        settle { b.editor.cursor_position == caret }
+      end
+      # Sync Cursor is off: the viewers stay, and B's is not scrolled.
+      scrolls.should eq 0
+    end
+  end
+
   it "starts linked from the config" do
     with_config("md:\n  window_link: linked\n") do
       with_app config: true do |app|
