@@ -86,9 +86,9 @@ module Md
   # shortcuts (`app_menu.cr`), shown in the menus, and outside the editor
   # the pager keys `/`, `?`, `n`, `N`, `:`, `[`, `]` and `q` do the same
   # (`q` is Crysterm's default quit key as well, kept live while a pane
-  # reads input; the editor consumes the `q` it inserts). Quitting closes
-  # every window, each modified document asked about once, in the last
-  # window on it (`app_windows.cr`).
+  # reads input; the editor consumes the `q` it inserts). Quitting asks
+  # about each modified document once, then closes every window; a Cancel
+  # closes none (`App#quit`, `app_file.cr`).
   class App
     # The three panes of the central area, in layout order.
     enum Pane

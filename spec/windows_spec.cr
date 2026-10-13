@@ -145,7 +145,7 @@ describe "Md::App windows" do
     end
   end
 
-  it "quits by closing every window, each through its own guard" do
+  it "quits by closing every window, once the unsaved document is settled" do
     application = Crysterm::Application.new
     with_app Md::Source.new(path: "a.md"), text: "A\n", view: true do |app, window|
       application.add window
@@ -154,11 +154,12 @@ describe "Md::App windows" do
       begin
         other.editor.insert_text "changed"
         app.quit
-        # The clean window went; the one with changes asks and stays.
-        window.destroyed?.should be_true
+        # Asked about the shared document here, nothing closed yet.
+        question(app).should start_with "Save changes to"
+        window.destroyed?.should be_false
         other.window.destroyed?.should be_false
-        question(other).should start_with "Save changes to"
-        answer other, 'n'
+        answer app, 'n'
+        window.destroyed?.should be_true
         other.window.destroyed?.should be_true
         application.windows.should be_empty
       ensure

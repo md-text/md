@@ -236,21 +236,21 @@ module Md
       notice "Cannot write #{path}: #{Md.error_text(ex)}"
     end
 
-    # `:q`: closes this window, or every window with *all* (`:qa`), asking
-    # about unsaved changes unless *bang* (`:q!`); after the save of a `:wq`
-    # still asking for a name, once it is answered.
+    # `:q`: closes this window, or every window with *all* (`:qa`, File →
+    # Quit's way: every unsaved document asked about before anything closes),
+    # asking about unsaved changes unless *bang* (`:q!`, `:qa!`); after the
+    # save of a `:wq` still asking for a name, once it is answered.
     private def vi_quit(bang : Bool, all : Bool) : Nil
       if @vi_naming
         @vi_quit_after_naming = {bang, all}
         return
       end
-      apps = all ? App.instances.dup : [self]
-      apps.each do |app|
-        if bang
-          app.window.close
-        else
-          app.close_window
-        end
+      if !bang
+        all ? quit : close_window
+      elsif all
+        App.instances.dup.each &.window.close
+      else
+        @window.close
       end
     end
 

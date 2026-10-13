@@ -48,7 +48,7 @@ module Md
       {"Alt-Q", "Refill the paragraph at the caret, or the selected paragraphs, to the wrap column (the text width, or 80); Format -> Rewrap -> Document refills every paragraph."},
       {"Ctrl-N", "Open another md window on this document (the same text, edited in either), in a new terminal window (Window -> New)."},
       {"Ctrl-W", "Outside the editor, close this window, asking first only when it is the last window on a document with unsaved changes; closing the last window quits (Window -> Close Current)."},
-      {"Ctrl-Q, q", "Quit, closing every window (q anywhere but in the editor); a document with unsaved changes is asked about once, in the last window on it."},
+      {"Ctrl-Q, q", "Quit, closing every window (q anywhere but in the editor) once each document with unsaved changes was asked about; Cancel closes nothing."},
       {"Vi Mode", "With Edit -> Vi Mode (Neovim) on, the editor's keys are an embedded Neovim's, but for the function keys and the Alt chords, which stay md's; the status bar shows Neovim's mode and command line. :w saves, :w FILE writes a copy to FILE (a document without a name takes FILE's), :saveas FILE saves as FILE, :q closes the window (asking about unsaved changes when no other window shows the document), :q! closes it without asking, :qa quits, and :wq, :x and ZZ save and close."},
     ]
 

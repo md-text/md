@@ -127,7 +127,7 @@ describe "Md::App shortcuts" do
       window.on(Crysterm::Event::CloseRequest) { asked += 1 }
       app.editor.insert_text "unsaved"
       e = press window, Tput::Key::CtrlQ
-      asked.should eq 1
+      asked.should eq 0 # the quit asks before any window is asked to close
       question(app).should start_with "Save changes to"
       window.destroyed?.should be_false
       # The entry took the key, so Crysterm's own quit key does not ask again.

@@ -98,7 +98,7 @@ runs too.
 | `Alt-Q`            | Refill the paragraph at the caret, or the selected paragraphs, to the wrap column (Format → Rewrap → Paragraph; Rewrap → Document refills them all) |
 | `Ctrl-N`           | Open another window on this document (the same text, edited in either), in a new terminal window (Window → New) |
 | `Ctrl-W`           | Outside the editor, close this window, asking first only when it is the last window on a document with unsaved changes; the last window's close quits (Window → Close Current) |
-| `Ctrl-Q`           | Quit: closes every window (`q` too, anywhere but in the editor; File → Quit); a document with unsaved changes is asked about once, in the last window on it |
+| `Ctrl-Q`           | Quit: closes every window (`q` too, anywhere but in the editor; File → Quit), once each document with unsaved changes was asked about; Cancel closes nothing |
 
 The menus show these keys next to their entries, spelled as
 Qt does (`Ctrl+O`), and the right end of the menu bar names the keys that
@@ -561,9 +561,11 @@ file.
 Quitting, opening another file or reloading with unsaved changes asks first:
 *Save*, *Don't save* or *Cancel*. Saving a document without a name asks for
 one, and the action goes ahead once the save is done. Options → Ask Before
-Discarding Changes turns the question off. A document shown in several
-windows (see Windows) is asked about once, in the last window on it:
-closing another window, or opening another file in it, loses nothing —
+Discarding Changes turns the question off. Quitting asks about each
+document with unsaved changes before any window closes, and Cancel keeps
+them all open. A document shown in several windows (see Windows) is asked
+about only in the last window on it otherwise: closing another window, or
+opening another file in it, loses nothing —
 except that opening another file in a linked window (Window → Linking)
 takes every window of its group along, so it asks.
 Reloading drops the changes in every window, so it asks whenever there are
@@ -744,9 +746,10 @@ The settings and the recent files are shared, written by the window that
 ends last. Window → Close Current (`Ctrl-W`, outside the editor, where
 `Ctrl-W` kills a word) closes the window you are in alone, asking about
 unsaved changes only when no other window shows the document; in the last
-window it is Quit. File → Quit (`Ctrl-Q`, `q`) closes every window, asking
-about each modified document once, in the last window on it, so a window
-with changes stays until you answer. The Window menu lists the open windows
+window it is Quit. File → Quit (`Ctrl-Q`, `q`) first asks about each
+document with unsaved changes, once — the one in the window you are in
+first, then each other in a window showing it — and closes every window
+only when all are answered; Cancel at any question closes nothing. The Window menu lists the open windows
 by their names, the one you are in checked; picking another makes it the
 active window (and, while windows are linked, the one the others follow),
 raised when the two share a terminal; otherwise a notice says it is in

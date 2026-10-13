@@ -173,11 +173,11 @@ describe "Md::App Vi Mode in windows on one document" do
     with_two_windows(text: "one\n", view: false, linked: true) do |a, b|
       vi_on a, b
       vi_type b.window, "ggIx<Esc>:qa<CR>"
-      a.window.destroyed?.should be_true # not the last window: closes silently
-      b.window.destroyed?.should be_false
       settle { question(b).starts_with? "Save changes to" }
+      a.window.destroyed?.should be_false # nothing closes before the answer
+      b.window.destroyed?.should be_false
       answer b, 'n'
-      settle { b.window.destroyed? }
+      settle { a.window.destroyed? && b.window.destroyed? }
     end
   end
 

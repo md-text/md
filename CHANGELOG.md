@@ -463,7 +463,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   starting where the window it was opened from is. The windows are named
   `README.md:1`, `README.md:2` in their titles and the Window menu while
   two or more show the document, and only the last window on a modified
-  document asks about it when closed, quit or given another file; File →
+  document asks about it when closed or given another file. Quit asks
+  about each modified document once, before any window closes, and Cancel
+  leaves every window open; File →
   Reload asks whenever the document is modified, saying how many windows
   show it. A window in the background shows the other's edits as they are
   made: md defaults Crysterm's `render.pause_when_unfocused` to off, which

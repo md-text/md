@@ -68,15 +68,34 @@ module Md
       @watch_file.value = value
     end
 
-    # Quits: closes every window (`app_windows.cr`), each through its own
-    # guard — the window asks its handlers (`Window#try_close`) and ours
-    # asks the user when the window is the last on a document with unsaved
-    # changes, closing after their answer, so such a window stays until its
-    # question is answered while the others on the document close without
-    # one (Qt's `QApplication::closeAllWindows`). The last window's close
-    # ends the loop. With one window, the one question.
+    # Quits: settles every document with unsaved changes first — one
+    # question per document, this window's own first, each in a window
+    # showing it (`#settle_documents`) —
+    # and closes every window (`app_windows.cr`) only once all are saved or
+    # given up, as Kate and Qt Creator ask before they close anything. A
+    # Cancel at any question closes nothing: every window stays as it was,
+    # with nothing to undo. With one window, the one question.
     def quit : Nil
-      App.instances.dup.each &.close_window
+      settle_documents(([@document] + App.instances.map(&.document)).uniq) do
+        App.instances.dup.each &.window.close
+      end
+    end
+
+    # Asks about the first of *docs* with unsaved changes (`#confirm_discard`,
+    # which honors Options → Ask Before Discarding Changes), in this window
+    # when it shows the document, else in the first window that does, which
+    # is brought forward; then about the next, and so on; *done* runs once
+    # none is left. A Cancel, or a save that did not happen, ends the chain:
+    # *done* never runs.
+    protected def settle_documents(docs : Array(Document), &done : ->) : Nil
+      unless doc = docs.find { |candidate| candidate.text.modified? && !candidate.views.empty? }
+        done.call
+        return
+      end
+      rest = docs.reject(&.same?(doc))
+      view = doc.views.includes?(self) ? self : doc.views.first
+      view.window.activate unless view.same?(self)
+      view.confirm_discard(last_view_only: false) { settle_documents(rest, &done) }
     end
 
     # Asks for a file to open (`#ask_text`; a line prompt completes the

@@ -78,27 +78,55 @@ describe "Md::App windows on one document" do
     end
   end
 
-  it "quits asking only in the last window on each modified document" do
+  it "quits asking about each modified document once, closing nothing before the last answer" do
     other = tempfile "# Other\n"
     begin
       with_two_windows do |one, two|
         two.open_file(other).should be_true
         three = one.new_window || fail("no window was opened")
+        windows = {one, two, three}
         begin
           three.document.should be one.document
           one.editor.insert_text "a"
           two.editor.insert_text "b"
           one.quit
-          one.window.destroyed?.should be_true # not the last on its document
+          # Asked here first, about this window's document; nothing closed.
+          question(one).should start_with "Save changes to doc.md (open in 2 windows)"
+          windows.none?(&.window.destroyed?).should be_true
+          answer one, 'n'
+          # Then about the other document, in the window showing it.
           question(two).should start_with "Save changes to #{other}"
-          question(three).should start_with "Save changes to doc.md"
+          windows.none?(&.window.destroyed?).should be_true
           answer two, 'n'
-          answer three, 'n'
-          two.window.destroyed?.should be_true
-          three.window.destroyed?.should be_true
+          windows.all?(&.window.destroyed?).should be_true
         ensure
           three.window.destroy
         end
+      end
+    ensure
+      File.delete? other
+    end
+  end
+
+  it "closes nothing when a quit is cancelled, at any of its questions" do
+    other = tempfile "# Other\n"
+    begin
+      with_two_windows do |one, two|
+        two.open_file(other).should be_true
+        one.editor.insert_text "a"
+        two.editor.insert_text "b"
+        two.quit
+        answer two, 'c' # at the first question
+        {one, two}.none?(&.window.destroyed?).should be_true
+        one.markdown.should start_with "a"
+        two.quit
+        answer two, 'n'
+        answer one, 'c' # at the second
+        {one, two}.none?(&.window.destroyed?).should be_true
+        one.markdown.should start_with "a"
+        two.quit # asks again from the start
+        question(two).should start_with "Save changes to #{other}"
+        answer two, 'c'
       end
     ensure
       File.delete? other

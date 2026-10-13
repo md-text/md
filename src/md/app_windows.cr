@@ -18,8 +18,8 @@ module Md
     # Windows on one document are named `README.md:1`, `README.md:2` in their
     # titles and in the Window menu (`#window_name`), plain `README.md` again
     # once one is left. Closing a window asks about unsaved changes only when
-    # it is the last on its document; quitting asks once per document, in
-    # the last window on it, as Qt's `QApplication::closeAllWindows` does.
+    # it is the last on its document; quitting asks once per modified
+    # document before any window closes, a Cancel closing none (`#quit`).
     # The history and the settings are shared and written by whichever
     # window ends last (`#finish`).
     #
