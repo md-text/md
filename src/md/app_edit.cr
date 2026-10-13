@@ -809,7 +809,9 @@ module Md
     end
 
     # *words* laid out from *head* on, a line starting with *rest* taking
-    # each word that does not fit the line before (see `#fill`).
+    # each word that does not fit the line before (see `#fill`). A list
+    # marker with no space after it (`-` over its text) takes one before
+    # its first word.
     private def fill_words(head : String, rest : String, words : Array(String), column : Int32) : Array(String)
       units = [] of String
       words.each do |word|
@@ -824,6 +826,7 @@ module Md
       empty = true
       units.each do |unit|
         if empty
+          current += " " if (item = ListItem.parse(head)) && item.spacing.empty?
           current += unit
           empty = false
         elsif current.size + 1 + unit.size <= column

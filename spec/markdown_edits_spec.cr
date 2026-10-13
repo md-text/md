@@ -62,3 +62,10 @@ describe "Md::App editing, Rewrap and hard breaks" do
     rewrapped("> aaaa  \n> bbbb\n> cccc\n").should eq "> aaaa  \n> bbbb cccc\n"
   end
 end
+
+describe "Md::App editing, Rewrap and list items" do
+  it "keeps a space after a marker whose text is on the lines below" do
+    rewrapped("-\n  aaaa\n  bbbb\n").should eq "- aaaa bbbb\n"
+    rewrapped("1.\n   aaaa\n").should eq "1. aaaa\n"
+  end
+end
