@@ -25,3 +25,31 @@ describe "Md::App editing, Enter" do
     end
   end
 end
+
+# *text* after Format → Rewrap → Document to *width* columns.
+private def rewrapped(text, width = 20)
+  result = ""
+  with_app text: text, view: false do |app|
+    app.text_width = width
+    app.rewrap_document
+    result = app.markdown
+  end
+  result
+end
+
+describe "Md::App editing, Rewrap" do
+  it "breaks no line where the next would start a list item, a heading, a quote, a fence or a setext underline" do
+    rewrapped("aaaa bbbb cccc dddd - eeee\n").should eq "aaaa bbbb cccc\ndddd - eeee\n"
+    rewrapped("aaaa bbbb cccc dddd 1. eeee\n").should eq "aaaa bbbb cccc\ndddd 1. eeee\n"
+    rewrapped("aaaa bbbb cccc dddd # eeee\n").should eq "aaaa bbbb cccc\ndddd # eeee\n"
+    rewrapped("aaaa bbbb cccc dddd > eeee\n").should eq "aaaa bbbb cccc\ndddd > eeee\n"
+    rewrapped("aaaa bbbb cccc dddd ```\n").should eq "aaaa bbbb cccc\ndddd ```\n"
+    rewrapped("aaaa bbbb cccc dddd ===\n").should eq "aaaa bbbb cccc\ndddd ===\n"
+    rewrapped("- aaaa bbbb cccc dd + eeee\n").should eq "- aaaa bbbb cccc\n  dd + eeee\n"
+  end
+
+  it "breaks no line after a backslash, which would end it in a hard break" do
+    rewrapped("aaaa bbbb cccc ddd\\ eeee\n").should eq "aaaa bbbb cccc\nddd\\ eeee\n"
+    rewrapped("aaaa bbbb cccc dd\\\\ eeee\n").should eq "aaaa bbbb cccc dd\\\\\neeee\n"
+  end
+end

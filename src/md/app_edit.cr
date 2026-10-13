@@ -95,7 +95,10 @@ module Md
     # or rule starts or interrupts (`#continues?`); a list item's lines
     # keep the marker and take the item's content indentation, a quote's
     # keep the `> `, and a code block, fenced or indented
-    # (`App.code_lines`), is not a paragraph. The caret keeps its place in
+    # (`App.code_lines`), is not a paragraph. No line is broken where the
+    # next would start with Markdown of its own — a `-`, `1.`, `#` or `>`
+    # in the text — nor after a backslash, which would end the line in a
+    # hard break (`.breakable?`). The caret keeps its place in
     # the text, counted in the characters that are not spaces.
     #
     # The keys: `Ctrl-B` is Qt's bold, and the editor does not use it;
@@ -229,6 +232,22 @@ module Md
     # may take: what comes after is the line as the quote holds it, its
     # indentation counted from there.
     QUOTE_MARKERS = /\A(?:[ \t]*> ?)*/
+
+    # A word that, starting a line of a paragraph, would be Markdown of its
+    # own there: a list marker, an ATX heading's hashes, a setext underline
+    # or a rule, a quote marker, a code fence or a table row — the line a
+    # list item, a heading, a quote, the start of a code block or a table,
+    # or the paragraph above it a heading. Between words, `- ` or `1. ` is
+    # text.
+    BLOCK_WORD = /\A(?:[-+*]|\d{1,9}[.)]|\#{1,6}|=+|-+|\*{3,}|_{3,}|>.*|`{3,}.*|~{3,}.*|\|.*)\z/
+
+    # Whether a paragraph's line may be broken between the words *before*
+    # and *after*, *after* starting the next line: not when *after* would
+    # start something else there (`BLOCK_WORD`), nor after a backslash
+    # ending *before*, which at a line's end is a hard line break.
+    def self.breakable?(before : String, after : String) : Bool
+      !BLOCK_WORD.matches?(after) && (before.size - before.rstrip('\\').size).even?
+    end
 
     # Whether line *index* of *doc* must not be broken or refilled: a code
     # block's line, a fence, a heading, a table row or a rule. One line's
@@ -764,12 +783,22 @@ module Md
     # *lines*, one paragraph, refilled to *column*: the first line keeps its
     # own prefix (a list marker, the quote), the next ones take the
     # continuation prefix, and the words flow across them, as many to a
-    # line as fit; a word longer than the line has one to itself.
+    # line as fit; a word longer than the line has one to itself. No line
+    # is broken where the next would start with Markdown of its own
+    # (`.breakable?`): the word that would, a `-` or a `#` in the text,
+    # stays with the one before it.
     private def fill(lines : Array(String), column : Int32) : Array(String)
       first = lines[0]
       head = (item = ListItem.parse(first)) ? first[0, item.prefix_size] : (QUOTE_LEAD.match(first).try(&.[0]) || "")
       rest = App.continuation_prefix(first)
-      words = ([first[head.size..]] + lines[1..].map(&.sub(QUOTE_LEAD, ""))).join(' ').split
+      words = [] of String
+      ([first[head.size..]] + lines[1..].map(&.sub(QUOTE_LEAD, ""))).join(' ').split.each do |word|
+        if (last = words.last?) && !App.breakable?(last, word)
+          words[-1] = "#{last} #{word}"
+        else
+          words << word
+        end
+      end
       out = [] of String
       current = head
       empty = true

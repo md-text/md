@@ -818,5 +818,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - In Vi Mode, keys typed right after `:e FILE`, `:enew` or `:split` could edit
   the other buffer before the document's buffer came back. (Fixed in Crysterm,
   which md builds against.)
+- Format → Rewrap could break a line before a word that starts a line with
+  Markdown of its own, so a `-`, `1.`, `#` or `>` in the text became a list
+  item, a heading or a quote on the line it began, and a `===` alone on the
+  last line made the paragraph a heading; and a line it ended after a
+  backslash ended in a hard line break. Such a word now stays with the one
+  before it.
 
 [Unreleased]: https://github.com/md-text/md/commits/main
