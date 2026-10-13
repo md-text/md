@@ -110,9 +110,18 @@ module Md
     # empty answer writes nothing.
     def save_config_prompt : Nil
       ask_text("Save config as: ", Config.path) do |answer|
-        path = answer.try &.strip
-        write_config path if path && !path.empty?
+        path = config_answer(answer)
+        write_config path if path
       end
+    end
+
+    # The file a Load Config or Save Config As answer names, or nil for none:
+    # a leading `~` is the home directory, as Tab completes it and as Qt's
+    # file dialog expands one typed in, rather than a directory of that
+    # name, which the save would have created in the working directory.
+    private def config_answer(answer : String?) : String?
+      path = answer.try &.strip
+      File.expand_path(path, home: true) if path && !path.empty?
     end
 
     # Puts the pane sizes, as they are now, into their option, for a write —
@@ -137,8 +146,7 @@ module Md
     # value that does not fit, is a notice.
     def load_config_prompt : Nil
       ask_text("Load config: ", Config.path) do |answer|
-        path = answer.try &.strip
-        next if path.nil? || path.empty?
+        next unless path = config_answer(answer)
         begin
           Config.load_file path
           notice "Loaded #{path}"
