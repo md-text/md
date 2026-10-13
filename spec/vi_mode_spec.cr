@@ -151,6 +151,18 @@ describe "Md::App Vi Mode" do
     end
   end
 
+  it "keeps the editor's buffer in Neovim's window on :enew" do
+    with_app text: "# A\n" do |app, window|
+      app.vi_mode = true
+      app.editor.focus
+      vi_type window, ":enew<CR>"
+      vi_type window, "ggAb<Esc>"
+      app.markdown.should eq "# Ab\n"
+      app.vi_mode?.should be_true
+      settle { notice(app).includes? "own buffer" }
+    end
+  end
+
   it "keeps the viewer's : as md's command line" do
     with_app text: "# A\n\ntext\n" do |app, window|
       app.vi_mode = true

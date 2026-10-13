@@ -436,7 +436,9 @@ Mode: Use Neovim Config (`md.vi_config`) is on: then your
 in the editor. Without `nvim` in `PATH` the entry is disabled, its
 description saying why; should Neovim end, or the editor's buffer be closed
 in it (`:bw`), Vi Mode turns off with a notice and the editor goes on as
-before. The viewer's `:` stays md's command line
+before. Neovim edits only the editor's buffer, in one window: `:enew`,
+`:e FILE`, `:b N`, `:split` or `:new` is undone at once, with a notice.
+The viewer's `:` stays md's command line
 (the viewer is no text input), and the line prompts keep plain editing.
 
 ### Searching and jumping

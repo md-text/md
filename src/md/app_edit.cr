@@ -1045,11 +1045,11 @@ module Md
     # and its closing fence and its last line; the closing fence is nil
     # for a block that runs to the end of the document, or that an outdent
     # ends inside a list item, its last line then the one before the
-    # outdented line. A fence is a fence line (`FENCE`) that is no code
-    # block's own line (`.code_lines`' scan), so a fence shown inside a
-    # block's code, or in an indented code block, does not count; the scan
-    # tells a fence that closes a block from one an outdent ended the block
-    # on, which opens another.
+    # outdented line. A block opens where `.code_lines`' scan opens one, so
+    # a fence shown inside a block's code, in an indented code block, or
+    # on a paragraph's line indented four columns (its text run on) does
+    # not count; the scan tells a fence that closes a block from one an
+    # outdent ended the block on, which opens another.
     private def fenced_blocks(doc : Crysterm::TextDocument) : Array({Int32, Int32?, Int32})
       blocks = [] of {Int32, Int32?, Int32}
       scan = CodeScan.new
@@ -1066,7 +1066,7 @@ module Md
           open = nil
           next if closing
         end
-        open = i if fence
+        open = i if scan.fenced?
       end
       open.try { |start| blocks << {start, nil, doc.block_count - 1} }
       blocks

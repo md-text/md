@@ -509,6 +509,14 @@ describe "Md::App editing" do
     end
   end
 
+  it "takes a ``` that a paragraph's text runs on to, four columns in, for text, not a fence" do
+    with_app text: "text\n    ```\nmore\n", view: false do |app|
+      place app, 1, 5
+      app.toggle_code_block.should be_true
+      app.markdown.should eq "```\ntext\n    ```\nmore\n```\n"
+    end
+  end
+
   it "promotes and demotes the heading on the caret's line" do
     with_app text: "## Title\n> ## quoted\n###### deep\n", view: false do |app, window|
       place app, 0, 3

@@ -386,8 +386,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   cancelled). Neovim starts with `--clean` unless Options → Vi Mode: Use Neovim
   Config (`vi-config`, `md.vi_config`) is on. Without `nvim` the entry is
   disabled and says why, and a Neovim that ends, or closing the editor's
-  buffer in Neovim (`:bw`), turns Vi Mode off. The viewer's `:` stays md's
-  command line.
+  buffer in Neovim (`:bw`), turns Vi Mode off. Neovim keeps the editor's
+  buffer in its one window: `:enew`, `:e FILE`, `:b N`, `:split` and `:new`
+  are undone at once with the notice "Only the widget's own buffer can be
+  edited here", where the keys then edited a buffer the editor did not
+  show. The viewer's `:` stays md's command line.
 - Format → Code Block (`code-block`): Code's companion for whole lines. It
   puts the selected lines, or the paragraph at the caret, between ```` ``` ````
   fences carrying the first line's quote markers and indentation, drops an
@@ -468,7 +471,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   on the line break between them. In a block opened by a fence that also
   ended a list item's block by its outdent, it takes that block's fences off,
   where it took the fence for the item block's closing one and fenced the code
-  again.
+  again. A ```` ``` ```` indented four columns on a line a paragraph's text
+  runs on to is that paragraph's text to Code Block, which fences the
+  paragraph from it, where it took the line for an opening fence and deleted
+  it.
 - Quitting with the viewer focused and the outline shown no longer crashes
   and wedges the process: tearing the panes down rewound focus from the
   viewer to the outline, whose focus-in refreshed the status bar, which asked
