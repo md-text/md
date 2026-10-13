@@ -110,6 +110,19 @@ module Md
       end
     end
 
+    # Whether *path* is a place md can go back to: a file on disk, or one a
+    # window still has open (its text in memory). A file deleted since it
+    # was left is not — reopening it would make a new, empty document under
+    # its name — and is said so ("No such file"), as Qt Creator does for a
+    # recent file that is gone. For Previous File, Next File, File → Close's
+    # next place and File → Open Recent, asked before their unsaved-changes
+    # question, which would be for nothing.
+    private def reopenable?(path : String) : Bool
+      return true if File.exists?(path) || Documents.find(path)
+      notice "No such file: #{path}"
+      false
+    end
+
     # The file a name typed at a prompt stands for: a leading `~` or `~/`
     # is the home directory, as in the shell, Qt's file dialogs and the
     # prompt's own completion (which expands it only on `Tab`), so
@@ -371,6 +384,18 @@ module Md
       history.save if history.dirty?
     end
 
+    # File → Open Recent's entry for *path*: opened through the guard, or,
+    # when the file is gone from disk, taken off the list with a notice
+    # (`#reopenable?`).
+    private def open_recent(path : String) : Nil
+      if reopenable?(path)
+        confirm_open(path) { open_file path }
+      elsif (history = @history) && history.forget(path)
+        history.save
+        refresh_recent_menus
+      end
+    end
+
     # Rebuilds File → Open Recent in every window keeping this window's
     # history (`#refresh_recent_menu`): the windows share it, so a file
     # opened, or the list cleared, in one shows in the others' menus too.
@@ -387,7 +412,7 @@ module Md
       entries = history.recent
       actions = entries.map do |entry|
         a = Crysterm::Action.new literal_label(entry.path)
-        a.on(Crysterm::Event::Triggered) { confirm_open(entry.path) { open_file entry.path } }
+        a.on(Crysterm::Event::Triggered) { open_recent entry.path }
         tip a, "Open this file again, at the place left in it"
       end
       action.menu = actions

@@ -142,7 +142,7 @@ module Md
           trail.forward.reject! { |place| here?(place) }
         end
         while target = trail.forward.pop?
-          next unless path = target.path
+          next unless (path = target.path) && reopenable?(path)
           @retracing = true # a close is no step: the closed place is not kept
           opened = begin
             open_file path
@@ -333,6 +333,10 @@ module Md
       if path.nil? || here?(target)
         go_to_line target.line, target.column
         arrived.call true
+        return
+      end
+      unless reopenable?(path)
+        arrived.call false # the place is spent: the next step leads on
         return
       end
       confirm_discard do

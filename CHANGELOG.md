@@ -542,6 +542,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- A file deleted since it was left was reopened as a new, empty document
+  under its name by File → Previous File, Next File, File → Close (the next
+  place) and File → Open Recent. md now says "No such file", spends the
+  place or takes the entry off Open Recent, and asks no unsaved-changes
+  question first.
 - A document deep enough that its escaped path was longer than a file name
   may be was never auto-saved ("File name too long") and never locked
   against a second md. Such a recovery or lock file is now named by a digest
