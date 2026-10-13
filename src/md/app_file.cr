@@ -111,8 +111,10 @@ module Md
       push_leaving_place
       doc = Document.new Source.new(path: path), text || ""
       doc.watch_file.value = watch_file?
+      # The caret starts at the top, as Qt's `setPlainText` and
+      # `setDocument` put it (`#switch_document`), unless the history
+      # remembers a place (`#restore_position`).
       switch_document doc
-      @editor.cursor_position = doc.text.size
       if text
         show_pane(Pane::Viewer).focus unless @viewer.visible?
       else

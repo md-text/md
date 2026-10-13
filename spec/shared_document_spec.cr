@@ -506,7 +506,7 @@ describe "Md::App watching a file shown in two windows" do
         b.editor.insert_text "x"
         File.write path, "third, longer\n"
         settle { notice(a).includes?("unsaved changes kept") && notice(b).includes?("unsaved changes kept") }
-        a.markdown.should eq "secondx\n" # the edit kept, not the file
+        a.markdown.should eq "xsecond\n" # the edit kept, not the file
         File.delete path
         settle { notice(a).includes?("removed from disk") && notice(b).includes?("removed from disk") }
       end

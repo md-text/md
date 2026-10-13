@@ -85,7 +85,7 @@ describe "Md::App sync cursor" do
       follow.checked?.should be_false
       follow.trigger
       app.sync_cursor?.should be_true
-      app.editor.cursor_position = at(app, 99)
+      app.editor.text_cursor = Crysterm::TextCursor.new(app.editor.document, at(app, 99))
       window.repaint
       app.viewer.scroll_position.should be > 0
       window.dump.to_s.should contain "Paragraph 50"

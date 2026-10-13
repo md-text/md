@@ -448,6 +448,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- A file opened puts the editor's cursor at the top, as Qt's editors do,
+  unless md remembers a place in it, where it was put at the end. Undo and
+  redo of a format change (Format → Bold, a block's format) put the cursor
+  after the range changed, as they do for text and as Qt does, where it
+  stayed put. (Changed in Crysterm, which md builds against.)
 - Windows on one document share it, as two windows on one buffer do in Vim,
   Emacs, Kate or Qt Creator: Window → New shows the same text, where it
   showed a copy, so an edit in either window is in both as it is typed, Undo

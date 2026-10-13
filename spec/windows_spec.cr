@@ -88,7 +88,7 @@ describe "Md::App windows" do
   it "shares the unsaved state, and only the last window on the document asks" do
     with_app Md::Source.new(path: "doc.md"), text: "A\n", view: true do |app, window|
       app.window_opener = recording_opener([] of Crysterm::Window)
-      app.editor.cursor_position = 0 # a load leaves the caret at the end
+      app.editor.cursor_position = 0
       app.editor.insert_text "changed "
       other = app.new_window || fail("no window was opened")
       begin
