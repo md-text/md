@@ -239,7 +239,7 @@ module Md
     private def self.export(positional : Array(String), format : String, stdin : IO, stdout : IO) : Int32
       source = Source.resolve(positional, false)
       text = (path = source.path) ? read_file(path) : stdin.gets_to_end
-      stdout << Export.render(text, format)
+      stdout << Export.render(Source.decode(text), format)
       0
     end
 

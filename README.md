@@ -425,11 +425,13 @@ place of the document's name while one is typed; Neovim's messages come as
 notices. Visual mode is the editor's selection, so Copy and Format act on
 it. `u` and `Ctrl-R` are Neovim's undo and redo, an insert one step; an
 edit made by md (Format, Replace, a paste with the mouse) reaches Neovim
-and is undone by `u` too. `:w` saves, `:w FILE` saves as FILE, `:q`
-closes the window as Window → Close Current does, asking about unsaved
-changes, `:q!` closes it without asking, `:qa` (`:qa!`) quits, and
-`:wq`, `:x` and `ZZ` save, then close — a new document once it is
-named in the Save As question, staying open when that is cancelled.
+and is undone by `u` too; a document opened, reloaded or closed starts
+the undo history afresh, in Neovim as in the editor. `:w` saves, `:w
+FILE` saves as FILE, `:q` closes the window as Window → Close Current
+does, asking about unsaved changes, `:q!` closes it without asking,
+`:qa` (`:qa!`) quits, and `:wq`, `:x` and `ZZ` save, then close — a new
+document once it is named in the Save As question, staying open when
+that is cancelled.
 Neovim writes no file itself.
 
 Neovim starts with `--clean`, without your config, unless Options → Vi
@@ -495,7 +497,9 @@ place. View → Watch File (or `--watch` on the command line) does that for
 you: the file is polled once a second and reloaded when another program
 changed it, so md beside an editor shows each save as it happens. While the
 editor holds unsaved changes the reload is skipped and a notice says the
-file changed on disk. The status bar shows `(watching)` after the name.
+file changed on disk; a file removed keeps its text in md, with a notice,
+and is reloaded when it comes back. The status bar shows `(watching)` after
+the name.
 
 File → Close closes the document, asking first about unsaved changes, and
 takes it off the trail of files that Previous File and Next File retrace
@@ -676,7 +680,8 @@ recovery files live in `$XDG_STATE_HOME/md/autosave/`
 (`~/.local/state/md/autosave/`), named after the file's absolute path with
 `/` escaped as `%2F` (`/home/u/notes.md` recovers from
 `%2Fhome%2Fu%2Fnotes.md`); a document without a name, such as one piped in
-on standard input and then edited, is kept as `unnamed-<date>-<time>-<pid>.md`.
+on standard input and then edited, is kept as `unnamed-<date>-<time>-<pid>.md`
+(with `-2`, `-3`… for another window's from the same second).
 Saving or quitting normally removes the recovery file, so whatever remains
 in the directory is what some session lost. When you open a file whose
 recovery file is newer than the file, a notice names the copy; open it

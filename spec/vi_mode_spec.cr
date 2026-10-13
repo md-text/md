@@ -163,6 +163,22 @@ describe "Md::App Vi Mode" do
     end
   end
 
+  it "starts Neovim's undo history afresh in a document opened" do
+    path = tempfile("# B\n")
+    with_app text: "# A\n" do |app, window|
+      app.vi_mode = true
+      app.editor.focus
+      vi_type window, "ggAb<Esc>"
+      app.markdown.should eq "# Ab\n"
+      app.open_file(path).should be_true
+      app.editor.focus
+      app.vi.sync
+      vi_type window, "u"
+      app.markdown.should eq "# B\n"
+      app.vi_mode?.should be_true
+    end
+  end
+
   it "keeps the viewer's : as md's command line" do
     with_app text: "# A\n\ntext\n" do |app, window|
       app.vi_mode = true

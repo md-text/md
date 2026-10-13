@@ -90,7 +90,8 @@ module Md
     # file, if any, is restored. Returns whether the file could be opened.
     def open_file(path : String) : Bool
       path = File.expand_path path
-      text = File.exists?(path) ? File.read(path) : nil
+      raw = File.read(path) if File.exists?(path)
+      text = raw.try { |read| Source.decode read }
       remember_position
       leave_document
       abandon_stream
@@ -110,7 +111,7 @@ module Md
       remember_position # the file just opened leads the recent list
       setup_file
       refresh_status
-      notice(text ? "Opened #{path}" : "New file #{path}")
+      notice(text ? "Opened #{path}#{" (invalid UTF-8 replaced by �)" unless text.same?(raw)}" : "New file #{path}")
       check_recovery
       true
     rescue ex : IO::Error
@@ -237,7 +238,7 @@ module Md
     # file could be read; when not, its notice says so and the document
     # stays as it was.
     private def reload_from(path : String) : Bool
-      text = File.read path
+      text = Source.decode File.read(path)
       caret = @editor.cursor_position
       @loading = true
       @editor.plain_text = text
@@ -272,14 +273,21 @@ module Md
 
     # The watched file changed on disk: reload it, unless the text on disk
     # is what the editor already holds (our own save) or the editor holds
-    # unsaved changes, which are kept with a notice.
+    # unsaved changes, which are kept with a notice. A file removed is
+    # said so, its text kept to be saved again; it is reloaded if it comes
+    # back. A change the watcher posted before Watch File was turned off
+    # is let be.
     private def file_changed(path : String) : Nil
-      return unless path == @source.path
+      return unless @watch_file.value && path == @source.path
+      unless File.exists?(path)
+        notice "#{path} was removed from disk; the text is kept"
+        return
+      end
       if @editor.document.modified?
         notice "#{path} changed on disk; unsaved changes kept"
         return
       end
-      return if File.exists?(path) && File.read(path) == markdown
+      return if Source.decode(File.read(path)) == markdown
       notice "Reloaded #{path} (changed on disk)" if reload_from path
     rescue IO::Error
       # A file mid-rewrite; the next change is polled.

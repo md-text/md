@@ -25,7 +25,8 @@ module Md
     # `%25`, so the name reads back to the path): `/home/u/notes.md`
     # recovers from `%2Fhome%2Fu%2Fnotes.md`. A document without a name — a
     # new one, or standard input, which md edits like anything else —
-    # recovers from `unnamed-<date>-<time>-<pid>.md`. A save makes the
+    # recovers from `unnamed-<date>-<time>-<pid>.md` (`-2`, `-3`… added
+    # for another window's taken in the same second). A save makes the
     # recovery file redundant and removes it, as does a clean exit, so what
     # is left in the directory after a crash or a kill is just what was
     # lost. Opening a file whose recovery file is newer than the file gets a
@@ -116,12 +117,14 @@ module Md
 
     # Starts the timer, or takes it down: run when the setting or the
     # interval changes. The tick is posted to the render fiber, where the
-    # editor is read (as `Crysterm::FileWatcher` delivers its events).
+    # editor is read (as `Crysterm::FileWatcher` delivers its events); a
+    # tick still queued when its timer is stopped or replaced is dropped
+    # there, so nothing is written after `#finish_autosave`.
     private def setup_autosave : Nil
       stop_autosave
       return unless @autosave.value
       timer = Crysterm::Timer.new @autosave_interval, immediate: false
-      timer.on_tick { @window.post { autosave_tick } }
+      timer.on_tick { @window.post { autosave_tick if @autosave_timer.same?(timer) } }
       @autosave_timer = timer.start
     end
 
@@ -165,14 +168,27 @@ module Md
     end
 
     # Removes the document's recovery file, if one was written: the document
-    # is saved, left for another, or the session ends cleanly.
+    # is saved, left for another, or the session ends cleanly. Another
+    # window on the same file with unsaved edits of its own keeps the file
+    # for them, and writes them at its next tick, over what this one wrote.
     private def drop_recovery : Nil
       if path = @recovery_path
-        File.delete? path
+        sharing = App.instances.select { |app| !app.same?(self) && app.@recovery_path == path && app.editor.document.modified? }
+        if sharing.empty?
+          File.delete? path
+        else
+          sharing.each &.mark_for_autosave
+        end
       end
       @recovery_path = nil
     rescue IO::Error
       # A recovery file that will not go is still only a copy.
+    end
+
+    # Makes the next tick write the document, whose recovery file another
+    # window on the same file has written over (`#drop_recovery`).
+    protected def mark_for_autosave : Nil
+      @autosave_dirty = true
     end
 
     # The exit's part: the timer stops and the recovery file goes, the
@@ -223,7 +239,15 @@ module Md
       if path = @source.path
         App.recovery_name path
       else
-        "unnamed-#{Time.local.to_s("%Y%m%d-%H%M%S")}-#{Process.pid}.md"
+        # Another window's unnamed document may have taken the name in the
+        # same second: a number tells the two apart.
+        base = "unnamed-#{Time.local.to_s("%Y%m%d-%H%M%S")}-#{Process.pid}"
+        name = "#{base}.md"
+        n = 1
+        while App.instances.any? { |app| !app.same?(self) && app.@recovery_path.try { |taken| File.basename(taken) == name } }
+          name = "#{base}-#{n += 1}.md"
+        end
+        name
       end
     end
   end

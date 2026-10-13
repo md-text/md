@@ -243,7 +243,8 @@ module Md
       wire_vi
 
       Pane.each { |pane| widget(pane).hide }
-      load text unless text.empty?
+      decoded = Source.decode text
+      load decoded unless decoded.empty?
       stream(stream) if stream
       show_pane(view ? Pane::Viewer : Pane::Editor).focus
       build_menus
@@ -265,6 +266,7 @@ module Md
       end
       refresh_recent_menu
       self.watch_file = watch
+      notice "Invalid UTF-8 in #{document_name} replaced by �" unless decoded.same?(text)
       wire_autosave
     end
 
@@ -611,15 +613,22 @@ module Md
       save_as_prompt { }
     end
 
-    # Makes *path* the document's file and saves to it.
+    # Saves to *path* and makes it the document's file. A save that fails
+    # (a directory that is not there, no permission) leaves the document
+    # its old name, as Qt's editors set the current file only once written.
     def save_as(path : String) : Bool
+      previous = @source
       @source = Source.new path: path
+      unless save
+        @source = previous
+        return false
+      end
       retitle
       apply_base_url
       # Watch File follows the document: the watcher on the old path is
       # replaced by one on the new (`app_file.cr`).
       setup_file
-      save
+      true
     end
 
     # Reads *io* in the background (`Window#pump`), line by line, feeding
@@ -650,6 +659,10 @@ module Md
     # arrives after the window was destroyed is dropped.
     def receive(chunk : String) : Nil
       return if @stream_abandoned || @window.destroyed?
+      unless (decoded = Source.decode chunk).same?(chunk)
+        notice "Invalid UTF-8 in #{document_name} replaced by �"
+        chunk = decoded
+      end
       @streamed << chunk
       @viewer.append_markdown chunk
       append_to_editor chunk unless @editor_stale

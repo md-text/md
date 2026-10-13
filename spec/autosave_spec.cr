@@ -105,6 +105,10 @@ describe "Md::App auto-save" do
           File.exists?(copy).should be_false
           edit app, "more "
           settle { File.exists? copy }
+          # A tick posted to the render fiber and still queued when the
+          # timer stops is dropped there: queue one, with no yield before
+          # the stop, so it runs after it.
+          (app.@autosave_timer || fail("no timer")).emit Crysterm::Event::Tick
           app.finish_autosave
           File.exists?(copy).should be_false
           app.editor.insert_text "late"
@@ -150,6 +154,49 @@ describe "Md::App auto-save" do
         File.read(File.join(dir, copies[0])).should eq "unsaved"
         app.finish_autosave
         Dir.children(dir).should be_empty
+      end
+    end
+  end
+
+  it "gives two windows' unnamed documents a recovery file each" do
+    with_state_home do |dir|
+      with_app do |one|
+        with_app do |two|
+          one.autosave_interval = 20.milliseconds
+          two.autosave_interval = 20.milliseconds
+          one.editor.insert_text "one"
+          two.editor.insert_text "two"
+          settle { Dir.exists?(dir) && Dir.children(dir).size == 2 }
+          one.recovery_path.should_not eq two.recovery_path
+          File.read(one.recovery_path).should eq "one"
+          File.read(two.recovery_path).should eq "two"
+        end
+      end
+    end
+  end
+
+  it "keeps the recovery file another window on the same file still needs" do
+    with_state_home do |_dir|
+      path = tempfile "text\n"
+      begin
+        with_app Md::Source.new(path: path), text: "text\n", view: true do |one|
+          with_app Md::Source.new(path: path), text: "text\n", view: true do |two|
+            one.autosave_interval = 20.milliseconds
+            two.autosave_interval = 20.milliseconds
+            edit two, "two "
+            copy = two.recovery_path
+            settle { File.exists?(copy) && File.read(copy) == "two text\n" }
+            edit one, "one "
+            settle { File.read(copy) == "one text\n" } # the same file: the last writer's
+            one.save.should be_true
+            settle { File.exists?(copy) && File.read(copy) == "two text\n" } # the other window's edits, written again
+            two.save.should be_true
+            File.exists?(copy).should be_false # nobody needs it now
+          end
+        end
+      ensure
+        File.delete? path
+        File.delete? "#{path}~"
       end
     end
   end

@@ -153,9 +153,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   file under `$XDG_STATE_HOME/md/autosave/` (`~/.local/state/md/autosave/`),
   never to the file itself — named after the file's absolute path with `/`
   escaped as `%2F`, or `unnamed-<date>-<time>-<pid>.md` for a document
-  without a name, standard input included — and removes it on a save or a
-  normal exit, so the directory holds only what a crash lost; opening a file
-  whose copy is newer than it gets a notice naming the copy.
+  without a name, standard input included (`-2`, `-3`… for another window's
+  started in the same second) — and removes it on a save or a normal exit,
+  so the directory holds only what a crash lost, though not while another
+  window on the same file still has unsaved edits of its own in it; opening
+  a file whose copy is newer than it gets a notice naming the copy. An
+  auto-save the timer had queued when md quit is dropped, where it could
+  write the recovery file again after the exit removed it.
 - Format → Soft Wrap (`Alt-W`) folds long lines in the editor at the pane's
   edge or lets them run past it with sideways scrolling; Format → Text Width
   caps the text at 72, 80, 100 or 120 columns for a wide terminal, in both
@@ -391,7 +395,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   are undone at once (other windows closed, a file buffer they left behind
   dropped unless modified) with the notice "Only the widget's own buffer can
   be edited here", where the keys then edited a buffer the editor did not
-  show. The viewer's `:` stays md's command line.
+  show. A document opened, reloaded or closed starts Neovim's undo history
+  afresh, as it does the editor's, where `u` then brought back the text of
+  the document before; Visual mode selects a letter with combining marks
+  or a flag at the selection's end whole, where it split it; and a change
+  Neovim reports line by line (`u` after `:%s`, `:g`) reaches the editor as
+  one edit, one step of Edit → Undo, where each line was an edit of its
+  own and a long document took minutes (all fixed in Crysterm). The
+  viewer's `:` stays md's command line.
 - Format → Code Block (`code-block`): Code's companion for whole lines. It
   puts the selected lines, or the paragraph at the caret, between ```` ``` ````
   fences carrying the first line's quote markers and indentation, drops an
@@ -449,6 +460,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- A file or standard input with bytes that are not UTF-8 opens, each bad
+  byte shown as `�` (U+FFFD) with a notice saying so, where md crashed at
+  start, File → Open… and Reload raised an internal error, and a stream
+  stopped at the first such line; `md --export` takes them so too.
+- File → Save As… to a name that cannot be written (a directory that is not
+  there, no permission) keeps the document's name, title and watched file,
+  where it took the new name anyway and the next Save went to it again.
+- View → Watch File says "FILE was removed from disk; the text is kept" when
+  the file is deleted, where it said it could not reload it, and reloads it
+  when it comes back; a change the watcher had queued when Watch File was
+  turned off is no longer reloaded.
+- A document with very long lines (a paragraph of tens of thousands of
+  characters on one line) opens and takes typing at once, where wrapping
+  and importing it took time growing with the square of the line's length —
+  seconds for a 100 KB line. (Fixed in Crysterm, which md builds against.)
 - Pictures are sampled at each cell's centre, so they no longer sit half a
   cell up and to the left, and the bottom rows are kept when a picture is
   shrunk. (Changed in pnggif, which Crysterm builds against.)
@@ -591,5 +617,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   lost them: a menu shown or hidden was given a bare inline style of its own,
   which replaced the menu's styles once no theme styled it any more. (Fixed
   in Crysterm, which md builds against.)
+- `Ctrl-Z` no longer leaves the shell with md's cursor shape or color until
+  `fg`. (Fixed in Crysterm, which md builds against.)
+- In the editor, text no longer runs into the caret or scroll-bar column,
+  rules and code backgrounds no longer cover the scroll bar, and the reading
+  column keeps its width when the scroll bar appears. (Fixed in Crysterm,
+  which md builds against.)
+- Long lines are wrapped in linear time: a document with a 100 KB line opens
+  in about 0.3s instead of 5.8s, and typing in it no longer takes seconds per
+  key. (Fixed in Crysterm, which md builds against.)
 
 [Unreleased]: https://github.com/crystallabs/md/commits/main

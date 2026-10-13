@@ -170,6 +170,68 @@ describe "Md::App watch" do
   end
 end
 
+describe "Md::App file failures" do
+  it "keeps the document's name when Save As cannot write the file" do
+    path = tempfile "a\n"
+    begin
+      with_app Md::Source.new(path: path), text: "a\n", view: true, watch: true do |app, window|
+        app.save_as("/nonexistent-md-dir/x.md").should be_false
+        notice(app).should start_with " Cannot save /nonexistent-md-dir/x.md: "
+        app.source.path.should eq path
+        window.title.to_s.should contain File.basename(path)
+        app.save.should be_true # to the old name, as before
+      end
+    ensure
+      File.delete? path
+      File.delete? "#{path}~"
+    end
+  end
+
+  it "says a watched file was removed, keeps the text, and reloads the file when it is back" do
+    path = tempfile "a\n"
+    begin
+      with_app Md::Source.new(path: path), text: "a\n", view: true, watch: true do |app|
+        app.watch_interval = 20.milliseconds
+        app.watch_file = false
+        app.watch_file = true
+        File.delete path
+        settle { notice(app) == " #{path} was removed from disk; the text is kept" }
+        app.markdown.should eq "a\n"
+        File.write path, "b\n"
+        settle { app.markdown == "b\n" }
+      end
+    ensure
+      File.delete? path
+    end
+  end
+
+  it "takes a file or a stream with bytes that are not UTF-8, as U+FFFD, saying so" do
+    path = tempfile "bad \xff\xfe\n# h\n"
+    begin
+      with_app do |app|
+        app.open_file(path).should be_true
+        app.markdown.should eq "bad \uFFFD\uFFFD\n# h\n"
+        notice(app).should eq " Opened #{path} (invalid UTF-8 replaced by \uFFFD)"
+        File.write path, "worse \xff\n"
+        app.reload
+        app.markdown.should eq "worse \uFFFD\n"
+      end
+      with_app Md::Source.new(path: path), text: File.read(path), view: true do |app|
+        app.markdown.should eq "worse \uFFFD\n"
+        notice(app).should eq " Invalid UTF-8 in #{File.basename(path)} replaced by \uFFFD"
+      end
+      with_app Md::Source.new(stdin: true), view: true do |app|
+        app.stream IO::Memory.new("ok\nbad \xff\nend\n")
+        settle { !app.@streaming }
+        app.markdown.should eq "ok\nbad \uFFFD\nend\n"
+        notice(app).should eq " Invalid UTF-8 in stdin replaced by \uFFFD"
+      end
+    ensure
+      File.delete? path
+    end
+  end
+end
+
 describe "Md::App unsaved-changes guard" do
   it "lets the window close when nothing is modified or the guard is off" do
     with_app do |app, window|

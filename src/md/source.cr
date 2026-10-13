@@ -36,5 +36,13 @@ module Md
     def name : String?
       @path || (@stdin ? "stdin" : nil)
     end
+
+    # *text* read from a file or a stream, as the document takes it: bytes
+    # that are not UTF-8 replaced by U+FFFD (`String#scrub`), as
+    # `QString::fromUtf8` decodes a file — the parsing and the layout take
+    # valid UTF-8 only.
+    def self.decode(text : String) : String
+      text.valid_encoding? ? text : text.scrub
+    end
   end
 end
