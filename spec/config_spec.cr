@@ -243,8 +243,8 @@ describe "Md::App config menu" do
         config_file(other)["md"]["guides"].as_bool.should be_true
 
         app.save_config_prompt
-        answer app, "" # nothing written
-        notice(app).should eq " Saved #{other}"
+        answer app, "" # nothing written, and nothing said
+        notice(app).should eq "" # the question ended the last notice
       end
     end
   end
