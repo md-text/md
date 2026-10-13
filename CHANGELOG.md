@@ -542,6 +542,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- In Vi Mode, `:w! FILE` naming the document's own file wrote it as a copy:
+  the file changed under the document, which stayed unsaved. It saves the
+  document now, as Vim's `:w` of the file being edited does.
 - `md --help`, `--generate` or `--export` piped into a reader that stops
   early (`md --export html big.md | head`) printed an internal error with a
   backtrace. md now stops quietly there, with the status of a filter killed

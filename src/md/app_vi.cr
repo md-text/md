@@ -208,8 +208,14 @@ module Md
     # `:w`: saves; with *path*, writes a copy there (`:w FILE`), or saves
     # as *path* when *rename* (`:saveas FILE`) or the document has no name
     # (Vim's 'cpoptions' `F`); a document without a name asks for one (File
-    # → Save As).
+    # → Save As). A *path* that is the document's own file — by whatever
+    # name (`Documents.key_for`) — is a plain save, as Vim's `:w FILE` of
+    # the file being edited is: Neovim knows the buffer by another name and
+    # asks it as a copy (with `!`, the file existing), which would have
+    # written the file and left the document unsaved, its file changed
+    # under it.
     private def vi_write(path : String?, rename : Bool) : Nil
+      path = nil if path && (own = source.path) && Documents.key_for(path) == Documents.key_for(own)
       if path && (rename || source.path.nil?)
         save_as path
       elsif path
