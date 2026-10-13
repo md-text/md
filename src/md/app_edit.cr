@@ -150,6 +150,9 @@ module Md
     # The Format → As a Task entry, whose check follows the caret's item.
     @task_action : Crysterm::Action?
 
+    # Whether the editor had the focus last of the panes (`#editor_leads?`).
+    @editor_led = false
+
     # A list item line taken apart: the blockquote markers before it (`>`
     # with the spacing between them; empty outside a quote), its
     # indentation, its marker, the spacing after the marker, its task box
@@ -751,6 +754,17 @@ module Md
     # Gives the editor its Markdown keys (from `#wire_panes`).
     private def wire_editing : Nil
       @editor.key_filter = ->(e : Crysterm::Event::KeyPress) { markdown_key e }
+      @editor_led = @editor.focused?
+      Pane.each { |pane| widget(pane).on(Crysterm::Event::FocusIn) { @editor_led = pane.editor? } }
+    end
+
+    # Whether the Format entries act on the editor's caret rather than on
+    # the source of the viewer's: the editor has the focus, or had it last
+    # of the panes while the focus is on none — on the menu bar or a menu
+    # opened from it, which take the focus in Crysterm where Qt's leave
+    # the window's focus widget as it was.
+    private def editor_leads? : Bool
+      @editor.focused? || (@editor_led && Pane.values.none? { |pane| widget(pane).focused? })
     end
 
     # The editor's keys that know the syntax, ahead of its own: `Enter` on a
@@ -971,7 +985,7 @@ module Md
     private def refresh_task_entry : Nil
       action = @task_action || return
       doc = @editor.document
-      first, last = if @editor.focused?
+      first, last = if editor_leads?
                       selected_blocks
                     else
                       line = doc.block_at(editor_position(@viewer.cursor_position)).index
@@ -1497,7 +1511,7 @@ module Md
     # caret put on the source of the viewer's, so the entry acts on what the
     # reader looks at.
     private def formatting_editor : Crysterm::Widget::PlainTextEdit
-      from_viewer = !@editor.focused?
+      from_viewer = !editor_leads?
       show_pane Pane::Editor unless @editor.visible?
       if from_viewer
         pos = editor_position(@viewer.cursor_position)

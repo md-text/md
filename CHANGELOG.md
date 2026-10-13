@@ -901,5 +901,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   line, or on a task item's `- [ ]` — wrapped the nearest word before it,
   however many lines up; they put the pair at the caret now. (Fixed in
   Crysterm, which md builds against.)
+- Format → As a Task, opened from the keyboard (`Alt-M`, `F10`) while
+  editing, showed the check of the line at the viewer's caret instead of the
+  editor's, as the menu bar takes the focus as it opens; it follows the
+  editor's caret now, as the entries themselves do.
 
 [Unreleased]: https://github.com/md-text/md/commits/main

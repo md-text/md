@@ -119,3 +119,26 @@ describe "Md::App editing, Bold" do
     end
   end
 end
+
+describe "Md::App editing, the Format menu from the keyboard" do
+  it "checks As a Task by the editor's caret when the menu bar has taken the focus from the editor" do
+    {Tput::Key::AltM, Tput::Key::F10}.each do |key|
+      with_app text: "- [ ] top\n\nplain\n\n- [ ] x\n", view: true do |app, window|
+        app.show_pane(Md::App::Pane::Editor).focus
+        task = menu(app, 2).actions.find!(&.text.==("As a &Task"))
+        place app, 2, 2
+        window.repaint
+        press window, key
+        {Tput::Key::Right, Tput::Key::Right, Tput::Key::Down}.each { |k| press window, k } if key.f10?
+        app.editor.focused?.should be_false
+        task.checked?.should be_false
+        app.main.menu_bar.close
+        app.editor.focus
+        place app, 4, 7
+        press window, key
+        {Tput::Key::Right, Tput::Key::Right, Tput::Key::Down}.each { |k| press window, k } if key.f10?
+        task.checked?.should be_true
+      end
+    end
+  end
+end
