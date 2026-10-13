@@ -109,6 +109,11 @@ module Md
     @numbers = {} of App => Int32
 
     @watcher : Crysterm::FileWatcher?
+    # The size and modification time of the file as the document last wrote
+    # or read it (a save, a reload), so the watcher's look at the document's
+    # own write is no change on disk, edits made since or not (Qt Creator's
+    # `DocumentManager` records a saved file's modification time likewise).
+    @disk_stamp : {Int64, Time}?
     @autosave_timer : Crysterm::Timer?
     # Set by every edit, cleared by every auto-save: the timer writes only
     # when there is something new to write.
@@ -443,6 +448,7 @@ module Md
       path = @source.path || raise ArgumentError.new("the document has no file")
       failure = Documents.backup(path) if backup
       SaveFile.write path, markdown
+      @disk_stamp = disk_stamp(path)
       @text.modified = false
       autosave_settled
       unless (key = Documents.key_for(path)) == @key
@@ -473,7 +479,10 @@ module Md
     # the document left as it was.
     def reload : Nil
       path = @source.path || raise ArgumentError.new("the document has no file")
+      # Taken before the read: a write after it is a change still to come.
+      stamp = disk_stamp(path)
       @text.replace_plain_text Source.decode(File.read(path))
+      @disk_stamp = stamp
       @text.modified = false
       autosave_settled
     end
@@ -500,14 +509,22 @@ module Md
       !@watcher.nil?
     end
 
+    # The size and modification time of the file at *path*, as the watcher
+    # compares them, or nil when it is not there.
+    private def disk_stamp(path : String) : {Int64, Time}?
+      File.info?(path).try { |info| {info.size, info.modification_time} }
+    rescue File::Error
+    end
+
     private def stop_watcher : Nil
       @watcher.try &.stop
       @watcher = nil
     end
 
-    # The watched file changed on disk: reload it, unless the text on disk
-    # is what the document already holds (our own save) or the document
-    # holds unsaved changes, which are kept with a notice. A file removed is
+    # The watched file changed on disk: reload it, unless it is as the
+    # document last wrote or read it (its own save, edits made after it or
+    # not), the text on disk is what the document already holds, or the
+    # document holds unsaved changes, which are kept with a notice. A file removed is
     # said so, its text kept to be saved again; it is reloaded if it comes
     # back. A change the watcher posted before Watch File was turned off,
     # or before the document closed, is let be. On the host's render fiber;
@@ -518,6 +535,7 @@ module Md
         notify "#{path} was removed from disk; the text is kept"
         return
       end
+      return if (stamp = disk_stamp(path)) && stamp == @disk_stamp
       if @text.modified?
         notify "#{path} changed on disk; unsaved changes kept"
         return

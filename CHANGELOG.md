@@ -542,6 +542,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- With View → Watch File on, typing on within a second of a save made md
+  take its own save for a change on disk and say "changed on disk; unsaved
+  changes kept". The document now knows its file as it last wrote or read
+  it, as Qt Creator does, and its own save is no change.
+- File → Open… took a name typed with a leading `~` (`~/notes.md`) as a
+  directory named `~` in the working directory, opening a new, empty file
+  there; only `Tab` completion expanded it. `~` is the home directory now,
+  as in the shell and Qt's file dialogs.
 - A search's smartcase took an escape such as `\S`, `\W` or `\D` for an
   uppercase letter, so `/\Dfoo` matched case exactly. As in Vim, a letter
   after a backslash, or in the braces an escape takes (`\x{4C}`), does not
