@@ -421,8 +421,9 @@ way (in the editor, where those are letters to type, use `Ctrl-F`, `Ctrl-G`
 and `Alt-G` instead; they work everywhere). The pane you are in is searched:
 the Markdown source in the editor, the rendered text in the viewer (or from
 the table of contents). The pattern is a regular expression when it is a
-valid one and plain text otherwise, and it ignores case unless it contains
-an uppercase letter, as vi's `smartcase` does. The search wraps around the
+valid one and plain text otherwise (`^` and `$` match at the start and end
+of every line, as in vi), and it ignores case unless it contains an
+uppercase letter, as vi's `smartcase` does. The search wraps around the
 end of the document with a notice. Every match is underlined in both panes
 and the current one is selected; Edit → Clear Search Highlights takes the underlines
 off until the next search — `n` is one, and still knows the pattern.

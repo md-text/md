@@ -542,6 +542,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- A search's `^` and `$` matched only at the start and end of the whole
+  document, so `/^## ` found no heading but one on the first line, and
+  Replace and the match underlines had the same blind spot. They match at
+  the start and end of every line now, as vi's do.
 - A file lock left by an md that ended badly (a crash, a power cut) whose
   pid another program took after a reboot was taken for a live md's, and
   the file was said to be open in another md for as long as that program

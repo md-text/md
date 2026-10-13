@@ -512,8 +512,12 @@ module Md
     # The regular expression for *pattern*: the pattern itself when it is
     # one, the pattern as literal text when it is not (an unbalanced `(`
     # finds a `(`), case-insensitive unless it has an uppercase letter.
+    # `^` and `$` match at the start and end of every line, as vi's do and
+    # as Qt's `QTextDocument::find` matches them in each block, not of the
+    # whole text only.
     private def compile_pattern(pattern : String) : Regex
-      options = pattern.each_char.any?(&.uppercase?) ? Regex::Options::None : Regex::Options::IGNORE_CASE
+      options = Regex::Options::MULTILINE_ONLY
+      options |= Regex::Options::IGNORE_CASE unless pattern.each_char.any?(&.uppercase?)
       begin
         Regex.new(pattern, options)
       rescue ArgumentError
