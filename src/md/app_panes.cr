@@ -43,7 +43,7 @@ module Md
       @resizable_panes.value
     end
 
-    # Lets the dividers move, or locks the panes as they are (View →
+    # Lets the dividers move, or locks the panes as they are (Options →
     # Resizable Panes), through the property's change handler
     # (`#wire_resizable`).
     def resizable_panes=(value : Bool) : Bool

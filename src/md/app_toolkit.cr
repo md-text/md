@@ -98,8 +98,8 @@ module Md
       @link_double_click.value = value
     end
 
-    # Skips Crysterm's animations, or lets them run (Options → Reduced
-    # Motion).
+    # Skips Crysterm's animations, or lets them run (Options → No
+    # Animations).
     def reduced_motion=(value : Bool) : Bool
       @reduced_motion.value = value
     end

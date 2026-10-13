@@ -197,9 +197,11 @@ cycles the mouse modes, named after vi's `set mouse=` values:
 While the mouse does not work for md, the terminal's own text selection and
 copy work instead. With the mouse off you cannot click the field, so `F5`
 cycles the modes from the keyboard too, and the Options menu offers them as
-well, next to the overwrite mode. The File menu opens, reloads, saves, saves
-as and quits, and lists the recently opened files; the Edit menu copies,
-searches, replaces, goes to a line and jumps between headings; the Format menu marks
+well, next to the overwrite mode. The File menu opens, reloads, closes, saves,
+saves as and quits, lists the recently opened files and retraces the files
+left (Previous File, Next File); the Edit menu copies, pastes, searches,
+replaces, runs md's commands, goes to a line, jumps between headings and
+turns Vi Mode on; the Format menu marks
 up the source (see Editing Markdown below) — the markup around text first
 (Bold, Italic, Code, Code Block), then what works on whole lines (Indent and
 Outdent, the task entries, the heading level), then the wrapping (Soft Wrap,
@@ -437,7 +439,8 @@ in the editor. Without `nvim` in `PATH` the entry is disabled, its
 description saying why; should Neovim end, or the editor's buffer be closed
 in it (`:bw`), Vi Mode turns off with a notice and the editor goes on as
 before. Neovim edits only the editor's buffer, in one window: `:enew`,
-`:e FILE`, `:b N`, `:split` or `:new` is undone at once, with a notice.
+`:e FILE`, `:b N`, `:split` or `:new` is undone at once, with a notice;
+the extra window is closed and a file it loaded dropped, unless modified.
 The viewer's `:` stays md's command line
 (the viewer is no text input), and the line prompts keep plain editing.
 

@@ -79,9 +79,12 @@ module Md
 
     # The description of the entry bound to the option *key*: the option's
     # description (`config.cr`) with its menu path stripped — `View → Sync
-    # Cursor: keep the…` is `Keep the…` — so the two are one text.
+    # Cursor: keep the…` is `Keep the…` — so the two are one text. The path
+    # ends at the first `: ` the text after it starts lowercase from, as an
+    # entry's label may hold one itself (`Options → Vi Mode: Use Neovim
+    # Config: start…`).
     private def option_tip(key : String) : String
-      text = Crysterm::Config[key].description.split(": ", 2).last
+      text = Crysterm::Config[key].description.sub(/\A.*?: (?=\p{Ll})/, "")
       text[0].upcase + text[1..]
     end
 

@@ -388,8 +388,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   disabled and says why, and a Neovim that ends, or closing the editor's
   buffer in Neovim (`:bw`), turns Vi Mode off. Neovim keeps the editor's
   buffer in its one window: `:enew`, `:e FILE`, `:b N`, `:split` and `:new`
-  are undone at once with the notice "Only the widget's own buffer can be
-  edited here", where the keys then edited a buffer the editor did not
+  are undone at once (other windows closed, a file buffer they left behind
+  dropped unless modified) with the notice "Only the widget's own buffer can
+  be edited here", where the keys then edited a buffer the editor did not
   show. The viewer's `:` stays md's command line.
 - Format → Code Block (`code-block`): Code's companion for whole lines. It
   puts the selected lines, or the paragraph at the caret, between ```` ``` ````
@@ -586,5 +587,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   highlighted, Enter or Space revealing the first one, where the clicked
   entry stayed the menu's current one. (Fixed in Crysterm, which md builds
   against.)
+- View → Theme → None after another theme keeps the menus' borders, where they
+  lost them: a menu shown or hidden was given a bare inline style of its own,
+  which replaced the menu's styles once no theme styled it any more. (Fixed
+  in Crysterm, which md builds against.)
 
 [Unreleased]: https://github.com/crystallabs/md/commits/main

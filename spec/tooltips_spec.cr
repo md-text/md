@@ -57,6 +57,13 @@ describe "Md::App tooltips" do
     end
   end
 
+  it "strips the whole menu path from a description whose entry's label holds a colon" do
+    with_app do |app|
+      config = (app.find_action("vi-config") || fail("no vi-config entry"))
+      (config.tool_tip || "").should start_with "Start Vi Mode's nvim with your own config"
+    end
+  end
+
   it "lets a status tip take the whole bar while it shows" do
     with_app do |app|
       app.main.status_tips_full_width?.should be_true
