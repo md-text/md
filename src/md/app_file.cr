@@ -340,7 +340,7 @@ module Md
       return unless (history = @history) && (path = source.path)
       line, column = source_position
       history.touch path, line, column, !@editor.focused?
-      refresh_recent_menu
+      refresh_recent_menus
     end
 
     # Where the reader is, as a 1-based source line and column: the editor's
@@ -368,9 +368,18 @@ module Md
       history.save if history.dirty?
     end
 
+    # Rebuilds File → Open Recent in every window keeping this window's
+    # history (`#refresh_recent_menu`): the windows share it, so a file
+    # opened, or the list cleared, in one shows in the others' menus too.
+    private def refresh_recent_menus : Nil
+      refresh_recent_menu
+      return unless history = @history
+      App.instances.each { |app| app.refresh_recent_menu if !app.same?(self) && app.history.same?(history) }
+    end
+
     # Rebuilds File → Open Recent from the history: the files most recently
     # used first, the current one included, each opening on activation.
-    private def refresh_recent_menu : Nil
+    protected def refresh_recent_menu : Nil
       return unless (history = @history) && (action = @recent_action)
       entries = history.recent
       actions = entries.map do |entry|

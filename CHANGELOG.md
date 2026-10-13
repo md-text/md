@@ -542,6 +542,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- File → Open Recent was remade only in the window that opened a file or
+  cleared the caches, so another window's menu missed the file just opened
+  and still listed the files Options → Clear Caches… had forgotten. Every
+  window's menu follows the shared history now.
 - With a search's matches underlined, every edit of a long document with a
   non-ASCII character in it (a dash, an accent, the viewer's bullets) paid
   for a rescan of the text from its start at each match, a lag at every key,

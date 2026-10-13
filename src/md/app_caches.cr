@@ -42,7 +42,7 @@ module Md
     end
 
     # Clears the caches (see the class comment), refreshes File → Open
-    # Recent and says what went: "Cleared 12 recent files, 3 recovery
+    # Recent in every window and says what went: "Cleared 12 recent files, 3 recovery
     # files". Returns the two counts. The history is written at once, so
     # a run that ends badly does not bring the list back.
     def clear_caches : {Int32, Int32}
@@ -62,7 +62,7 @@ module Md
       end
       forget_window_places
       remove_entries App.cache_dir, empty: Crysterm::Config.log_file
-      refresh_recent_menu
+      refresh_recent_menus
       notice "Cleared #{recent} recent file#{"s" unless recent == 1}, #{recovery} recovery file#{"s" unless recovery == 1}"
       {recent, recovery}
     end
