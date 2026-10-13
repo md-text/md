@@ -522,6 +522,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- File → Open Recent and the remembered positions knew a file by its
+  absolute path, so a file opened through a symbolic link and through its
+  real path (or by another case of its name on a case-insensitive volume)
+  had two entries and two positions. A file is known by its canonical path
+  now, as Qt Creator's recent files are, each entry showing the path it was
+  last opened by; a history written before is merged on loading, the most
+  recent entry of a file winning.
 - Format edits (Bold, a list's indent, Rewrap…) and Replace did not mark the
   document for the next auto-save, which only typed edits did; every edit
   does now.

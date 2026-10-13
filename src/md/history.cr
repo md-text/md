@@ -7,17 +7,34 @@ module Md
   #
   # The list lives in a small JSON file; every method tolerates a missing or
   # broken file so that history never gets in the way of opening a document.
+  #
+  # A file is known by its canonical key (`Documents.key_for`, Qt's
+  # `QFileInfo::canonicalFilePath`, which Qt Creator's recent files use
+  # too), so a file opened through a symlink and through its real path —
+  # or by another case of its name on a case-insensitive volume — is one
+  # entry with one position. The entry shows the path as the user last
+  # opened it.
   class History
-    # One remembered file: its absolute *path*, the 1-based caret *line* and
-    # *column* in the Markdown source, whether the *viewing* pane (rather than
-    # the editor) was focused, and when it was last touched (UTC).
+    # One remembered file: its absolute *path* as last opened (what File →
+    # Open Recent shows and opens), the 1-based caret *line* and *column* in
+    # the Markdown source, whether the *viewing* pane (rather than the
+    # editor) was focused, when it was last touched (UTC), and the file's
+    # canonical *key* (`Documents.key_for`) — nil only in a file written
+    # before keys were kept, which `History` fills in as it loads.
     record Entry,
       path : String,
       line : Int32,
       column : Int32,
       viewing : Bool,
-      at : Time do
+      at : Time,
+      key : String? = nil do
       include JSON::Serializable
+
+      # The key the entry is matched by: the one recorded, or else the
+      # path's own.
+      def canonical : String
+        key || Documents.key_for(path)
+      end
     end
 
     # How many files are remembered; older ones fall off the end.
@@ -67,8 +84,26 @@ module Md
       new(path)
     end
 
-    def initialize(@path : String, @entries = [] of Entry)
-      @dirty = false
+    # A history kept at *path* holding *entries*, most recent first. An
+    # entry without a key (a file written before keys were kept) gets its
+    # path's, and entries that turn out to be one file merge, the most
+    # recently touched winning; the history is then dirty, so the next save
+    # writes the file migrated.
+    def initialize(@path : String, entries = [] of Entry)
+      @entries = History.merge(entries)
+      @dirty = @entries.size != entries.size || entries.any?(&.key.nil?)
+    end
+
+    # *entries* with a key each, one per key: the most recently touched entry
+    # of a key stays, in its place among the others (most recent first).
+    protected def self.merge(entries : Array(Entry)) : Array(Entry)
+      keyed = entries.map { |entry| entry.key ? entry : entry.copy_with(key: entry.canonical) }
+      latest = {} of String => Int32
+      keyed.each_with_index do |entry, index|
+        held = latest[entry.canonical]?
+        latest[entry.canonical] = index if held.nil? || entry.at > keyed[held].at
+      end
+      latest.values.sort!.map { |index| keyed[index] }
     end
 
     # The remembered files, most recent first.
@@ -76,20 +111,23 @@ module Md
       @entries.dup
     end
 
-    # The entry for *path*, spelled any way that expands to the same absolute
-    # path, or nil when it was never opened (or has been forgotten).
+    # The entry for *path*, reached by any path to the same file — another
+    # spelling, a symlink, another case on a case-insensitive volume — or
+    # nil when it was never opened (or has been forgotten).
     def entry(path : String) : Entry?
-      absolute = File.expand_path(path)
-      @entries.find { |entry| entry.path == absolute }
+      key, absolute = Documents.key_for(path), File.expand_path(path)
+      @entries.find { |entry| same?(entry, key, absolute) }
     end
 
     # Records that *path* was open at *line*/*column* with the *viewing* pane
     # focused, moving it to the front and letting the oldest entry fall off
-    # beyond `MAX`. The path is made absolute so the same file reached from
-    # different directories is one entry.
+    # beyond `MAX`. The file's entry is found by its key, so the same file
+    # reached through another path is one entry, which now shows *path*
+    # (made absolute), the way it was opened this time.
     def touch(path : String, line : Int32, column : Int32, viewing : Bool, at : Time = Time.utc) : Entry
-      entry = Entry.new(File.expand_path(path), line, column, viewing, at)
-      @entries.reject! { |other| other.path == entry.path }
+      absolute = File.expand_path(path)
+      entry = Entry.new(absolute, line, column, viewing, at, Documents.key_for(absolute))
+      @entries.reject! { |other| same?(other, entry.canonical, absolute) }
       @entries.unshift(entry)
       @entries.pop(@entries.size - MAX) if @entries.size > MAX
       @dirty = true
@@ -109,12 +147,19 @@ module Md
     # Drops *path* from the list, for a file that is gone or that the user
     # removed from the menu. Returns whether it was there.
     def forget(path : String) : Bool
-      absolute = File.expand_path(path)
+      key, absolute = Documents.key_for(path), File.expand_path(path)
       before = @entries.size
-      @entries.reject! { |entry| entry.path == absolute }
+      @entries.reject! { |entry| same?(entry, key, absolute) }
       removed = @entries.size != before
       @dirty = true if removed
       removed
+    end
+
+    # Whether *entry* is the file of *key*, or was opened as *absolute* (a
+    # file gone since, whose key, now its directory's, may no longer be the
+    # one recorded).
+    private def same?(entry : Entry, key : String, absolute : String) : Bool
+      entry.canonical == key || entry.path == absolute
     end
 
     # Writes the list to `path`, creating the directory as needed. The file

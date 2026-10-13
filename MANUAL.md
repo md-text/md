@@ -460,8 +460,10 @@ symbolic link or a hard link — is not read again: the window shows that window
 unsaved edits included, and a notice says so. Opening the file the window
 already shows goes nowhere; File → Reload reads it again. File → Open Recent lists the files you opened before, most
 recent first; md also remembers where you were in each and lands there when
-you open it again. The list lives in `$XDG_STATE_HOME/md/history.json`
-(`~/.local/state/md/history.json`).
+you open it again. A file is one entry however you reach it — through a
+symbolic link, or by another case of its name on a case-insensitive volume
+— shown by the path you last opened it by. The list lives in
+`$XDG_STATE_HOME/md/history.json` (`~/.local/state/md/history.json`).
 
 File → Reload (`Ctrl-R`) re-reads the file from disk, keeping the viewer's
 place, in every window showing the document. View → Watch File (or

@@ -123,6 +123,90 @@ describe Md::History do
     end
   end
 
+  describe "canonical keys" do
+    it "makes a file reached through a symlink one entry, showing the path last opened" do
+      with_tempdir do |dir|
+        real = File.join(dir, "real.md")
+        link = File.join(dir, "link.md")
+        File.write real, "a"
+        File.symlink real, link
+        history = Md::History.new("unused.json")
+        history.touch(real, 2, 1, viewing: true)
+        history.touch(link, 5, 3, viewing: false)
+        history.recent.size.should eq 1
+        history.recent.first.path.should eq link
+        history.recent.first.key.should eq File.realpath(real)
+        history.entry(real).try(&.line).should eq 5
+        history.forget(real).should be_true
+        history.recent.should be_empty
+      end
+    end
+
+    it "finds a file by another case on a case-insensitive volume" do
+      with_tempdir do |dir|
+        path = File.join(dir, "readme.md")
+        File.write path, "a"
+        upper = File.join(dir, "README.md")
+        pending! "case-sensitive volume" unless File.exists?(upper)
+        history = Md::History.new("unused.json")
+        history.touch(path, 3, 1, viewing: true)
+        history.touch(upper, 4, 1, viewing: true)
+        history.recent.map(&.path).should eq [upper]
+        history.entry(path).try(&.line).should eq 4
+      end
+    end
+
+    it "migrates a file without keys, merging the entries of one file, the most recent winning" do
+      with_tempdir do |dir|
+        real = File.join(dir, "real.md")
+        link = File.join(dir, "link.md")
+        File.write real, "a"
+        File.symlink real, link
+        other = File.join(dir, "other.md")
+        path = File.join(dir, "history.json")
+        File.write(path, {version: 1, recent: [
+          {path: real, line: 2, column: 1, viewing: true, at: "2026-01-01T00:00:00Z"},
+          {path: other, line: 3, column: 1, viewing: true, at: "2026-01-02T00:00:00Z"},
+          {path: link, line: 9, column: 4, viewing: false, at: "2026-01-03T00:00:00Z"},
+        ]}.to_json)
+        history = Md::History.load(path)
+        history.dirty?.should be_true
+        history.recent.map(&.path).should eq [other, link]
+        history.recent.map(&.key).should eq [Md::Documents.key_for(other), File.realpath(real)]
+        history.entry(real).try(&.line).should eq 9
+
+        history.save.should be_true
+        loaded = Md::History.load(path)
+        loaded.dirty?.should be_false
+        loaded.recent.should eq history.recent
+      end
+    end
+
+    it "keeps one Open Recent entry and one position for a file a window opens through a symlink" do
+      with_tempdir do |dir|
+        real = File.join(dir, "real.md")
+        link = File.join(dir, "link.md")
+        File.write real, "one\ntwo\nthree\n"
+        File.symlink real, link
+        history = Md::History.new(File.join(dir, "history.json"))
+        # A window with a history keeps state under `XDG_STATE_HOME`: the
+        # scratch directory.
+        with_xdg_state_home(dir) do
+          with_app history: history do |app|
+            app.open_file(real).should be_true
+            app.go_to_line 3
+            app.open_file(File.join(dir, "elsewhere.md")).should be_true
+            app.open_file(link).should be_true
+            # The position left in the real path is restored through the
+            # link, and the link is what the entry shows now.
+            history.recent.map(&.path).should eq [link, File.join(dir, "elsewhere.md")]
+            history.recent.first.line.should eq 3
+          end
+        end
+      end
+    end
+  end
+
   describe "#clear" do
     it "forgets every file and says how many there were" do
       history = Md::History.new("unused.json")
