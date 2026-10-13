@@ -224,7 +224,7 @@ module Md
           .PP
           Crysterm: https://github.com/crystallabs/crysterm
           .br
-          md: https://github.com/crystallabs/md
+          md: https://github.com/md-text/md
           ROFF
         io << '\n'
       end

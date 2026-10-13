@@ -761,4 +761,4 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   the other buffer before the document's buffer came back. (Fixed in Crysterm,
   which md builds against.)
 
-[Unreleased]: https://github.com/crystallabs/md/commits/main
+[Unreleased]: https://github.com/md-text/md/commits/main

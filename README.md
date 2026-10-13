@@ -1,3 +1,7 @@
+**Build status**: [![CI](https://github.com/md-text/md/actions/workflows/ci.yml/badge.svg)](https://github.com/md-text/md/actions/workflows/ci.yml)
+[![Version](https://img.shields.io/github/tag/md-text/md.svg?maxAge=360)](https://github.com/md-text/md/releases/latest)
+[![License](https://img.shields.io/github/license/md-text/md.svg)](https://github.com/md-text/md/blob/main/LICENSE)
+
 # md
 
 **Markdown editor and viewer for the terminal.**
@@ -5,10 +9,6 @@
 Includes simultaneous editing and viewing, dynamic/real-time updates,
 graphics display, multiple terminal windows, Vi keys (integration with
 Neovim), rulers and guides, TUI themes, everything configurable, etc.
-
-[![CI](https://github.com/crystallabs/md/actions/workflows/ci.yml/badge.svg)](https://github.com/crystallabs/md/actions/workflows/ci.yml)
-[![Release](https://img.shields.io/github/v/release/crystallabs/md?sort=semver)](https://github.com/crystallabs/md/releases/latest)
-[![License: AGPL-3.0-only](https://img.shields.io/badge/license-AGPL--3.0--only-blue.svg)](LICENSE)
 
 ```sh
 md README.md                 # read/view a document
@@ -20,7 +20,7 @@ md --export html notes.md    # or use it as a filter
 ## Installation
 
 Download an archive for your platform from the
-[releases page](https://github.com/crystallabs/md/releases):
+[releases page](https://github.com/md-text/md/releases):
 
 | Archive                          | Platform                                   |
 | -------------------------------- | ------------------------------------------ |
@@ -34,8 +34,8 @@ libraries. For example, on Linux x86_64:
 
 ```sh
 VERSION=vX.Y.Z   # the latest release
-curl -LO https://github.com/crystallabs/md/releases/download/$VERSION/md-$VERSION-linux-x86_64.tar.gz
-curl -LO https://github.com/crystallabs/md/releases/download/$VERSION/md-$VERSION-linux-x86_64.tar.gz.sha256
+curl -LO https://github.com/md-text/md/releases/download/$VERSION/md-$VERSION-linux-x86_64.tar.gz
+curl -LO https://github.com/md-text/md/releases/download/$VERSION/md-$VERSION-linux-x86_64.tar.gz.sha256
 shasum -a 256 -c md-$VERSION-linux-x86_64.tar.gz.sha256
 tar xzf md-$VERSION-linux-x86_64.tar.gz
 sudo install -m 0755 md-$VERSION-linux-x86_64/md /usr/local/bin/md

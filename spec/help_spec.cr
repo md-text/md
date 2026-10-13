@@ -28,7 +28,7 @@ describe "Help menu" do
       app.main.menu_bar.menus.last.actions[1].trigger
       notice(app).should contain Md::VERSION
       notice(app).should contain "Davor Ocelic"
-      notice(app).should contain "https://github.com/crystallabs/md"
+      notice(app).should contain "https://github.com/md-text/md"
     end
   end
 
