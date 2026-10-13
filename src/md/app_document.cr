@@ -39,10 +39,10 @@ module Md
       subs.add doc.watch_file.on_change { refresh_status }
       @seen_revision = doc.revision
       if doc.streaming?
-        # Joining a stream: the viewer starts from what arrived so far and
+        # Joining a stream: the viewer starts from what arrived so far, as
+        # the stream so far (its unfinished last block held back), and
         # takes the rest as it comes, following the tail.
-        @viewer.set_markdown ""
-        @viewer.append_markdown markdown
+        @viewer.set_markdown markdown, stream: true
         @viewer.follow_tail = true
       else
         # A file holds still: the viewer follows no tail, whatever it did
