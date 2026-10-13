@@ -11,12 +11,13 @@ module Md
   # Each window Window → New opens takes the lowest number free from 2 while
   # it is open (`.free_number`), so the second window of this run opens
   # where the second window of the last run was closed. Frames are kept per
-  # launcher (`"terminal.app"`, `"iterm2"`): a frame from one emulator means
-  # nothing to another.
+  # launcher (`"terminal.app"`, `"iterm2"`, `"ghostty"`): a frame from one
+  # emulator means nothing to another.
   #
   # Only Crysterm can place a window and read its frame back
   # (`Crysterm::Window.open(frame:)`, `Window#frame_geometry`), and only for
-  # Terminal.app and iTerm2 on macOS, through AppleScript; everywhere else
+  # Terminal.app and iTerm2 on macOS, through AppleScript, and Ghostty on
+  # macOS, which sizes a window in whole cells; everywhere else
   # the menu entry is disabled with the reason
   # (`Crysterm::Terminal.frame_geometry_refusal`) and nothing is recorded.
   #

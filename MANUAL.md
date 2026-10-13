@@ -720,12 +720,15 @@ Window → New (`Ctrl-N`) opens another md window on the document you
 are looking at, in a new terminal window, starting where this window is:
 the same panes, the cursor and the scroll in the same places. md asks
 the terminal emulator it is running in for one: kitty, Alacritty, WezTerm,
-foot, xterm, Konsole and GNOME Terminal, Terminal.app and iTerm2 on macOS
-(`$TERMINAL` names another), or a new tmux or screen window inside a
+foot, xterm, Konsole and GNOME Terminal, Terminal.app, iTerm2 and Ghostty
+on macOS (`$TERMINAL` names another), or a new tmux or screen window inside a
 multiplexer, which works over SSH as well. A session that can open none —
 a console, SSH without tmux, an emulator md cannot drive — has the entry
 disabled, and `Ctrl-N` says why. The new window is the emulator's default
-size, or this window's where the emulator takes a size.
+size, or this window's where the emulator takes a size. On macOS, Ghostty
+opens each such window as a Ghostty of its own, with its own Dock icon,
+which quits when the window closes: Ghostty takes no command for a new
+window from outside, only at a start.
 
 The two windows show one document, as two windows on one buffer do in Vim,
 Emacs, Kate or Qt Creator: an edit in either is in both, editor and viewer,
@@ -790,7 +793,8 @@ recorded as each window closes; a place on a display that is no longer
 connected is not used, and the window manager places that window instead.
 This works on macOS with Terminal.app and iTerm2, which md drives through
 AppleScript, so the first use asks for the same Automation permission as
-Window → New there; elsewhere — Linux and the BSDs, X11 or Wayland, tmux and
+Window → New there, and with Ghostty, which asks for none and sizes a
+window in whole cells, to the nearest; elsewhere — Linux and the BSDs, X11 or Wayland, tmux and
 screen, the other macOS emulators — an emulator offers no way to place a
 window and read where it is, and the entry is disabled, its description
 saying why.

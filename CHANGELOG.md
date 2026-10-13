@@ -9,6 +9,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Window → New in Ghostty on macOS opened the new window in Terminal.app,
+  Crysterm having no way to ask Ghostty for one. It now opens in Ghostty,
+  as a Ghostty of its own that quits with its window, and Window →
+  Remember Positions works there too, to the nearest cell, with no
+  permission to give.
 - A file open in one md process and opened in another went unnoticed, the
   last save winning. Each md now leaves a lock for the files it has open in
   `$XDG_STATE_HOME/md/locks/` (its pid, host and the time, after Qt's
