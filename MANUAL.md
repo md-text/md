@@ -121,7 +121,14 @@ The status bar shows the document's name (a save result or warning takes its
 place for a moment), the caret's line and column while editing or the reading
 position while viewing (`Top`, `Bot`, a percentage, or `All` when the whole
 document fits), the line and word counts, the encoding and line endings, and
-whether the document is modified. Two fields at the right are toggles you can
+whether the document is modified.
+
+A file is saved with the line endings it was opened with: `LF`, or `CRLF` for
+a file from Windows, decided by its first line (a file mixing both is saved
+with its first line's throughout, one without any line break as `LF`). The
+status bar shows which; a new document is `LF`, a reload looks again, and a
+document read from standard input takes its first line's. A lone carriage
+return is a line break too, as in Qt, and is saved as the file's line ending. Two fields at the right are toggles you can
 click: `INS`/`OVR` switches the editor between inserting and overwriting, and
 the mouse field — `🖱=` on terminals known to render the icon, `M=` elsewhere —
 cycles the mouse modes, named after vi's `set mouse=` values:

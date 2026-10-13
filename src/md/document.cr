@@ -69,6 +69,38 @@ module Md
     # `App#watch_interval` says otherwise (specs shorten it).
     WATCH_INTERVAL = 1.second
 
+    # The line break a document's file uses (Qt Creator's
+    # `TextFileFormat::LineTerminationMode`). The text itself always
+    # separates its lines with `'\n'` — Crysterm's `TextDocument` takes
+    # `"\r\n"` and a lone `'\r'` as a line break as it takes `'\n'` — so the
+    # file's is taken from it as it is read (`.detect`) and put back as it is
+    # written (`#encode`): a file is saved with the line endings it was
+    # opened with.
+    enum LineTerminator
+      LF
+      CRLF
+
+      # The line terminator of *text*, a file's contents or a stream's
+      # first lines: as Qt Creator's `TextFileFormat::detect` decides it,
+      # by the first line break, a `'\n'` after a `'\r'` being CRLF. A
+      # text without one is LF, as a new document is.
+      def self.detect(text : String) : LineTerminator
+        nl = text.byte_index('\n'.ord) || return LF
+        nl > 0 && text.byte_at(nl - 1) == '\r'.ord ? CRLF : LF
+      end
+
+      # *text*, its lines separated by `'\n'` (the document's), with this
+      # line terminator in the file.
+      def encode(text : String) : String
+        crlf? ? text.gsub('\n', "\r\n") : text
+      end
+
+      # The name the status bar shows.
+      def to_s(io : IO) : Nil
+        io << (crlf? ? "CRLF" : "LF")
+      end
+    end
+
     # The Markdown source: its text, undo history and modified flag.
     getter text : Crysterm::TextDocument
 
@@ -90,6 +122,12 @@ module Md
     # The Neovim the linked windows on the document share in Vi Mode, one
     # buffer for all of them (`#ensure_vi`); nil while none runs.
     getter vi : Crysterm::Neovim::Handler?
+
+    # The line break the document's file uses, detected when the file is
+    # read (or the stream's first line arrives) and written back on every
+    # save (`LineTerminator`). A file whose lines end both ways is saved
+    # with the first line's throughout, as Qt Creator saves it.
+    getter line_terminator : LineTerminator
 
     # Set while the text is changed programmatically (a stream appending to
     # it or filling it), so the resulting change is not taken for an edit.
@@ -146,6 +184,12 @@ module Md
     # in whichever window, takes them (`#drain_stream`).
     @stream_pending = Deque(String).new
     @stream_end : Tuple(String?)? = nil
+    # Whether the stream's line terminator is still to be detected, from
+    # the first line break that arrives (`#receive`).
+    @terminator_pending = false
+    # Whether the last chunk the stream brought ended in a `'\r'`, so a
+    # `'\n'` opening the next one ends the same line (`#take_line_breaks`).
+    @after_cr = false
     # Whether the stream brought bytes that were not UTF-8 yet, so the
     # notice is given once, not for every line holding some.
     @stream_scrubbed = false
@@ -159,6 +203,7 @@ module Md
     # A document of *source* holding *text*, unmodified, with no undo
     # history.
     def initialize(@source : Source = Source.new, text : String = "")
+      @line_terminator = LineTerminator.detect text
       @text = Crysterm::TextDocument.new text
       @key = @source.path.try { |path| Documents.key_for path }
       @text.on(Crysterm::Event::ContentsChanged) { |e| contents_changed e }
@@ -320,6 +365,7 @@ module Md
     # left. The windows' viewers follow the tail (`App#stream`).
     def start_stream(io : IO) : Nil
       @from_stream = @streaming = @editor_stale = true
+      @terminator_pending = true
       spawn name: "md-stream" do
         message = nil
         begin
@@ -368,8 +414,11 @@ module Md
     # too when it was filled — and hands it to every window
     # (`Event::StreamAppended`), at once in *by*, on whose render fiber it
     # arrived (`#receiver`). Bytes that are not UTF-8 are replaced, with a
-    # notice the first time. A chunk after the stream was abandoned is
-    # dropped.
+    # notice the first time. The stream's first line break decides the
+    # document's `#line_terminator`; the chunk's line breaks are then the
+    # text's `'\n'`s, the same for the text not yet filled
+    # (`#markdown`) as for the text. A chunk after the stream was
+    # abandoned is dropped.
     def receive(chunk : String, by : App? = nil) : Nil
       return if @stream_abandoned
       unless (decoded = Source.decode chunk).same?(chunk)
@@ -377,12 +426,39 @@ module Md
         @stream_scrubbed = true
         chunk = decoded
       end
+      chunk = take_line_breaks chunk
       if @editor_stale
         @streamed << chunk
       else
         loading { Crysterm::TextCursor.new(@text, @text.size).insert_text chunk }
       end
       received_by(by) { emit Md::Event::StreamAppended, chunk }
+    end
+
+    # *chunk* with its line breaks as the text's `'\n'`s
+    # (`Crysterm::TextDocument.normalize_line_breaks`), the first one
+    # deciding the document's `#line_terminator`. A `"\r\n"` split between
+    # two chunks is one line break, the `'\n'` opening the second one going
+    # with the `'\r'` that ended the first, already taken as the break.
+    private def take_line_breaks(chunk : String) : String
+      if @after_cr
+        @after_cr = false
+        if chunk.starts_with?('\n')
+          chunk = chunk[1..]
+          decide_terminator LineTerminator::CRLF
+        end
+      end
+      decide_terminator LineTerminator.detect(chunk) if chunk.includes?('\n')
+      @after_cr = chunk.ends_with?('\r')
+      Crysterm::TextDocument.normalize_line_breaks chunk
+    end
+
+    # Makes *terminator* the document's `#line_terminator`, unless the
+    # stream's first line break decided it already.
+    private def decide_terminator(terminator : LineTerminator) : Nil
+      return unless @terminator_pending
+      @terminator_pending = false
+      @line_terminator = terminator
     end
 
     # The end of the stream, with the error *message* that cut it short:
@@ -453,7 +529,7 @@ module Md
     def save(backup : Bool) : String?
       path = @source.path || raise ArgumentError.new("the document has no file")
       failure = Documents.backup(path) if backup
-      SaveFile.write path, markdown
+      SaveFile.write path, file_text
       @disk_stamp = disk_stamp(path)
       @text.modified = false
       autosave_settled
@@ -468,7 +544,13 @@ module Md
     # name, its file and its unsaved state. Raises `IO::Error` when the copy
     # cannot be written.
     def write_copy(path : String) : Nil
-      SaveFile.write path, markdown
+      SaveFile.write path, file_text
+    end
+
+    # The text as the document's file holds it: `#markdown` with the
+    # file's `#line_terminator`.
+    def file_text : String
+      @line_terminator.encode markdown
     end
 
     # Reads the document's file again and makes the text the file's by an
@@ -481,13 +563,17 @@ module Md
     # (`Event::DocumentEdited`). The document is then the file's, unmodified
     # — the state after the reload is the clean one, so undoing it makes the
     # document modified again — and the recovery file of the edits given up
-    # goes, as after a save. Raises `IO::Error` when the file cannot be read,
-    # the document left as it was.
+    # goes, as after a save. The file's line terminator is detected again
+    # (`LineTerminator`), so one converted on disk is saved its new way.
+    # Raises `IO::Error` when the file cannot be read, the document left as
+    # it was.
     def reload : Nil
       path = @source.path || raise ArgumentError.new("the document has no file")
       # Taken before the read: a write after it is a change still to come.
       stamp = disk_stamp(path)
-      @text.replace_plain_text Source.decode(File.read(path))
+      text = Source.decode(File.read(path))
+      @line_terminator = LineTerminator.detect text
+      @text.replace_plain_text text
       @disk_stamp = stamp
       @text.modified = false
       autosave_settled
@@ -546,7 +632,8 @@ module Md
         notify "#{path} changed on disk; unsaved changes kept"
         return
       end
-      return if Source.decode(File.read(path)) == markdown
+      text = Source.decode(File.read(path))
+      return if LineTerminator.detect(text) == @line_terminator && Crysterm::TextDocument.normalize_line_breaks(text) == markdown
       reload
       notify "Reloaded #{path} (changed on disk)"
     rescue IO::Error
@@ -610,7 +697,7 @@ module Md
     private def write_recovery : Nil
       path = recovery_path
       Dir.mkdir_p File.dirname(path)
-      SaveFile.write path, markdown
+      SaveFile.write path, file_text
       @autosave_dirty = false
       @autosave_failed = false
     rescue ex : IO::Error

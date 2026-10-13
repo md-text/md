@@ -124,9 +124,10 @@ module Md
     def refresh_status : Nil
       @name_field.text = " #{name_text}"
       @position_field.text = position_text
-      lines, words, crlf = measure
+      lines, words = measure
       @size_field.text = "#{lines} #{lines == 1 ? "line" : "lines"}, #{words} #{words == 1 ? "word" : "words"}"
-      @encoding_field.text = "UTF-8 #{crlf ? "CRLF" : "LF"}"
+      # The file's line endings, which a save keeps (`Document::LineTerminator`).
+      @encoding_field.text = "UTF-8 #{@document.line_terminator}"
       @modified_field.text = @editor.document.modified? ? "✎ modified" : ""
       @overwrite_button.text = @editor.overwrite_mode? ? "OVR" : "INS"
       @mouse_button.text = "#{mouse_icon}=#{@mouse_mode.value.vi_value}"
@@ -186,22 +187,21 @@ module Md
       end
     end
 
-    # Line count, word count and whether the text uses CRLF line endings,
-    # recomputed only after the text changed (`#text_changed`); a streamed
-    # chunk is added to them instead (`#text_appended`), so a stream is
-    # measured once over, not from its start at every line.
-    private def measure : {Int32, Int32, Bool}
-      newlines, words, crlf, last = (@measured ||= measure_text(markdown))
+    # Line count and word count, recomputed only after the text changed
+    # (`#text_changed`); a streamed chunk is added to them instead
+    # (`#text_appended`), so a stream is measured once over, not from its
+    # start at every line.
+    private def measure : {Int32, Int32}
+      newlines, words, last = (@measured ||= measure_text(markdown))
       # A last line without its newline is a line too.
-      {last && last != '\n' ? newlines + 1 : newlines, words, crlf}
+      {last && last != '\n' ? newlines + 1 : newlines, words}
     end
 
     # Measures *text* as the continuation of a text ending in *before* (nil
     # at the start): its newlines, its words — runs of non-whitespace,
     # counted in one pass with nothing allocated, a run begun before *text*
-    # not counted again — whether a CRLF is in it or straddles the join, and
-    # the last character so far.
-    private def measure_text(text : String, before : Char? = nil) : {Int32, Int32, Bool, Char?}
+    # not counted again — and the last character so far.
+    private def measure_text(text : String, before : Char? = nil) : {Int32, Int32, Char?}
       words = 0
       in_word = before ? !before.whitespace? : false
       text.each_char do |char|
@@ -212,8 +212,7 @@ module Md
           words += 1
         end
       end
-      crlf = text.includes?("\r\n") || (before == '\r' && text.starts_with?('\n'))
-      {text.count('\n'), words, crlf, text[-1]? || before}
+      {text.count('\n'), words, text[-1]? || before}
     end
 
     # Forgets the cached measurements; the next refresh recomputes them.
@@ -225,9 +224,9 @@ module Md
     # otherwise the next refresh measures the whole text, chunk included.
     private def text_appended(chunk : String) : Nil
       return unless measured = @measured
-      newlines, words, crlf, last = measured
-      more, more_words, more_crlf, now = measure_text(chunk, last)
-      @measured = {newlines + more, words + more_words, crlf || more_crlf, now}
+      newlines, words, last = measured
+      more, more_words, now = measure_text(chunk, last)
+      @measured = {newlines + more, words + more_words, now}
     end
 
     # Shows *text* in place of the name field for a while (a save result, a

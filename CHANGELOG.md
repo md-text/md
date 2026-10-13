@@ -542,6 +542,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- A file with Windows (CRLF) line endings kept a carriage return at the end
+  of every line of the text, so nothing anchored to a line's end matched:
+  a code fence never closed (everything after the first code block was
+  code), Format → Rewrap said "Not a paragraph", Hard Wrap stopped, `---`
+  was no rule and `Enter` on an empty list item continued the list. The
+  text now takes `CRLF` (and a lone `CR`) as a line break, as Qt and Qt
+  Creator do, and md remembers the file's line endings, decided by its
+  first line, and writes them back on every save, Save As, `:w FILE` and
+  recovery copy: opening and saving a file no longer changes its line
+  endings, and a file mixing both is saved with its first line's
+  throughout. The status bar shows the file's line endings (`CRLF` or
+  `LF`), a reload detects them again, a stream takes them from its first
+  line, and a new document is `LF`.
 - Format → Rewrap and Hard Wrap took an HTML block for paragraph text: they
   refilled the lines of a `<pre>`, a `<script>` or a comment, joined a
   `<div>` line to the paragraph above it, and broke lines typed in one, and

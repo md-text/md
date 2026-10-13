@@ -156,9 +156,9 @@ module Md
     @modified_field : Crysterm::Widget::Label
     @overwrite_button : Crysterm::Widget::ToolButton
     @mouse_button : Crysterm::Widget::ToolButton
-    # Cached measurements of the text — newlines, words, CRLF, the last
+    # Cached measurements of the text — newlines, words, the last
     # character (`#measure_text`); `nil` after the text changed.
-    @measured : {Int32, Int32, Bool, Char?}?
+    @measured : {Int32, Int32, Char?}?
 
     # Builds the user interface for *source*. *text* is the document's initial
     # Markdown; *stream* is an IO the document is read from instead, as it
