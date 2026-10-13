@@ -55,6 +55,7 @@ module Md
       link @reduced_motion, "render.reduced_motion"
       link @tear_off_menus, "menu.tear_off"
       link @link_double_click, "md.link_double_click"
+      link @open_local_programs, "md.open_local_programs"
       link @vi_config, "md.vi_config"
       # Without the config, the windows of a process still share one choice
       # (`Documents.window_link`), which the option's default must not undo.

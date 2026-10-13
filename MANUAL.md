@@ -528,6 +528,20 @@ image or a PDF — is handed to the system to open with whatever handles it:
 `open` on macOS, `xdg-open` elsewhere. A link to a file that does not exist
 only gets a notice.
 
+A link to a program on this computer is refused with a notice instead,
+since the system would run it, not show it: a file with any execute
+permission (a shell script, a binary), and by name an application bundle
+or anything the system launches or installs — `.app`, `.command`, `.tool`,
+`.terminal`, `.workflow`, `.action`, `.jar`, `.fileloc`, `.pkg` on macOS,
+`.desktop`, `.AppImage`, `.run`, `.deb`, `.rpm`, `.flatpakref` and the
+Windows `.exe`, `.msi`, `.bat`, `.cmd`, `.com` that Wine runs on Linux —
+through a symbolic link too. A Markdown file is read whatever its
+permissions. Options → Links → Open Local Programs lets such links through
+(`md.open_local_programs`, `MD_OPEN_LOCAL_PROGRAMS`; off by default). Web
+and mail links are not affected. On a volume that marks every file
+executable (FAT, some network shares) every linked file counts as a
+program.
+
 Every file left is a step you can retrace: `Backspace` in the viewer or the
 table of contents goes back to the file you came from, at the position you
 left (File → Previous File, `Alt-Left`, works from the menu too), and File →
@@ -832,7 +846,7 @@ command, and so is every key no entry has:
 | `copy`, `copy-as-markdown`, `paste`, `paste-from-terminal`, `paste-from-command`, `paste-from-internal`, `find`, `find-backward`, `find-next`, `find-previous`, `replace`, `clear-search-highlights`, `command`, `go-to-line`, `next-heading`, `previous-heading`, `vi-mode` | The Edit menu, and `?` |
 | `bold`, `italic`, `code`, `code-block`, `indent`, `outdent`, `task`, `toggle-task`, `promote-heading`, `demote-heading`, `soft-wrap`, `hard-wrap`, `rewrap-paragraph`, `rewrap-document` | The Format menu (`soft-wrap` and `hard-wrap` turn their setting on or off) |
 | `editor`, `viewer`, `toc`, `bars`, `sync-cursor`, `highlight-line`, `line-numbers`, `viewer-line-numbers`, `center-text`, `horizontal-ruler`, `vertical-ruler`, `guides`, `images`, `media-trial` | The View menu's check entries: each turns its setting on or off |
-| `overwrite-mode`, `confirm-discard`, `autosave`, `backup-file`, `watch-file`, `link-double-click`, `resizable-panes`, `reduced-motion`, `detachable-menus`, `vi-config`, `load-config`, `save-config`, `save-config-as`, `clear-caches` | The Options menu |
+| `overwrite-mode`, `confirm-discard`, `autosave`, `backup-file`, `watch-file`, `link-double-click`, `open-local-programs`, `resizable-panes`, `reduced-motion`, `detachable-menus`, `vi-config`, `load-config`, `save-config`, `save-config-as`, `clear-caches` | The Options menu |
 | `new-window`, `close-window`, `remember-window-positions`, `manual`, `about` | The Window and Help menus |
 | `toggle-editor`, `toggle-viewer`, `toggle-toc`, `toggle-bars`, `cycle-mouse-mode`, `cycle-theme`, `suspend`, `resize-panes` | `F1`–`F6`, `Ctrl-Z` and `Alt-R` |
 
@@ -850,7 +864,7 @@ The choices made in the Edit, Format, View, Options and Window menus — Vi Mode
 Wrap, Text Width, Menu and
 Status Bars, Sync Cursor, Highlight Line, Line Numbers (Editor and
 Viewer), Center Document, Rulers (Horizontal and Vertical), Guides,
-Images, Links → Double-click to Open, Dialog Style, Ask Before Discarding
+Images, Links → Double-click to Open and Open Local Programs, Dialog Style, Ask Before Discarding
 Changes, Auto-Save, Keep a Backup File, the mouse mode, the clipboard mode,
 Resizable Panes, Tooltips, the theme and Crysterm's own Color Depth, Links, Media
 Backend, No Animations, Detachable Menus, Vi Mode: Use Neovim Config, Window → Linking and Window → Remember Positions — and the pane sizes are kept across runs in

@@ -65,6 +65,8 @@ module Superconf
     description: "Options → Clipboard: where a copy goes and a paste comes from (terminal|command|internal)"
   option "md.link_double_click", false, env: "MD_LINK_DOUBLE_CLICK",
     description: "Options → Links → Double-click to Open: follow a link in the viewer on a double click rather than a single one"
+  option "md.open_local_programs", false, env: "MD_OPEN_LOCAL_PROGRAMS",
+    description: "Options → Links → Open Local Programs: let a link to a program on this computer (an executable file, an .app, a .command, a .desktop entry) run it, rather than refuse it with a notice"
   option "md.resizable_panes", true, env: "MD_RESIZABLE_PANES",
     description: "Options → Resizable Panes: let the dividers between the panes move"
   # Window.

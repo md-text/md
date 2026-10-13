@@ -20,7 +20,8 @@ module Md
     # modes the status bar toggles — overwrite mode and the mouse mode — the
     # unsaved-changes guard, auto-save and the backup file
     # (`app_autosave.cr`), whether the file is watched, the clipboard mode,
-    # the links (Links, with Double-click to Open, `app_toolkit.cr`), whether the panes resize
+    # the links (Links, with Double-click to Open, `app_toolkit.cr`, and
+    # Open Local Programs, `app_links.cr`), whether the panes resize
     # (`app_panes.cr`), No Animations (reduced motion) and detachable
     # menus (`app_toolkit.cr`), the config file's entries
     # (`app_config.cr`) and Clear Caches…,
@@ -173,8 +174,12 @@ module Md
       # What the viewer's links are and how they are followed, beside how
       # the mouse and the clipboard serve md (`app_toolkit.cr`): Never
       # turns them off altogether, Double-click to Open is how a click
-      # follows one. `K` is free, Keep a Backup File having taken `B`.
-      @hyperlinks_actions = add_choices(options, "Lin&ks", "hyperlinks", Hyperlinks.values, @hyperlinks, "What the viewer's links are — the terminal's own hyperlinks too, to click or hover, or none — and how they are followed", ->hyperlinks_tip(Hyperlinks), [toggle_action("Double-click to &Open", "link-double-click", @link_double_click, option_tip("md.link_double_click"))]) { |policy| hyperlinks_label policy }
+      # follows one, and Open Local Programs whether a link may run a
+      # program (`app_links.cr`). `K` is free, Keep a Backup File having
+      # taken `B`.
+      link_entries = [toggle_action("Double-click to &Open", "link-double-click", @link_double_click, option_tip("md.link_double_click")),
+                      toggle_action("Open Local &Programs", "open-local-programs", @open_local_programs, option_tip("md.open_local_programs"))]
+      @hyperlinks_actions = add_choices(options, "Lin&ks", "hyperlinks", Hyperlinks.values, @hyperlinks, "What the viewer's links are — the terminal's own hyperlinks too, to click or hover, or none — and how they are followed", ->hyperlinks_tip(Hyperlinks), link_entries) { |policy| hyperlinks_label policy }
       options.on(Crysterm::Event::AboutToShow) { refresh_detected_labels }
       # Whether the dividers between the panes move (`app_panes.cr`); `z`
       # is free, as `r` is not.

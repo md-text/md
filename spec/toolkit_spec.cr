@@ -35,7 +35,7 @@ describe "Md::App toolkit options" do
   it "offers the hyperlink policies and tells the window" do
     with_app do |app, window|
       entries = submenu(app, 4, "Lin&ks")
-      entries.map(&.text).should eq ["&Auto (No)", "Al&ways", "&Never", "", "Double-click to &Open"]
+      entries.map(&.text).should eq ["&Auto (No)", "Al&ways", "&Never", "", "Double-click to &Open", "Open Local &Programs"]
       entries[0, 3].map(&.checked?).should eq [true, false, false]
       app.viewer.links_enabled?.should be_true
       entries[2].trigger
@@ -62,7 +62,7 @@ describe "Md::App toolkit options" do
     with_app Md::Source.new(path: "doc.md"), text: "See [the site](https://example.com).\n", view: true do |app|
       opened = [] of String
       app.url_opener = ->(url : String) { opened << url; nil }
-      toggle = submenu(app, 4, "Lin&ks").last
+      toggle = submenu(app, 4, "Lin&ks")[-2]
       toggle.checked?.should be_false
       app.viewer.double_click_links?.should be_false
       toggle.trigger

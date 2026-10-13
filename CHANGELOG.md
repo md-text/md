@@ -9,6 +9,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- A link in the viewer to a program on this computer — an executable file,
+  an `.app`, a `.command`, a `.desktop` entry and the like — was handed to
+  `open` or `xdg-open`, which ran it. md now refuses it with a notice
+  unless Options → Links → Open Local Programs is on
+  (`md.open_local_programs`, off by default); web links and other files
+  open as before, and Markdown files are read whatever their permissions.
 - Replace's question takes Vim's `l` (last) answer: replace this match,
   then stop.
 - Window → New in Ghostty on macOS opened the new window in Terminal.app,

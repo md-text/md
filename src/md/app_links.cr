@@ -19,6 +19,16 @@ module Md
     # `QDesktopServices::openUrl` does. A link to a file that does not exist
     # is a notice, not a new document.
     #
+    # Except a local program (`.program?`): handed to the opener, a link to
+    # one would run it — `open` launches an `.app` or runs a `.command` in
+    # Terminal, `xdg-open` a `.desktop` entry — on a click in a document
+    # that may come from anywhere. `QDesktopServices::openUrl` has no such
+    # guard; browsers and Qt Creator ask or refuse, and md refuses, with a
+    # notice naming Options → Links → Open Local Programs
+    # (`#open_local_programs?`, `md.open_local_programs`), off by default,
+    # which lets them through. A remote URL is the browser's to judge and is
+    # not affected.
+    #
     # Previous File and Next File (File → Previous File, Next File, `Alt-Left`
     # and `Alt-Right`; `Backspace` too in the viewer and the table of
     # contents; Qt's `QTextBrowser::backward`/`forward`, for files) retrace
@@ -51,9 +61,53 @@ module Md
     # other extension, or none, goes to the platform opener.
     MARKDOWN_EXTENSIONS = {".md", ".markdown", ".mdown", ".mkd", ".mkdn", ".mdwn"}
 
+    # The extensions of the files the platforms' openers run, install or
+    # pass on to something that does, whatever their permission bits say
+    # (`.program?`), on any platform, as a document travels between them.
+    # macOS's LaunchServices launches an application bundle (`.app`), runs
+    # a shell script in Terminal (`.command`, `.tool`), a Terminal profile's
+    # startup command (`.terminal`), an Automator workflow or action
+    # (`.workflow`, `.action`) and a Java archive (`.jar`), opens what a
+    # Finder location file points at (`.fileloc`) and hands a package to
+    # the installer (`.pkg`, `.mpkg`); `xdg-open` launches a desktop entry
+    # (`.desktop`), and with Java or Wine installed a `.jar` or a Windows
+    # program or installer (`.exe`, `.msi`, `.bat`, `.cmd`, `.com`), and
+    # hands a package to the software center (`.deb`, `.rpm`, `.flatpakref`).
+    PROGRAM_EXTENSIONS = {".app", ".command", ".tool", ".terminal", ".workflow", ".action", ".jar", ".fileloc", ".pkg", ".mpkg",
+                          ".desktop", ".appimage", ".run", ".exe", ".msi", ".bat", ".cmd", ".com", ".deb", ".rpm", ".flatpakref"}
+
+    # Whether *path* is a program — a file the opener would run rather than
+    # show: a file (not a directory, which every one with an `x` is) with
+    # any execute permission bit, which `open` and `xdg-open` run, or a file
+    # or bundle directory with one of `PROGRAM_EXTENSIONS`, by its own name
+    # or, through a symbolic link, its target's. An executable shell script
+    # counts by its bit; so does any file on a volume that gives every file
+    # all the bits (FAT, some network shares), which is the safe side to err
+    # on.
+    def self.program?(path : String) : Bool
+      return false unless info = File.info?(path)
+      return true if info.file? && (info.permissions & File::Permissions.flags(OwnerExecute, GroupExecute, OtherExecute)).value != 0
+      real = File.realpath(path) rescue path
+      {path, real}.any? { |name| PROGRAM_EXTENSIONS.includes? File.extname(name.rstrip('/')).downcase }
+    end
+
     # How an external URL is opened: the platform's opener unless a caller
     # supplies another (specs do, to see the URL without launching anything).
     property url_opener : Proc(String, Nil) = ->(url : String) { App.open_externally url }
+
+    # Options → Links → Open Local Programs: whether a link to a local
+    # program is handed to the opener, which runs it (see above).
+    @open_local_programs : Crysterm::Reactive::Property(Bool) = Crysterm::Reactive::Property.new(false)
+
+    def open_local_programs? : Bool
+      @open_local_programs.value
+    end
+
+    # Lets links to local programs run them, or refuses them (Options →
+    # Links → Open Local Programs).
+    def open_local_programs=(value : Bool) : Bool
+      @open_local_programs.value = value
+    end
 
     # The places left (`Trail`), the browser's back and forward stacks
     # `#travel` moves between: Previous File pops the one, Next File the
@@ -239,20 +293,35 @@ module Md
 
     # Opens the linked file *target* (absolute): a Markdown file in this
     # window, through the guard, landing on *fragment*'s heading when there
-    # is one; another kind of file with the platform opener.
+    # is one; another kind of file with the platform opener (`#open_other`).
     private def follow_file(target : String, fragment : String) : Nil
-      unless File.file? target
+      unless info = File.info?(target)
         notice "No such file: #{target}"
         return
       end
-      unless markdown_file? target
-        open_url target
+      # Markdown is read, never run, whatever its permission bits.
+      unless info.file? && markdown_file?(target)
+        open_other target, info
         return
       end
       confirm_open(target) do
         # A file that could not be read (its notice says so) has no
         # headings to land on.
         go_to_anchor fragment if open_file(target) && !fragment.empty?
+      end
+    end
+
+    # Hands the linked file *target*, not Markdown, to the opener — unless
+    # it is a program (`.program?`) and Open Local Programs is off, or a
+    # directory that is not one, with a notice saying which.
+    private def open_other(target : String, info : File::Info) : Nil
+      if App.program?(target)
+        return open_url(target) if open_local_programs?
+        notice "Not running #{target}: a program (Options → Links → Open Local Programs)"
+      elsif info.file?
+        open_url target
+      else
+        notice "Not a file: #{target}"
       end
     end
 
