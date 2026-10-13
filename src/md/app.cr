@@ -844,9 +844,13 @@ module Md
     end
 
     # Re-renders the viewer from the editor text, keeping the reader's place
-    # (a plain `set_markdown` rewinds to the top).
+    # (a plain `set_markdown` rewinds to the top). While the document is
+    # still streaming in, the text is rendered as the stream so far
+    # (`stream: true`), so the chunks still to come continue it — the
+    # paragraph the stream is in the middle of included — where a plain
+    # render would show that paragraph twice, or cut it in two.
     private def render_viewer : Nil
-      @viewer.set_markdown markdown, keep_view: true
+      @viewer.set_markdown markdown, keep_view: true, stream: streaming?
       @viewer_stale = false
       highlight_matches Pane::Viewer
       # The viewer's caret kept its offset, not its place in the changed
