@@ -22,7 +22,7 @@ jobs:
           - runner: ubuntu-latest
             crystal: nightly
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       # shard.override.yml builds against unreleased Crysterm, Tput,
       # Superconf, event_handler and pnggif checkouts beside this one.
