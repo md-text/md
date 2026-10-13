@@ -2,16 +2,12 @@ require "./spec_helper"
 require "file_utils"
 
 # An App on a document the viewer shows, so a pane's background is on
-# screen to read; the theme is one global for every window (creating one
-# installs Crysterm's config theme), so each spec puts back the one it
-# found.
+# screen to read; `with_app` puts back the theme it found, the theme
+# being one global for every window.
 private def with_theme_app(config = false, &)
-  saved = Crysterm::CSS.theme
   with_app Md::Source.new(path: "doc.md"), text: "# Title\n\nSome text.\n", view: true, config: config do |app, window|
     yield app, window
   end
-ensure
-  Crysterm::CSS.theme = saved
 end
 
 # The View → Theme entries.

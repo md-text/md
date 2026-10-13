@@ -7,7 +7,7 @@ require "./spec_helper"
 # Presses the keypad key whose application-keypad sequence ends in *final*,
 # the way `Tput::Input#listen` delivers it.
 private def press_keypad(window, final : Char) : Crysterm::Event::KeyPress
-  ke = Tput::KeyEvent.from_ss3_keypad(final).not_nil!
+  ke = Tput::KeyEvent.from_ss3_keypad(final) || fail("no keypad key ends in #{final}")
   e = Crysterm::Event::KeyPress.new (ke.char || '\e'), ke.to_legacy_key, ['\e', 'O', final], ke
   window.emit Crysterm::Event::KeyPress, e
   e

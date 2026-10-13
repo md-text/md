@@ -139,6 +139,18 @@ describe "Md::App Vi Mode" do
     end
   end
 
+  it "turns off when the editor's buffer is closed in Neovim" do
+    with_app text: "# A\n" do |app, window|
+      app.vi_mode = true
+      app.editor.focus
+      vi_type window, ":bw!<CR>"
+      settle { !app.vi_mode? }
+      app.vi.attached?.should be_false
+      notice(app).should contain "Vi Mode is off"
+      vi_entry(app).checked?.should be_false
+    end
+  end
+
   it "keeps the viewer's : as md's command line" do
     with_app text: "# A\n\ntext\n" do |app, window|
       app.vi_mode = true

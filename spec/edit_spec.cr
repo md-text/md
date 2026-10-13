@@ -258,6 +258,20 @@ describe "Md::App editing" do
     end
   end
 
+  it "takes the box a line of text starts with for the box of the item made of it" do
+    with_app text: "[x] done\n[ ] todo\n[x] kept\n", view: false do |app|
+      place app, 0, 2
+      app.check_task.should be_true # ticked, not flipped to [ ]
+      app.markdown.should eq "- [x] done\n[ ] todo\n[x] kept\n"
+      place app, 1, 2
+      app.check_task.should be_true
+      app.markdown.should eq "- [x] done\n- [x] todo\n[x] kept\n"
+      place app, 2, 2
+      app.toggle_task_box.should be_true # kept, not taken off
+      app.markdown.should eq "- [x] done\n- [x] todo\n- [x] kept\n"
+    end
+  end
+
   it "leaves a line of code that looks like a list item alone" do
     with_app text: "```\n- not an item\n```\n", view: false do |app|
       place app, 1, 3

@@ -475,12 +475,13 @@ module Md
     # Format → As a Task: a task box on the caret's list item, or on every
     # list item of the selection — `[ ] ` added to an item without one, and
     # taken off an item that has one; a line of text is made an item with a
-    # box (`#edit_task_items`). Returns whether there was an item or a line
-    # of text, with a notice when there was not.
+    # box (`#edit_task_items`), the `[ ]` or `[x]` it starts with, if any,
+    # being that box. Returns whether there was an item or a line of text,
+    # with a notice when there was not.
     def toggle_task_box : Bool
-      edit_task_items do |doc, box, item|
+      edit_task_items do |doc, box, item, made|
         if task = item.task
-          Crysterm::TextCursor.new(doc, box, box + task.size).remove_selected_text
+          Crysterm::TextCursor.new(doc, box, box + task.size).remove_selected_text unless made
         else
           Crysterm::TextCursor.new(doc, box).insert_text(item.spacing.empty? ? " [ ] " : "[ ] ")
         end
@@ -489,11 +490,12 @@ module Md
 
     # Format → Toggle Task Checkbox: the box ticked when empty and emptied when
     # ticked, on the same items; an item without a box gets a ticked one,
-    # so a plain item is done in one key. Likewise.
+    # so a plain item is done in one key, and a line of text made an item
+    # has its box ticked. Likewise.
     def check_task : Bool
-      edit_task_items do |doc, box, item|
+      edit_task_items do |doc, box, item, made|
         if task = item.task
-          Crysterm::TextCursor.new(doc, box + 1, box + 2).insert_text(task[1] == ' ' ? "x" : " ")
+          Crysterm::TextCursor.new(doc, box + 1, box + 2).insert_text(made || task[1] == ' ' ? "x" : " ")
         else
           Crysterm::TextCursor.new(doc, box).insert_text(item.spacing.empty? ? " [x] " : "[x] ")
         end
@@ -508,11 +510,10 @@ module Md
       editor = formatting_editor
       first, last = selected_blocks
       code = App.code_lines editor.document
-      unless editor.selection?
-        first = paragraph_start first, code
-        last = paragraph_end first, code
-      end
-      rewrap_blocks first, last, code
+      # The whole of each paragraph the selection touches, not just its
+      # lines (`#paragraph_start` and `#paragraph_end` leave a line in no
+      # paragraph where it is).
+      rewrap_blocks paragraph_start(first, code), paragraph_end(last, code), code
     end
 
     # Format → Rewrap → Document: every paragraph of the document refilled,
@@ -893,10 +894,12 @@ module Md
     # them, the lines of text become items first, a `- ` put after their
     # quote markers and indentation, since a task box belongs on an item;
     # a blank line, a code block's, a heading, a fence, a table row and a
-    # rule do not. Returns whether there was an item or a line to make one
-    # of, with a notice when there was not. The position is taken as each
-    # item's turn comes, so an earlier item's edit has already moved it.
-    private def edit_task_items(& : Crysterm::TextDocument, Int32, ListItem ->) : Bool
+    # rule do not; the block is told an item was made of the line (a box
+    # the line's text started with is then the new item's). Returns
+    # whether there was an item or a line to make one of, with a notice
+    # when there was not. The position is taken as each item's turn comes,
+    # so an earlier item's edit has already moved it.
+    private def edit_task_items(& : Crysterm::TextDocument, Int32, ListItem, Bool ->) : Bool
       editor = formatting_editor
       doc = editor.document
       first, last = selected_blocks
@@ -923,7 +926,7 @@ module Md
           block = doc.blocks[i]
           item = ListItem.parse(block.text) || next
           at = block.position + item.quote.size + item.indent.size + item.content_offset
-          yield doc, at, item
+          yield doc, at, item, bare
         end
         nil
       end

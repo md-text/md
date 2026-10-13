@@ -4,7 +4,8 @@
 # widths for text-presentation emoji, the rich-text viewer following the CSS
 # theme/stylesheet; option change notifications, a load at runtime
 # precedence, resets and selective dumps in Superconf; Subscriptions#add in
-# event_handler, which Crysterm's ConfigLink uses). Remove once releases
+# event_handler, which Crysterm's ConfigLink uses; centre-of-cell sampling
+# in pnggif's create_cellmap). Remove once releases
 # include them and shard.yml's version bounds are raised.
 dependencies:
   crysterm:
@@ -15,3 +16,5 @@ dependencies:
     path: ../superconf.cr
   event_handler:
     path: ../event_handler
+  pnggif:
+    path: ../pnggif

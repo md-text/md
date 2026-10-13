@@ -385,8 +385,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   (a new document once it has a name: the window stays when Save As is
   cancelled). Neovim starts with `--clean` unless Options → Vi Mode: Use Neovim
   Config (`vi-config`, `md.vi_config`) is on. Without `nvim` the entry is
-  disabled and says why, and a Neovim that ends turns Vi Mode off. The
-  viewer's `:` stays md's command line.
+  disabled and says why, and a Neovim that ends, or closing the editor's
+  buffer in Neovim (`:bw`), turns Vi Mode off. The viewer's `:` stays md's
+  command line.
 - Format → Code Block (`code-block`): Code's companion for whole lines. It
   puts the selected lines, or the paragraph at the caret, between ```` ``` ````
   fences carrying the first line's quote markers and indentation, drops an
@@ -444,6 +445,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Pictures are sampled at each cell's centre, so they no longer sit half a
+  cell up and to the left, and the bottom rows are kept when a picture is
+  shrunk. (Changed in pnggif, which Crysterm builds against.)
+- Two table rows that render alike each keep their own cells, where one read
+  back the other's, and a pasted table is a table of its own, where it was
+  more rows of the table it was copied from. (Changed in Crysterm, which md
+  builds against.)
+- Format → Rewrap → Paragraph with a selection refills the whole of every
+  paragraph the selection touches, as its description says, where it refilled
+  only the selected lines, leaving a paragraph's lines outside the selection
+  as they were.
+- Format → Toggle Task Checkbox on a line of text that starts with a box
+  (`[x] done`) makes it the item `- [x] done`, its box ticked, and As a Task
+  makes `[ ] todo` the item `- [ ] todo`, where the box they made the line an
+  item with was then toggled at once: Toggle Task Checkbox gave `- [ ] done`
+  and As a Task took the box off, giving `- todo`.
 - Format → Code Block on whole lines selected up to the next line's start
   keeps the selection on those lines and the closing fence, where it ended at
   the closing fence's start; and it takes off an empty fenced block that ends

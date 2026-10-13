@@ -154,13 +154,15 @@ module Md
       @@document.clear
       toolkit = toolkit_path
       Superconf.load_file toolkit if File.exists?(toolkit)
-      # md's file is read once: Superconf applies the text at file
-      # precedence, under the name `Superconf.load_file` gives a file, and
-      # the same text is kept as the file's own entries, for `.save`.
+      # md's file is read and parsed once: Superconf applies the document
+      # at file precedence, under the name `Superconf.load_file` gives a
+      # file, and the same document is kept as the file's own entries, for
+      # `.save`.
       origin = "config file #{file}"
       if text = read(file)
-        Superconf.load_yaml text, origin
-        @@document = flatten(YAML.parse(text))
+        document = Superconf.parse_yaml text, origin
+        Superconf.load_yaml document, origin
+        @@document = flatten(document)
       end
       Crysterm.configure!("", argv: argv)
       # Superconf stamps a file's values "config file PATH (KEY)"; with no

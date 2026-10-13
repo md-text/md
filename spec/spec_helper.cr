@@ -14,13 +14,17 @@ end
 
 # An App on a headless window, destroyed after the block, with the
 # constructor's own defaults: a new document in the editor unless *text* is
-# given, which the viewer shows.
+# given, which the viewer shows. The theme is one global for every window,
+# so one the App switched to (View → Theme, a config file) is put back to
+# the one the window found, for the specs after.
 def with_app(source = Md::Source.new, text = "", view = !text.empty?, config = false, history = nil, watch = false, line = nil, &)
   window = headless_window
+  theme = Crysterm::CSS.theme
   begin
     yield Md::App.new(source, text: text, view: view, window: window, config: config, history: history, watch: watch, line: line), window
   ensure
     window.destroy
+    Crysterm::CSS.theme = theme unless Crysterm::CSS.theme == theme
   end
 end
 

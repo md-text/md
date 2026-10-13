@@ -162,6 +162,17 @@ describe "Md::App rewrap paragraph" do
     end
   end
 
+  it "refills the whole of each paragraph a selection touches, not just its lines" do
+    with_app text: "aa\nbb\ncc\n\ndd\nee\nff\n", view: false do |app|
+      app.text_width = 20
+      doc = app.editor.document
+      # From "bb" to the middle of "ee": both paragraphs, all their lines.
+      app.editor.text_cursor = Crysterm::TextCursor.new(doc, doc.block_position(1) + 1, doc.block_position(5) + 1)
+      app.rewrap_paragraph.should be_true
+      app.markdown.should eq "aa bb cc\n\ndd ee ff\n"
+    end
+  end
+
   it "leaves an indented code block, a fence nested in a list item and a rule alone" do
     with_app text: "para one\nline two\n\n    code here\n    more code\n\n- item\n  - sub\n\n    ```\n    fenced in\n    sub\n    ```\n\ntext\n---\nafter\nrule\n", view: false do |app|
       app.text_width = 40

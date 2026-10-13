@@ -118,8 +118,8 @@ describe "Md::App copying" do
         app.copy
         lines = clip.text.lines
         lines.size.should be > 5
-        lines.map(&.size).uniq.size.should eq 1 # every line the table's width
-        lines.select(&.starts_with?("│ 1 │")).size.should eq 1
+        lines.map(&.size).uniq!.size.should eq 1 # every line the table's width
+        lines.count(&.starts_with?("│ 1 │")).should eq 1
       end
     end
   end

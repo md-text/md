@@ -206,8 +206,6 @@ describe "Md::App config menu" do
         answer app, File.join(File.dirname(path), "missing.yml")
         notice(app).should start_with " Cannot load #{File.join(File.dirname(path), "missing.yml")}: cannot read config file"
       end
-    ensure
-      Crysterm::CSS.theme = nil
     end
   end
 

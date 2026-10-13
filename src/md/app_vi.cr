@@ -22,7 +22,8 @@ module Md
     # Neovim starts with `--clean` — none of the user's config — unless
     # Options → Vi Mode: Use Neovim Config is on (`md.vi_config`); a
     # change to it restarts Neovim when Vi Mode is on. Without `nvim` the
-    # entry is disabled and says why; a Neovim that ends turns Vi Mode off.
+    # entry is disabled and says why; a Neovim that ends, or the editor's
+    # buffer closed in Neovim (`:bw`), turns Vi Mode off.
     #
     # Turned on from the menu or by name, Vi Mode shows and focuses the
     # editor. The viewer's `:` stays md's command line, the viewer being no
@@ -71,6 +72,12 @@ module Md
       @vi.on(Crysterm::Event::ProcessExited) do
         @vi_mode.value = false
         notice "Neovim ended; Vi Mode is off"
+      end
+      # The editor's buffer closed in Neovim (`:bw`), or Neovim failing a
+      # call: the handler has let go of the editor.
+      @vi.on(Crysterm::Event::ViDetached) do |e|
+        @vi_mode.value = false
+        notice "#{e.reason}; Vi Mode is off"
       end
     end
 

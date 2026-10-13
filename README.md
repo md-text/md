@@ -383,7 +383,8 @@ Format → Toggle Task Checkbox (`Alt-X`) ticks the box `[x]` and unticks it,
 and gives an item without a box a ticked one. A task box belongs on a list
 item, so on a line of text that is no item both make it one first, `text`
 becoming `- [ ] text` (a selection's lines of text each, when it holds no
-item); Format → Promote Heading and Demote Heading (`Ctrl-Up`, `Ctrl-Down`)
+item), and a line that starts with a box, `[ ] text` or `[x] text`, keeping
+that box as the item's, which Toggle Task Checkbox ticks; Format → Promote Heading and Demote Heading (`Ctrl-Up`, `Ctrl-Down`)
 move the heading of the caret's section one level up or down, a paragraph
 being the level above `#` — the caret's line when it is a heading, and from
 anywhere in the section's text the nearest heading above it (one in a code
@@ -433,8 +434,9 @@ Neovim starts with `--clean`, without your config, unless Options → Vi
 Mode: Use Neovim Config (`md.vi_config`) is on: then your
 `init.lua` or `init.vim` and plugins load, and a mapping of yours applies
 in the editor. Without `nvim` in `PATH` the entry is disabled, its
-description saying why; should Neovim end, Vi Mode turns off with a notice
-and the editor goes on as before. The viewer's `:` stays md's command line
+description saying why; should Neovim end, or the editor's buffer be closed
+in it (`:bw`), Vi Mode turns off with a notice and the editor goes on as
+before. The viewer's `:` stays md's command line
 (the viewer is no text input), and the line prompts keep plain editing.
 
 ### Searching and jumping
