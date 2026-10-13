@@ -59,14 +59,28 @@ module Md
     # A replace in progress: what the matches become, where it started (so
     # the wrap-around stops there), whether it has wrapped, whether it found
     # a match at all, and how many matches it replaced.
+    #
+    # Where it started is kept in a `TextCursor`, so it moves with the text
+    # before it — the replacements made past the wrap, and the edits made
+    # in another window on the document while the question is up. The
+    # cursor keeps its position when text goes in right at it (Qt's
+    # `KeepPositionOnInsert`): a replacement of the match that starts there
+    # leaves it before the new text, where the wrap-around is to stop.
     private class Replacement
       getter replacement : String
-      property origin : Int32
+      getter origin_cursor : Crysterm::TextCursor
       property? wrapped = false
       property? found = false
       property count = 0
 
-      def initialize(@replacement, @origin)
+      def initialize(@replacement, document : Crysterm::TextDocument, origin : Int32)
+        @origin_cursor = Crysterm::TextCursor.new(document, origin)
+        @origin_cursor.keep_position_on_insert = true
+      end
+
+      # Where the replace started, in the document as it is now.
+      def origin : Int32
+        @origin_cursor.position
       end
     end
 
@@ -177,7 +191,7 @@ module Md
       if @editor.selection?
         @editor.text_cursor = Crysterm::TextCursor.new(@editor.document, @editor.text_cursor.selection_start)
       end
-      @replacing = Replacement.new replacement, @editor.cursor_position
+      @replacing = Replacement.new replacement, @editor.document, @editor.cursor_position
       all ? replace_rest : replace_step
     end
 
@@ -244,9 +258,6 @@ module Md
       cursor.insert_text text
       @editor.text_cursor = cursor
       session.count += 1
-      # Past the wrap the start is ahead of the caret and moves with the
-      # text before it.
-      session.origin += text.size - (match.stop - start) if session.wrapped?
       edited
     end
 

@@ -542,6 +542,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Edit → Replace remembered where it started as a plain position, so an edit
+  in another window on the document while the Replace? question was up made
+  its wrap-around stop in the wrong place, skipping matches or going on past
+  where it began. Where it started now moves with the text.
 - A file deleted since it was left was reopened as a new, empty document
   under its name by File → Previous File, Next File, File → Close (the next
   place) and File → Open Recent. md now says "No such file", spends the
