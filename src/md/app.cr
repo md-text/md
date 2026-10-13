@@ -586,14 +586,14 @@ module Md
         return false
       end
       backup_failure = backup path
-      File.write path, markdown
+      SaveFile.write path, markdown
       @editor.document.modified = false
       autosave_settled
       refresh_status
       notice(backup_failure ? "Saved #{path} (#{backup_failure})" : "Saved #{path}")
       true
     rescue ex : IO::Error
-      notice "Cannot save #{path}: #{ex.message}"
+      notice "Cannot save #{path}: #{Md.error_text(ex)}"
       false
     end
 

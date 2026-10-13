@@ -140,23 +140,16 @@ module Md
       write_recovery
     end
 
-    # Writes the document to its recovery file, beside its final name and
-    # renamed over it, so a crash mid-write leaves the previous copy intact.
+    # Writes the document to its recovery file whole (`SaveFile`), so a
+    # crash mid-write leaves the previous copy intact.
     private def write_recovery : Nil
       path = recovery_path
       Dir.mkdir_p File.dirname(path)
-      temp = "#{path}.#{Process.pid}.tmp"
-      begin
-        File.write temp, markdown
-        File.rename temp, path
-      rescue ex : IO::Error
-        File.delete? temp
-        raise ex
-      end
+      SaveFile.write path, markdown
       @autosave_dirty = false
       @autosave_failed = false
     rescue ex : IO::Error
-      notice "Cannot auto-save to #{path}: #{ex.message}" unless @autosave_failed
+      notice "Cannot auto-save to #{path}: #{Md.error_text(ex)}" unless @autosave_failed
       @autosave_failed = true
     end
 
@@ -207,7 +200,7 @@ module Md
       File.copy path, "#{path}~"
       nil
     rescue ex : IO::Error
-      "backup #{path}~ failed: #{ex.message}"
+      "backup #{path}~ failed: #{Md.error_text(ex)}"
     end
 
     # A notice when a recovery file for the document is newer than the

@@ -247,7 +247,7 @@ module Md
     private def self.read_file(path : String) : String
       File.read path
     rescue ex : IO::Error
-      raise Error.new("cannot read #{path}: #{ex.message}")
+      raise Error.new("cannot read #{path}: #{Md.error_text(ex)}")
     end
 
     # Where Crysterm's log goes while md runs: `$XDG_CACHE_HOME/md/md.log`

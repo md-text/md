@@ -427,8 +427,10 @@ it. `u` and `Ctrl-R` are Neovim's undo and redo, an insert one step; an
 edit made by md (Format, Replace, a paste with the mouse) reaches Neovim
 and is undone by `u` too; a document opened, reloaded or closed starts
 the undo history afresh, in Neovim as in the editor. `:w` saves, `:w
-FILE` saves as FILE, `:q` closes the window as Window → Close Current
-does, asking about unsaved changes, `:q!` closes it without asking,
+FILE` writes a copy to FILE and keeps the document's name, as Vim does
+(a document without a name takes FILE's), `:saveas FILE` (or `:file
+FILE` and `:w`) saves as FILE, `:q` closes the window as Window → Close
+Current does, asking about unsaved changes, `:q!` closes it without asking,
 `:qa` (`:qa!`) quits, and `:wq`, `:x` and `ZZ` save, then close — a new
 document once it is named in the Save As question, staying open when
 that is cancelled.
@@ -438,8 +440,9 @@ Neovim starts with `--clean`, without your config, unless Options → Vi
 Mode: Use Neovim Config (`md.vi_config`) is on: then your
 `init.lua` or `init.vim` and plugins load, and a mapping of yours applies
 in the editor. Without `nvim` in `PATH` the entry is disabled, its
-description saying why; should Neovim end, or the editor's buffer be closed
-in it (`:bw`), Vi Mode turns off with a notice and the editor goes on as
+description saying why; should Neovim end, not answer for 5 seconds
+(`Ctrl-C` interrupts a loop or a `:!cmd` before that), or the editor's
+buffer be closed in it (`:bw`), Vi Mode turns off with a notice and the editor goes on as
 before. Neovim edits only the editor's buffer, in one window: `:enew`,
 `:e FILE`, `:b N`, `:split` or `:new` is undone at once, with a notice;
 the extra window is closed and a file it loaded dropped, unless modified.
@@ -673,7 +676,11 @@ Two nets catch what a crash, a kill or a slip would lose, both on by default
 in the Options menu. *Keep a Backup File* keeps the file as it was before
 the first save of the session, as `FILE~` beside it (emacs' convention), so
 one save too many is undone by copying the backup back; later saves in the
-same session leave it alone. *Auto-Save* writes your unsaved edits every 30
+same session leave it alone. A save itself writes the file whole: the text
+goes to a temporary file beside it and replaces the file only once it is all
+on disk, so a full disk or a crash mid-save leaves the previous contents
+(the file's permissions are kept, and a symbolic link is followed; a file
+with other hard links is written in place). *Auto-Save* writes your unsaved edits every 30
 seconds to a recovery file — never to the file itself, which is written
 only when you save, the way vim's swap file and emacs' `#file#` work. The
 recovery files live in `$XDG_STATE_HOME/md/autosave/`
@@ -812,7 +819,8 @@ for md alone goes here rather than in Crysterm's `~/.config/crysterm/config.yml`
 (which md reads first, below its own, and never copies into it).
 Entries md does not know are kept across a rewrite, so an older md does not
 shed a newer one's settings; a broken file stops md with a message naming the
-entry, as does a value that fits no option, given anywhere. One YAML caution: write a value that YAML reads as a boolean, such as
+entry, as does a file that is not a mapping of option groups or a value that
+fits no option, given anywhere. One YAML caution: write a value that YAML reads as a boolean, such as
 Terminal Links' `off`, in quotes (`hyperlinks: "off"`); md's own writes
 quote every word.
 

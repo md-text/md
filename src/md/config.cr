@@ -182,7 +182,7 @@ module Md
     rescue File::NotFoundError
       nil
     rescue ex : IO::Error
-      raise Error.new("cannot read config file #{file}: #{ex.message}")
+      raise Error.new("cannot read config file #{file}: #{Md.error_text(ex)}")
     end
 
     # What Superconf stamps on a value from the file `.configure` loaded, up
@@ -200,21 +200,14 @@ module Md
 
     # Writes the settings to *file* (`.path` by default; see the module
     # comment for what goes in), creating the directory as needed. The text
-    # is written beside the file and renamed over it, so a crash mid-write
-    # leaves the previous file intact. Returns false instead of raising when
-    # the directory cannot be made or the file not written: at exit there is
-    # no one left to tell, and the menu entry gives a notice.
+    # is written whole (`SaveFile`), so a crash mid-write leaves the previous
+    # file intact. Returns false instead of raising when the directory cannot
+    # be made or the file not written: at exit there is no one left to tell,
+    # and the menu entry gives a notice.
     def self.save(file : String = path) : Bool
       text = render
       Dir.mkdir_p File.dirname(file)
-      temp = "#{file}.#{Process.pid}.tmp"
-      begin
-        File.write temp, text
-        File.rename temp, file
-      rescue IO::Error
-        File.delete? temp
-        return false
-      end
+      SaveFile.write file, text
       @@dirty = false if file == path
       true
     rescue IO::Error

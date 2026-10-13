@@ -384,7 +384,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   shows the mode left of the position and the command line while one is
   typed, Neovim's messages come as notices, Visual mode is the editor's
   selection, `u`/`Ctrl-R` are Neovim's undo and redo, and `:w` saves (`:w
-  FILE` saves as), `:q` closes the window as Window → Close Current does,
+  FILE` writes a copy and keeps the document's name, as in Vim, unless the
+  document has none; `:saveas FILE` saves as), `:q` closes the window as
+  Window → Close Current does,
   `:q!` without asking, `:qa` quits, `:wq`, `:x` and `ZZ` save and close
   (a new document once it has a name: the window stays when Save As is
   cancelled). Neovim starts with `--clean` unless Options → Vi Mode: Use Neovim
@@ -467,6 +469,34 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - File → Save As… to a name that cannot be written (a directory that is not
   there, no permission) keeps the document's name, title and watched file,
   where it took the new name anyway and the next Save went to it again.
+- Saving writes the file whole, as Qt's `QSaveFile` does: the text goes to a
+  temporary file beside it, is flushed to disk and renamed over the file, so
+  a full disk or a crash mid-save leaves the previous contents, where the
+  file was rewritten in place and could be left cut short. The file keeps its
+  permissions, owner and group, a symbolic link stays a link with its target
+  written, and a file with other hard links, or in a directory md may not
+  create files in, is still written in place. A read-only file is refused as
+  before. The config file, the history and the recovery files are written
+  the same way.
+- A notice for a file that cannot be opened, saved, reloaded, auto-saved or
+  backed up names the file once, followed by the system's reason ("Cannot
+  save FILE: Permission denied"), where the reason repeated the path
+  ("Error opening file with mode 'w': 'FILE': Permission denied");
+  Options → Load Config… says "Cannot read config file FILE: …" where it
+  named the file twice before that.
+- A config file that is not a mapping (a list, a bare value) or that gives an
+  option group a value (`md: 5`) stops md with a message naming the file,
+  as a broken file does, where it was taken as empty and the next save
+  replaced it. (Fixed in Superconf, which md builds against.)
+- In Vi Mode, an edit md makes while Neovim is still busy with a key (a
+  long `:s`, a `:!cmd`) is put on the right lines, and Neovim's change on
+  lines of its own kept, where the edit could land on other lines and the
+  editor and Neovim then differ; Neovim's change to the lines md edited
+  gives way to md's. A Neovim that does not answer for 5 seconds (a loop, a
+  hang) turns Vi Mode off with the notice "Neovim did not answer within 5
+  s", where md froze until it did, and `Ctrl-C` reaches a busy Neovim at
+  once to interrupt it. Turning Vi Mode off with Neovim stopped takes 2
+  seconds, where it took 6. (Fixed in Crysterm.)
 - View → Watch File says "FILE was removed from disk; the text is kept" when
   the file is deleted, where it said it could not reload it, and reloads it
   when it comes back; a change the watcher had queued when Watch File was
@@ -626,5 +656,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Long lines are wrapped in linear time: a document with a 100 KB line opens
   in about 0.3s instead of 5.8s, and typing in it no longer takes seconds per
   key. (Fixed in Crysterm, which md builds against.)
+- `Tab` and `Shift-Tab` in an open menu move down and up, where `Tab` closed
+  it, and a letter that several entries share moves between them, where it
+  always took the first. (Fixed in Crysterm, which md builds against.)
+- Vi Mode edits, and edits that join or split lines, no longer rebuild the
+  whole text or re-wrap the whole document, so editing a very large document
+  stays fast. (Fixed in Crysterm, which md builds against.)
 
 [Unreleased]: https://github.com/crystallabs/md/commits/main

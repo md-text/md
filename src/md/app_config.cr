@@ -137,7 +137,10 @@ module Md
           Config.load_file path
           notice "Loaded #{path}"
         rescue ex : Error
-          notice "Cannot load #{path}: #{ex.message}"
+          # Superconf's message names the file ("cannot read config file
+          # PATH: …", "invalid value … (config file PATH (KEY))").
+          message = ex.message || "cannot load #{path}"
+          notice message.sub(0, message[0].upcase)
         end
       end
     end

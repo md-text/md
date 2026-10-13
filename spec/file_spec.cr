@@ -176,7 +176,7 @@ describe "Md::App file failures" do
     begin
       with_app Md::Source.new(path: path), text: "a\n", view: true, watch: true do |app, window|
         app.save_as("/nonexistent-md-dir/x.md").should be_false
-        notice(app).should start_with " Cannot save /nonexistent-md-dir/x.md: "
+        notice(app).should start_with " Cannot save /nonexistent-md-dir/x.md: No such file or directory"
         app.source.path.should eq path
         window.title.to_s.should contain File.basename(path)
         app.save.should be_true # to the old name, as before

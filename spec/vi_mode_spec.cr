@@ -100,6 +100,33 @@ describe "Md::App Vi Mode" do
     end
   end
 
+  it "writes a copy on :w FILE, keeping the document's name, and saves as on :saveas FILE" do
+    path = tempfile("# Title\n")
+    copy = tempfile(nil)
+    named = tempfile(nil)
+    with_app Md::Source.new(path: path), text: File.read(path), view: false do |app, window|
+      app.vi_mode = true
+      vi_type window, "Gonew<Esc>:w #{copy}<CR>"
+      settle { File.exists? copy }
+      File.read(copy).should eq "# Title\nnew\n"
+      File.read(path).should eq "# Title\n"
+      app.source.path.should eq path
+      app.editor.document.modified?.should be_true
+
+      vi_type window, ":saveas #{named}<CR>"
+      settle { File.exists? named }
+      File.read(named).should eq "# Title\nnew\n"
+      File.realpath(app.source.path.as(String)).should eq File.realpath(named)
+      app.editor.document.modified?.should be_false
+    end
+  ensure
+    [path, copy, named].each do |file|
+      next unless file
+      File.delete? file
+      File.delete? "#{file}~"
+    end
+  end
+
   it "asks a new document's name on :wq and closes once it is saved there, staying when it is not" do
     path = tempfile(nil)
     with_app do |app, window|

@@ -118,20 +118,13 @@ module Md
     end
 
     # Writes the list to `path`, creating the directory as needed. The file
-    # is written beside its final name and renamed over it so a crash
-    # mid-write leaves the previous history intact. Returns false instead of
-    # raising when the directory cannot be made or the file cannot be
-    # written: history is not worth an error dialog.
+    # is written whole (`SaveFile`) so a crash mid-write leaves the previous
+    # history intact. Returns false instead of raising when the directory
+    # cannot be made or the file cannot be written: history is not worth an
+    # error dialog.
     def save : Bool
       Dir.mkdir_p(File.dirname(@path))
-      temp = "#{@path}.#{Process.pid}.tmp"
-      begin
-        File.write(temp, Document.new(VERSION, @entries).to_pretty_json)
-        File.rename(temp, @path)
-      rescue IO::Error
-        File.delete?(temp)
-        return false
-      end
+      SaveFile.write(@path, Document.new(VERSION, @entries).to_pretty_json)
       @dirty = false
       true
     rescue IO::Error

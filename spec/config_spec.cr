@@ -65,6 +65,12 @@ describe Md::Config do
       (error.message || "").should contain "config.yml"
     end
 
+    it "refuses a file that is not a mapping of option groups, naming it, and takes an empty one" do
+      expect_raises(Md::Error, /config.yml: the document is not a mapping/) { with_config("- md.text_width: 72\n") { } }
+      expect_raises(Md::Error, /"md" \(config file .*config.yml\): a group of options takes a mapping/) { with_config("md: 5\n") { } }
+      with_config("# nothing yet\n") { Crysterm::Config.md_text_width.should eq 0 }
+    end
+
     it "refuses a file it cannot read, naming it, and starts on none at all" do
       with_config do |path|
         Md::Config.configure file: path, argv: [] of String # no file: the defaults
@@ -204,7 +210,7 @@ describe "Md::App config menu" do
 
         app.load_config_prompt
         answer app, File.join(File.dirname(path), "missing.yml")
-        notice(app).should start_with " Cannot load #{File.join(File.dirname(path), "missing.yml")}: cannot read config file"
+        notice(app).should start_with " Cannot read config file #{File.join(File.dirname(path), "missing.yml")}: No such file or directory"
       end
     end
   end

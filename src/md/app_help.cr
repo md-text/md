@@ -28,7 +28,7 @@ module Md
           Dir.mkdir_p File.dirname(path)
           File.write path, Manual.markdown
         rescue ex : IO::Error | File::Error
-          notice "Cannot write the manual to #{path}: #{ex.message}"
+          notice "Cannot write the manual to #{path}: #{Md.error_text(ex)}"
           next
         end
         open_file path

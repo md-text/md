@@ -115,7 +115,7 @@ module Md
       check_recovery
       true
     rescue ex : IO::Error
-      notice "Cannot open #{path}: #{ex.message}"
+      notice "Cannot open #{path}: #{Md.error_text(ex)}"
       false
     end
 
@@ -254,7 +254,7 @@ module Md
       refresh_status
       true
     rescue ex : IO::Error
-      notice "Cannot reload #{path}: #{ex.message}"
+      notice "Cannot reload #{path}: #{Md.error_text(ex)}"
       false
     end
 

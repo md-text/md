@@ -4,6 +4,7 @@
 # `src/bin/md.cr`, which simply calls `Md::CLI.run`.
 require "./md/version"
 require "./md/source"
+require "./md/save_file"
 require "./md/history"
 require "./md/config"
 require "./md/export"

@@ -13,8 +13,10 @@ module Md
     # The status bar shows Neovim's mode beside the position (`NORMAL`,
     # `INSERT`, `VISUAL`, …), and the command line in place of the
     # document's name while one is typed; Neovim's messages come as notices.
-    # `:w` saves (File → Save), `:w FILE` saves as FILE (File → Save As),
-    # `:q` closes the window as Window → Close Current does, asking about
+    # `:w` saves (File → Save), `:w FILE` writes a copy to FILE and keeps
+    # the document's name, as Vim does (a document without a name takes
+    # FILE as its own), `:saveas FILE` saves as FILE (File → Save As), `:q`
+    # closes the window as Window → Close Current does, asking about
     # unsaved changes, `:q!` closes it without asking, `:qa` quits as
     # File → Quit does (`:qa!` without asking), and `:wq`, `:x` and `ZZ`
     # save, then close.
@@ -22,8 +24,9 @@ module Md
     # Neovim starts with `--clean` — none of the user's config — unless
     # Options → Vi Mode: Use Neovim Config is on (`md.vi_config`); a
     # change to it restarts Neovim when Vi Mode is on. Without `nvim` the
-    # entry is disabled and says why; a Neovim that ends, or the editor's
-    # buffer closed in Neovim (`:bw`), turns Vi Mode off.
+    # entry is disabled and says why; a Neovim that ends or does not answer
+    # (`Neovim::Handler#request_timeout`), or the editor's buffer closed in
+    # Neovim (`:bw`), turns Vi Mode off.
     #
     # Turned on from the menu or by name, Vi Mode shows and focuses the
     # editor. The viewer's `:` stays md's command line, the viewer being no
@@ -66,15 +69,15 @@ module Md
       @vi.on(Crysterm::Event::ViModeChanged) { refresh_status }
       @vi.on(Crysterm::Event::ViCommandLineChanged) { refresh_status }
       @vi.on(Crysterm::Event::ViMessageChanged) { |e| e.text.try { |text| notice text } }
-      @vi.on(Crysterm::Event::ViWriteRequested) { |e| vi_write e.path }
+      @vi.on(Crysterm::Event::ViWriteRequested) { |e| vi_write e.path, e.rename }
       @vi.on(Crysterm::Event::ViQuitRequested) { |e| vi_quit e.bang, e.all }
       # Neovim ended under the editor: the editor is its own again.
       @vi.on(Crysterm::Event::ProcessExited) do
         @vi_mode.value = false
         notice "Neovim ended; Vi Mode is off"
       end
-      # The editor's buffer closed in Neovim (`:bw`), or Neovim failing a
-      # call: the handler has let go of the editor.
+      # The editor's buffer closed in Neovim (`:bw`), or Neovim failing or
+      # not answering a call: the handler has let go of the editor.
       @vi.on(Crysterm::Event::ViDetached) do |e|
         @vi_mode.value = false
         notice "#{e.reason}; Vi Mode is off"
@@ -109,11 +112,15 @@ module Md
     @vi_naming = false
     @vi_quit_after_naming : {Bool, Bool}? = nil
 
-    # `:w`: saves, or saves as *path* (`:w FILE`); a document without a
-    # file asks for a name (File → Save As).
-    private def vi_write(path : String?) : Nil
-      if path
+    # `:w`: saves; with *path*, writes a copy there (`:w FILE`), or saves
+    # as *path* when *rename* (`:saveas FILE`) or the document has no name
+    # (Vim's 'cpoptions' `F`); a document without a name asks for one (File
+    # → Save As).
+    private def vi_write(path : String?, rename : Bool) : Nil
+      if path && (rename || @source.path.nil?)
         save_as path
+      elsif path
+        vi_write_copy path
       elsif @source.path
         save
       else
@@ -125,6 +132,15 @@ module Md
           vi_quit *quit if quit && saved
         end
       end
+    end
+
+    # `:w FILE` on a named document: the text goes to *path*, and the
+    # document keeps its name, its file and its unsaved state.
+    private def vi_write_copy(path : String) : Nil
+      SaveFile.write path, markdown
+      notice "Wrote a copy to #{path}"
+    rescue ex : IO::Error
+      notice "Cannot write #{path}: #{Md.error_text(ex)}"
     end
 
     # `:q`: closes this window, or every window with *all* (`:qa`), asking
