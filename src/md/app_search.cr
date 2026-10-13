@@ -216,10 +216,10 @@ module Md
     # `""`. A key typed before the question is up goes into the editor.
     private def ask_replace : Nil
       prompt = @main.status_bar.line_prompt
-      status_prompt("Replace? (y)es (n)o (a)ll (q)uit ", "") { |text| replace_answered text }
+      status_prompt("Replace? (y)es (n)o (a)ll (q)uit (l)ast ", "") { |text| replace_answered text }
       field = prompt.field
       @replace_key = field.on(Crysterm::Event::KeyPress) do |e|
-        next if e.key || !e.char.in?('y', 'n', 'a', 'q')
+        next if e.key || !e.char.in?('y', 'n', 'a', 'q', 'l')
         @replace_answer = e.char.to_s
         field.value = ""
         field.submit
@@ -227,7 +227,8 @@ module Md
     end
 
     # The answer to the question: the key it was answered with, else the
-    # text (`nil` for Escape; anything else asks again).
+    # text (`nil` for Escape; anything else asks again). `l` (last) replaces
+    # the match and stops, as Vim's `:s///c` answer does.
     private def replace_answered(text : String?) : Nil
       @replace_key.try &.off
       @replace_key = nil
@@ -241,7 +242,10 @@ module Md
       when "n" then replace_step
       when "a" then replace_rest
       when "q" then end_replace
-      else          ask_replace
+      when "l"
+        replace_match
+        end_replace
+      else ask_replace
       end
     end
 

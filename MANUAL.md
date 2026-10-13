@@ -439,10 +439,11 @@ off until the next search — `n` is one, and still knows the pattern.
 Replacing (`Alt-H`, Edit → Replace…) works like vi's `:s///c`, at the same
 prompt: it asks for the pattern — the last search's is filled in — and
 then for the replacement, and steps through the matches from the cursor,
-selecting each in the editor and asking `Replace? (y)es (n)o (a)ll (q)uit`.
+selecting each in the editor and asking `Replace? (y)es (n)o (a)ll (q)uit (l)ast`.
 A single key answers: `y` replaces the match and moves on, `n` leaves it,
 `a` replaces it and every match after it (around the end of the document
-and back to where you started), `q` and `Esc` stop. The pattern follows the
+and back to where you started), `l` replaces it and stops, `q` and `Esc`
+stop. The pattern follows the
 search's rules, and the replacement may refer to the pattern's groups,
 `\1` to `\9`, and to the whole match, `\0`, as Crystal's `String#sub`
 does (`\\` is a backslash). Replacing edits the Markdown source, so from

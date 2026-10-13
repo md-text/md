@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Replace's question takes Vim's `l` (last) answer: replace this match,
+  then stop.
 - Window → New in Ghostty on macOS opened the new window in Terminal.app,
   Crysterm having no way to ask Ghostty for one. It now opens in Ghostty,
   as a Ghostty of its own that quits with its window, and Window →
