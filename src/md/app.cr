@@ -676,12 +676,13 @@ module Md
 
     # Asks for a file name (`#ask_text`, in place of the status bar or in
     # a dialog), the current name filled in, and saves under the answer
-    # (`#save_as`); a cancelled or empty answer saves nothing. *done* hears
-    # whether a save happened.
+    # (`#save_as`), a leading `~` being the home directory, as File → Open
+    # takes it (`App.typed_path`); a cancelled or empty answer saves
+    # nothing. *done* hears whether a save happened.
     def save_as_prompt(&done : Bool ->) : Nil
       ask_text("Save as: ", source.path || "") do |answer|
         path = answer.try &.strip
-        done.call(path && !path.empty? ? save_as(path) : false)
+        done.call(path && !path.empty? ? save_as(App.typed_path(path)) : false)
       end
     end
 

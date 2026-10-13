@@ -568,6 +568,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   directory named `~` in the working directory, opening a new, empty file
   there; only `Tab` completion expanded it. `~` is the home directory now,
   as in the shell and Qt's file dialogs.
+- File → Save As… took a name typed with a leading `~` as a directory named
+  `~` in the working directory, and failed to save into it; it is the home
+  directory now, as File → Open… takes it.
 - A search's smartcase took an escape such as `\S`, `\W` or `\D` for an
   uppercase letter, so `/\Dfoo` matched case exactly. As in Vim, a letter
   after a backslash, or in the braces an escape takes (`\x{4C}`), does not
