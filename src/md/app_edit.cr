@@ -81,7 +81,8 @@ module Md
     # down — the caret's line when it is a heading, the nearest heading
     # above it otherwise, so they work from anywhere in the section — a
     # paragraph being the level above `#` and `######` the last; a setext
-    # heading moved becomes an ATX one (`#shift_heading`).
+    # heading moved becomes an ATX one, a task item's one stays setext,
+    # keeping its box (`#shift_heading`, `#shift_task_heading`).
     #
     # Format → Rewrap — labelled with the column, `Rewrap (to 80 Columns)`
     # — → Paragraph (`Alt-Q`, Emacs's `fill-paragraph`, Kate's
@@ -359,6 +360,20 @@ module Md
     # Whether *line* is an ATX heading.
     def self.heading?(line : String) : Bool
       !HEADING.match(line).try(&.["hashes"]?).nil?
+    end
+
+    # A task box opening an item's text, with text after it: GFM's task
+    # list item marker.
+    TASK_BOX = /\A\[[ xX]\][ \t]+[^ \t]/
+
+    # The quote and list markers before the box when *line* is a task
+    # item's first line (`- [ ] text`, `> 1. [x] text`, `- - [ ] text`),
+    # nil otherwise. A box after an ATX heading's hashes is text
+    # (`- ## [ ] x`), as GFM reads it.
+    def self.task_lead(line : String) : String?
+      return unless ListItem.parse(line)
+      lead = HEADING.match(line).try(&.["lead"]) || return
+      lead if TASK_BOX.matches?(line[lead.size..])
     end
 
     # The headings of *doc*, in order: ATX ones (`## Title`) and setext
@@ -965,10 +980,12 @@ module Md
     # quote markers and indentation, since a task box belongs on an item;
     # a blank line, a code block's, a heading, a fence, a table row and a
     # rule do not; the block is told an item was made of the line (a box
-    # the line's text started with is then the new item's). Returns
-    # whether there was an item or a line to make one of, with a notice
-    # when there was not. The position is taken as each item's turn comes,
-    # so an earlier item's edit has already moved it.
+    # the line's text started with is then the new item's). An item that
+    # is an ATX heading, `- ## Title`, is made a setext one first, which
+    # GFM boxes (`#untitle_task`). Returns whether there was an item or a
+    # line to make one of and one was edited, with a notice when not. The
+    # position is taken as each item's turn comes, so an earlier item's
+    # edit has already moved it.
     private def edit_task_items(& : Crysterm::TextDocument, Int32, ListItem, Bool ->) : Bool
       editor = formatting_editor
       doc = editor.document
@@ -987,6 +1004,7 @@ module Md
         notice "Not a list item or a line of text"
         return false
       end
+      changed = false
       doc.edit do
         lines.each do |i|
           if bare
@@ -996,12 +1014,43 @@ module Md
           block = doc.blocks[i]
           item = ListItem.parse(block.text) || next
           at = block.position + item.quote.size + item.indent.size + item.content_offset
+          next unless item.task || untitle_task(doc, block, at, item.text)
           yield doc, at, item, bare
+          changed = true
         end
         nil
       end
-      edited
+      edited if changed
+      changed
+    end
+
+    # An item's ATX heading, *text* at *at* in *block* of *doc*, about to
+    # take a task box at *at*, made the setext heading GFM boxes, as
+    # `#shift_task_heading` keeps a task item's: `- ## Title` becomes
+    # `- Title` over `---` (`===` for `#`), its hashes, and any closing
+    # ones, taken off. Text that is no heading stays. Returns false, the
+    # line left, for a heading below level 2, which a task item cannot
+    # have, with the notice Demote gives.
+    private def untitle_task(doc : Crysterm::TextDocument, block : Crysterm::TextBlock, at : Int32, text : String) : Bool
+      m = HEADING.match(text)
+      return true unless m && m["lead"].empty? && (hashes = m["hashes"]?)
+      if hashes.size > 2
+        notice "No task heading below level 2"
+        return false
+      end
+      title = text[m[0].size..].sub(/(?:\A|[ \t]+)#+[ \t]*\z/, "").rstrip
+      from = at + m[0].size + title.size
+      underline = title.empty? ? "" : task_underline(block.text[0, at - block.position], hashes.size)
+      Crysterm::TextCursor.new(doc, from, block.position + block.text.size).insert_text underline
+      Crysterm::TextCursor.new(doc, at, at + m[0].size).remove_selected_text
       true
+    end
+
+    # The line that makes a task item's text a heading at *level*, 1 or
+    # 2, with the newline before it: `===` or `---` at the item's content
+    # column, under *lead*, the quote and list markers before the box.
+    private def task_underline(lead : String, level : Int32) : String
+      "\n#{lead.gsub(/[^>\t]/, ' ')}#{level == 1 ? "===" : "---"}"
     end
 
     # Wraps the selection — or the word at the caret — in *marker*, or
@@ -1202,7 +1251,8 @@ module Md
     # one promoted loses its underline and is a paragraph. Before the
     # first heading there is no section, and the caret's line itself is
     # shifted: a line of text becomes a `#` heading on Demote and stays on
-    # Promote, and a code block's line stays as it is. The caret keeps its
+    # Promote, and a code block's line stays as it is. A task item's
+    # heading moves by `#shift_task_heading` instead. The caret keeps its
     # place in the text.
     private def shift_heading(by : Int32) : Bool
       editor = formatting_editor
@@ -1212,6 +1262,9 @@ module Md
         return false
       end
       target = heading.level + by
+      if lead = App.task_lead(doc.blocks[heading.first].text)
+        return shift_task_heading(doc, heading, lead, target)
+      end
       if target > 6
         notice "No heading level below 6"
         return false
@@ -1221,6 +1274,39 @@ module Md
       end
       hashes = target == 0 ? "" : "#" * target + " "
       replace_spans doc, heading_spans(doc, heading, hashes)
+      edited
+      true
+    end
+
+    # `#shift_heading` on a task item's text, `- [ ] Title` (*lead* the
+    # markers before its box), at level *target*. GFM gives the box only
+    # to an item whose first paragraph starts with it, which an underline
+    # may make a setext heading, as github.com shows it: `- ## [ ] Title`
+    # is a heading with no box and `- [ ] ## Title` a task whose text is
+    # `## Title`. So the heading goes between a paragraph, `===` (level 1)
+    # and `---` (level 2) under the paragraph at the item's content
+    # column, the box kept, and no lower: Markdown has no task heading
+    # past level 2, and the entry says so and leaves the line.
+    private def shift_task_heading(doc : Crysterm::TextDocument, heading : Heading, lead : String, target : Int32) : Bool
+      if target > 2
+        notice "No task heading below level 2"
+        return false
+      elsif target < 0
+        notice "Not a heading"
+        return false
+      end
+      if !heading.setext?
+        last = doc.blocks[paragraph_end(heading.first, App.code_lines(doc))]
+        at = last.position + last.text.size
+        replace_spans doc, [{at, at, task_underline(lead, target)}]
+      elsif target == 0
+        replace_spans doc, heading_spans(doc, heading, "")
+      else
+        underline = doc.blocks[heading.last]
+        run = /[=-]+/.match(underline.text) || return false
+        from = underline.position + run.begin
+        replace_spans doc, [{from, from + run[0].size, target == 1 ? "===" : "---"}]
+      end
       edited
       true
     end

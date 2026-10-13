@@ -44,7 +44,7 @@ module Md
       {"Enter", "In the editor, on a list item: continue the list; on an empty item, end it."},
       {"Ctrl-B, Alt-I, Alt-C", "Bold, italic and code around the selection or the word at the caret, or off again."},
       {"Alt-X", "Tick or untick a list item's task box, or give it a ticked one, a line of text becoming an item (Format -> Toggle Task Checkbox; Format -> As a Task, a check entry, adds and removes the box)."},
-      {"Ctrl-Up, Ctrl-Down", "Promote or demote the heading of the caret's section, from the heading or anywhere in its text, a heading in a list item (- ## Title) keeping its marker (Format -> Promote Heading, Demote Heading)."},
+      {"Ctrl-Up, Ctrl-Down", "Promote or demote the heading of the caret's section, from the heading or anywhere in its text, a heading in a list item (- ## Title) keeping its marker, and a task item's (- [ ] Title over ===, or ---) its box, down to level 2 (Format -> Promote Heading, Demote Heading)."},
       {"Alt-Q", "Refill the paragraph at the caret, or the selected paragraphs, to the wrap column (the text width, or 80); Format -> Rewrap -> Document refills every paragraph."},
       {"Ctrl-N", "Open another md window on this document, in a new terminal window (Window -> New)."},
       {"Ctrl-W", "Outside the editor, close this window, asking first when its changes are unsaved; closing the last window quits (Window -> Close Current)."},

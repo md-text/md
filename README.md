@@ -386,7 +386,10 @@ and gives an item without a box a ticked one. A task box belongs on a list
 item, so on a line of text that is no item both make it one first, `text`
 becoming `- [ ] text` (a selection's lines of text each, when it holds no
 item), and a line that starts with a box, `[ ] text` or `[x] text`, keeping
-that box as the item's, which Toggle Task Checkbox ticks; Format → Promote Heading and Demote Heading (`Ctrl-Up`, `Ctrl-Down`)
+that box as the item's, which Toggle Task Checkbox ticks. An item that is a
+heading, `- ## Title`, takes its box as a task heading, `- [ ] Title` over
+`---` (`===` for `#`), since GFM boxes no ATX heading, and a level 3 to 6
+one is left with a notice (see below); Format → Promote Heading and Demote Heading (`Ctrl-Up`, `Ctrl-Down`)
 move the heading of the caret's section one level up or down, a paragraph
 being the level above `#` — the caret's line when it is a heading, and from
 anywhere in the section's text the nearest heading above it (one in a code
@@ -398,9 +401,16 @@ heading loses its underline. A heading in a list item, at any depth, counts
 as CommonMark has it: `- ## Title`, or `- Title` over a `---` or `===`
 indented to the item's text (a `---` at the margin under an item is a rule
 after the list); it keeps its marker and indentation as it moves, `- Title`
-over `---` demoted becoming `- ### Title`. Before the first
-heading, Demote makes the caret's line a `#` heading. Each change is
-one undo step.
+over `---` demoted becoming `- ### Title`. A task item's heading follows
+GFM as github.com renders it: the box counts only at the start of the
+item's first paragraph, so `- [ ] Title` over `---` is a task whose text
+is a level-2 heading, while `- [ ] ## Title` is a task whose text is
+`## Title` and `- ## [ ] Title` a heading `[ ] Title` with no box. Such a
+heading therefore stays setext as it moves, keeping the box: `===` for
+level 1, `---` for level 2, and no underline for a paragraph. Demote stops
+at level 2 with a notice, since a task item has no heading below that.
+Before the first heading, Demote makes the caret's line a `#` heading, or
+puts `===` under a task item's text. Each change is one undo step.
 
 The keys are not all Qt's: `Ctrl-B` is, but a terminal sends the same byte
 for `Ctrl-I` and `Tab`, and cannot tell `Ctrl-Shift-X` from `Ctrl-X`, so

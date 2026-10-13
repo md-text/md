@@ -475,6 +475,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   demoted is `- ### Title`), and leave them whole; a fence on an item's own
   line (`` - ``` ``) opens a code block, where the code after it was read as
   text. A task box stays text, as markd reads it: `- [ ] ## x` is no heading.
+- Task items and headings follow GFM as github.com (cmark-gfm) renders them,
+  where the viewer and Format → Promote and Demote Heading disagreed:
+  `- ## [ ] a` showed a checkbox and a heading `a`, where it is a heading
+  `[ ] a` in a plain item; a task heading (`- [ ] a` over `  ---`) was saved
+  as `- [ ] a`, losing the heading; and Demote on one wrote `- ### [ ] a`,
+  which drops the box. Promote and Demote now keep a task item's heading
+  setext, `===` or `---` under its text, the box kept, and stop at level 2
+  with the notice "No task heading below level 2"; before the first heading,
+  Demote on a task item puts `===` under it. Format → As a Task and Toggle
+  Task Checkbox on an item's ATX heading wrote `- [ ] ## x`, a task whose
+  text is `## x`, where they now make it the setext heading under the box,
+  `- [ ] x` over `  ---` (`===` for `#`), and leave a level 3 to 6 one with
+  the same notice. (The viewer's part fixed in Crysterm, which md builds
+  against.)
+- The viewer showed literal `[ ] a` on a numbered task item (`1. [ ] a`) and a
+  box on a plain item in a task list (`- c` under `- [ ] a`), and exported or
+  copied text lost a nested list's outer item (`- - a` came out as `  - a`).
+  The viewer now shows a box on the numbered task item and a bullet on the
+  plain one, and the text keeps the outer item. (Fixed in Crysterm, which md
+  builds against.)
 - A file or standard input with bytes that are not UTF-8 opens, each bad
   byte shown as `�` (U+FFFD) with a notice saying so, where md crashed at
   start, File → Open… and Reload raised an internal error, and a stream

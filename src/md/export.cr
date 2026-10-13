@@ -44,7 +44,7 @@ module Md
             n = items[lf.object_id]? || 0
             items[lf.object_id] = n + 1
             io << INDENT * (lf.indent - 1)
-            io << lf.marker(n, checked: bf.checked?)
+            io << lf.marker(n, checked: bf.checked?, task: bf.task?)
           end
           io << block.text << '\n'
           bf.bottom_margin.times { io << '\n' }
