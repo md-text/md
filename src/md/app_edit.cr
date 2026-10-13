@@ -24,8 +24,9 @@ module Md
     # in the Markdown: with the item's content indentation on a list item,
     # with the quote markers and indentation of any other line
     # (`App.continuation_prefix`). A line that cannot be broken without
-    # changing its meaning — a code block's, fenced or indented, a fence, a
-    # heading, a table row, a rule (`App.unbreakable?`) — is left alone.
+    # changing its meaning — a code block's, fenced or indented, a fence, an
+    # HTML block's, a heading, a table row, a rule (`App.unbreakable?`) — is
+    # left alone.
     def hard_wrap_prefix(line : String) : String?
       return if App.unbreakable?(document, document.block_at(cursor_position).index)
       App.continuation_prefix(line)
@@ -115,8 +116,8 @@ module Md
     # in the same blockquote, that no list item, heading, fence, table row
     # or rule starts or interrupts (`#continues?`); a list item's lines
     # keep the marker and take the item's content indentation, a quote's
-    # keep the `> `, and a code block, fenced or indented
-    # (`App.code_lines`), is not a paragraph, nor is a link reference
+    # keep the `> `, and a code block, fenced or indented, or an HTML
+    # block (`App.code_lines`), is not a paragraph, nor is a link reference
     # definition (`[id]: url`). A hard break (two spaces or a backslash
     # ending a line) stays where it is. No line is broken where the
     # next would start with Markdown of its own — a `-`, `1.`, `#` or `>`
@@ -281,7 +282,8 @@ module Md
     end
 
     # Whether line *index* of *doc* must not be broken or refilled: a code
-    # block's line, a fence, a heading, a table row or a rule. One line's
+    # block's line, an HTML block's, a fence, a heading, a table row or a
+    # rule. One line's
     # answer, with a scan of the lines above it (`.code_lines`); a caller
     # that asks about many lines takes the scan once instead.
     def self.unbreakable?(doc : Crysterm::TextDocument, index : Int32) : Bool
@@ -306,17 +308,51 @@ module Md
     # pass over the lines, the items open at each kept as a stack of their
     # content columns, so a rewrap asks about every line of its range, and
     # a hard wrap about the caret's, without a scan of the lines above each.
+    # An HTML block's lines (`HTML_BLOCK_STARTS`), raw HTML, count too, from
+    # the line that starts one to the line that ends it, or the last before
+    # a blank line, so a paragraph ends where one of kinds 1 to 6 starts.
     def self.code_lines(doc : Crysterm::TextDocument, upto : Int32 = doc.block_count - 1) : Array(Bool)
       scan = CodeScan.new
       Array(Bool).new(upto + 1) { |i| scan.code?(doc.blocks[i].text) }
     end
 
+    # The start conditions of CommonMark's seven kinds of HTML block
+    # (§4.6), in order, each matched against a line's text after its
+    # indentation (at most three columns past the content around it):
+    # 1. `<script`, `<pre`, `<style` or `<textarea`; 2. a comment,
+    # `<!--`; 3. a processing instruction, `<?`; 4. a declaration, `<!`
+    # and an uppercase letter; 5. `<![CDATA[`; 6. a block-level tag, open
+    # or closing, by its name (`<div`, `</table>`); 7. any complete open
+    # or closing tag alone on its line. They are CommonMark 0.29's, which
+    # cmark-gfm and markd, md's renderer, follow (`<textarea` is cmark-gfm's
+    # only); the first that matches gives the kind.
+    HTML_BLOCK_STARTS = [
+      /\A<(?:script|pre|style|textarea)(?:[ \t>]|\z)/i,
+      /\A<!--/,
+      /\A<\?/,
+      /\A<![A-Z]/,
+      /\A<!\[CDATA\[/,
+      /\A<\/?(?:address|article|aside|base|basefont|blockquote|body|caption|center|col|colgroup|dd|details|dialog|dir|div|dl|dt|fieldset|figcaption|figure|footer|form|frame|frameset|h[1-6]|head|header|hr|html|iframe|legend|li|link|main|menu|menuitem|nav|noframes|ol|optgroup|option|p|param|section|source|summary|table|tbody|td|tfoot|th|thead|title|tr|track|ul)(?:[ \t]|\/?>|\z)/i,
+      /\A(?:<[A-Za-z][A-Za-z0-9-]*(?:[ \t]+[A-Za-z_:][A-Za-z0-9:._-]*(?:[ \t]*=[ \t]*(?:[^ \t"'=<>`]+|'[^']*'|"[^"]*"))?)*[ \t]*\/?>|<\/[A-Za-z][A-Za-z0-9-]*[ \t]*>)[ \t]*\z/,
+    ]
+
+    # The end conditions of HTML blocks of kinds 1 to 5, by kind: the line
+    # that holds one, the start's own line too, is the block's last. A
+    # block of kind 6 or 7 ends before a blank line.
+    HTML_BLOCK_ENDS = [/<\/(?:script|pre|style|textarea)>/i, /-->/, /\?>/, />/, /\]\]>/]
+
+    # One blockquote marker, with the one space it may take.
+    QUOTE_MARKER = /\A[ \t]*> ?/
+
     # What `.code_lines` carries from one line to the next: the fence of
-    # the code block open (nil outside one), the content columns of the
-    # list items open, innermost last, and whether paragraph text runs on
-    # from above.
+    # the code block open (nil outside one), the kind of the HTML block
+    # open (1 to 7, nil outside one) and the quote depth it opened at, the
+    # content columns of the list items open, innermost last, and whether
+    # paragraph text runs on from above.
     private class CodeScan
       @fence : String? = nil
+      @html : Int32? = nil
+      @html_depth = 0
       @items = [] of Int32
       @text_above = false
 
@@ -326,29 +362,41 @@ module Md
         !@fence.nil?
       end
 
-      # Whether *line* is a code block's, the scan moved past it.
+      # Whether *line* is a code block's, or an HTML block's, the scan
+      # moved past it.
       def code?(line : String) : Bool
-        body = line.sub(QUOTE_MARKERS, "")
+        quote = QUOTE_MARKERS.match(line).try(&.[0]) || ""
+        body = line[quote.size..]
         indent = indent_width body
-        if @fence && !body.blank? && (top = @items.last?) && indent < top
-          # A line less indented than the item's content ends the item, and
-          # the code block in it.
-          @fence = nil
-        end
-        if open = @fence
+        close_left_blocks body, indent, quote.count('>')
+        if kind = @html
+          html_line? line, body, kind
+        elsif open = @fence
           @fence = nil if closes?(body, open, indent)
           !@fence.nil?
         elsif body.blank?
           @text_above = false
           false
         else
-          outside_fence? body, indent
+          outside_fence? body, indent, quote.count('>')
         end
       end
 
+      # The code or HTML block open ended by a line out of the list item
+      # holding it — *body*, less indented than the item's content — and
+      # the HTML block open by one out of its quote, *depth* quote markers
+      # in: no paragraph runs on lazily in either.
+      private def close_left_blocks(body : String, indent : Int32, depth : Int32) : Nil
+        if (@fence || @html) && !body.blank? && (top = @items.last?) && indent < top
+          @fence = @html = nil
+        end
+        @html = nil if depth < @html_depth
+      end
+
       # Whether *body*, a line with text outside a fenced block, is an
-      # indented code block's; a fence, an item or text it opens is noted.
-      private def outside_fence?(body : String, indent : Int32) : Bool
+      # indented code block's or an HTML block's; a fence, an HTML block,
+      # an item or text it opens is noted. *depth* is its quote depth.
+      private def outside_fence?(body : String, indent : Int32, depth : Int32) : Bool
         # A line less indented than an item's content ends the item (a
         # sibling replaces one).
         while (top = @items.last?) && top > indent
@@ -357,22 +405,59 @@ module Md
         # Four columns past the content: code, unless paragraph text runs
         # on from above.
         return !@text_above if indent - margin >= INDENT
+        return true if opens_html?(body.lstrip(" \t"), depth, @text_above)
         if run = FENCE.match(body).try(&.["fence"])
           @fence = run
           @text_above = false
         elsif !RULE.matches?(body) && (item = ListItem.parse(body))
           # An item opens (`* * *` is a rule, not one); its text can run on
-          # to the next line, or it opens a fenced block (`- ``` `).
+          # to the next line, or it opens a fenced block (`- ``` `) or an
+          # HTML block (`- <div>`).
           @items << indent + item.content_offset
           @text_above = !item.empty?
           if item.task.nil? && (run = FENCE.match(item.text).try(&.["fence"]))
             @fence = run
             @text_above = false
+          elsif item.task.nil? && opens_html?(item.text, depth, false)
+            return true
           end
         else
           @text_above = !App.unbreakable_line?(body)
         end
         false
+      end
+
+      # Whether an HTML block opens with *text*, a line's text after its
+      # quote markers, indentation and list marker, *depth* quote markers
+      # in: one of any kind but 7, which cannot interrupt a paragraph,
+      # when *paragraph* text runs on from above. The block is noted, and
+      # ended at once when *text* meets its end condition.
+      private def opens_html?(text : String, depth : Int32, paragraph : Bool) : Bool
+        return false unless text.starts_with?('<')
+        index = HTML_BLOCK_STARTS.index(&.matches?(text)) || return false
+        return false if paragraph && index == HTML_BLOCK_STARTS.size - 1
+        @html = index + 1 unless HTML_BLOCK_ENDS[index]?.try(&.matches?(text))
+        @html_depth = depth
+        @text_above = false
+        true
+      end
+
+      # Line *line* of the HTML block of kind *kind* open, *body* the line
+      # without its quote markers: the block's, and its last when it meets
+      # the block's end condition — for kinds 6 and 7 a blank line, which
+      # is no part of the block. Whether the line is the block's.
+      private def html_line?(line : String, body : String, kind : Int32) : Bool
+        if kind >= 6
+          return true unless body.blank?
+          @html = nil
+          @text_above = false
+          return false
+        end
+        # The quote markers the block is in are no part of its text; any
+        # further ones are.
+        @html_depth.times { line = line.sub(QUOTE_MARKER, "") }
+        @html = nil if HTML_BLOCK_ENDS[kind - 1].matches?(line)
+        true
       end
 
       # Whether *body* closes the fenced block *open* began: a run of the
@@ -1009,8 +1094,9 @@ module Md
     # continued below, or the list ended when the item is empty. Returns
     # whether that was the case; a selection is left to the editor, which
     # replaces it with the newline, and so is a line that only looks like
-    # an item: a rule (`* * *`), a code block's line, an item opening a
-    # fenced block (`- ``` `), whose next line is code.
+    # an item: a rule (`* * *`), a code block's or an HTML block's line, an
+    # item opening a fenced block (`- ``` `), whose next line is code, or
+    # an HTML block (`- <div>`).
     private def continue_list : Bool
       return false if @editor.selection?
       cursor = @editor.text_cursor

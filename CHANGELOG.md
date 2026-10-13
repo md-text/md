@@ -542,6 +542,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Format → Rewrap and Hard Wrap took an HTML block for paragraph text: they
+  refilled the lines of a `<pre>`, a `<script>` or a comment, joined a
+  `<div>` line to the paragraph above it, and broke lines typed in one, and
+  `Enter` on a line in one that looked like a list item continued the list.
+  HTML blocks of all seven CommonMark kinds are now left as they are, each
+  ending where CommonMark ends it, and one of kinds 1 to 6 ends the
+  paragraph above it.
 - Edit → Replace remembered where it started as a plain position, so an edit
   in another window on the document while the Replace? question was up made
   its wrap-around stop in the wrong place, skipping matches or going on past
