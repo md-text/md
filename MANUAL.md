@@ -569,8 +569,8 @@ through the same rendering the viewer uses: `html` is an HTML body fragment
 (no `<html>`/`<head>` wrapper, as pandoc without `--standalone`), `text` is
 the viewer's text without its styling — paragraphs spaced as on screen, list
 items with their markers, quotes and nested items indented, tables drawn
-with box characters. Nothing else happens in this mode: no history, no log
-file.
+with box characters, a rule as a line 72 cells wide. Nothing else happens in
+this mode: no history, no log file.
 
 ### Unsaved changes
 

@@ -580,6 +580,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `md --export html` wrote a fenced code block as a `<pre>` per line, which
   a browser showed as lines set apart by blank space; a block is one `<pre>`
   now.
+- `md --export html` wrote a nested list directly inside its parent list,
+  after the parent item had closed (invalid HTML), and an item's later
+  paragraph or code block after the list; both are inside the item's `<li>`
+  now. (Fixed in Crysterm, which md builds against.)
+- `md --export html` wrote each line after a hard line break (two trailing
+  spaces or a `\` at a line's end) as a paragraph of its own, which a browser
+  set apart by a paragraph gap; the lines are one paragraph with `<br>`
+  between them now, as on screen. (Fixed in Crysterm, which md builds
+  against.)
+- `md --export html` wrote a code block's lines each in a `<code>` of its
+  own, the language class on the `<pre>`, so syntax highlighters such as
+  highlight.js did not take it as one block; the block is one
+  `<code class="language-…">` now, as Markdown renderers write it. (Fixed in
+  Crysterm, which md builds against.)
+- `md --export` of an empty file printed `<br>` (html) or a blank line
+  (text); it prints nothing now. (Fixed partly in Crysterm, which md builds
+  against.)
+- `md --export text` wrote a horizontal rule as blank lines, which read as
+  one more paragraph gap; it is a line of the rule glyph now, 72 wide.
 - With Options → Clipboard on Command and `xclip` the command found, a copy
   hung md until something else was copied, xclip leaving a process behind
   that held its output open. (Fixed in Crysterm, which md builds against.)

@@ -16,6 +16,11 @@ module Md
     # Cells per level of list nesting and quoting, as the viewer indents them.
     INDENT = "  "
 
+    # How wide `text` draws a horizontal rule: the viewer draws one across
+    # the pane, and a filter has no pane, so it takes the width pandoc's
+    # plain-text writer gives its rules (`--columns`' default).
+    RULE_WIDTH = 72
+
     # *format* checked against `FORMATS`: a usage error otherwise.
     def self.format(value : String) : String
       return value if FORMATS.includes?(value)
@@ -23,15 +28,21 @@ module Md
     end
 
     # *markdown* rendered as *format* (`.format` checked), ending with a
-    # newline.
+    # newline — or nothing at all for an empty document, as `cat` and a
+    # Markdown renderer give for an empty file.
     def self.render(markdown : String, format : String) : String
       doc = Crysterm::TextDocument.from_markdown(markdown)
+      return "" if doc.empty? && doc.blocks[0].block_format == Crysterm::TextBlockFormat.default
       out = format == "html" ? doc.to_html : text(doc)
       out.ends_with?('\n') ? out : "#{out}\n"
     end
 
-    # The document's blocks as the viewer paints them, less the styling.
+    # The document's blocks as the viewer paints them, less the styling. A
+    # horizontal rule is a line of the viewer's rule glyph (`RULE_WIDTH`
+    # wide), the separator the reader sees, where its empty text would be a
+    # blank line that reads as one more paragraph gap.
     private def self.text(doc : Crysterm::TextDocument) : String
+      rule = Crysterm::Glyphs.str(Crysterm::Glyphs::Role::LineHorizontal, Crysterm::Glyphs::Tier::Unicode) * RULE_WIDTH
       # Items are numbered per list instance, in document order, as the
       # viewer numbers them.
       items = {} of UInt64 => Int32
@@ -46,7 +57,7 @@ module Md
             io << INDENT * (lf.indent - 1)
             io << lf.marker(n, checked: bf.checked?, task: bf.task?)
           end
-          io << block.text << '\n'
+          io << (bf.horizontal_rule? ? rule : block.text) << '\n'
           bf.bottom_margin.times { io << '\n' }
         end
       end
