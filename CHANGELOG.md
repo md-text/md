@@ -418,6 +418,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   the blank rows between blocks and a picture's rows each counted — rather
   than the source lines (Crysterm's line-number gutter, now on every scroll
   area, `AbstractScrollArea#line_numbers`).
+- Window → Remember Positions (`remember-window-positions`,
+  `md.remember_window_positions`, off by default): a window Window → New
+  opens is put where the window with the same number was when it was last
+  closed — the second where the second was, and so on, the window md was
+  started in never moved — and sized as it was, on macOS with Terminal.app
+  or iTerm2 (Crysterm's `Window.open(frame:)` and `Window#frame_geometry`,
+  through AppleScript). The frames are kept per emulator in
+  `$XDG_STATE_HOME/md/windows.yml`, and one on no display now is not used.
+  Elsewhere the window manager places the windows and the entry is disabled,
+  saying why.
 
 ### Changed
 

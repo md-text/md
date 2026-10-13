@@ -15,10 +15,10 @@ describe "Md::App windows" do
       application.add window
       opened = [] of Crysterm::Window
       app.window_opener = recording_opener(opened)
-      window_menu(app).actions.map(&.text).should eq ["&New", "&Close Current", "", "doc.md"]
+      window_menu(app).actions.map(&.text).should eq ["&New", "&Close Current", "Remember &Positions", "", "doc.md"]
       window_menu(app).actions[0].enabled?.should be_true
-      window_menu(app).actions[3].checked?.should be_true
-      window_menu(app).actions.map(&.shortcut_text).should eq ["Ctrl+N", "Ctrl+W", "", ""]
+      window_menu(app).actions[4].checked?.should be_true
+      window_menu(app).actions.map(&.shortcut_text).should eq ["Ctrl+N", "Ctrl+W", "", "", ""]
 
       other = app.new_window || fail("no window was opened")
       begin
@@ -34,9 +34,9 @@ describe "Md::App windows" do
         other.editor.document.should be app.editor.document
         other.visible_panes.should eq [Md::App::Pane::Viewer]
         # Both windows list both, numbered, each with its own checked.
-        window_menu(app).actions.map(&.text).should eq ["&New", "&Close Current", "", "doc.md:1", "doc.md:2"]
-        window_menu(app).actions[3..].map(&.checked?).should eq [true, false]
-        window_menu(other).actions[3..].map(&.checked?).should eq [false, true]
+        window_menu(app).actions.map(&.text).should eq ["&New", "&Close Current", "Remember &Positions", "", "doc.md:1", "doc.md:2"]
+        window_menu(app).actions[4..].map(&.checked?).should eq [true, false]
+        window_menu(other).actions[4..].map(&.checked?).should eq [false, true]
         # One text: an edit in one is in the other.
         other.editor.insert_text "More"
         app.markdown.should contain "More"
@@ -47,7 +47,7 @@ describe "Md::App windows" do
         other.window.destroyed?.should be_true
         window.destroyed?.should be_false
         application.windows.should eq [window]
-        window_menu(app).actions.map(&.text).should eq ["&New", "&Close Current", "", "doc.md"]
+        window_menu(app).actions.map(&.text).should eq ["&New", "&Close Current", "Remember &Positions", "", "doc.md"]
         window.title.should eq "doc.md • MD"
         Md::App.instances.should contain app
         Md::App.instances.should_not contain other
@@ -59,7 +59,7 @@ describe "Md::App windows" do
 
   it "shows an & in a document's name as it is, not as a mnemonic" do
     with_app Md::Source.new(path: "Q&A.md"), text: "# Q\n", view: true do |app|
-      entry = window_menu(app).actions[3]
+      entry = window_menu(app).actions[4]
       entry.text.should eq "Q&&A.md"
       entry.mnemonic.should be_nil
       Crysterm::Mnemonic.parse(entry.text)[0].should eq "Q&A.md"
@@ -74,9 +74,9 @@ describe "Md::App windows" do
       begin
         app.save_as(saved).should be_true
         names = ["#{File.basename(saved)}:1", "#{File.basename(saved)}:2"]
-        window_menu(app).actions[3..].map(&.text).should eq names
+        window_menu(app).actions[4..].map(&.text).should eq names
         settle { other.window.title == "#{names[1]} • MD" }
-        window_menu(other).actions[3..].map(&.text).should eq names
+        window_menu(other).actions[4..].map(&.text).should eq names
         other.close_window
       ensure
         other.window.destroy
@@ -172,11 +172,11 @@ describe "Md::App windows" do
       app.window_opener = recording_opener([] of Crysterm::Window)
       other = app.new_window || fail("no window was opened")
       begin
-        window_menu(app).actions[4].trigger
+        window_menu(app).actions[5].trigger
         notice(app).should contain "a.md:2 is in another terminal window"
-        window_menu(app).actions[3..].map(&.checked?).should eq [true, false] # the checks stay with each window's own
-        window_menu(app).actions[3].trigger                                   # this one: nothing to do
-        window_menu(app).actions[3..].map(&.checked?).should eq [true, false]
+        window_menu(app).actions[4..].map(&.checked?).should eq [true, false] # the checks stay with each window's own
+        window_menu(app).actions[4].trigger                                   # this one: nothing to do
+        window_menu(app).actions[4..].map(&.checked?).should eq [true, false]
       ensure
         other.window.destroy
       end

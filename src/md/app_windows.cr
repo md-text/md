@@ -43,19 +43,27 @@ module Md
     @new_window_action : Crysterm::Action?
     @window_entries = [] of Crysterm::Action
 
-    # How Window → New opens a terminal window, given the title: Crysterm's
-    # `Window.open`, which picks the emulator. Replaceable, so a spec can
-    # hand out headless windows — and a replacement is taken to work
-    # wherever it runs, so the entry is enabled (`#window_opener=`).
-    @window_opener : Proc(String, Crysterm::Window) = ->(title : String) { Crysterm::Window.open(title: title) }
+    # How Window → New opens a terminal window, given the title and the
+    # frame to put it at (nil: where the window manager puts it; Window →
+    # Remember Positions, `window_places.cr`): Crysterm's `Window.open`,
+    # which picks the emulator. Replaceable, so a spec can hand out headless
+    # windows — and a replacement is taken to work wherever it runs, so the
+    # entry is enabled (`#window_opener=`).
+    @window_opener : Proc(String, WindowPlaces::Frame?, Crysterm::Window) = ->(title : String, frame : WindowPlaces::Frame?) { Crysterm::Window.open(title: title, frame: frame) }
 
-    def window_opener : Proc(String, Crysterm::Window)
+    def window_opener : Proc(String, WindowPlaces::Frame?, Crysterm::Window)
       @window_opener
     end
 
-    def window_opener=(opener : Proc(String, Crysterm::Window)) : Proc(String, Crysterm::Window)
+    def window_opener=(opener : Proc(String, WindowPlaces::Frame?, Crysterm::Window)) : Proc(String, WindowPlaces::Frame?, Crysterm::Window)
       @window_opener = opener
       self.window_refusal = nil
+      opener
+    end
+
+    # An opener given the title alone, which places nothing.
+    def window_opener=(opener : Proc(String, Crysterm::Window)) : Proc(String, Crysterm::Window)
+      self.window_opener = ->(title : String, _frame : WindowPlaces::Frame?) { opener.call(title) }
       opener
     end
 
@@ -127,6 +135,7 @@ module Md
     private def finish : Nil
       return if @finished || !@started
       @finished = true
+      record_window_place
       # The last window on the document ends its auto-save; the others
       # leave it to the windows still showing it.
       @document.finish_autosave if last_view?
@@ -152,9 +161,11 @@ module Md
         notice "Cannot open a window: #{reason}"
         return
       end
-      window = @window_opener.call(title)
+      number, frame = next_window_place
+      window = @window_opener.call(title, frame)
       begin
         app = App.new(@document, view: @viewer.visible?, window: window, history: @history, config: @config)
+        app.window_number = number
       rescue ex
         # The terminal window is open already; an App that failed to build
         # must not leave it behind, empty.
@@ -238,6 +249,7 @@ module Md
       # The editor's `Ctrl-W` kills a word, so the key works outside it.
       named "close-window", tip menu.add_action("&Close Current", shortcut: "Ctrl+W") { close_window },
         "Close this window, asking about unsaved changes when no other window shows the document; the last window closing quits md"
+      add_remember_positions menu
       menu.add_separator
       menu.on(Crysterm::Event::AboutToShow) { refresh_window_menu }
       @window_menu = menu

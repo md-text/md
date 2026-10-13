@@ -714,6 +714,24 @@ says it is in another terminal window, since one terminal cannot raise
 another. Terminal.app keeps a closed window on screen with "[Process
 completed]" when its profile says so.
 
+Where a new window appears is the window manager's choice, as for any other
+window, unless Window → Remember Positions is on (`md.remember_window_positions`,
+off by default). Then each window Window → New opens is put where the
+window with the same number was when it was last closed, at the size it had:
+the window md was started in is the first and is never moved — it is your
+own terminal — and the windows md opens are numbered from 2, each taking the
+lowest number free while it is open, so the second window of this run opens
+where the second window of the last one was. The places are kept per
+emulator in `$XDG_STATE_HOME/md/windows.yml` (`~/.local/state/md/windows.yml`),
+recorded as each window closes; a place on a display that is no longer
+connected is not used, and the window manager places that window instead.
+This works on macOS with Terminal.app and iTerm2, which md drives through
+AppleScript, so the first use asks for the same Automation permission as
+Window → New there; elsewhere — Linux and the BSDs, X11 or Wayland, tmux and
+screen, the other macOS emulators — an emulator offers no way to place a
+window and read where it is, and the entry is disabled, its description
+saying why.
+
 ### Help
 
 Help → Manual opens md's manual — this text, built into md — as the
@@ -750,14 +768,14 @@ not know.
 
 ### Settings
 
-The choices made in the Edit, Format, View and Options menus — Vi Mode, Soft Wrap, Hard
+The choices made in the Edit, Format, View, Options and Window menus — Vi Mode, Soft Wrap, Hard
 Wrap, Text Width, Menu and
 Status Bars, Sync Cursor, Highlight Line, Line Numbers (Editor and
 Viewer), Center Document, Rulers (Horizontal and Vertical), Guides,
 Images, Terminal Links → Double-click to Open, Dialog Style, Ask Before Discarding
 Changes, Auto-Save, Keep a Backup File, the mouse mode, the clipboard mode,
 Resizable Panes, Tooltips, the theme and Crysterm's own Color Depth, Terminal Links, Media
-Backend, No Animations, Detachable Menus and Vi Mode: Use Neovim Config — and the pane sizes are kept across runs in
+Backend, No Animations, Detachable Menus, Vi Mode: Use Neovim Config and Window → Remember Positions — and the pane sizes are kept across runs in
 `$XDG_CONFIG_HOME/md/config.yml` (`~/.config/md/config.yml`), written when
 md quits if anything changed. Watch File is not kept: like `--watch`, it is
 for the run at hand.
