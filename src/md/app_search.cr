@@ -223,10 +223,11 @@ module Md
     end
 
     # Replaces the selected match (the one `#next_replace_match` selected):
-    # one undo step, the caret left after the new text. The editor reports
-    # its own edits (`TextChanged`), not a `TextCursor`'s, so the change is
-    # reported here (`#edited`: the viewer re-rendered, the highlight and
-    # the status refreshed).
+    # one undo step, the caret left after the new text. The window follows
+    # the user's edits in its editor (`TextEdited`), not a `TextCursor`'s,
+    # so the change is reported here (`#edited`: the viewer re-rendered, the
+    # highlight and the status refreshed); the other windows catch up
+    # through the document (`#document_changed`).
     private def replace_match : Nil
       return unless (session = @replacing) && (regex = @search_regex) && @editor.selection?
       doc = @editor.document

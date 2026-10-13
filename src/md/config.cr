@@ -71,7 +71,7 @@ module Superconf
   option "md.window_link", Md::App::WindowLink::Separate, env: "MD_WINDOW_LINK",
     description: "Window → Linking: how windows on the same document behave — each with its own caret, scroll and search (separate), or mirroring each other's (linked); the text, its undo and its modified state are shared either way"
   option "md.remember_window_positions", false, env: "MD_REMEMBER_WINDOW_POSITIONS",
-    description: "Window → Remember Positions: open each new window where the window with the same number was last closed (macOS Terminal.app and iTerm2); elsewhere the window manager places it"
+    description: "Window → Remember Positions: open each new window where the window with the same number was last closed (macOS Terminal.app, iTerm2 and Ghostty); elsewhere the window manager places it"
   # The panes.
   option "md.pane_sizes", "", env: "MD_PANE_SIZES",
     description: "The widths in columns of the editor, the viewer and the table of contents, comma-separated (0 for a pane never resized), as the dividers left them; recorded when md quits"
