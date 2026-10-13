@@ -783,10 +783,15 @@ module Md
       return false if a.blank? || b.blank? || code[above] || code[below]
       return false if App.unbreakable_line?(a) || App.unbreakable_line?(b) || ListItem.parse(b)
       return false if LINK_DEFINITION.matches?(a) || LINK_DEFINITION.matches?(b)
-      if (item = ListItem.parse(a)) && item.empty? && item.task.nil?
-        return false if App.indent_width(b.sub(QUOTE_MARKERS, "")) < item.inner_indent + item.marker.size + 1
-      end
-      quote_depth(a) == quote_depth(b)
+      quote_depth(a) == quote_depth(b) && !leaves_empty_item?(a, b)
+    end
+
+    # Whether *below* is out of the item *above* is, when that is an empty
+    # item (the marker alone): less indented than the item's content.
+    private def leaves_empty_item?(above : String, below : String) : Bool
+      item = ListItem.parse(above) || return false
+      return false unless item.empty? && item.task.nil?
+      App.indent_width(below.sub(QUOTE_MARKERS, "")) < item.inner_indent + item.marker.size + 1
     end
 
     # How many blockquote markers *line* starts with.
