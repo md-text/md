@@ -11,7 +11,7 @@ module Md
   # hard links, which a rename would part from them; one that is not a
   # regular file; one whose owner or group cannot be given to a new file; and
   # a directory md may not create files in, though the file itself is
-  # writable.
+  # writable, or a name too long for the temporary file's.
   module SaveFile
     # How many links `.target` follows before it takes the path as it is.
     MAX_LINKS = 40
@@ -33,7 +33,9 @@ module Md
         # A fresh name, readable by md alone until it takes the target's
         # permissions.
         file = File.tempfile(".#{File.basename(target)}.", ".tmp", dir: File.dirname(target))
-      rescue File::AccessDeniedError
+      rescue File::Error
+        # A directory md may not create files in, or a name too long to
+        # take the temporary file's prefix and suffix.
         return write_in_place(target, text)
       end
       begin
@@ -73,7 +75,9 @@ module Md
     private def self.write_in_place(path : String, text : String) : Nil
       File.open(path, "w") do |file|
         file.print text
-        file.fsync
+        # A pipe, a terminal or a device has no disk to flush to, and Linux
+        # refuses an `fsync` of one.
+        file.fsync if file.info.file?
       end
     end
 

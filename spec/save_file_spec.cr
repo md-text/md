@@ -77,6 +77,17 @@ describe Md::SaveFile do
     end
   end
 
+  it "writes in place a name too long for the temporary file's, and a device with no disk to flush to" do
+    with_dir do |dir|
+      path = File.join(dir, "#{"a" * 250}.md")
+      File.write path, "old"
+      Md::SaveFile.write path, "new"
+      File.read(path).should eq "new"
+      Dir.children(dir).size.should eq 1
+    end
+    Md::SaveFile.write "/dev/null", "text"
+  end
+
   it "leaves the file as it was when the text cannot be renamed over it" do
     with_dir do |dir|
       path = File.join(dir, "a.md")

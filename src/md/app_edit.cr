@@ -177,8 +177,13 @@ module Md
     INDENT = 4
 
     # A line's heading prefix: what precedes the hashes (blockquote markers,
-    # indentation), then the hashes with their spacing when there are any.
-    HEADING = /\A(?<lead>(?:[ \t]*>)*[ \t]*)(?:(?<hashes>\#{1,6})(?:[ \t]+|$))?/
+    # list markers, indentation), then the hashes with their spacing when
+    # there are any. A list marker counts with one to four columns of
+    # spacing after it, so `- ## Title` is a heading in the item while
+    # `-     # code`, five columns in, is the item's indented code
+    # (CommonMark's list items), and a task box is text: `- [ ] ## x` is
+    # no heading, as markd, which md renders with, reads it with GFM off.
+    HEADING = /\A(?<lead>(?:[ \t]*(?:>|(?:[-*+]|\d{1,9}[.)])[ \t]{1,4}(?=[^ \t])))*[ \t]*)(?:(?<hashes>\#{1,6})(?:[ \t]+|$))?/
 
     # The blockquote markers a line starts with and the indentation after
     # them: what a wrapped line's continuation starts with outside a list.
@@ -305,9 +310,13 @@ module Md
           @text_above = false
         elsif !RULE.matches?(body) && (item = ListItem.parse(body))
           # An item opens (`* * *` is a rule, not one); its text can run on
-          # to the next line.
+          # to the next line, or it opens a fenced block (`- ``` `).
           @items << indent + item.content_offset
           @text_above = !item.empty?
+          if item.task.nil? && (run = FENCE.match(item.text).try(&.["fence"]))
+            @fence = run
+            @text_above = false
+          end
         else
           @text_above = !App.unbreakable_line?(body)
         end
@@ -328,19 +337,23 @@ module Md
         @items.last? || 0
       end
 
-      # The columns *text*'s leading whitespace takes, a tab reaching the
-      # next multiple of four as CommonMark counts it.
       private def indent_width(text : String) : Int32
-        width = 0
-        text.each_char do |char|
-          case char
-          when ' '  then width += 1
-          when '\t' then width += INDENT - width % INDENT
-          else           break
-          end
-        end
-        width
+        App.indent_width text
       end
+    end
+
+    # The columns *text*'s leading whitespace takes, a tab reaching the
+    # next multiple of four as CommonMark counts it.
+    def self.indent_width(text : String) : Int32
+      width = 0
+      text.each_char do |char|
+        case char
+        when ' '  then width += 1
+        when '\t' then width += INDENT - width % INDENT
+        else           break
+        end
+      end
+      width
     end
 
     # Whether *line* is an ATX heading.
@@ -351,12 +364,18 @@ module Md
     # The headings of *doc*, in order: ATX ones (`## Title`) and setext
     # ones (`Title` over a line of `=` or `-`), a code block's line
     # (*code*, `.code_lines` of the whole of *doc*) being no part of
-    # either. A setext heading's text is the paragraph right above the
-    # underline, in the same blockquote: a run of lines of text that no
-    # blank line, list item, fence, table row, rule or ATX heading
-    # interrupts. A line that runs on lazily — a list item's text, or a
-    # quote's on a line without its markers — is no such paragraph, so
-    # the `---` under it is a rule.
+    # either; in a list item too, at any depth (`- ## Title`, or `- Title`
+    # over a `---` indented to the item's content). A setext heading's
+    # text is the paragraph right above the underline, in the same
+    # blockquote and list item: a run of lines of text that no blank line,
+    # list item, fence, table row, rule or ATX heading interrupts, the
+    # underline indented at least to the item's content and less than
+    # four columns past it. So `- item` over a `---` at the margin is the
+    # list then a rule, and over a `===` there it is the item's text run
+    # on lazily. A paragraph that runs on lazily in an item, on a line
+    # less indented, is still one, as markd reads it; a quote's that runs
+    # on to a line without its markers is not, so the `---` under it is a
+    # rule.
     def self.headings(doc : Crysterm::TextDocument, code : Array(Bool)) : Array(Heading)
       scan = HeadingScan.new
       headings = [] of Heading
@@ -372,12 +391,17 @@ module Md
     end
 
     # What `.headings` carries from one line to the next: the paragraph an
-    # underline would make a heading, by its first line and quote depth,
-    # and whether lazy text runs on instead.
+    # underline would make a heading, by its first line, quote depth and
+    # the content column of the item it is in (0 outside a list); whether
+    # it ran on lazily out of a quote, which no underline follows; and the
+    # content columns of the list items open at each quote depth,
+    # innermost last.
     private class HeadingScan
       @start : Int32? = nil
       @depth = 0
+      @column = 0
       @lazy = false
+      @items = [[] of Int32]
 
       # A blank line or a code block's: no paragraph runs on past it.
       def reset : Nil
@@ -388,31 +412,77 @@ module Md
       # The heading line *index*, *text*, ends or is, the scan moved past it.
       def heading(index : Int32, text : String) : Heading?
         quotes = QUOTE.match(text).try(&.[0].count('>')) || 0
-        if (first = @start) && quotes == @depth && (underline = SETEXT_UNDERLINE.match(text))
-          @start = nil
-          return Heading.new(first, index, underline["mark"].starts_with?('=') ? 1 : 2)
+        body = text.sub(QUOTE_MARKERS, "")
+        indent = App.indent_width body
+        if first = @start
+          if underline?(body, indent, quotes)
+            @start = nil
+            return Heading.new(first, index, body.lstrip.starts_with?('=') ? 1 : 2)
+          end
+          if runs_on?(body, indent, quotes)
+            @lazy ||= quotes < @depth
+            return
+          end
+        end
+        reset
+        block index, text, body, indent, quotes
+      end
+
+      # Notes line *index*, *text*, which no paragraph runs on to: its
+      # *body* (the line inside its quote markers, indented *indent*
+      # columns) closes the items it is less indented than, opens any it
+      # starts with, and is an ATX heading, or a paragraph's first line,
+      # or neither.
+      private def block(index : Int32, text : String, body : String, indent : Int32, quotes : Int32) : Heading?
+        items = items_at quotes
+        while (top = items.last?) && top > indent
+          items.pop
+        end
+        rest = body.lstrip
+        column = indent
+        # `- - -` is a rule, not items; `* ---` an item holding one.
+        while !RULE.matches?(rest) && (item = ListItem.parse(rest)) && item.quote.empty?
+          column += item.content_offset
+          items << column
+          rest = "#{item.task}#{item.text}"
         end
         if hashes = HEADING.match(text).try(&.["hashes"]?)
-          reset
           return Heading.new(index, index, hashes.size)
         end
-        paragraph index, text, quotes
+        unless rest.empty? || App.unbreakable_line?(rest)
+          @start, @depth, @column = index, quotes, items.last? || 0
+        end
         nil
       end
 
-      # Notes line *index*, *text*, no heading, at quote depth *quotes*.
-      private def paragraph(index : Int32, text : String, quotes : Int32) : Nil
-        if App.unbreakable_line?(text)
-          reset
-        elsif ListItem.parse(text) || @lazy || (@start && quotes < @depth)
-          # An item's text, or a quote's on a line without its markers,
-          # runs on lazily.
-          @start = nil
-          @lazy = true
-        elsif @start.nil? || quotes > @depth
-          @start = index
-          @depth = quotes
-        end
+      # Whether *body*, indented *indent* at quote depth *quotes*, is the
+      # paragraph's setext underline: in its quote and item, at most three
+      # columns past the item's content.
+      private def underline?(body : String, indent : Int32, quotes : Int32) : Bool
+        !@lazy && quotes == @depth && indent >= @column && indent - @column < INDENT &&
+          SETEXT_UNDERLINE.matches?(body.lstrip)
+      end
+
+      # Whether *body*, no underline, is paragraph text running on: any
+      # line but one that opens a quote, or a block that interrupts a
+      # paragraph — an ATX heading, a fence, a table row, a rule or a list
+      # item — less than four columns past the content of the item it is
+      # in. A `===` that underlines nothing, out of the paragraph's item,
+      # is text.
+      private def runs_on?(body : String, indent : Int32, quotes : Int32) : Bool
+        return false if quotes > @depth
+        margin = @items[quotes]?.try(&.reverse_each.find { |column| column <= indent }) || 0
+        return true if indent - margin >= INDENT
+        line = body.lstrip
+        line.starts_with?('=') || !(App.unbreakable_line?(line) || ListItem.parse(line))
+      end
+
+      # The content columns of the items open at quote depth *quotes*,
+      # those of deeper quotes, now closed, dropped.
+      private def items_at(quotes : Int32) : Array(Int32)
+        @items = @items.first(quotes + 1)
+        (quotes + 1 - @items.size).times { @items << [] of Int32 }
+        @items[quotes]
       end
     end
 

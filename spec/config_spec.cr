@@ -109,6 +109,15 @@ describe Md::Config do
       end
     end
 
+    it "writes a pick into a group the file had empty, as a mapping" do
+      with_config "md:\n  # guides: true\n" do |path|
+        Crysterm::Config.md_guides = true
+        Md::Config.save.should be_true
+        config_file(path)["md"]["guides"].as_bool.should be_true
+        File.read(path).should_not contain "null"
+      end
+    end
+
     it "carries over an entry a variable or a flag outranked, and entries it does not know" do
       yaml = <<-YAML
         md:

@@ -462,6 +462,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- A heading in a list item (`- ## Title`, `1. # Title`, at any depth, in a
+  quote too) was no heading to md, and `- Title` over a `---` indented to the
+  item's text was taken for a rule, where CommonMark and markd read a setext
+  heading in the item (`===` level 1): Format → Promote Heading and Demote
+  Heading in such an item moved the heading above it, and Format → Hard Wrap
+  and Rewrap broke or refilled the heading line. Both now find these headings
+  (`App.headings`, with the content columns of the open items, so a `---` at
+  the margin under an item stays a rule after the list, `===` there the
+  item's text run on lazily, and a lazy line the paragraph's), shift them
+  keeping the marker, its indentation and the caret (`- Title` over `---`
+  demoted is `- ### Title`), and leave them whole; a fence on an item's own
+  line (`` - ``` ``) opens a code block, where the code after it was read as
+  text. A task box stays text, as markd reads it: `- [ ] ## x` is no heading.
 - A file or standard input with bytes that are not UTF-8 opens, each bad
   byte shown as `�` (U+FFFD) with a notice saying so, where md crashed at
   start, File → Open… and Reload raised an internal error, and a stream
@@ -474,9 +487,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   a full disk or a crash mid-save leaves the previous contents, where the
   file was rewritten in place and could be left cut short. The file keeps its
   permissions, owner and group, a symbolic link stays a link with its target
-  written, and a file with other hard links, or in a directory md may not
-  create files in, is still written in place. A read-only file is refused as
-  before. The config file, the history and the recovery files are written
+  written, and a file with other hard links, in a directory md may not
+  create files in or with a name too long for the temporary file's, is
+  still written in place, as is a pipe or a device (Save As `/dev/stdout`).
+  A read-only file is refused as before. The config file, the history and the recovery files are written
   the same way.
 - A notice for a file that cannot be opened, saved, reloaded, auto-saved or
   backed up names the file once, followed by the system's reason ("Cannot
@@ -487,7 +501,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - A config file that is not a mapping (a list, a bare value) or that gives an
   option group a value (`md: 5`) stops md with a message naming the file,
   as a broken file does, where it was taken as empty and the next save
-  replaced it. (Fixed in Superconf, which md builds against.)
+  replaced it. (Fixed in Superconf, which md builds against.) A group the
+  file has empty (`md:`, its entries commented out) gets a pick saved into
+  it, where the file was written with `md: null` and the picks as flat
+  `md.guides: true` entries beside it.
 - In Vi Mode, an edit md makes while Neovim is still busy with a key (a
   long `:s`, a `:!cmd`) is put on the right lines, and Neovim's change on
   lines of its own kept, where the edit could land on other lines and the
@@ -662,5 +679,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Vi Mode edits, and edits that join or split lines, no longer rebuild the
   whole text or re-wrap the whole document, so editing a very large document
   stays fast. (Fixed in Crysterm, which md builds against.)
+- In Vi Mode, keys typed right after `:e FILE`, `:enew` or `:split` could edit
+  the other buffer before the document's buffer came back. (Fixed in Crysterm,
+  which md builds against.)
 
 [Unreleased]: https://github.com/crystallabs/md/commits/main

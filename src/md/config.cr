@@ -297,14 +297,16 @@ module Md
 
     # The scalars of a parsed config *document* by dotted key, nested
     # mappings flattened as Superconf reads them (`screen: {glyphs: ascii}`
-    # is `screen.glyphs`).
+    # is `screen.glyphs`). An empty entry sets nothing and is left out: an
+    # empty group (`md:`, its entries commented out) kept as `md: null` would
+    # have `.save` write the group's picks flat beside it (`md.guides: true`).
     private def self.flatten(document : YAML::Any, prefix : String = "", into = {} of String => YAML::Any) : Hash(String, YAML::Any)
       if hash = document.as_h?
         hash.each do |key, value|
           name = key.as_s? || key.raw.to_s
           flatten value, prefix.empty? ? name : "#{prefix}.#{name}", into
         end
-      elsif !prefix.empty?
+      elsif !prefix.empty? && !document.raw.nil?
         into[prefix] = document
       end
       into

@@ -394,7 +394,11 @@ block does not count), the caret staying where it is. A setext heading
 (`Title` over a line of `===` or `---`; a `---` after a blank line is a
 rule) counts too, and becomes an ATX one as it moves: `---` is level 2, so
 Demote makes it `### Title` and Promote `# Title`, while a promoted `===`
-heading loses its underline. Before the first
+heading loses its underline. A heading in a list item, at any depth, counts
+as CommonMark has it: `- ## Title`, or `- Title` over a `---` or `===`
+indented to the item's text (a `---` at the margin under an item is a rule
+after the list); it keeps its marker and indentation as it moves, `- Title`
+over `---` demoted becoming `- ### Title`. Before the first
 heading, Demote makes the caret's line a `#` heading. Each change is
 one undo step.
 
