@@ -3,6 +3,7 @@
 #   make            build a development binary in bin/md
 #   make release    build an optimized binary in bin/md
 #   make test       run the specs
+#   make e2e        run md in tmux, end to end (e2e/; needs tmux)
 #   make lint       run ameba (its Lint/Formatting rule checks the formatting)
 #   make check      test + lint
 #   make man        generate the man page, share/man/man1/md.1
@@ -32,7 +33,7 @@ FISHCOMP  = share/fish/vendor_completions.d/$(NAME).fish
 # Extra flags for `crystal build`, e.g. `make release CRFLAGS=-Dwithout_readline`.
 CRFLAGS  ?=
 
-.PHONY: all build release test lint format check man completions install uninstall clean distclean
+.PHONY: all build release test e2e lint format check man completions install uninstall clean distclean
 
 all: build
 
@@ -54,6 +55,10 @@ lib: shard.yml shard.lock
 
 test: lib
 	crystal spec
+
+# The end-to-end checks drive the binary in a private tmux server (e2e/).
+e2e: build
+	crystal spec e2e
 
 # Ameba ships no prebuilt binary; it is compiled from the development dependency.
 bin/ameba: lib
