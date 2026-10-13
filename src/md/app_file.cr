@@ -105,9 +105,18 @@ module Md
       confirm_discard do
         ask_text("Open: ", "") do |answer|
           path = answer.try &.strip
-          open_file path if path && !path.empty?
+          open_file App.typed_path(path) if path && !path.empty?
         end
       end
+    end
+
+    # The file a name typed at a prompt stands for: a leading `~` or `~/`
+    # is the home directory, as in the shell, Qt's file dialogs and the
+    # prompt's own completion (which expands it only on `Tab`), so
+    # `~/notes.md` typed out in full is not `./~/notes.md`; any other name
+    # is as typed, a relative one counting from the working directory.
+    def self.typed_path(text : String) : String
+      text == "~" || text.starts_with?("~/") ? Path[text].expand(home: true).to_s : text
     end
 
     # Makes *path* the document: an existing file is read and shown in the
