@@ -30,7 +30,7 @@ module Md
       subs.on(doc, Md::Event::DocumentRenamed) { @window.post { renamed } }
       subs.on(doc, Md::Event::DocumentNotice) { |e| @window.post { notice e.text } }
       subs.on(doc.text, Crysterm::Event::ModificationChanged) { @window.post { refresh_status } }
-      # The stream's chunks: at once in the host, whose render fiber took
+      # The stream's chunks: at once in the window whose render fiber took
       # them; posted to the others, in order (a window's queue is FIFO).
       subs.on(doc, Md::Event::StreamAppended) { |e| on_own_fiber { stream_appended e.chunk } }
       subs.on(doc, Md::Event::StreamEnded) { |e| on_own_fiber { stream_ended e.message } }
@@ -46,7 +46,10 @@ module Md
         @viewer.append_markdown markdown
         @viewer.follow_tail = true
       else
+        # A file holds still: the viewer follows no tail, whatever it did
+        # on a stream it showed before.
         @viewer.set_markdown markdown
+        @viewer.follow_tail = false
       end
       @viewer_stale = false
       text_changed
@@ -86,9 +89,13 @@ module Md
       end
     end
 
-    # This window's part of a switch to *doc* (`#switch_document`).
+    # This window's part of a switch to *doc* (`#switch_document`). A
+    # stream this window followed goes on for the other windows on it (the
+    # last one leaving abandons it, `Document#detach`); a `--line` waiting
+    # for one of its lines gives way to the new document's own position.
     protected def move_to(doc : Document) : Nil
       return if doc.same?(@document)
+      @pending_line = nil
       leave_document clean: true
       @document = doc
       @editor.document = doc.text
@@ -99,11 +106,10 @@ module Md
       apply_base_url
     end
 
-    # Runs *job* now when this window hosts the document (the stream's
-    # chunks arrive on the host's render fiber), else posts it to this
-    # window's.
+    # Runs *job* now when the stream's chunk arrived on this window's render
+    # fiber (`Document#receiver`), else posts it to this window's.
     private def on_own_fiber(&job : ->) : Nil
-      if @document.host.same?(self)
+      if @document.receiver.same?(self)
         job.call
       else
         @window.post(&job)

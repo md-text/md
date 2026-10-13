@@ -107,9 +107,7 @@ module Md
       @window.on(Crysterm::Event::WindowClosed) { finish }
       @window.on(Crysterm::Event::Destroy) do
         App.instances.delete self
-        # A window gone is no group's next leader, and is not kept alive by
-        # being the last one used.
-        App.last_active = nil if App.last_active.same?(self)
+        forget_active
         finish
         leave_document
         App.refresh_window_menus

@@ -88,10 +88,10 @@ module Md
 
     # Makes *path* the document: an existing file is read and shown in the
     # viewer (shown and focused if it was hidden), a file that does not exist
-    # yet is a new, empty document in the editor (shown and focused). A
-    # stream being followed is abandoned, and the document left goes on in
-    # the other windows showing it, if any. The position remembered for the
-    # file, if any, is restored. Watch File carries over to the file opened.
+    # yet is a new, empty document in the editor (shown and focused). The
+    # document left — a stream being followed too — goes on in the other
+    # windows showing it, if any. The position remembered for the file, if
+    # any, is restored. Watch File carries over to the file opened.
     # A file another window has open — through whatever path, symlink or
     # hard link (`Documents.find`) — is not read again: this window joins
     # that window's document, unsaved edits and all (`#join_document`).
@@ -105,7 +105,6 @@ module Md
       text = raw.try { |read| Source.decode read }
       remember_position
       push_leaving_place
-      abandon_stream
       doc = Document.new Source.new(path: path), text || ""
       doc.watch_file.value = watch_file?
       switch_document doc
@@ -137,7 +136,6 @@ module Md
       remember_position
       push_leaving_place
       return true if doc.same?(@document)
-      abandon_stream
       switch_document doc
       if File.exists?(path)
         show_pane(Pane::Viewer).focus unless @viewer.visible?
@@ -167,10 +165,9 @@ module Md
     # asks for one, the title and the status bar show none — nothing to
     # watch, no recovery file yet (the one of the document left goes,
     # unless another window still shows it), and a stream being followed is
-    # abandoned. The editor is shown and focused to take the text; the other
-    # panes stay as they were.
+    # left to the other windows on it, if any. The editor is shown and
+    # focused to take the text; the other panes stay as they were.
     private def blank_document : Nil
-      abandon_stream
       switch_document Document.new
       show_pane(Pane::Editor).focus
       refresh_status
@@ -296,17 +293,6 @@ module Md
     rescue ex : IO::Error
       notice "Cannot reload #{source.path}: #{Md.error_text(ex)}"
       false
-    end
-
-    # Stops following the stream in this window, once another document is
-    # opened over it: the viewer no longer follows the tail and a pending
-    # `--line` gives way to the file's own position. The stream goes on for
-    # the other windows on it; the last one leaving abandons it
-    # (`Document#detach`).
-    private def abandon_stream : Nil
-      return unless streaming?
-      @pending_line = nil
-      @viewer.follow_tail = false
     end
 
     # Records the document's file and the caret's place in the history, if

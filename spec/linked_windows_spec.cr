@@ -240,6 +240,52 @@ describe "Md::App linked windows" do
     end
   end
 
+  it "shows a switch in every window's Window → Linking, with a notice in each" do
+    with_two_windows(text: LONG, view: false) do |a, b|
+      entries = ->(app : Md::App) { window_menu(app).actions[2].menu || fail("no submenu") }
+      a.run_command "window-link-linked"
+      entries.call(b).map(&.checked?).should eq [false, true]
+      entries.call(a).map(&.checked?).should eq [false, true]
+      settle { notice(a).includes?("are linked") && notice(b).includes?("are linked") }
+      b.run_command "window-link-separate"
+      entries.call(a).map(&.checked?).should eq [true, false]
+      a.link.should be_nil
+      settle { notice(a).includes?("are separate") && notice(b).includes?("are separate") }
+    end
+  end
+
+  it "hands leadership to the window used most recently when the leader closes" do
+    with_two_windows(text: LONG, view: false, linked: true) do |a, b|
+      c = a.new_window || fail("no window was opened")
+      begin
+        link = a.link || fail("not linked")
+        link.views.should eq [a, b, c]
+        press b.window, Tput::Key::Down
+        press c.window, Tput::Key::Down
+        press a.window, Tput::Key::Down
+        link.leader.should be a
+        a.window.close
+        link.leader.should be c
+        Md::App.last_active.should be c
+      ensure
+        c.window.destroy
+      end
+    end
+  end
+
+  it "takes Sync Cursor switched in the leader, though no caret moved" do
+    with_two_windows(text: LONG, view: false, linked: true) do |a, b|
+      press a.window, Tput::Key::Down
+      a.window.repaint
+      a.sync_cursor = true
+      a.window.repaint
+      settle { b.sync_cursor? }
+      a.sync_cursor = false
+      a.window.repaint
+      settle { !b.sync_cursor? }
+    end
+  end
+
   it "starts linked from the config" do
     with_config("md:\n  window_link: linked\n") do
       with_app config: true do |app|

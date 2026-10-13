@@ -148,7 +148,7 @@ module Md
       @@all.each do |doc|
         next if doc.views.empty?
         if mode.linked?
-          leader = {initiator, App.last_active}.find { |app| app && doc.views.includes?(app) } || doc.views.first
+          leader = initiator.try { |app| app if doc.views.includes?(app) } || App.most_recent(doc.views) || doc.views.first
           link = ViewLink.new(doc, leader, leader.own_trail)
           doc.views.each { |view| link.add view }
           doc.link = link

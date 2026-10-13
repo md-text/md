@@ -90,6 +90,117 @@ describe "Md::App Vi Mode in windows on one document" do
     end
   end
 
+  it "puts a window joining a linked group in Vi Mode on the group's Neovim" do
+    first = tempfile "one\n"
+    second = tempfile "two\n"
+    begin
+      with_two_windows(Md::Source.new(path: first), "one\n", view: false) do |a, b|
+        c = a.new_window || fail("no window was opened")
+        begin
+          c.open_file(second).should be_true # separate: C alone goes
+          Md::Documents.link_windows Md::App::WindowLink::Linked
+          {a, b, c}.each do |app|
+            app.show_pane(Md::App::Pane::Editor).focus
+            app.vi_mode = true
+          end
+          own = c.vi
+          own.should_not be a.vi
+          c.open_file(first).should be_true # C joins A and B's group
+          c.link.should be a.link
+          c.vi.should be a.vi
+          a.vi.views.should eq [a.editor, b.editor, c.editor]
+          own.attached?.should be_false # the second document's Neovim ended with it
+          vi_type b.window, "ggIb<Esc>"
+          c.markdown.should eq "bone\n"
+          # A window opened with Ctrl-N joins as well.
+          d = a.new_window || fail("no window was opened")
+          begin
+            d.vi_mode = true
+            d.vi.should be a.vi
+            a.vi.views.size.should eq 4
+          ensure
+            d.window.destroy
+          end
+          a.vi.views.should eq [a.editor, b.editor, c.editor]
+          # The group moving takes the Neovim along: one, on the new document.
+          b.open_file(second).should be_true
+          a.document.should be b.document
+          c.document.should be b.document
+          a.vi.should be b.vi
+          a.vi.should be c.vi
+          a.vi.attached?.should be_true
+        ensure
+          c.window.destroy
+        end
+      end
+    ensure
+      File.delete? first
+      File.delete? second
+    end
+  end
+
+  # Fails until Crysterm's `TextEditing#swap_document` reports the caret it
+  # rewinds (Qt's `setContent` emits `cursorPositionChanged`): C's first key
+  # reports that stale move, and the handler's caret push lands inside the
+  # `gg` it splits.
+  it "takes the first keys typed in a window that joined from another document" do
+    first = tempfile "one\n"
+    second = tempfile "two\n"
+    begin
+      with_two_windows(Md::Source.new(path: first), "one\n", view: false) do |a, b|
+        c = a.new_window || fail("no window was opened")
+        begin
+          c.open_file(second).should be_true
+          Md::Documents.link_windows Md::App::WindowLink::Linked
+          {a, b, c}.each do |app|
+            app.show_pane(Md::App::Pane::Editor).focus
+            app.vi_mode = true
+          end
+          c.open_file(first).should be_true
+          vi_type c.window, "ggIc<Esc>"
+          b.markdown.should eq "cone\n"
+        ensure
+          c.window.destroy
+        end
+      end
+    ensure
+      File.delete? first
+      File.delete? second
+    end
+  end
+
+  it "quits every linked window on :qa, asking once about the modified document" do
+    with_two_windows(text: "one\n", view: false, linked: true) do |a, b|
+      vi_on a, b
+      vi_type b.window, "ggIx<Esc>:qa<CR>"
+      a.window.destroyed?.should be_true # not the last window: closes silently
+      b.window.destroyed?.should be_false
+      settle { question(b).starts_with? "Save changes to" }
+      answer b, 'n'
+      settle { b.window.destroyed? }
+    end
+  end
+
+  it "quits every linked window on :qa! without asking" do
+    with_two_windows(text: "one\n", view: false, linked: true) do |a, b|
+      vi_on a, b
+      vi_type a.window, "ggIx<Esc>:qa!<CR>"
+      a.window.destroyed?.should be_true
+      b.window.destroyed?.should be_true
+    end
+  end
+
+  it "turns Vi Mode off in every linked window when Neovim ends, with a notice in each" do
+    with_two_windows(text: "one\n", view: false, linked: true) do |a, b|
+      vi_on a, b
+      pid = (a.vi.client || fail("no Neovim")).pid
+      Process.signal Signal::KILL, pid # Neovim ends under the editors
+      settle { !a.vi_mode? && !b.vi_mode? }
+      settle { notice(a).includes?("Vi Mode is off") && notice(b).includes?("Vi Mode is off") }
+      a.document.vi.should be_nil
+    end
+  end
+
   it "runs a Neovim per separate window, each seeing the other's edits" do
     with_two_windows(text: "one\n", view: false) do |a, b|
       vi_on a, b

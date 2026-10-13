@@ -33,9 +33,23 @@ module Md
     # plain face.
     @window_link : Crysterm::Reactive::Property(WindowLink) = Crysterm::Reactive::Property.new(WindowLink::Separate)
 
-    # The window that took input last, of all md's windows: the leader of
-    # its group when linking starts, and after its group's leader leaves.
-    class_property last_active : App?
+    # md's windows in the order they last took input, the latest last
+    # (`#became_active`): the window used last leads its group when linking
+    # starts, and the one used most recently after it takes over when its
+    # group's leader leaves (`.most_recent`). A window leaves the list when
+    # it is destroyed (`#forget_active`).
+    @@used = [] of App
+
+    # The window that took input last, of all md's windows.
+    def self.last_active : App?
+      @@used.last?
+    end
+
+    # The window of *apps* used most recently, if any of them took input.
+    def self.most_recent(apps : Array(App)) : App?
+      @@used.reverse_each { |app| return app if apps.includes?(app) }
+      nil
+    end
 
     # Something the link mirrors moved here since the last publish
     # (`#publish_view`).
@@ -88,13 +102,24 @@ module Md
       @viewer.on(Crysterm::Event::CursorPositionChanged) { mark_view_moved }
       @viewer.on(Crysterm::Event::Scroll) { mark_view_moved }
       @window.on(Crysterm::Event::Rendered) { publish_view }
+      # Sync Cursor switched here may move no caret, yet the group takes it.
+      @sync_cursor.on_change { mark_view_moved }
     end
 
     # This window took input, or was picked in the Window menu: it is the
     # last active, and its group's leader.
     protected def became_active : Nil
-      App.last_active = self
+      unless @@used.last?.same?(self)
+        @@used.delete self
+        @@used << self
+      end
       link.try &.leader = self
+    end
+
+    # A window destroyed is no group's next leader, and is not kept alive by
+    # having been used (from the window's `Destroy`).
+    protected def forget_active : Nil
+      @@used.delete self
     end
 
     # Notes a move the link mirrors — unless it is a mirror being applied —

@@ -461,6 +461,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   standard input streams live into every window on it, and on after the
   window that started it closes. Opening the file the window already shows
   no longer reads it again (File → Reload does).
+  The first save of a new file that has since become another window's file
+  (a symlink made to it, another case of its name) is a Save As onto it.
 - View → Theme calls its first entry Terminal Default, where it was Terminal (Its
   Own Colors); it still draws the window in the terminal's own colors, and its
   mnemonic is still T.

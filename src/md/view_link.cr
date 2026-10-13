@@ -58,7 +58,7 @@ module Md
       if @views.empty?
         @document.link = nil if @document.link.same?(self)
       elsif @leader.same?(app)
-        @leader = App.last_active.try { |last| last if @views.includes?(last) } || @views.first
+        @leader = App.most_recent(@views) || @views.first
         @leader.mark_view_moved
       end
     end

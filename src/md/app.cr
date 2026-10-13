@@ -618,16 +618,30 @@ module Md
     #
     # The document is saved for every window showing it: one write, one
     # backup, the modified flag cleared in each; the notice is this
-    # window's, which took the action.
+    # window's, which took the action. A file that has become another open
+    # document's since it was named goes the way of Save As onto it
+    # (`#colliding?`).
     def save : Bool
       unless path = source.path
         save_as_prompt
         return false
       end
+      return save_as(path) if colliding?(path)
       saved path, @document.save(@backup_file.value)
     rescue ex : IO::Error
       notice "Cannot save #{path}: #{Md.error_text(ex)}"
       false
+    end
+
+    # Whether saving to *path*, the document's file, would write over a file
+    # another document has open: the file the document was given has come
+    # to be that one since (a new file whose name another window saved in
+    # another case, on a case-insensitive volume; a symlink made to an open
+    # file), which only the key the file has now tells. Such a save is a
+    # Save As onto an open file (`#save_as`).
+    private def colliding?(path : String) : Bool
+      return false if Documents.key_for(path) == @document.key
+      !(Documents.find(path) || @document).same?(@document)
     end
 
     # A save's end: the status and the notice, naming a backup that failed.
@@ -718,13 +732,13 @@ module Md
     # window, on its own render fiber, appends it at once
     # (`#stream_appended`). A document that is no stream takes nothing.
     def receive(chunk : String) : Nil
-      @document.receive chunk if @document.from_stream?
+      @document.receive chunk, self if @document.from_stream?
     end
 
     # The end of the stream (`Document#finish_stream`), for every window on
     # the document.
     def finish_stream : Nil
-      @document.finish_stream if @document.from_stream?
+      @document.finish_stream nil, self if @document.from_stream?
     end
 
     # A streamed *chunk* for this window: appended to the viewer, and taken

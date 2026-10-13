@@ -125,4 +125,66 @@ describe "Md::App windows on a stream" do
       window.destroy
     end
   end
+
+  it "keeps lines queued in a host that opens another file for the window left" do
+    path = tempfile "# File\n"
+    application = Crysterm::Application.new
+    begin
+      with_app Md::Source.new(stdin: true), view: true do |a, first_window|
+        application.add first_window
+        a.window_opener = recording_opener
+        b = a.new_window || fail("no window was opened")
+        begin
+          a.stream IO::Memory.new("# One\n\n# Two\n\n")
+          Fiber.yield # the lines wait in the host's queue
+          a.open_file(path).should be_true
+          b.document.host.should be b
+          settle { !b.streaming? }
+          b.markdown.should eq "# One\n\n# Two\n\n"
+          settle { b.viewer.document.outline.size == 2 }
+          a.viewer.follow_tail?.should be_false
+          a.markdown.should eq "# File\n"
+        ensure
+          b.window.destroy
+        end
+      end
+    ensure
+      File.delete? path
+    end
+    Md::Documents.all.should be_empty
+  end
+
+  it "stops following the stream in every window of a linked group that opens a file" do
+    path = tempfile "# File\n"
+    reader, writer = IO.pipe
+    application = Crysterm::Application.new
+    begin
+      with_app Md::Source.new(stdin: true), view: true do |a, first_window|
+        application.add first_window
+        a.window_opener = recording_opener
+        a.window_link = Md::App::WindowLink::Linked
+        a.stream reader
+        b = a.new_window || fail("no window was opened")
+        begin
+          writer << "# One\n\n"
+          writer.flush
+          settle { b.viewer.document.outline.size == 1 }
+          streamed = a.document
+          b.viewer.follow_tail?.should be_true
+          a.open_file(path).should be_true
+          b.source.path.should eq path
+          b.viewer.follow_tail?.should be_false
+          a.viewer.follow_tail?.should be_false
+          Md::Documents.all.should_not contain streamed # the last window left it
+        ensure
+          b.window.destroy
+          Md::Documents.link_windows Md::App::WindowLink::Separate
+        end
+      end
+    ensure
+      writer.close
+      File.delete? path
+    end
+    Md::Documents.all.should be_empty
+  end
 end

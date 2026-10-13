@@ -53,7 +53,7 @@ module Md
   # the host's, and moves on when the host leaves.
   #
   # A document read from standard input streams in (`#start_stream`): a
-  # reader fiber takes the lines as they come and hands each to the host's
+  # reader fiber takes the lines as they come and hands them to the host's
   # render fiber, or to the next window's when the host's is gone, so the
   # stream outlives the window that started it; every window on the
   # document appends the chunk to its own viewer (`Event::StreamAppended`).
@@ -144,6 +144,12 @@ module Md
     # in whichever window, takes them (`#drain_stream`).
     @stream_pending = Deque(String).new
     @stream_end : Tuple(String?)? = nil
+
+    # The window on whose render fiber the stream's chunk or end is being
+    # taken in just now (`#receive`, `#finish_stream`): its handlers of
+    # `Event::StreamAppended` and `Event::StreamEnded` run at once, the
+    # other windows' are posted to their own fibers. Nil at other times.
+    getter receiver : App?
 
     # A document of *source* holding *text*, unmodified, with no undo
     # history.
@@ -342,28 +348,29 @@ module Md
     # abandoned).
     private def deliver : Bool
       return false if @stream_abandoned
-      @views.any? { |view| view.window.post? { drain_stream } }
+      @views.any? { |view| view.window.post? { drain_stream view } }
     end
 
-    # Takes in, on a window's render fiber, what the stream brought that no
+    # Takes in, on *view*'s render fiber, what the stream brought that no
     # window took in yet: each line (`#receive`), then the end, once read
     # (`#finish_stream`). A job finding nothing left — an earlier one took
     # it — does nothing.
-    private def drain_stream : Nil
+    private def drain_stream(view : App) : Nil
       while line = @stream_pending.shift?
-        receive line
+        receive line, view
       end
       if ended = @stream_end
         @stream_end = nil
-        finish_stream ended[0]
+        finish_stream ended[0], view
       end
     end
 
     # Takes a streamed *chunk* of Markdown into the document — into the text
     # too when it was filled — and hands it to every window
-    # (`Event::StreamAppended`). Bytes that are not UTF-8 are replaced, with
-    # a notice. A chunk after the stream was abandoned is dropped.
-    def receive(chunk : String) : Nil
+    # (`Event::StreamAppended`), at once in *by*, on whose render fiber it
+    # arrived (`#receiver`). Bytes that are not UTF-8 are replaced, with a
+    # notice. A chunk after the stream was abandoned is dropped.
+    def receive(chunk : String, by : App? = nil) : Nil
       return if @stream_abandoned
       unless (decoded = Source.decode chunk).same?(chunk)
         notify "Invalid UTF-8 in #{name} replaced by �"
@@ -371,15 +378,26 @@ module Md
       end
       @streamed << chunk
       loading { Crysterm::TextCursor.new(@text, @text.size).insert_text chunk } unless @editor_stale
-      emit Md::Event::StreamAppended, chunk
+      received_by(by) { emit Md::Event::StreamAppended, chunk }
     end
 
     # The end of the stream, with the error *message* that cut it short:
-    # every window is told (`Event::StreamEnded`).
-    def finish_stream(message : String? = nil) : Nil
+    # every window is told (`Event::StreamEnded`), at once in *by*, on whose
+    # render fiber it arrived.
+    def finish_stream(message : String? = nil, by : App? = nil) : Nil
       return if @stream_abandoned
       @streaming = false
-      emit Md::Event::StreamEnded, message
+      received_by(by) { emit Md::Event::StreamEnded, message }
+    end
+
+    # Runs the block with *by* as the `#receiver`.
+    private def received_by(by : App?, &) : Nil
+      @receiver = by
+      begin
+        yield
+      ensure
+        @receiver = nil
+      end
     end
 
     # Fills the text from the stream, for *by*'s editor, now shown (a

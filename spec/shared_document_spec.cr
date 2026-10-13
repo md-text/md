@@ -405,4 +405,113 @@ describe "Md::App linked windows switching documents" do
       File.delete? fresh
     end
   end
+
+  it "joins a group a linked group arrives at, its leader staying the leader and the arriving trail kept" do
+    path = tempfile "# Doc\n"
+    left = tempfile "# Left\n"
+    begin
+      with_side_by_side(path) do |a, b|
+        a.window_link = Md::App::WindowLink::Linked
+        b.window_opener = recording_opener
+        b.open_file(left).should be_true
+        c = b.new_window || fail("no window was opened")
+        begin
+          c.link.should be b.link
+          a.link.try(&.leader).should be a
+          b.open_file(path).should be_true
+          b.document.should be a.document
+          c.document.should be a.document
+          b.link.should be a.link
+          c.link.should be a.link
+          a.link.try(&.leader).should be a
+          a.previous_file_available?.should be_true # the arrivals' trail
+          a.trail.back.last.path.should eq left
+        ensure
+          c.window.destroy
+        end
+      ensure
+        Md::Documents.link_windows Md::App::WindowLink::Separate
+      end
+    ensure
+      File.delete? path
+      File.delete? left
+    end
+  end
+end
+
+describe "Md::App windows on one document reaching it again" do
+  it "joins the other window's document on Previous File and on a followed link" do
+    path = tempfile "# Doc\n"
+    other = tempfile "# Other\n"
+    begin
+      with_side_by_side(path) do |a, b|
+        b.open_file(path).should be_true
+        b.open_file(other).should be_true
+        a.editor.cursor_position = 0
+        a.editor.insert_text "edited "
+        File.write path, "changed on disk\n"
+        b.previous_file.should be_true
+        question(b).should eq "" # b's own document was unmodified
+        b.document.should be a.document
+        b.markdown.should eq "edited # Doc\n"
+        notice(b).should contain "unsaved changes from another window"
+        b.open_file(other).should be_true
+        b.follow_link path
+        b.document.should be a.document
+      end
+    ensure
+      File.delete? path
+      File.delete? other
+    end
+  end
+
+  it "saves a new file that has become another window's file since as a Save As onto it" do
+    dir = File.tempname("md-spec-collide")
+    Dir.mkdir dir
+    real = File.join(dir, "real.md")
+    File.write real, "# Real\n"
+    late = File.join(dir, "late.md")
+    begin
+      with_side_by_side(real) do |a, b|
+        b.open_file(late).should be_true # a new file
+        b.editor.insert_text "mine\n"
+        File.symlink real, late # made a link to a's file since
+        a.editor.insert_text "x"
+        b.save.should be_false
+        notice(b).should contain "has unsaved changes in another window"
+        File.read(real).should eq "# Real\n"
+        a.save.should be_true
+        b.save.should be_true
+        File.read(real).should eq "mine\n"
+        a.document.should be b.document
+        Md::Documents.find(real).should be b.document
+      end
+    ensure
+      FileUtils.rm_rf dir
+    end
+  end
+end
+
+describe "Md::App watching a file shown in two windows" do
+  it "tells every window when the file changes, changes under unsaved edits, or goes" do
+    path = tempfile "first\n"
+    begin
+      with_two_windows(Md::Source.new(path: path), "first\n") do |a, b|
+        a.watch_interval = 20.milliseconds
+        b.watch_interval = 20.milliseconds
+        a.watch_file = true
+        File.write path, "second\n"
+        settle { a.markdown == "second\n" }
+        settle { notice(a).includes?("Reloaded") && notice(b).includes?("Reloaded") }
+        b.editor.insert_text "x"
+        File.write path, "third, longer\n"
+        settle { notice(a).includes?("unsaved changes kept") && notice(b).includes?("unsaved changes kept") }
+        a.markdown.should eq "secondx\n" # the edit kept, not the file
+        File.delete path
+        settle { notice(a).includes?("removed from disk") && notice(b).includes?("removed from disk") }
+      end
+    ensure
+      File.delete? path
+    end
+  end
 end
