@@ -69,14 +69,15 @@ jobs:
 
       # shard.override.yml builds against unreleased Crysterm, Tput,
       # Superconf, event_handler and pnggif checkouts beside this one.
+      # The tags are the versions shard.lock records; raise both together.
       - name: Check out sibling dependencies
         run: |
           cd ..
-          git clone https://github.com/crystallabs/crysterm crysterm2
-          git clone https://github.com/crystallabs/tput.cr
-          git clone https://github.com/crystallabs/superconf.cr
-          git clone https://github.com/crystallabs/event_handler
-          git clone https://github.com/crystallabs/pnggif
+          git clone --depth 1 --branch v1.5.0 https://github.com/crystallabs/crysterm crysterm2
+          git clone --depth 1 --branch v2.3.0 https://github.com/crystallabs/tput.cr
+          git clone --depth 1 --branch v0.3.0 https://github.com/crystallabs/superconf.cr
+          git clone --depth 1 --branch v2.4.0 https://github.com/crystallabs/event_handler
+          git clone --depth 1 --branch v0.1.2 https://github.com/crystallabs/pnggif
 
       # The build runs in the Crystal Alpine image via docker so that the
       # binary is fully static, independent of the runner's architecture

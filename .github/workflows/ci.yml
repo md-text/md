@@ -26,14 +26,15 @@ jobs:
 
       # shard.override.yml builds against unreleased Crysterm, Tput,
       # Superconf, event_handler and pnggif checkouts beside this one.
+      # The tags are the versions shard.lock records; raise both together.
       - name: Check out sibling dependencies
         run: |
           cd ..
-          git clone https://github.com/crystallabs/crysterm crysterm2
-          git clone https://github.com/crystallabs/tput.cr
-          git clone https://github.com/crystallabs/superconf.cr
-          git clone https://github.com/crystallabs/event_handler
-          git clone https://github.com/crystallabs/pnggif
+          git clone --depth 1 --branch v1.5.0 https://github.com/crystallabs/crysterm crysterm2
+          git clone --depth 1 --branch v2.3.0 https://github.com/crystallabs/tput.cr
+          git clone --depth 1 --branch v0.3.0 https://github.com/crystallabs/superconf.cr
+          git clone --depth 1 --branch v2.4.0 https://github.com/crystallabs/event_handler
+          git clone --depth 1 --branch v0.1.2 https://github.com/crystallabs/pnggif
 
       - name: Update package index (Linux)
         if: runner.os == 'Linux'
@@ -55,11 +56,14 @@ jobs:
       - name: Install dependencies
         run: shards install
 
+      # Tput's term-screen links libreadline for a terminal size fallback
+      # that ioctl makes unnecessary; the runners lack its development
+      # package, and the release builds leave it out the same way.
       - name: Run specs
-        run: crystal spec
+        run: crystal spec -Dwithout_readline
 
       - name: Build
-        run: shards build
+        run: shards build -Dwithout_readline
 
       - name: Lint
         run: make lint
