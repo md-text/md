@@ -864,11 +864,19 @@ module Md
 
     # Application-level keys, after the focused widget had its turn, and not
     # while a question is up (`#asking?`): a `q` at the unsaved-changes
-    # question must not quit over it. The menu entries' keys are not here:
-    # they are the entries' shortcuts (`app_menu.cr`), which Crysterm fires
-    # on the same terms.
+    # question must not quit over it. Nor may Crysterm's default quit keys,
+    # `q` (which md keeps live past a pane's grab for the viewer) and
+    # `Ctrl-Q`, which quit every window when nothing takes them: a dialog
+    # that has no use for them (a message box) leaves them here, and they
+    # are taken, doing nothing, as Qt's modal dialog blocks the window
+    # behind it. The menu entries' keys are not here: they are the entries'
+    # shortcuts (`app_menu.cr`), which Crysterm fires on the same terms.
     private def key_pressed(e : Crysterm::Event::KeyPress) : Nil
-      return if e.accepted? || asking?
+      return if e.accepted?
+      if asking?
+        e.accept if Crysterm::Application.quit_key?(e.char, e.key)
+        return
+      end
       # The pager's keys are letters the editor would have typed, so they
       # reach here only from the viewer or the table of contents.
       handled = (key = e.key) ? app_key(key) : pager_key(e.char)

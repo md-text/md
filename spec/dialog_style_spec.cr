@@ -107,8 +107,9 @@ describe "Md::App dialog style" do
       app.confirm_discard { }
       app.asking?.should be_true
       # A letter the box's buttons leave to the window: `q` would quit over
-      # the question, `F1` show the editor under it.
-      press(window, 'q').accepted?.should be_false
+      # the question, `F1` show the editor under it. The `q` is taken, so
+      # Crysterm's default quit key, which it is too, stands down.
+      press(window, 'q').accepted?.should be_true
       window.destroyed?.should be_false
       press window, Tput::Key::F1
       app.visible_panes.should eq [Md::App::Pane::Viewer]

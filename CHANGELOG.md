@@ -583,6 +583,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - File → Save As… took a name typed with a leading `~` as a directory named
   `~` in the working directory, and failed to save into it; it is the home
   directory now, as File → Open… takes it.
+- A `q` or `Ctrl-Q` pressed while a dialog was up (View → Dialog Style →
+  Modal Dialogs), which the dialog had no use for, went on to Crysterm's
+  default quit keys and quit md over the question, asking about unsaved
+  changes only in the windows that had them. A question up now takes them,
+  doing nothing.
 - A search's smartcase took an escape such as `\S`, `\W` or `\D` for an
   uppercase letter, so `/\Dfoo` matched case exactly. As in Vim, a letter
   after a backslash, or in the braces an escape takes (`\x{4C}`), does not
