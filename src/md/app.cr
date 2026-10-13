@@ -260,6 +260,7 @@ module Md
       wire_view
       wire_resizable
       wire_vi
+      wire_linking
 
       Pane.each { |pane| widget(pane).hide }
       enter_document
@@ -296,14 +297,14 @@ module Md
       # The table of contents follows the leading pane's caret too: the
       # editor's while it has the focus, the viewer's otherwise.
       @editor.on(Crysterm::Event::CursorPositionChanged) do
-        if @editor.focused?
+        if @editor.focused? && !@mirroring
           sync_to_editor
           track_toc
         end
       end
       @viewer.on(Crysterm::Event::CursorPositionChanged) do
-        sync_to_viewer if @viewer.focused?
-        track_toc unless @editor.focused?
+        sync_to_viewer if @viewer.focused? && !@mirroring
+        track_toc unless @editor.focused? || @mirroring
       end
       @toc.on(Crysterm::Event::AnchorClick) { |e| jump_to e.url }
       wire_links

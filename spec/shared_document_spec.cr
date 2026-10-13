@@ -125,10 +125,10 @@ describe "Md::App windows on one document" do
     with_two_windows do |a, b|
       a.window.title.should eq "doc.md:1 • MD"
       b.window.title.should eq "doc.md:2 • MD"
-      window_menu(b).actions[4..].map(&.text).should eq ["doc.md:1", "doc.md:2"]
+      window_menu(b).actions[5..].map(&.text).should eq ["doc.md:1", "doc.md:2"]
       a.window.close
       b.window.title.should eq "doc.md • MD"
-      window_menu(b).actions[4..].map(&.text).should eq ["doc.md"]
+      window_menu(b).actions[5..].map(&.text).should eq ["doc.md"]
     end
   end
 

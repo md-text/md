@@ -21,6 +21,7 @@ describe Md::Config do
       keys.should contain "md.sync_cursor"
       keys.should contain "md.mouse_mode"
       keys.should contain "md.pane_sizes"
+      keys.should contain "md.window_link"
       option = Crysterm::Config["md.text_width"]
       option.cli.should eq "--md-text-width"
       Superconf.env_name(option).should eq "MD_TEXT_WIDTH"

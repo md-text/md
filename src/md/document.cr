@@ -87,6 +87,10 @@ module Md
     # The windows showing the document, the first being the host.
     getter views = [] of App
 
+    # The group of linked windows on the document (Window → Linking →
+    # Linked), nil while windows are separate.
+    property link : ViewLink?
+
     # Set while the text is replaced programmatically (a load, a reload, a
     # stream filling it), so the resulting change is not taken for an edit.
     getter? loading = false

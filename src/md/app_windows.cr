@@ -249,6 +249,7 @@ module Md
       # The editor's `Ctrl-W` kills a word, so the key works outside it.
       named "close-window", tip menu.add_action("&Close Current", shortcut: "Ctrl+W") { close_window },
         "Close this window, asking about unsaved changes when no other window shows the document; the last window closing quits md"
+      add_linking_menu menu
       add_remember_positions menu
       menu.add_separator
       menu.on(Crysterm::Event::AboutToShow) { refresh_window_menu }

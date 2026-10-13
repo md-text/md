@@ -227,7 +227,8 @@ module Md
     # the document (an open, a close) asks only when no other window shows
     # it: the changes are not lost while one does.
     def confirm_discard(last_view_only : Bool = true, &action : ->) : Nil
-      at_stake = @confirm_discard.value && @document.text.modified? && (!last_view_only || last_view?)
+      # Linked windows leave the document together: no window is left on it.
+      at_stake = @confirm_discard.value && @document.text.modified? && (!last_view_only || last_view? || link)
       unless at_stake
         action.call
         return

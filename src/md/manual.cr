@@ -133,7 +133,7 @@ module Md
         end
         io << <<-'ROFF'
           .PP
-          The Edit, Format, View and Options menu choices are options too, listed under
+          The Edit, Format, View, Options and Window menu choices are options too, listed under
           SETTINGS below. Crysterm, the toolkit md is built on, takes options of
           its own (\fB\-\-colors\-theme\fR, \fB\-\-colors\-stylesheet\fR,
           \fB\-\-log\-file\fR and more) on the same command line, each also
@@ -144,7 +144,7 @@ module Md
         io << '\n'
         io << ".SH SETTINGS\n"
         io << <<-'ROFF'
-          The choices made in the Edit, Format, View and Options menus are kept across runs in
+          The choices made in the Edit, Format, View, Options and Window menus are kept across runs in
           \fI~/.config/md/config.yml\fR (see FILES), and each is an option of
           Crysterm's configuration registry: a key in that file, an environment
           variable and a command-line option, the later winning, with a pick in a
@@ -183,7 +183,7 @@ module Md
           .SH FILES
           .TP
           .I $XDG_CONFIG_HOME/md/config.yml
-          The Edit, Format, View and Options choices and the pane sizes, kept across runs
+          The Edit, Format, View, Options and Window choices and the pane sizes, kept across runs
           (\fI~/.config/md/config.yml\fR by default): YAML with one mapping per
           option group, \fBmd\fR for md's own settings and Crysterm's groups for
           its options, written when md quits if anything changed and by Options

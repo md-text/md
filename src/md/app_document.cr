@@ -23,6 +23,7 @@ module Md
     private def enter_document : Nil
       doc = @document
       doc.attach self
+      join_link if Documents.window_link.linked?
       subs = @document_subscriptions
       subs.on(doc, Md::Event::DocumentEdited) { schedule_catch_up }
       subs.on(doc, Md::Event::DocumentReset) { schedule_catch_up }
@@ -59,6 +60,7 @@ module Md
     # the windows left on it renamed — their `:N` may go. From the window's
     # `Destroy`, and before a switch to another document.
     private def leave_document(clean : Bool = @started) : Nil
+      link.try &.remove(self)
       @document_subscriptions.off
       @watch_link.try &.dispose
       @watch_link = nil
@@ -71,8 +73,19 @@ module Md
     # link, File → Close…): this window leaves its document — closing it
     # when no other window shows it — and becomes a view on *doc*, its
     # editor on *doc*'s text (Qt's `setDocument`, which puts the caret at
-    # the start and tells Neovim, when Vi Mode is on, to follow).
+    # the start and tells Neovim, when Vi Mode is on, to follow). Linked
+    # windows go together (`ViewLink#move`).
     protected def switch_document(doc : Document) : Nil
+      return if doc.same?(@document)
+      if (link = self.link) && link.views.size > 1
+        link.move doc, self
+      else
+        move_to doc
+      end
+    end
+
+    # This window's part of a switch to *doc* (`#switch_document`).
+    protected def move_to(doc : Document) : Nil
       return if doc.same?(@document)
       leave_document clean: true
       @document = doc

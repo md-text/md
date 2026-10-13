@@ -263,7 +263,7 @@ module Md
     # existing file in view mode, or an empty editor (named after a file
     # that does not exist yet, or unnamed) — unless `--view` or `--edit`
     # said which pane. The history of recent files and positions comes
-    # along, and the Edit, Format, View and Options choices are linked to the
+    # along, and the Edit, Format, View, Options and Window choices are linked to the
     # configuration (`Config`, loaded by `.run`) and kept in its file;
     # `--watch` follows the file from the start, `--line` opens on that
     # line. The app is built on *window* when there is one.

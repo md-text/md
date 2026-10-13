@@ -9,6 +9,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Window → Linking (`md.window_link`): Separate Views, the default, keeps
+  each window on a document with its own cursor, scroll, search and trail;
+  Linked (Mirrored) makes them act as the panes of one window — the cursor
+  and selection, the scroll, the viewer's place, the table of contents'
+  entry, the search, Sync Cursor and the trail follow the window used last,
+  and opening a file, a link, Previous File and File → Close move the whole
+  group. Switching applies to every window at once.
 - Project infrastructure: build system, specs, linting, continuous integration
   and release builds for Linux (x86_64, aarch64) and macOS (Intel, Apple Silicon).
 - Command line: `md [FILE | -]`, with `-` for standard input, `--help` and `--version`.

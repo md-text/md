@@ -1,7 +1,7 @@
 require "crysterm"
 require "yaml"
 
-# The Edit, Format, View and Options menu choices as configuration options, in Crysterm's
+# The Edit, Format, View, Options and Window menu choices as configuration options, in Crysterm's
 # registry (`Crysterm::Config`, which is the Superconf shard): each is a
 # `md.<name>` key in the config file, an `MD_<NAME>` environment variable, a
 # `--md-<name>` command-line option and a typed accessor
@@ -68,6 +68,8 @@ module Superconf
   option "md.resizable_panes", true, env: "MD_RESIZABLE_PANES",
     description: "Options → Resizable Panes: let the dividers between the panes move"
   # Window.
+  option "md.window_link", Md::App::WindowLink::Separate, env: "MD_WINDOW_LINK",
+    description: "Window → Linking: how windows on the same document behave — each with its own caret, scroll and search (separate), or mirroring each other's (linked); the text, its undo and its modified state are shared either way"
   option "md.remember_window_positions", false, env: "MD_REMEMBER_WINDOW_POSITIONS",
     description: "Window → Remember Positions: open each new window where the window with the same number was last closed (macOS Terminal.app and iTerm2); elsewhere the window manager places it"
   # The panes.
@@ -233,7 +235,7 @@ module Md
         values[option.key] = option if saved?(option)
       end
       String.build do |io|
-        io << "# md's settings: the Edit, Format, View and Options menu choices, written when md quits\n"
+        io << "# md's settings: the Edit, Format, View, Options and Window menu choices, written when md quits\n"
         io << "# and by Options → Save Config. Each entry is also a --<group>-<name>\n"
         io << "# option and an MD_* or CRYSTERM_* variable; md --help --verbose lists them.\n"
         io << YAML.build { |yaml| emit values, yaml }
@@ -264,7 +266,7 @@ module Md
     # else it can be set.
     def self.help : String
       banner = <<-BANNER
-        Settings: the Edit, Format, View and Options menu choices. Each can also be set in
+        Settings: the Edit, Format, View, Options and Window menu choices. Each can also be set in
         #{path.sub(Path.home.to_s, "~")} or by an MD_* environment variable; a pick in
         a menu is kept there (Options → Save Config).
         BANNER

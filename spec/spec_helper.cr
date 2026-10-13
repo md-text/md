@@ -43,16 +43,23 @@ end
 # *source* and *text* under one shared `Crysterm::Application`, and a second
 # from its `#new_window`. Both are destroyed after the block, and then no
 # document may be left in the registry.
-def with_two_windows(source = Md::Source.new(path: "doc.md"), text = "# Doc\n\nText.\n", view = true, &)
+#
+# With *linked*, the windows are linked (Window → Linking → Linked) before
+# the second opens, and separate again afterwards: the choice is one for
+# the process.
+def with_two_windows(source = Md::Source.new(path: "doc.md"), text = "# Doc\n\nText.\n", view = true, linked = false,
+                     opener = recording_opener, &)
   application = Crysterm::Application.new
   with_app source, text: text, view: view do |a, window|
     application.add window
-    a.window_opener = recording_opener
+    a.window_link = Md::App::WindowLink::Linked if linked
+    a.window_opener = opener
     b = a.new_window || fail("no window was opened")
     begin
       yield a, b
     ensure
       b.window.destroy
+      Md::Documents.link_windows Md::App::WindowLink::Separate
     end
   end
   Md::Documents.all.should be_empty

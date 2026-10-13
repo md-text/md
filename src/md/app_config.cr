@@ -1,6 +1,6 @@
 module Md
   class App
-    # The choices kept across runs: the Edit, Format, View and Options settings, which are
+    # The choices kept across runs: the Edit, Format, View, Options and Window settings, which are
     # options in Crysterm's registry (`Md::Config`, `config.cr`), and the
     # pane sizes. When the app keeps the configuration (`config: true`; the
     # CLI does, specs do not, so a spec's picks stay its own), each choice's
@@ -57,6 +57,9 @@ module Md
       link @link_double_click, "md.link_double_click"
       link @vi_config, "md.vi_config"
       link @vi_mode, "md.vi_mode"
+      # Without the config, the windows of a process still share one choice
+      # (`Documents.window_link`), which the option's default must not undo.
+      link @window_link, "md.window_link" if @config
       link @remember_window_positions, "md.remember_window_positions"
       # The pane sizes are not a property: applied from the option now and,
       # with the configuration kept, whenever it changes (a file loaded);

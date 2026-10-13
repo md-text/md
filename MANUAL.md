@@ -701,6 +701,24 @@ document as well. A document streaming in from standard input streams into
 every window on it, a new one starting from what has arrived, and goes on
 after the window that started it closes.
 
+Window → Linking says how the windows on one document behave towards each
+other; the text, its undo and its modified state are one either way.
+*Separate Views*, the default, is what is described above: each window
+keeps its own cursor, scroll, search and trail of files (Previous File,
+Next File), and opening another file in a window takes that window alone.
+*Linked (Mirrored)* makes the windows on a document act as the panes of one
+window: the cursor and selection, the scroll (the same first line, however
+tall each window is), the viewer's place, the table of contents' entry, the
+search and Sync Cursor follow whichever window you used last, and opening a
+file, following a link, Previous File and File → Close take every window of
+the group along. With Sync Cursor on, moving in one window's editor moves
+another window's viewer, even one that shows no editor, as it would move
+the viewer beside the editor. Each window keeps its own panes, sizes and
+wrapping. The choice applies to every window at once: linking puts each
+document's windows where the window you used last is; going back to
+separate leaves each where it is, with its own copy of the trail. It is
+kept across runs (`md.window_link`, `--md-window-link linked`).
+
 The settings and the recent files are shared, written by the window that
 ends last. Window → Close Current (`Ctrl-W`, outside the editor, where
 `Ctrl-W` kills a word) closes the window you are in alone, asking about
@@ -775,7 +793,7 @@ Viewer), Center Document, Rulers (Horizontal and Vertical), Guides,
 Images, Terminal Links → Double-click to Open, Dialog Style, Ask Before Discarding
 Changes, Auto-Save, Keep a Backup File, the mouse mode, the clipboard mode,
 Resizable Panes, Tooltips, the theme and Crysterm's own Color Depth, Terminal Links, Media
-Backend, No Animations, Detachable Menus, Vi Mode: Use Neovim Config and Window → Remember Positions — and the pane sizes are kept across runs in
+Backend, No Animations, Detachable Menus, Vi Mode: Use Neovim Config, Window → Linking and Window → Remember Positions — and the pane sizes are kept across runs in
 `$XDG_CONFIG_HOME/md/config.yml` (`~/.config/md/config.yml`), written when
 md quits if anything changed. Watch File is not kept: like `--watch`, it is
 for the run at hand.

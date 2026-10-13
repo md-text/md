@@ -112,12 +112,44 @@ module Md
       name
     end
 
-    # Forgets every document and backup, as a fresh process would have none:
-    # for specs.
+    # Forgets every document and backup, as a fresh process would have none,
+    # and the windows are separate again: for specs.
     def self.reset : Nil
       @@all.clear
       @@by_key.clear
       @@backed_up.clear
+      @@window_link = App::WindowLink::Separate
+    end
+
+    # How windows on one document behave (Window → Linking): the one value
+    # for the process, which every window's setting follows.
+    class_getter window_link : App::WindowLink = App::WindowLink::Separate
+
+    # Makes *mode* how windows on one document behave, for every window, once
+    # however many windows' settings report the change (*initiator*'s first;
+    # the others' equal values return at once). Linking makes a group of
+    # each document's windows, led by *initiator* when it is among them, else
+    # by the window used last, else the first, which the others mirror at
+    # once; separating lets each window go on from where it is, with its own
+    # copy of the group's trail. Every window on a document shown in more
+    # than one is told.
+    def self.link_windows(mode : App::WindowLink, initiator : App? = nil) : Nil
+      return if mode == @@window_link
+      @@window_link = mode
+      App.instances.each &.window_link=(mode)
+      @@all.each do |doc|
+        next if doc.views.empty?
+        if mode.linked?
+          leader = {initiator, App.last_active}.find { |app| app && doc.views.includes?(app) } || doc.views.first
+          link = ViewLink.new(doc, leader, leader.own_trail)
+          doc.views.each { |view| link.add view }
+          doc.link = link
+          link.publish leader
+        else
+          doc.link.try &.dissolve
+        end
+        doc.notify "Windows on #{doc.name} are #{mode.linked? ? "linked" : "separate"}" if doc.views.size > 1
+      end
     end
   end
 end

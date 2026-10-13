@@ -54,10 +54,10 @@ module Md
     # supplies another (specs do, to see the URL without launching anything).
     property url_opener : Proc(String, Nil) = ->(url : String) { App.open_externally url }
 
-    # The places left, the browser's back and forward stacks `#travel` moves
-    # between: Previous File pops the one, Next File the other.
-    @back = [] of Place
-    @forward = [] of Place
+    # The places left (`Trail`), the browser's back and forward stacks
+    # `#travel` moves between: Previous File pops the one, Next File the
+    # other. The window's own, unless it is linked (`#trail`).
+    @trail = Trail.new
     @previous_action : Crysterm::Action?
     @next_action : Crysterm::Action?
     # Set while Previous File or Next File reopens a file, so the open is
@@ -75,12 +75,18 @@ module Md
       spawn(name: "md-opener") { process.wait }
     end
 
+    # The trail this window retraces: its link's while linked (Window →
+    # Linking), its own otherwise.
+    def trail : Trail
+      link.try(&.trail) || @trail
+    end
+
     def previous_file_available? : Bool
-      !@back.empty?
+      !trail.back.empty?
     end
 
     def next_file_available? : Bool
-      !@forward.empty?
+      !trail.forward.empty?
     end
 
     # Follows *url*, a link activated in the viewer — or chosen in the table
@@ -100,7 +106,7 @@ module Md
     # Goes back to the file left last, where it was left (File → Previous
     # File), through the guard. Returns whether there was one.
     def previous_file : Bool
-      travel(@back, @forward) || begin
+      travel(trail.back, trail.forward) || begin
         notice "No previous file"
         false
       end
@@ -109,7 +115,7 @@ module Md
     # Undoes the last Previous File (File → Next File). Returns whether
     # there was one.
     def next_file : Bool
-      travel(@forward, @back) || begin
+      travel(trail.forward, trail.back) || begin
         notice "No next file"
         false
       end
@@ -131,10 +137,10 @@ module Md
         closed = source.name || "the new document"
         remember_position
         if @document.key
-          @back.reject! { |place| here?(place) }
-          @forward.reject! { |place| here?(place) }
+          trail.back.reject! { |place| here?(place) }
+          trail.forward.reject! { |place| here?(place) }
         end
-        while target = @forward.pop?
+        while target = trail.forward.pop?
           next unless path = target.path
           @retracing = true # a close is no step: the closed place is not kept
           opened = begin
@@ -293,8 +299,9 @@ module Md
     # ones behind, as in any browser.
     private def push(here : Place?) : Nil
       return unless here
-      @back << here unless @back.last? == here
-      @forward.clear
+      back = trail.back
+      back << here unless back.last? == here
+      trail.forward.clear
       refresh_navigation
     end
 
