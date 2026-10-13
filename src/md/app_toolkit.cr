@@ -47,7 +47,9 @@ module Md
     # screen where it is dropped, with the same entries kept in step with the
     # menu's own (Crysterm's torn-off menu shares the `Action`s), movable by
     # its strip and closed by the `⊠` (`x` on an ASCII terminal) at its right
-    # end; the ordinary menus are unchanged. A torn-off menu stays until closed, option or no option.
+    # end; the ordinary menus are unchanged. Turning the option off hides
+    # the torn-off menus, and turning it on again brings them back where
+    # they were (Crysterm's option watcher does both).
     alias ColorDepth = Crysterm::ColorDepth
     alias Hyperlinks = Crysterm::AutoToggle
 
@@ -107,7 +109,8 @@ module Md
     end
 
     # Gives the menus their tear-off strips, or takes them away (Options →
-    # Detachable Menus); a menu already torn off stays until closed.
+    # Detachable Menus); the menus already torn off are hidden while it is
+    # off, and come back when it is on again.
     def tear_off_menus=(value : Bool) : Bool
       @tear_off_menus.value = value
     end

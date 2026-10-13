@@ -381,8 +381,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   typed, Neovim's messages come as notices, Visual mode is the editor's
   selection, `u`/`Ctrl-R` are Neovim's undo and redo, and `:w` saves (`:w
   FILE` saves as), `:q` closes the window as Window → Close Current does,
-  `:q!` without asking, `:qa` quits, `:wq`, `:x` and `ZZ` save and close.
-  Neovim starts with `--clean` unless Options → Vi Mode: Use Neovim
+  `:q!` without asking, `:qa` quits, `:wq`, `:x` and `ZZ` save and close
+  (a new document once it has a name: the window stays when Save As is
+  cancelled). Neovim starts with `--clean` unless Options → Vi Mode: Use Neovim
   Config (`vi-config`, `md.vi_config`) is on. Without `nvim` the entry is
   disabled and says why, and a Neovim that ends turns Vi Mode off. The
   viewer's `:` stays md's command line.
@@ -402,6 +403,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- View → Theme calls its first entry Terminal Default, where it was Terminal (Its
+  Own Colors); it still draws the window in the terminal's own colors, and its
+  mnemonic is still T.
 - The Format menu is grouped by what an entry works on: Bold, Italic, Code
   and Code Block; then Indent and Outdent, in a section of their own below
   them; then the task entries; then the heading level; then Rewrap.
@@ -432,13 +436,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - A torn-off menu's close button is a boxed `⊠`, reading as a window's
   button rather than a letter, where it was a bare `✕`; an ASCII terminal
   shows `x`. (Changed in Crysterm, which md builds against.)
-- The menus' check marks are one character, `☑`/`☐`, and `◉`/`○` for a
-  choice of one (the theme, the mouse mode), where they were `[x]`/`[ ]`,
+- The menus' check marks are one character, `☑`/`☐`, and for a choice of
+  one (the theme, the mouse mode) a `◉` on the chosen entry alone, the
+  others blank and their labels still aligned, where they were `[x]`/`[ ]`,
   so the entries sit two columns further left; an ASCII terminal keeps
-  `[x]`. (Changed in Crysterm, which md builds against.)
+  `[x]`/`[ ]`. (Changed in Crysterm, which md builds against.)
 
 ### Fixed
 
+- Format → Code Block on whole lines selected up to the next line's start
+  keeps the selection on those lines and the closing fence, where it ended at
+  the closing fence's start; and it takes off an empty fenced block that ends
+  the document without a final newline, where the two fences' spans overlapped
+  on the line break between them. In a block opened by a fence that also
+  ended a list item's block by its outdent, it takes that block's fences off,
+  where it took the fence for the item block's closing one and fenced the code
+  again.
 - Quitting with the viewer focused and the outline shown no longer crashes
   and wedges the process: tearing the panes down rewound focus from the
   viewer to the outline, whose focus-in refreshed the status bar, which asked
@@ -543,5 +556,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `p`), View → Menu and Status Bars `s` (Media Backend keeping `b`) and
   Options → Mouse → Never `v` (While Reading keeping `n`), where two
   entries shared a letter and pressing it always took the first of them.
+- A disabled menu entry is drawn greyed out in every theme, where an entry
+  with an underlined letter — all of md's — kept the enabled color until
+  highlighted, so File → Previous File and Next File looked usable; and a
+  menu closed after a disabled entry was clicked opens again with no entry
+  highlighted, Enter or Space revealing the first one, where the clicked
+  entry stayed the menu's current one. (Fixed in Crysterm, which md builds
+  against.)
 
 [Unreleased]: https://github.com/crystallabs/md/commits/main

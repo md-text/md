@@ -90,21 +90,44 @@ module Md
 
     # Neovim's arguments: `--clean` unless the user's config is wanted.
     private def vi_args : Array(String)
-      vi_config? ? ["--headless", "-n"] : Crysterm::Neovim::Handler.default_args.dup
+      args = Crysterm::Neovim::Handler.default_args.dup
+      args.delete "--clean" if vi_config?
+      args
     end
 
-    # `:w`: saves, or saves as *path* (`:w FILE`).
+    # While `:w` asks for the name of a document that has none, the quit of
+    # a `:wq` (`:x`, `ZZ`) that came with it, `{bang, all}`: it waits for the
+    # answer, and is dropped when nothing was saved, as Neovim's `:wq` stays
+    # when its write fails.
+    @vi_naming = false
+    @vi_quit_after_naming : {Bool, Bool}? = nil
+
+    # `:w`: saves, or saves as *path* (`:w FILE`); a document without a
+    # file asks for a name (File → Save As).
     private def vi_write(path : String?) : Nil
       if path
         save_as path
-      else
+      elsif @source.path
         save
+      else
+        @vi_naming = true
+        save_as_prompt do |saved|
+          @vi_naming = false
+          quit = @vi_quit_after_naming
+          @vi_quit_after_naming = nil
+          vi_quit *quit if quit && saved
+        end
       end
     end
 
     # `:q`: closes this window, or every window with *all* (`:qa`), asking
-    # about unsaved changes unless *bang* (`:q!`).
+    # about unsaved changes unless *bang* (`:q!`); after the save of a `:wq`
+    # still asking for a name, once it is answered.
     private def vi_quit(bang : Bool, all : Bool) : Nil
+      if @vi_naming
+        @vi_quit_after_naming = {bang, all}
+        return
+      end
       apps = all ? App.instances.dup : [self]
       apps.each do |app|
         if bang

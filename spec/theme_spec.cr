@@ -46,7 +46,7 @@ describe "Md::App theme" do
       app.theme.should eq Md::App::Theme::Terminal
       entries = theme_entries(app)
       entries.map(&.text).should eq [
-        "&Terminal (Its Own Colors)", "&Dark", "&Light",
+        "&Terminal Default", "&Dark", "&Light",
         "&Breeze Dark", "Breeze L&ight", "&QDarkStyle Dark", "QDarkStyle Li&ght", "Qt &Modern Dark",
       ]
       entries.map(&.checked?).should eq checked_at(0)

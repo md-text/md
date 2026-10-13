@@ -100,6 +100,30 @@ describe "Md::App Vi Mode" do
     end
   end
 
+  it "asks a new document's name on :wq and closes once it is saved there, staying when it is not" do
+    path = tempfile(nil)
+    with_app do |app, window|
+      app.vi_mode = true
+      vi_type window, "ihi<Esc>:wq<CR>"
+      # The name is asked, and no unsaved-changes question takes its place.
+      settle { question(app) == "Save as: " }
+      app.main.status_bar.line_prompt.cancel
+      sleep 50.milliseconds
+      window.destroyed?.should be_false
+
+      vi_type window, ":wq<CR>"
+      settle { question(app) == "Save as: " }
+      answer app, path
+      settle { window.destroyed? }
+      File.read(path).should contain "hi"
+    end
+  ensure
+    if path
+      File.delete? path
+      File.delete? "#{path}~"
+    end
+  end
+
   it "shows and focuses the editor when turned on from the menu, and says nothing of Neovim ending when turned off" do
     with_app text: "# A\n\ntext\n" do |app, window|
       app.viewer.focused?.should be_true

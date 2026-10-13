@@ -235,7 +235,7 @@ module Md
         values[option.key] = option if saved?(option)
       end
       String.build do |io|
-        io << "# md's settings: the View and Options menu choices, written when md quits\n"
+        io << "# md's settings: the Edit, Format, View and Options menu choices, written when md quits\n"
         io << "# and by Options → Save Config. Each entry is also a --<group>-<name>\n"
         io << "# option and an MD_* or CRYSTERM_* variable; md --help --verbose lists them.\n"
         io << YAML.build { |yaml| emit values, yaml }
@@ -266,7 +266,7 @@ module Md
     # else it can be set.
     def self.help : String
       banner = <<-BANNER
-        Settings: the View and Options menu choices. Each can also be set in
+        Settings: the Edit, Format, View and Options menu choices. Each can also be set in
         #{path.sub(Path.home.to_s, "~")} or by an MD_* environment variable; a pick in
         a menu is kept there (Options → Save Config).
         BANNER

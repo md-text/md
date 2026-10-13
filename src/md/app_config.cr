@@ -1,6 +1,6 @@
 module Md
   class App
-    # The choices kept across runs: the View and Options settings, which are
+    # The choices kept across runs: the Edit, Format, View and Options settings, which are
     # options in Crysterm's registry (`Md::Config`, `config.cr`), and the
     # pane sizes. When the app keeps the configuration (`config: true`; the
     # CLI does, specs do not, so a spec's picks stay its own), each choice's

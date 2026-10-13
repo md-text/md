@@ -425,7 +425,9 @@ edit made by md (Format, Replace, a paste with the mouse) reaches Neovim
 and is undone by `u` too. `:w` saves, `:w FILE` saves as FILE, `:q`
 closes the window as Window → Close Current does, asking about unsaved
 changes, `:q!` closes it without asking, `:qa` (`:qa!`) quits, and
-`:wq`, `:x` and `ZZ` save, then close. Neovim writes no file itself.
+`:wq`, `:x` and `ZZ` save, then close — a new document once it is
+named in the Save As question, staying open when that is cancelled.
+Neovim writes no file itself.
 
 Neovim starts with `--clean`, without your config, unless Options → Vi
 Mode: Use Neovim Config (`md.vi_config`) is on: then your
@@ -892,7 +894,7 @@ src/md/app_clipboard.cr copying and pasting; the clipboard modes
 src/md/app_edit.cr    Markdown-aware editing: lists continued and indented, the Format menu
 src/md/app_dialogs.cr the questions md asks, at the prompt or in a dialog (View → Dialog Style)
 src/md/app_caches.cr  Options → Clear Caches…
-src/md/app_config.cr  the View and Options choices linked to their options, the config file written
+src/md/app_config.cr  the menus' choices linked to their options, the config file written
 src/md/app_tips.cr    the menu entries' descriptions; where they show (View → Tooltips)
 src/md/app_windows.cr the Window menu: more windows on the document, in new terminal windows
 src/md/config.cr      the choices as Crysterm (Superconf) options; the config file (~/.config/md/config.yml)

@@ -263,6 +263,12 @@ module Md
       @items = [] of Int32
       @text_above = false
 
+      # Whether the scan is inside a fenced code block: after a fence that
+      # opened one, and not after the one that closed it.
+      def fenced? : Bool
+        !@fence.nil?
+      end
+
       # Whether *line* is a code block's, the scan moved past it.
       def code?(line : String) : Bool
         body = line.sub(QUOTE_MARKERS, "")
@@ -452,15 +458,14 @@ module Md
       editor = formatting_editor
       doc = editor.document
       first, last = selected_blocks
-      code = App.code_lines doc
-      if block = fenced_blocks(doc, code).find { |open, _, end_line| open <= last && end_line >= first }
+      if block = fenced_blocks(doc).find { |open, _, end_line| open <= last && end_line >= first }
         unfence doc, block[0], block[1]
       elsif !editor.selection? && doc.blocks[first].text.blank?
         at = doc.blocks[first].position
         doc.edit { Crysterm::TextCursor.new(doc, at, at + doc.blocks[first].size).insert_text "```\n\n```" }
         editor.text_cursor = Crysterm::TextCursor.new(doc, at + 4)
       else
-        first, last = code_paragraph(doc, code, first) unless editor.selection?
+        first, last = code_paragraph(doc, App.code_lines(doc), first) unless editor.selection?
         fence first, last
       end
       edited
@@ -1038,21 +1043,25 @@ module Md
     # for a block that runs to the end of the document, or that an outdent
     # ends inside a list item, its last line then the one before the
     # outdented line. A fence is a fence line (`FENCE`) that is no code
-    # block's own line (`.code_lines`), so a fence shown inside a block's
-    # code, or in an indented code block, does not count.
-    # *code* is `.code_lines` of the whole of *doc*.
-    private def fenced_blocks(doc : Crysterm::TextDocument, code : Array(Bool)) : Array({Int32, Int32?, Int32})
+    # block's own line (`.code_lines`' scan), so a fence shown inside a
+    # block's code, or in an indented code block, does not count; the scan
+    # tells a fence that closes a block from one an outdent ended the block
+    # on, which opens another.
+    private def fenced_blocks(doc : Crysterm::TextDocument) : Array({Int32, Int32?, Int32})
       blocks = [] of {Int32, Int32?, Int32}
+      scan = CodeScan.new
       open = nil
-      code.each_with_index do |is_code, i|
-        next if is_code
-        fence = FENCE.matches?(doc.blocks[i].text)
+      doc.block_count.times do |i|
+        text = doc.blocks[i].text
+        next if scan.code?(text)
+        fence = FENCE.matches?(text)
         if start = open
           # The first line after the opening fence that is no code ends
           # the block: its closing fence, or the line an outdent ended it on.
-          blocks << (fence ? {start, i, i} : {start, nil, i - 1})
+          closing = fence && !scan.fenced?
+          blocks << (closing ? {start, i, i} : {start, nil, i - 1})
           open = nil
-          next if fence
+          next if closing
         end
         open = i if fence
       end
@@ -1075,7 +1084,10 @@ module Md
         Crysterm::TextCursor.new(doc, from).insert_text "#{lead}```\n"
         nil
       end
-      shift = ->(at : Int32) { at >= from ? at + lead.size + 4 : at }
+      # Past the last line (a whole-line selection ends at the next line's
+      # start) a position moves over both fences, inside over the opening.
+      size = lead.size + 4
+      shift = ->(at : Int32) { at > to ? at + 2 * size : (at >= from ? at + size : at) }
       @editor.text_cursor = Crysterm::TextCursor.new(doc, shift.call(anchor), shift.call(position))
     end
 
@@ -1083,6 +1095,12 @@ module Md
     # *doc*, each with its line break; the editor's caret, or selection,
     # kept on the same text.
     private def unfence(doc : Crysterm::TextDocument, open : Int32, close : Int32?) : Nil
+      if close && close == open + 1 && close == doc.block_count - 1
+        # An empty block ending the document: the two fences go as one span,
+        # with the break before them, where two would overlap on it.
+        last = doc.blocks[close]
+        return replace_spans doc, [{Math.max(doc.blocks[open].position - 1, 0), last.position + last.size, ""}]
+      end
       spans = [line_span(doc, open)]
       close.try { |line| spans << line_span(doc, line) }
       replace_spans doc, spans

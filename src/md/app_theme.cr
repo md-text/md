@@ -85,7 +85,7 @@ module Md
 
     private def theme_label(theme : Theme) : String
       case theme
-      in .terminal?         then "&Terminal (Its Own Colors)"
+      in .terminal?         then "&Terminal Default"
       in .dark?             then "&Dark"
       in .light?            then "&Light"
       in .none?             then "&None"

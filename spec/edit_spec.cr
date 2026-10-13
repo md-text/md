@@ -468,6 +468,33 @@ describe "Md::App editing" do
     end
   end
 
+  it "keeps a whole-line selection on its lines when fencing them" do
+    with_app text: "a\nb\nc\n", view: false do |app|
+      doc = app.editor.document
+      select_text app, 0, doc.block_position(2) # "a\nb\n", up to c's start
+      app.toggle_code_block.should be_true
+      app.markdown.should eq "```\na\nb\n```\nc\n"
+      app.editor.text_cursor.selected_text.should eq "a\nb\n```\n"
+    end
+  end
+
+  it "takes the fences off a block opened on the line that outdented a list item's block" do
+    with_app text: "- item\n  ```\n  code\n```\nmore\n```\n", view: false do |app|
+      place app, 4, 2 # in the block the outdented fence opens
+      app.toggle_code_block.should be_true
+      app.markdown.should eq "- item\n  ```\n  code\nmore\n"
+    end
+  end
+
+  it "takes off an empty fenced block that ends the document" do
+    with_app text: "x\n```\n```", view: false do |app|
+      place app, 2, 1
+      app.toggle_code_block.should be_true
+      app.markdown.should eq "x"
+      app.editor.cursor_position.should eq 1
+    end
+  end
+
   it "promotes and demotes the heading on the caret's line" do
     with_app text: "## Title\n> ## quoted\n###### deep\n", view: false do |app, window|
       place app, 0, 3
