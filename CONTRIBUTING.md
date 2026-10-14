@@ -110,11 +110,19 @@ and, on one platform, Crystal nightly.
    git push origin main vX.Y.Z
    ```
 
-The *Release* workflow creates the GitHub release for the tag and attaches an
+3. Once the *Release* workflow has passed on the tag, publish the release:
+
+   ```sh
+   gh release create vX.Y.Z --verify-tag --title vX.Y.Z --generate-notes
+   ```
+
+Pushing the tag creates no release: the *Release* workflow only builds an
 archive per supported platform, with a SHA-256 checksum, holding the binary
-and the man page and completions it generated. The
-workflow can also be run by hand from the *Actions* tab against an existing
-tag, or without a tag to produce the archives as workflow artifacts only.
+and the man page and completions it generated, and keeps them as workflow
+artifacts. Publishing the release runs the workflow again for its tag, and
+that run attaches the archives to it. The workflow can also be run by hand
+from the *Actions* tab against a tag whose release exists, or without a tag
+to produce the archives as workflow artifacts only.
 
 ## License
 
