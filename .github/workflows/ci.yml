@@ -30,10 +30,10 @@ jobs:
       - name: Check out sibling dependencies
         run: |
           cd ..
-          git clone --depth 1 --branch v1.5.0 https://github.com/crystallabs/crysterm crysterm2
+          git clone --depth 1 --branch v1.6.0 https://github.com/crystallabs/crysterm crysterm2
           git clone --depth 1 --branch v2.3.0 https://github.com/crystallabs/tput.cr
-          git clone --depth 1 --branch v0.3.0 https://github.com/crystallabs/superconf.cr
-          git clone --depth 1 --branch v2.4.0 https://github.com/crystallabs/event_handler
+          git clone --depth 1 --branch v0.3.1 https://github.com/crystallabs/superconf.cr
+          git clone --depth 1 --branch v2.4.1 https://github.com/crystallabs/event_handler
           git clone --depth 1 --branch v0.1.2 https://github.com/crystallabs/pnggif
 
       - name: Update package index (Linux)
@@ -73,7 +73,7 @@ jobs:
         run: |
           bin/md --version
           bin/md --help
-          bin/md --export html README.md | grep -q '<h1>md</h1>'
+          bin/md --export html README.md | grep -qE '<h1( [^>]*)?>md</h1>'
           bin/md --generate man | grep -q '^\.TH MD 1'
           # The toolkit's options are read by md itself, with md's registered,
           # and a value that fits no option is a message, not a backtrace.

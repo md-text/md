@@ -11,11 +11,11 @@ shards:
 
   crysterm: # Overridden
     path: ../crysterm2
-    version: 1.5.0
+    version: 1.6.0
 
   event_handler: # Overridden
     path: ../event_handler
-    version: 2.4.0
+    version: 2.4.1
 
   gpm:
     git: https://github.com/crystallabs/gpm.cr.git
@@ -39,7 +39,7 @@ shards:
 
   superconf: # Overridden
     path: ../superconf.cr
-    version: 0.3.0
+    version: 0.3.1
 
   term-screen:
     git: https://github.com/crystal-term/screen.git
