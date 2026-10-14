@@ -1,5 +1,5 @@
 name: md
-version: 0.6.0
+version: 0.6.1
 
 authors:
   - Davor Ocelic <docelic@crystallabs.io>
@@ -20,7 +20,7 @@ targets:
 dependencies:
   crysterm:
     github: crystallabs/crysterm
-    version: ~> 1.0
+    version: ~> 1
 
 development_dependencies:
   ameba:
