@@ -43,7 +43,7 @@ module Md
     # cannot be listed: what `#frame_for` checks a remembered frame against,
     # so a window is not put on a display that is gone. Replaceable, so a
     # spec can stub the displays (`.desktop_screens` by default).
-    class_property screens : Proc(Array(Frame)?) = -> { desktop_screens }
+    class_property screens : Proc(Array(Frame)?) = -> : Array(Frame)? { desktop_screens }
 
     # The store every window of the process shares, loaded the first time it
     # is asked for. Replaceable, so a spec can use a scratch file.
