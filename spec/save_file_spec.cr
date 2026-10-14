@@ -29,6 +29,9 @@ describe Md::SaveFile do
       fresh = File.join(dir, "b.md")
       Md::SaveFile.write fresh, "made"
       File.read(fresh).should eq "made"
+      File.open(File.join(dir, "c.md"), "w") { } # what File.open makes of a new file
+      File.info(fresh).permissions.should eq File.info(File.join(dir, "c.md")).permissions
+      Dir.children(dir).sort.should eq ["a.md", "b.md", "c.md"] # the temporary file is gone
     end
   end
 

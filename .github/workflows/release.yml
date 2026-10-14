@@ -69,10 +69,10 @@ jobs:
       - name: Check out sibling dependencies
         run: |
           cd ..
-          git clone --depth 1 --branch v1.5.0 https://github.com/crystallabs/crysterm crysterm2
+          git clone --depth 1 --branch v1.6.0 https://github.com/crystallabs/crysterm crysterm2
           git clone --depth 1 --branch v2.3.0 https://github.com/crystallabs/tput.cr
-          git clone --depth 1 --branch v0.3.0 https://github.com/crystallabs/superconf.cr
-          git clone --depth 1 --branch v2.4.0 https://github.com/crystallabs/event_handler
+          git clone --depth 1 --branch v0.3.1 https://github.com/crystallabs/superconf.cr
+          git clone --depth 1 --branch v2.4.1 https://github.com/crystallabs/event_handler
           git clone --depth 1 --branch v0.1.2 https://github.com/crystallabs/pnggif
 
       # The build runs in the Crystal Alpine image via docker so that the

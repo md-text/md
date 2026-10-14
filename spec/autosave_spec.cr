@@ -97,7 +97,7 @@ describe "Md::App auto-save" do
           copy = File.join(dir, path.gsub('%', "%25").gsub('/', "%2F"))
           app.recovery_path.should eq copy
           settle { File.exists? copy }
-          File.read(copy).should eq "edited text\n"
+          File.read(copy).should eq "edited text\n"         # written whole, never seen empty
           File.read(path).should eq "text\n"                # the file is the user's to write
           Dir.children(dir).should eq [File.basename(copy)] # the temporary file is gone
 

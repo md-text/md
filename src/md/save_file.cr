@@ -6,6 +6,9 @@ module Md
   # and group; a symbolic link is followed and its target written, the link
   # left a link.
   #
+  # A target not there yet is made the same way, so it is never seen
+  # part-written, with the permissions any new file gets.
+  #
   # Where a rename cannot keep the file what it was, the text is written in
   # place instead (`QSaveFile::setDirectWriteFallback`): a target with other
   # hard links, which a rename would part from them; one that is not a
@@ -22,13 +25,14 @@ module Md
     # `File::AccessDeniedError`, as for `File.write`, rather than replaced.
     def self.write(path : String, text : String) : Nil
       target = target(path)
-      # A new file is written where it goes: there is nothing before it to
-      # keep, and it gets the permissions any new file does.
-      return write_in_place(target, text) unless info = File.info?(target)
-      unless File::Info.writable?(target)
-        raise File::Error.from_os_error("Cannot write file", Errno::EACCES, file: target)
+      # A new file goes through a temporary one as well, so that it never
+      # shows up part-written; it gets the permissions any new file does.
+      if info = File.info?(target)
+        unless File::Info.writable?(target)
+          raise File::Error.from_os_error("Cannot write file", Errno::EACCES, file: target)
+        end
+        return write_in_place(target, text) unless info.file? && single_link?(target)
       end
-      return write_in_place(target, text) unless info.file? && single_link?(target)
       begin
         # A fresh name, readable by md alone until it takes the target's
         # permissions.
@@ -40,11 +44,15 @@ module Md
       end
       begin
         begin
-          made = File.info(file.path)
-          unless made.owner_id == info.owner_id && made.group_id == info.group_id
-            File.chown file.path, info.owner_id.to_i, info.group_id.to_i
+          if info
+            made = File.info(file.path)
+            unless made.owner_id == info.owner_id && made.group_id == info.group_id
+              File.chown file.path, info.owner_id.to_i, info.group_id.to_i
+            end
+            File.chmod file.path, info.permissions
+          else
+            File.chmod file.path, new_file_permissions
           end
-          File.chmod file.path, info.permissions
         rescue File::Error
           file.delete
           file.close
@@ -79,6 +87,14 @@ module Md
         # refuses an `fsync` of one.
         file.fsync if file.info.file?
       end
+    end
+
+    # The permissions `File.open` gives a new file: 0o666 less the umask.
+    # The umask can only be read by setting it, so it is put back at once.
+    private def self.new_file_permissions : File::Permissions
+      mask = LibC.umask(0o022)
+      LibC.umask(mask)
+      File::Permissions.new(0o666 & ~mask.to_i)
     end
 
     # Whether the file at *path* has no other hard link.
