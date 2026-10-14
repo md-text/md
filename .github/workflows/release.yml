@@ -104,13 +104,17 @@ jobs:
       # statically, by putting a directory holding only their .a files first
       # in the linker's search path, so that the binary depends on nothing
       # but the libraries that ship with the system (libedit, libiconv, libz,
-      # libutil, libSystem).
+      # libutil, libSystem). libcrypto (Digest::SHA256) comes from OpenSSL 3,
+      # and PKG_CONFIG_PATH names it too, so that Crystal's bindings are
+      # compiled for the version linked rather than for the OpenSSL 1.1 that
+      # install-crystal points pkg-config at.
       - name: Build binary (macOS)
         if: matrix.os == 'macos'
         run: |
-          brew install unibilium libyaml pcre2 bdw-gc
+          brew install unibilium libyaml pcre2 bdw-gc openssl@3
+          export PKG_CONFIG_PATH="$(brew --prefix openssl@3)/lib/pkgconfig"
           mkdir static
-          for lib in unibilium/libunibilium libyaml/libyaml pcre2/libpcre2-8 bdw-gc/libgc; do
+          for lib in unibilium/libunibilium libyaml/libyaml pcre2/libpcre2-8 bdw-gc/libgc openssl@3/libcrypto; do
             prefix="$(brew --prefix "${lib%/*}")"
             ln -s "$prefix/lib/${lib#*/}.a" static/
           done
