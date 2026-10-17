@@ -9,6 +9,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- An Insert menu (`Alt-S`), between Edit and Format, puts Markdown's syntax
+  in as templates, the first placeholder selected to type over: Heading
+  (levels 1–6), Table (a list of sizes, or Custom Size…, asking for columns
+  × rows), Link, Image, Footnote (numbered, its definition at the end of the
+  document), Bulleted and Numbered List, Blockquote, Alert (GitHub's
+  `> [!NOTE]` and the rest) and Horizontal Rule. A block goes on a blank
+  line, or after the caret's paragraph, apart by blank lines. Each entry is
+  also a command (`insert-table-3x3`, `insert-link`, …).
 - `md --export html` writes a GFM alert (`> [!NOTE]` …) as github.com
   renders it, a `<div class="markdown-alert markdown-alert-note">` with its
   title, and `--export text` starts its lines with the title chip the viewer
@@ -485,6 +493,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - View → Theme is now View → CSS/QSS Theme.
+- As a Task and Toggle Task Checkbox (`Alt-X`) are in the Insert menu, where
+  they were in Format.
 - A backward search (`?`, `N` after `/`) skipped a match the cursor was
   inside and went to the one before it; it now finds that match, from its
   start, as Vim's `?` and Qt's backward find do, and steps back from there

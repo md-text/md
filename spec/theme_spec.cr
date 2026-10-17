@@ -12,7 +12,7 @@ end
 
 # The View → CSS/QSS Theme entries.
 private def theme_entries(app) : Array(Crysterm::Action)
-  view = app.main.menu_bar.menus[3]
+  view = app.main.menu_bar.menus[4]
   submenu = view.actions.find! { |action| action.text == "CSS/QSS The&me" }
   submenu.menu || [] of Crysterm::Action
 end

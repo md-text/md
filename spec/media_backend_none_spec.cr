@@ -7,7 +7,7 @@ describe "Md::App media backend None" do
   it "offers None after Auto, with a tooltip saying what it does, and draws no pictures under it" do
     text = "# Title\n\n![Peak](matterhorn.png \"The Matterhorn\")\n\nAfter\n"
     with_app Md::Source.new(path: "#{__DIR__}/../matterhorn.md"), text: text, view: true do |app, window|
-      entries = menu(app, 3).actions.find!(&.text.==("Media &Backend")).menu.should_not(be_nil).reject(&.separator?)
+      entries = menu(app, 4).actions.find!(&.text.==("Media &Backend")).menu.should_not(be_nil).reject(&.separator?)
       none = entries.find!(&.text.==("Non&e"))
       entries.index!(none).should eq entries.index!(&.text.starts_with?("&Auto")) + 1
       none.enabled?.should be_true

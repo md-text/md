@@ -215,7 +215,7 @@ describe "Md::App config menu" do
         app.text_width.should eq 72
         app.pane_sizes.should eq [20, 40, 25]
         app.theme.should eq Md::App::Theme::Dark
-        rulers = menu(app, 3).actions.find!(&.text.==("R&ulers")).menu || fail("no Rulers submenu")
+        rulers = menu(app, 4).actions.find!(&.text.==("R&ulers")).menu || fail("no Rulers submenu")
         rulers.map(&.checked?).should eq [true, true]
 
         app.load_config_prompt
@@ -228,16 +228,16 @@ describe "Md::App config menu" do
   it "saves on request, to the config file or elsewhere" do
     with_config do |path|
       with_app config: true do |app|
-        options = menu(app, 4).actions.map(&.text)
+        options = menu(app, 5).actions.map(&.text)
         options.should eq ["&Overwrite Mode", "&Ask Before Discarding Changes", "A&uto-Save", "Keep a &Backup File", "&Watch File", "&Mouse", "&Clipboard", "Lin&ks", "Resi&zable Panes", "No An&imations", "D&etachable Menus", "Vi Mode: Use &Neovim Config", "", "&Load Config…", "&Save Config", "Sa&ve Config As…", "", "Clea&r Caches…"]
         app.guides = true
-        menu(app, 4).actions.find!(&.text.==("&Save Config")).trigger
+        menu(app, 5).actions.find!(&.text.==("&Save Config")).trigger
         notice(app).should eq " Saved #{path}"
         config_file(path)["md"]["guides"].as_bool.should be_true
         config_file(path)["md"]["pane_sizes"].as_s.should eq "0,0,#{Md::App::TOC_WIDTH}"
 
         other = File.join(File.dirname(path), "copy.yml")
-        menu(app, 4).actions.find!(&.text.==("Sa&ve Config As…")).trigger
+        menu(app, 5).actions.find!(&.text.==("Sa&ve Config As…")).trigger
         answer app, other
         notice(app).should eq " Saved #{other}"
         config_file(other)["md"]["guides"].as_bool.should be_true

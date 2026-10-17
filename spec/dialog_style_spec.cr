@@ -17,7 +17,7 @@ describe "Md::App dialog style" do
     with_config do
       with_app config: true do |app|
         app.dialog_style.should eq Md::App::DialogStyle::LinePrompt
-        styles = menu(app, 3).actions.find!(&.text.==("&Dialog Style")).menu || [] of Crysterm::Action
+        styles = menu(app, 4).actions.find!(&.text.==("&Dialog Style")).menu || [] of Crysterm::Action
         styles.map(&.text).should eq ["&Modal Dialogs", "&Line Prompts"]
         styles.map(&.checked?).should eq [false, true]
         styles[0].trigger

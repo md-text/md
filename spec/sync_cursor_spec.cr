@@ -80,7 +80,7 @@ describe "Md::App sync cursor" do
       app.show_pane Md::App::Pane::Viewer
       app.editor.focus
       window.repaint
-      follow = menu(app, 3).actions.find!(&.text.==("S&ync Cursor"))
+      follow = menu(app, 4).actions.find!(&.text.==("S&ync Cursor"))
       follow.text.should eq "S&ync Cursor"
       follow.checked?.should be_false
       follow.trigger

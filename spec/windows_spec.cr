@@ -5,7 +5,7 @@ require "./spec_helper"
 # `Crysterm::Application`.
 
 private def window_menu(app)
-  menu(app, 5)
+  menu(app, 6)
 end
 
 describe "Md::App windows" do

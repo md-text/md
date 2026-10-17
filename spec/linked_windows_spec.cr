@@ -8,7 +8,7 @@ LONG = (1..80).map { |number| "Line #{number} of the document." }.join('\n') + "
 PARAGRAPHS = (1..80).map { |number| "Line #{number} of the document." }.join("\n\n") + "\n"
 
 private def window_menu(app)
-  menu(app, 5)
+  menu(app, 6)
 end
 
 # An opener of headless windows *width* by *height* cells, smaller than

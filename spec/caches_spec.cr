@@ -120,7 +120,7 @@ describe "Md::App clear caches" do
       history.touch "a.md", 1, 1, true
       history.touch "b.md", 12, 3, true
       with_app history: history do |app|
-        entry = menu(app, 4).actions.find!(&.text.==("Clea&r Caches…"))
+        entry = menu(app, 5).actions.find!(&.text.==("Clea&r Caches…"))
         entry.trigger
         # Every count is given, a position being a place other than a file's start.
         question(app).should eq "Clear the recent files (2), positions (1), and recovery files (1)? (y)es, (n)o: "

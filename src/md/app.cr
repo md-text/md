@@ -329,18 +329,7 @@ module Md
         sync_to_viewer if @viewer.focused? && !@mirroring
         track_toc unless @editor.focused? || @mirroring
       end
-      # A scroll of the leading pane (the wheel, which focuses the pane it
-      # turns over, or the scroll bar) reports no caret move, yet leaves the
-      # caret elsewhere on the viewport, or past its edge: the other pane
-      # follows it there too. Not in the middle of an edit, whose own scroll
-      # comes before the viewer has the new text; the edit re-places the
-      # viewer's caret once it has (`#render_viewer`).
-      @editor.on(Crysterm::Event::Scroll) do
-        sync_to_editor if @editor.focused? && !@mirroring && @seen_revision == @document.revision
-      end
-      @viewer.on(Crysterm::Event::Scroll) do
-        sync_to_viewer if @viewer.focused? && !@mirroring && @seen_revision == @document.revision
-      end
+      follow_scrolls
       @toc.on(Crysterm::Event::AnchorClick) { |e| jump_to e.url }
       wire_links
       wire_editing
@@ -350,6 +339,21 @@ module Md
         doc = @viewer.document
         @toc.document = doc unless @toc.document.same? doc
         apply_base_url
+      end
+    end
+
+    # A scroll of the leading pane (the wheel, which focuses the pane it
+    # turns over, or the scroll bar) reports no caret move, yet leaves the
+    # caret elsewhere on the viewport, or past its edge: the other pane
+    # follows it there too. Not in the middle of an edit, whose own scroll
+    # comes before the viewer has the new text; the edit re-places the
+    # viewer's caret once it has (`#render_viewer`).
+    private def follow_scrolls : Nil
+      @editor.on(Crysterm::Event::Scroll) do
+        sync_to_editor if @editor.focused? && !@mirroring && @seen_revision == @document.revision
+      end
+      @viewer.on(Crysterm::Event::Scroll) do
+        sync_to_viewer if @viewer.focused? && !@mirroring && @seen_revision == @document.revision
       end
     end
 

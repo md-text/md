@@ -84,10 +84,10 @@ module Md
     # `QPlainTextEdit` (`tabChangesFocus` is off by default): `F1`–`F3` and
     # the mouse put the focus elsewhere.
     #
-    # Format → As a Task, a check entry, gives a list item a task box, or
+    # Insert → As a Task, a check entry, gives a list item a task box, or
     # takes off the one it has: `- item` ⇄ `- [ ] item`; its check shows
     # whether the caret's item is a task, read as the menu opens
-    # (`#refresh_task_entry`, Qt's `aboutToShow`). Format → Toggle Task
+    # (`#refresh_task_entry`, Qt's `aboutToShow`). Insert → Toggle Task
     # Checkbox (`Alt-X`) ticks the box and unticks it, `- [ ] item` ⇄
     # `- [x] item`; an item without a box gets one ticked. A task box
     # belongs on a list item, so both make a line of text one first: `text`
@@ -148,7 +148,7 @@ module Md
     # editor at the source of the viewer's caret, showing the editor when
     # it is hidden.
 
-    # The Format → As a Task entry, whose check follows the caret's item.
+    # The Insert → As a Task entry, whose check follows the caret's item.
     @task_action : Crysterm::Action?
 
     # Whether the editor had the focus last of the panes (`#editor_leads?`).
@@ -693,7 +693,7 @@ module Md
       true
     end
 
-    # Format → As a Task: a task box on the caret's list item, or on every
+    # Insert → As a Task: a task box on the caret's list item, or on every
     # list item of the selection — `[ ] ` added to an item without one, and
     # taken off an item that has one; a line of text is made an item with a
     # box (`#edit_task_items`), the `[ ]` or `[x]` it starts with, if any,
@@ -709,7 +709,7 @@ module Md
       end
     end
 
-    # Format → Toggle Task Checkbox: the box ticked when empty and emptied when
+    # Insert → Toggle Task Checkbox: the box ticked when empty and emptied when
     # ticked, on the same items; an item without a box gets a ticked one,
     # so a plain item is done in one key, and a line of text made an item
     # has its box ticked. Likewise.
@@ -1005,8 +1005,8 @@ module Md
       named "italic", tip format.add_action("&Italic", shortcut: "Alt+I") { toggle_italic }, "Put * around the selection or the word at the caret, or take it off"
       named "code", tip format.add_action("&Code", shortcut: "Alt+C") { toggle_code }, "Put backticks around the selection or the word at the caret, or take them off"
       named "code-block", tip format.add_action("Code B&lock") { toggle_code_block }, "Put ``` fences around the selection's lines or the caret's paragraph, or an empty block on a blank line; inside a fenced block, take its fences off"
-      # Then the entries for whole lines: their indentation, their task
-      # boxes, their heading level.
+      # Then the entries for whole lines: their indentation, their heading
+      # level (their task boxes are Insert's, `app_insert.cr`).
       format.add_separator
       indent = named "indent", tip format.add_action("I&ndent", shortcut: "Tab") { indent_lines 1 }, "Indent the caret's line or the selection's lines; a list item nests under the one above"
       outdent = named "outdent", tip format.add_action("&Outdent", shortcut: "Shift+Tab") { indent_lines -1 }, "Outdent the caret's line or the selection's lines, one level or four spaces"
@@ -1016,17 +1016,6 @@ module Md
         action.shortcut_context = Crysterm::Action::ShortcutContext::Widget
         @editor.add_action action
       end
-      format.add_separator
-      # The check is the caret's item's, read as the menu opens; picking the
-      # entry flips it and the box with it.
-      task = Crysterm::Action.new "As a &Task", checkable: true, name: "task"
-      # With no item nor text to make one of, nothing changes, and the
-      # check flipped by the pick is put back.
-      task.on(Crysterm::Event::Triggered) { refresh_task_entry unless toggle_task_box }
-      format.add_action tip(task, "Give the caret's list item a task box, [ ], or take it off, making a line of text an item first; the selection's items too")
-      @task_action = task
-      format.on(Crysterm::Event::AboutToShow) { refresh_task_entry }
-      named "toggle-task", tip format.add_action("Toggle Task Chec&kbox", shortcut: "Alt+X") { check_task }, "Tick the caret's task box, or empty it; an item without a box, or a line of text, gets a ticked one"
       format.add_separator
       named "promote-heading", tip format.add_action("&Promote Heading", shortcut: "Ctrl+Up") { promote_heading }, "Take one # off the heading of the caret's section, from anywhere in it; a # heading becomes a paragraph"
       named "demote-heading", tip format.add_action("&Demote Heading", shortcut: "Ctrl+Down") { demote_heading }, "Add a # to the heading of the caret's section, from anywhere in it, down to ######; before any heading, the caret's line becomes a # heading"
@@ -1061,7 +1050,7 @@ module Md
       "Re&wrap (to #{wrap_column} Columns)"
     end
 
-    # Puts the caret's item's state on the Task entry as the Format menu
+    # Puts the caret's item's state on the Task entry as the Insert menu
     # opens: checked when the item at the caret — the first list item of
     # the selection, when there is one — has a task box; unchecked on an
     # item without one, and on a line that is no item. Read without moving

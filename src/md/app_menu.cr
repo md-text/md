@@ -111,6 +111,7 @@ module Md
       named "next-heading", tip edit.add_action("Nex&t Heading", shortcut: "Alt+Down") { jump_heading 1 }, "Jump to the next heading"
       named "previous-heading", tip edit.add_action("Pre&vious Heading", shortcut: "Alt+Up") { jump_heading -1 }, "Jump to the previous heading"
 
+      build_insert_menu bar
       build_format_menu bar
 
       view = bar.add_menu "&View"

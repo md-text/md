@@ -5,7 +5,7 @@ require "./spec_helper"
 # modified flag and one unsaved-changes question.
 
 private def window_menu(app)
-  menu(app, 5)
+  menu(app, 6)
 end
 
 describe "Md::App windows on one document" do

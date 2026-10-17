@@ -26,9 +26,9 @@ end
 
 # Tears the View menu off by a drag of its strip and returns the copy.
 private def tear_off_view(app, window) : Menu
-  app.main.menu_bar.open_menu 3
+  app.main.menu_bar.open_menu 4
   window.repaint
-  handle = handle_of(menu(app, 3)) || fail("the View menu shows no tear-off strip")
+  handle = handle_of(menu(app, 4)) || fail("the View menu shows no tear-off strip")
   x, y = handle.aleft, handle.atop
   mouse window, Tput::Mouse::Action::Move, x, y, Tput::Mouse::Button::None
   mouse window, Tput::Mouse::Action::Down, x, y
@@ -47,14 +47,14 @@ end
 describe "Md::App detachable menus" do
   it "toggles the option from the Options entry" do
     with_app do |app|
-      entry = menu(app, 4).actions.find!(&.text.==("D&etachable Menus"))
+      entry = menu(app, 5).actions.find!(&.text.==("D&etachable Menus"))
       entry.checked?.should be_false
       app.tear_off_menus?.should be_false
-      menu(app, 3).tear_off_enabled?.should be_false
+      menu(app, 4).tear_off_enabled?.should be_false
       entry.trigger
       app.tear_off_menus?.should be_true
       Crysterm::Config.menu_tear_off.should be_true
-      menu(app, 3).tear_off_enabled?.should be_true
+      menu(app, 4).tear_off_enabled?.should be_true
       app.tear_off_menus = false
       entry.checked?.should be_false
       Crysterm::Config.menu_tear_off.should be_false
@@ -65,21 +65,21 @@ describe "Md::App detachable menus" do
 
   it "shows the strip on the View menu, tears a working copy off it, and closes it by its mark" do
     with_app Md::Source.new(path: "doc.md"), text: "# T\n\ntext\n", view: true do |app, window|
-      app.main.menu_bar.open_menu 3
+      app.main.menu_bar.open_menu 4
       window.repaint
-      handle_of(menu(app, 3)).should be_nil
+      handle_of(menu(app, 4)).should be_nil
       app.main.menu_bar.close
       app.tear_off_menus = true
       torn = tear_off_view(app, window)
-      torn.actions.map(&.text).should eq menu(app, 3).actions.map(&.text)
-      menu(app, 3).visible?.should be_false # the chain went down as on a leaf activation
+      torn.actions.map(&.text).should eq menu(app, 4).actions.map(&.text)
+      menu(app, 4).visible?.should be_false # the chain went down as on a leaf activation
       app.main.menu_bar.open_index.should be_nil
 
       app.sync_cursor?.should be_false
       click_row window, torn, "S&ync Cursor"
       app.sync_cursor?.should be_true
       torn.actions.find!(&.text.==("S&ync Cursor")).checked?.should be_true
-      menu(app, 3).actions.find!(&.text.==("S&ync Cursor")).checked?.should be_true # the same action
+      menu(app, 4).actions.find!(&.text.==("S&ync Cursor")).checked?.should be_true # the same action
       torn.visible?.should be_true
       click_row window, torn, "S&ync Cursor"
       app.sync_cursor?.should be_false
@@ -113,7 +113,7 @@ describe "Md::App detachable menus" do
     with_config "menu:\n  tear_off: true\n" do |path|
       with_app config: true do |app|
         app.tear_off_menus?.should be_true
-        menu(app, 3).tear_off_enabled?.should be_true
+        menu(app, 4).tear_off_enabled?.should be_true
         Md::Config.dirty?.should be_false
         app.tear_off_menus = false
         Md::Config.dirty?.should be_true

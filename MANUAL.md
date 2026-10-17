@@ -73,7 +73,7 @@ runs too.
 | `F5`               | Cycle the mouse mode (the `🖱=` field)                                    |
 | `F6`               | Cycle the theme: terminal, dark, light and the five Qt themes (View → CSS/QSS Theme) |
 | `Ctrl-Z`           | Outside the editor, suspend md to the shell (`fg` resumes); in the editor, undo |
-| `Alt-F`, `Alt-E`, `Alt-M`, `Alt-V`, `Alt-O`, `Alt-N`, `Alt-P` | Open the File, Edit, Format, View, Options, Window and Help menus (`F10` too) |
+| `Alt-F`, `Alt-E`, `Alt-S`, `Alt-M`, `Alt-V`, `Alt-O`, `Alt-N`, `Alt-P` | Open the File, Edit, Insert, Format, View, Options, Window and Help menus (`F10` too) |
 | `Alt-W`            | Soft Wrap in the editor on and off (Format → Soft Wrap)                     |
 | `Shift` + `Left`, `Right`, `Up`, `Down`, `Home`, `End`, `PageUp`, `PageDown` | Select from the cursor, in the editor and in the viewer |
 | `Ctrl-Home`, `Ctrl-End` | Go to the start and the end of the document, in the editor and in the viewer |
@@ -93,7 +93,7 @@ runs too.
 | `Alt-Left`, `Alt-Right` | Previous File and Next File (File → Previous File, Next File); in the editor and the viewer these move by word instead |
 | `Enter`            | In the editor, on a list item: continue the list (an empty item ends it) |
 | `Ctrl-B`, `Alt-I`, `Alt-C` | Bold, italic and code around the selection or the word at the caret, or off again (Format → Bold, Italic, Code) |
-| `Alt-X`            | Tick or untick a list item's task box, or give it a ticked one, a line of text becoming an item (Format → Toggle Task Checkbox; Format → As a Task, a check entry, adds and removes the box) |
+| `Alt-X`            | Tick or untick a list item's task box, or give it a ticked one, a line of text becoming an item (Insert → Toggle Task Checkbox; Insert → As a Task, a check entry, adds and removes the box) |
 | `Ctrl-Up`, `Ctrl-Down` | Promote or demote the heading of the caret's section, from the heading or anywhere in its text (Format → Promote Heading, Demote Heading) |
 | `Alt-Q`            | Refill the paragraph at the caret, or the selected paragraphs, to the wrap column (Format → Rewrap → Paragraph; Rewrap → Document refills them all) |
 | `Ctrl-N`           | Open another window on this document (the same text, edited in either), in a new terminal window (Window → New) |
@@ -147,10 +147,12 @@ well, next to the overwrite mode. The File menu opens, reloads, closes, saves,
 saves as and quits, lists the recently opened files and retraces the files
 left (Previous File, Next File); the Edit menu copies, pastes, searches,
 replaces, runs md's commands, goes to a line, jumps between headings and
-turns Vi Mode on; the Format menu marks
+turns Vi Mode on; the Insert menu puts templates of Markdown's syntax in —
+headings, tables, links, images, footnotes, lists, quotes, alerts, rules —
+and makes tasks of list items; the Format menu marks
 up the source (see Editing Markdown below) — the markup around text first
 (Bold, Italic, Code, Code Block), then what works on whole lines (Indent and
-Outdent, the task entries, the heading level), then the wrapping (Soft Wrap,
+Outdent, the heading level), then the wrapping (Soft Wrap,
 Hard Wrap, Text Width and Rewrap); the View menu shows and hides the panes.
 
 Every menu entry has a one-sentence description of what it does. While a
@@ -328,10 +330,10 @@ selected, so a second press undoes the first. Format → Code Block puts
 the selected lines, or the paragraph at the caret, between ```` ``` ````
 fences (inside a quote, the fences carry its `> `), drops an empty fenced
 block on a blank line with the caret inside it, and takes the fences off
-again when the caret is anywhere in a fenced block. Format → As a Task, a
+again when the caret is anywhere in a fenced block. Insert → As a Task, a
 check entry whose check shows whether the item at the caret is a task when
 the menu opens, gives a list item a `[ ]` box and takes it off again;
-Format → Toggle Task Checkbox (`Alt-X`) ticks the box `[x]` and unticks it,
+Insert → Toggle Task Checkbox (`Alt-X`) ticks the box `[x]` and unticks it,
 and gives an item without a box a ticked one. A task box belongs on a list
 item, so on a line of text that is no item both make it one first, `text`
 becoming `- [ ] text` (a selection's lines of text each, when it holds no
@@ -362,13 +364,33 @@ at level 2 with a notice, since a task item has no heading below that.
 Before the first heading, Demote makes the caret's line a `#` heading, or
 puts `===` under a task item's text. Each change is one undo step.
 
+The Insert menu (`Alt-S`) puts Markdown's syntax into the text as a
+template, its first placeholder selected so that typing replaces it:
+Heading (levels 1 to 6, `## Heading`), Table, Link (`[text](url)`), Image
+(`![alt text](url)`), Footnote, Bulleted and Numbered List (`- Item`,
+`1. Item`), Blockquote (`> Quote`), Alert (GitHub's `> [!NOTE]`, Tip,
+Important, Warning and Caution) and Horizontal Rule (`---`), with As a Task
+and Toggle Task Checkbox (above) after them. Table offers a list of sizes,
+columns by rows under the header row, and Custom Size…, which asks for one
+as `3x4` (`3 × 4` and `3 4` do too), offering the size asked for last; the
+header cells read `Column 1`, `Column 2` and so on, and the body cells are
+blank, as wide as the header's. A block — a heading, a table, a list item,
+a quote, an alert, a rule — goes on the caret's line when that is blank, and
+after the caret's paragraph otherwise, a blank line kept between it and the
+text on either side (a `---` right under a line of text would make that line
+a heading); inside a code block nothing goes in, with a notice. Link and
+Image take the selection as their text, `url` then selected instead, and
+Footnote puts a reference numbered one past the document's highest, `[^2]`,
+after the caret and its definition, `[^2]: Footnote`, at the end of the
+document, `Footnote` selected there. Each is one undo step.
+
 The keys are not all Qt's: `Ctrl-B` is, but a terminal sends the same byte
 for `Ctrl-I` and `Tab`, and cannot tell `Ctrl-Shift-X` from `Ctrl-X`, so
 Italic, Code and Toggle Task Checkbox use `Alt` chords the editor does not
 (`Alt-B` and `Alt-F` are its readline word moves). Indent and Outdent show
-`Tab` and `Shift+Tab`, keys that are theirs in the editor alone. The Format
-menu works from any pane: chosen while reading, it edits the source of the
-viewer's caret, showing the editor if it is hidden.
+`Tab` and `Shift+Tab`, keys that are theirs in the editor alone. The Insert
+and Format menus work from any pane: chosen while reading, they edit the
+source of the viewer's caret, showing the editor if it is hidden.
 
 ### Vi Mode
 
@@ -862,7 +884,8 @@ command, and so is every key no entry has:
 | -------- | - |
 | `open`, `reload`, `close`, `previous-file`, `next-file`, `save`, `save-as`, `export-html`, `export-text`, `quit` | The File menu |
 | `copy`, `copy-as-markdown`, `paste`, `paste-from-terminal`, `paste-from-command`, `paste-from-internal`, `find`, `find-backward`, `find-next`, `find-previous`, `replace`, `clear-search-highlights`, `command`, `go-to-line`, `next-heading`, `previous-heading`, `vi-mode` | The Edit menu, and `?` |
-| `bold`, `italic`, `code`, `code-block`, `indent`, `outdent`, `task`, `toggle-task`, `promote-heading`, `demote-heading`, `soft-wrap`, `hard-wrap`, `rewrap-paragraph`, `rewrap-document` | The Format menu (`soft-wrap` and `hard-wrap` turn their setting on or off) |
+| `insert-heading-1` … `insert-heading-6`, `insert-table-2x2` (and the other sizes listed), `insert-table-custom`, `insert-link`, `insert-image`, `insert-footnote`, `insert-bulleted-list`, `insert-numbered-list`, `insert-blockquote`, `insert-alert-note` (`-tip`, `-important`, `-warning`, `-caution`), `insert-rule`, `task`, `toggle-task` | The Insert menu |
+| `bold`, `italic`, `code`, `code-block`, `indent`, `outdent`, `promote-heading`, `demote-heading`, `soft-wrap`, `hard-wrap`, `rewrap-paragraph`, `rewrap-document` | The Format menu (`soft-wrap` and `hard-wrap` turn their setting on or off) |
 | `editor`, `viewer`, `toc`, `bars`, `sync-cursor`, `highlight-line`, `line-numbers`, `viewer-line-numbers`, `center-text`, `horizontal-ruler`, `vertical-ruler`, `guides`, `images`, `media-trial` | The View menu's check entries: each turns its setting on or off |
 | `overwrite-mode`, `confirm-discard`, `autosave`, `backup-file`, `watch-file`, `link-double-click`, `open-local-programs`, `resizable-panes`, `reduced-motion`, `detachable-menus`, `vi-config`, `load-config`, `save-config`, `save-config-as`, `clear-caches` | The Options menu |
 | `new-window`, `close-window`, `remember-window-positions`, `manual`, `about` | The Window and Help menus |

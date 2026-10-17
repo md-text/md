@@ -20,10 +20,10 @@ end
 
 # Opens the View menu with its first entry highlighted, the keyboard way.
 private def open_view(app, window)
-  app.main.menu_bar.open_menu 3
+  app.main.menu_bar.open_menu 4
   window.repaint
-  menu(app, 3).select_first_action
-  menu(app, 3)
+  menu(app, 4).select_first_action
+  menu(app, 4)
 end
 
 describe "Md::App tooltips" do
@@ -47,11 +47,11 @@ describe "Md::App tooltips" do
 
   it "derives a setting's description from its option, written once" do
     with_app do |app|
-      view = menu(app, 3)
+      view = menu(app, 4)
       sync = view.actions.find!(&.text.==("S&ync Cursor"))
       sync.status_tip.should eq " Keep the editor's and the viewer's carets on the same place in the document"
       sync.tool_tip.should eq "Keep the editor's and the viewer's carets on the same place in the document"
-      tooltips = menu(app, 3).actions.find!(&.text.==("T&ooltips"))
+      tooltips = menu(app, 4).actions.find!(&.text.==("T&ooltips"))
       tooltips.tool_tip.should eq Crysterm::Config["md.tooltips"].description.split(": ", 2).last.sub(/\A./, &.upcase)
       (tooltips.menu || fail("Tooltips has no submenu")).map(&.text).should eq ["In &Status Bar", "As a &Popup", "&Never"]
     end
@@ -72,7 +72,7 @@ describe "Md::App tooltips" do
 
   it "gives every entry of every menu and submenu a description" do
     with_app Md::Source.new(path: "doc.md"), text: "# T\n\ntext\n", view: true, history: Md::History.new(tempfile(nil)) do |app|
-      app.main.menu_bar.menus.size.should eq 7
+      app.main.menu_bar.menus.size.should eq 8
       all = app.main.menu_bar.menus.flat_map { |bar_menu| walk bar_menu.actions }
       all.size.should be > 100
       all.each do |action|
@@ -121,7 +121,7 @@ describe "Md::App tooltips" do
       # The submenus, built on each open, inherit the choice.
       app.main.menu_bar.open_menu 4
       window.repaint
-      options = menu(app, 4)
+      options = menu(app, 5)
       options.select_first_action
       until options.selected_action.try(&.text) == "&Mouse"
         options.handle_key_press Crysterm::Event::KeyPress.new('\0', Tput::Key::Down)
@@ -166,7 +166,7 @@ describe "Md::App tooltips" do
         app.tooltips.should eq Md::App::Tooltips::Popup
         app.main.status_tips?.should be_false
         app.main.menu_bar.menus.all?(&.tool_tips_visible?).should be_true
-        entries = menu(app, 3).actions.find!(&.text.==("T&ooltips")).menu || fail("Tooltips has no submenu")
+        entries = menu(app, 4).actions.find!(&.text.==("T&ooltips")).menu || fail("Tooltips has no submenu")
         entries.map(&.checked?).should eq [false, true, false]
         entries[2].trigger
         app.tooltips.should eq Md::App::Tooltips::Off

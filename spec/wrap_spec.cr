@@ -27,7 +27,7 @@ describe "Md::App text layout" do
       app.editor.cursor_viewport_row.should be > 0 # folded over several rows
       app.editor.show_horizontal_scrollbar?.should be_false
 
-      wrap = menu(app, 2).actions.find!(&.text.==("&Soft Wrap"))
+      wrap = menu(app, 3).actions.find!(&.text.==("&Soft Wrap"))
       wrap.text.should eq "&Soft Wrap"
       wrap.checked?.should be_true
       wrap.shortcut_text.should eq "Alt+W"
@@ -52,7 +52,7 @@ describe "Md::App text layout" do
       window.repaint
       pane_row(window, app.viewer, 0).rstrip.size.should be > 90
 
-      widths = menu(app, 2).actions.find!(&.text.==("Te&xt Width"))
+      widths = menu(app, 3).actions.find!(&.text.==("Te&xt Width"))
       widths.text.should eq "Te&xt Width"
       entries = widths.menu.should_not be_nil
       entries.map(&.text).should eq ["&Unlimited", "&72 Columns", "&80 Columns", "&100 Columns", "1&20 Columns", "", "To &Last Guide"]
@@ -78,7 +78,7 @@ describe "Md::App text layout" do
       pane_row(window, app.viewer, 1)[29].should eq 'w'
       app.viewer.position_at(app.viewer.aleft + 29, app.viewer.atop).should eq 0
 
-      center = menu(app, 3).actions.find!(&.text.==("&Center Document"))
+      center = menu(app, 4).actions.find!(&.text.==("&Center Document"))
       center.text.should eq "&Center Document"
       center.checked?.should be_true
       center.trigger

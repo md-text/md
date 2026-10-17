@@ -120,9 +120,9 @@ describe "Md::App editing, Bold" do
   end
 end
 
-describe "Md::App editing, the Format menu from the keyboard" do
+describe "Md::App editing, the Insert menu from the keyboard" do
   it "checks As a Task by the editor's caret when the menu bar has taken the focus from the editor" do
-    {Tput::Key::AltM, Tput::Key::F10}.each do |key|
+    {Tput::Key::AltS, Tput::Key::F10}.each do |key|
       with_app text: "- [ ] top\n\nplain\n\n- [ ] x\n", view: true do |app, window|
         app.show_pane(Md::App::Pane::Editor).focus
         task = menu(app, 2).actions.find!(&.text.==("As a &Task"))

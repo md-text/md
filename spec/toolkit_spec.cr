@@ -10,7 +10,7 @@ end
 describe "Md::App toolkit options" do
   it "offers the color depths, the current one checked, and applies a pick to the window" do
     with_app Md::Source.new(path: "doc.md"), text: "# T\n\ntext\n", view: true do |app, window|
-      entries = submenu(app, 3, "Co&lor Depth")
+      entries = submenu(app, 4, "Co&lor Depth")
       # Auto names the depth Crysterm detects here, by that depth's own label.
       detected = entries[0].text
       detected.should match /\A&Auto \((Monochrome|8 Colors|16 Colors|256 Colors|True Color|\d+ Colors)\)\z/
@@ -25,7 +25,7 @@ describe "Md::App toolkit options" do
       window.color_count.should eq 0x1000000
       entries[5].checked?.should be_true
       # The detection, not the pick: View's AboutToShow brings it up to date.
-      menu(app, 3).emit Crysterm::Event::AboutToShow
+      menu(app, 4).emit Crysterm::Event::AboutToShow
       entries[0].text.should eq detected
     end
   ensure
@@ -34,7 +34,7 @@ describe "Md::App toolkit options" do
 
   it "offers the hyperlink policies and tells the window" do
     with_app do |app, window|
-      entries = submenu(app, 4, "Lin&ks")
+      entries = submenu(app, 5, "Lin&ks")
       entries.map(&.text).should eq ["&Auto (No)", "Al&ways", "&Never", "", "Double-click to &Open", "Open Local &Programs"]
       entries[0, 3].map(&.checked?).should eq [true, false, false]
       app.viewer.links_enabled?.should be_true
@@ -62,7 +62,7 @@ describe "Md::App toolkit options" do
     with_app Md::Source.new(path: "doc.md"), text: "See [the site](https://example.com).\n", view: true do |app|
       opened = [] of String
       app.url_opener = ->(url : String) { opened << url; nil }
-      toggle = submenu(app, 4, "Lin&ks")[-2]
+      toggle = submenu(app, 5, "Lin&ks")[-2]
       toggle.checked?.should be_false
       app.viewer.double_click_links?.should be_false
       toggle.trigger
@@ -76,27 +76,27 @@ describe "Md::App toolkit options" do
 
   it "keeps Links and Watch File in Options, behavior rather than a view" do
     with_app do |app|
-      view = menu(app, 3).actions.map(&.text)
+      view = menu(app, 4).actions.map(&.text)
       view.should_not contain "Lin&ks"
       view.should_not contain "Terminal Lin&ks"
       view.should_not contain "&Watch File"
-      watch = menu(app, 4).actions.find!(&.text.==("&Watch File"))
+      watch = menu(app, 5).actions.find!(&.text.==("&Watch File"))
       watch.name.should eq "watch-file"
       watch.trigger
       app.watch_file?.should be_true
       watch.checked?.should be_true
       # Options' opening brings the Auto entry up to the detection, as
       # View's did.
-      entries = submenu(app, 4, "Lin&ks")
+      entries = submenu(app, 5, "Lin&ks")
       entries[0].text = "stale"
-      menu(app, 4).emit Crysterm::Event::AboutToShow
+      menu(app, 5).emit Crysterm::Event::AboutToShow
       entries[0].text.should eq "&Auto (No)"
     end
   end
 
   it "toggles reduced motion" do
     with_app do |app|
-      entry = menu(app, 4).actions.find!(&.text.==("No An&imations"))
+      entry = menu(app, 5).actions.find!(&.text.==("No An&imations"))
       entry.checked?.should be_false
       entry.trigger
       app.reduced_motion?.should be_true
