@@ -43,9 +43,9 @@ brew install crystal unibilium make
 make release && sudo make install   # PREFIX=/usr/local by default
 ```
 
-> For now, `shard.override.yml` builds against unreleased Crysterm and Tput
-> checkouts in `../crysterm2` and `../tput.cr`. Clone them there, or edit
-> the paths.
+> To build against local checkouts of Crysterm, Tput or the other
+> dependencies, list them in a `shard.override.yml` of your own; git ignores
+> it, and `shard.lock` keeps recording the released versions.
 
 ## Development
 

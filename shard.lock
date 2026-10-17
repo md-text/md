@@ -1,4 +1,3 @@
-# NOTICE: This lockfile contains some overrides from shard.override.yml
 version: 2.0
 shards:
   ameba:
@@ -9,12 +8,12 @@ shards:
     git: https://github.com/crystallabs/crystallabs-helpers.cr.git
     version: 1.1.1
 
-  crysterm: # Overridden
-    path: ../crysterm2
+  crysterm:
+    git: https://github.com/crystallabs/crysterm.git
     version: 1.6.0
 
-  event_handler: # Overridden
-    path: ../event_handler
+  event_handler:
+    git: https://github.com/crystallabs/event_handler.git
     version: 2.4.1
 
   gpm:
@@ -33,12 +32,12 @@ shards:
     git: https://github.com/crystal-community/msgpack-crystal.git
     version: 1.3.5
 
-  pnggif: # Overridden
-    path: ../pnggif
+  pnggif:
+    git: https://github.com/crystallabs/pnggif.git
     version: 0.1.2
 
-  superconf: # Overridden
-    path: ../superconf.cr
+  superconf:
+    git: https://github.com/crystallabs/superconf.cr.git
     version: 0.3.1
 
   term-screen:
@@ -49,8 +48,8 @@ shards:
     git: https://github.com/crystallabs/term_colors.git
     version: 2.0.1
 
-  tput: # Overridden
-    path: ../tput.cr
+  tput:
+    git: https://github.com/crystallabs/tput.git
     version: 2.3.0
 
   unibilium:

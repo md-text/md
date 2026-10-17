@@ -23,7 +23,7 @@ end
 # An App on a headless window, destroyed after the block, with the
 # constructor's own defaults: a new document in the editor unless *text* is
 # given, which the viewer shows. The theme is one global for every window,
-# so one the App switched to (View → Theme, a config file) is put back to
+# so one the App switched to (View → CSS/QSS Theme, a config file) is put back to
 # the one the window found, for the specs after.
 def with_app(source = Md::Source.new, text = "", view = !text.empty?, config = false, history = nil, watch = false, line = nil, &)
   window = headless_window

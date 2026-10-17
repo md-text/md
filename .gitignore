@@ -20,3 +20,7 @@
 
 # The lib symlink a worktree may carry (the pattern above matches only a directory)
 /lib
+
+# A developer's own dependency overrides (sibling checkouts of Crysterm and
+# the like); shard.lock records the released versions
+/shard.override.yml
