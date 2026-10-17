@@ -37,7 +37,7 @@ private def framing_opener(frames)
 end
 
 private def remember_entry(app)
-  menu(app, 5).actions.find! { |action| action.text == "Remember &Positions" }
+  menu(app, 6).actions.find! { |action| action.text == "Remember &Positions" }
 end
 
 describe Md::WindowPlaces do

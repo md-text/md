@@ -19,7 +19,7 @@ end
 
 # The Format menu's Hard Wrap entry.
 private def hard_wrap_entry(app)
-  menu(app, 2).actions.find! { |a| a.text == "&Hard Wrap" }
+  menu(app, 3).actions.find! { |a| a.text == "&Hard Wrap" }
 end
 
 describe "Md::App hard wrap" do
@@ -198,7 +198,7 @@ describe "Md::App rewrap paragraph" do
 
   it "shows the Format → Rewrap entries, Paragraph with its key, the column in the label" do
     with_app do |app|
-      rewrap = menu(app, 2).actions.find! { |a| a.text == "Re&wrap (to 80 Columns)" }
+      rewrap = menu(app, 3).actions.find! { |a| a.text == "Re&wrap (to 80 Columns)" }
       entries = rewrap.menu || fail("Rewrap has no submenu")
       entries.map(&.text).should eq ["&Paragraph", "&Document"]
       entries[0].shortcut_text.should eq "Alt+Q"

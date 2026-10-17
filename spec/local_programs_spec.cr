@@ -63,7 +63,7 @@ describe "Md::App local programs" do
         app.source.path.should eq File.join(dir, "readme.md")
         app.follow_link "doc.md"
 
-        entry = menu(app, 4).actions.find!(&.text.==("Lin&ks")).menu.try(&.find(&.text.==("Open Local &Programs"))) || fail("no Open Local Programs entry")
+        entry = menu(app, 5).actions.find!(&.text.==("Lin&ks")).menu.try(&.find(&.text.==("Open Local &Programs"))) || fail("no Open Local Programs entry")
         entry.name.should eq "open-local-programs"
         entry.checked?.should be_false
         entry.trigger

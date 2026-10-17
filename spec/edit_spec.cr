@@ -190,8 +190,8 @@ describe "Md::App editing" do
 
   it "shows Tab and Shift+Tab on Format → Indent and Outdent, keys that are theirs in the editor alone" do
     with_app text: "text\n", view: false do |app, window|
-      indent = menu(app, 2).actions.find!(&.text.==("I&ndent"))
-      outdent = menu(app, 2).actions.find!(&.text.==("&Outdent"))
+      indent = menu(app, 3).actions.find!(&.text.==("I&ndent"))
+      outdent = menu(app, 3).actions.find!(&.text.==("&Outdent"))
       indent.shortcut_text.should eq "Tab"
       outdent.shortcut_text.should eq "Shift+Tab"
       indent.shortcut_context.widget?.should be_true
@@ -283,29 +283,29 @@ describe "Md::App editing" do
 
   it "shows on the Task entry whether the caret's item is a task, as the menu opens, and flips it" do
     with_app text: "- [ ] task\n- item\ntext\n\n# Heading\n", view: false do |app|
-      format = menu(app, 2)
-      task = format.actions.find! { |a| a.text == "As a &Task" }
+      insert = menu(app, 2)
+      task = insert.actions.find! { |a| a.text == "As a &Task" }
       task.checkable?.should be_true
-      toggle = format.actions.find! { |a| a.text == "Toggle Task Chec&kbox" }
+      toggle = insert.actions.find! { |a| a.text == "Toggle Task Chec&kbox" }
       toggle.shortcut_text.should eq "Alt+X"
       place app, 0, 2
-      format.emit Crysterm::Event::AboutToShow
+      insert.emit Crysterm::Event::AboutToShow
       task.checked?.should be_true
       place app, 1, 2
-      format.emit Crysterm::Event::AboutToShow
+      insert.emit Crysterm::Event::AboutToShow
       task.checked?.should be_false
       task.trigger # picking the entry: checked, and the box with it
       task.checked?.should be_true
       app.markdown.should eq "- [ ] task\n- [ ] item\ntext\n\n# Heading\n"
       place app, 2, 0
-      format.emit Crysterm::Event::AboutToShow
+      insert.emit Crysterm::Event::AboutToShow
       task.checked?.should be_false # no item
       # A line of text: made an item, with a box.
       task.trigger
       task.checked?.should be_true
       app.markdown.should eq "- [ ] task\n- [ ] item\n- [ ] text\n\n# Heading\n"
       place app, 4, 2 # nothing to make a task of
-      format.emit Crysterm::Event::AboutToShow
+      insert.emit Crysterm::Event::AboutToShow
       task.trigger
       task.checked?.should be_false # nothing to flip: the check stays off
       notice(app).should contain "Not a list item"
@@ -315,14 +315,14 @@ describe "Md::App editing" do
   it "reads the Task entry's state from the viewer's caret while reading, without showing the editor" do
     with_app Md::Source.new(path: "doc.md"), text: "- [x] task\n- item\n", view: true do |app|
       app.visible_panes.should eq [Md::App::Pane::Viewer]
-      format = menu(app, 2)
-      task = format.actions.find! { |a| a.text == "As a &Task" }
+      insert = menu(app, 2)
+      task = insert.actions.find! { |a| a.text == "As a &Task" }
       plain = app.viewer.document.plain_text
       app.viewer.text_cursor = Crysterm::TextCursor.new(app.viewer.document, plain.index!("item"))
-      format.emit Crysterm::Event::AboutToShow
+      insert.emit Crysterm::Event::AboutToShow
       task.checked?.should be_false
       app.viewer.text_cursor = Crysterm::TextCursor.new(app.viewer.document, plain.index!("task"))
-      format.emit Crysterm::Event::AboutToShow
+      insert.emit Crysterm::Event::AboutToShow
       task.checked?.should be_true
       app.visible_panes.should eq [Md::App::Pane::Viewer] # opening a menu edits nothing
     end

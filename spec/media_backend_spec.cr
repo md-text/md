@@ -15,7 +15,7 @@ end
 
 # The View → Media Backend submenu, separators included.
 private def media_menu(app) : Array(Crysterm::Action)
-  menu(app, 3).actions.find!(&.text.==("Media &Backend")).menu || [] of Crysterm::Action
+  menu(app, 4).actions.find!(&.text.==("Media &Backend")).menu || [] of Crysterm::Action
 end
 
 # Its "Change for 5s" entry.
@@ -43,7 +43,7 @@ describe "Md::App media backend" do
   it "offers Crysterm's media backends in the View menu after Theme and Images, Auto checked" do
     with_media_app do |app|
       app.media_backend.should eq Backend::Auto
-      texts = menu(app, 3).actions.map(&.text)
+      texts = menu(app, 4).actions.map(&.text)
       texts[texts.index!("CSS/QSS The&me") + 1, 2].should eq ["&Images", "Media &Backend"]
 
       entries = media_menu(app)

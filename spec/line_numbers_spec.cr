@@ -20,7 +20,7 @@ describe "Md::App line numbers" do
       app.show_pane Md::App::Pane::Viewer
       app.line_numbers?.should be_false
       app.viewer_line_numbers?.should be_false
-      editor_entry, viewer_entry = menu(app, 3).actions.find!(&.text.==("Line &Numbers")).menu || fail("Line Numbers has no submenu")
+      editor_entry, viewer_entry = menu(app, 4).actions.find!(&.text.==("Line &Numbers")).menu || fail("Line Numbers has no submenu")
       editor_entry.text.should eq "&Editor"
       viewer_entry.text.should eq "&Viewer"
 

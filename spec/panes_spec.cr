@@ -112,7 +112,7 @@ describe "Md::App panes" do
   it "locks the panes as they are when Options → Resizable Panes is unchecked" do
     with_app text: PANES_DOC do |app, window|
       show_all app
-      resizable = menu(app, 4).actions.find!(&.text.==("Resi&zable Panes"))
+      resizable = menu(app, 5).actions.find!(&.text.==("Resi&zable Panes"))
       resizable.text.should eq "Resi&zable Panes"
       resizable.checkable?.should be_true
       resizable.checked?.should be_true

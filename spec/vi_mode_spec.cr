@@ -35,7 +35,7 @@ describe "Md::App Vi Mode" do
       entry.name.should eq "vi-mode"
       entry.checkable?.should be_true
       entry.enabled?.should eq Crysterm::Neovim.available?
-      menu(app, 4).actions.find!(&.text.==("Vi Mode: Use &Neovim Config")).name.should eq "vi-config"
+      menu(app, 5).actions.find!(&.text.==("Vi Mode: Use &Neovim Config")).name.should eq "vi-config"
       app.vi_mode?.should be_false
       vi_field(app).visible?.should be_false
     end

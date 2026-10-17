@@ -26,7 +26,7 @@ end
 
 # The View menu's Images entry.
 private def images_entry(app) : Crysterm::Action
-  menu(app, 3).actions.find!(&.text.==("&Images"))
+  menu(app, 4).actions.find!(&.text.==("&Images"))
 end
 
 describe "Md::App images" do
@@ -49,7 +49,7 @@ describe "Md::App images" do
   it "offers View → Images right before Media Backend, checked, and the entry turns the pictures off and on" do
     with_picture_docs do |_dir, doc, _other|
       with_app Md::Source.new(path: doc), text: IMAGE_DOC, view: true do |app, window|
-        texts = menu(app, 3).actions.map(&.text)
+        texts = menu(app, 4).actions.map(&.text)
         texts.index!("&Images").should eq texts.index!("Media &Backend") - 1
         entry = images_entry(app)
         entry.checkable?.should be_true

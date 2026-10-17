@@ -4,7 +4,7 @@ require "./spec_helper"
 # off by default in md (`Md::Config.apply_defaults`).
 
 private def entry(app)
-  menu(app, 3).actions.find!(&.text.==("&Pause When Unfocused"))
+  menu(app, 4).actions.find!(&.text.==("&Pause When Unfocused"))
 end
 
 describe "Md::App View → Pause When Unfocused" do

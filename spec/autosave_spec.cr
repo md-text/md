@@ -272,7 +272,7 @@ describe "Md::App auto-save" do
   it "keeps both choices in the config, and offers them in the Options menu" do
     with_config do
       with_app config: true do |app|
-        options = app.main.menu_bar.menus[4]
+        options = app.main.menu_bar.menus[5]
         autosave = options.actions.find { |a| a.text == "A&uto-Save" } || fail("no Auto-Save entry")
         backup = options.actions.find { |a| a.text == "Keep a &Backup File" } || fail("no backup entry")
         autosave.checked?.should be_true

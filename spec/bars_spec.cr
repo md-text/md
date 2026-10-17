@@ -8,7 +8,7 @@ describe "Md::App menu and status bars" do
   it "hides both bars on F4 and the View entry, and shows them again" do
     with_app Md::Source.new(path: "doc.md"), text: "# T\n\ntext\n", view: true do |app, window|
       app.bars?.should be_true
-      entry = menu(app, 3).actions.find!(&.text.==("Menu and &Status Bars"))
+      entry = menu(app, 4).actions.find!(&.text.==("Menu and &Status Bars"))
       entry.checked?.should be_true
       window.repaint
       app.main.menu_bar.visible?.should be_true

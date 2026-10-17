@@ -26,7 +26,7 @@ describe "Md::App guides" do
       app.editor.guides_enabled?.should be_false
       app.viewer.guides_enabled?.should be_false
 
-      entry = menu(app, 3).actions.find!(&.text.==("&Guides"))
+      entry = menu(app, 4).actions.find!(&.text.==("&Guides"))
       entry.checked?.should be_false
       entry.trigger
       app.guides?.should be_true
@@ -94,7 +94,7 @@ describe "Md::App guides" do
 
   it "sets the text width to the last guide of the focused pane from Format → Text Width" do
     with_app Md::Source.new(path: "doc.md"), text: GUIDES_DOC, view: true do |app|
-      entry = (menu(app, 2).actions.find!(&.text.==("Te&xt Width")).menu || fail("Text Width has no submenu")).last
+      entry = (menu(app, 3).actions.find!(&.text.==("Te&xt Width")).menu || fail("Text Width has no submenu")).last
       entry.text.should eq "To &Last Guide"
       app.viewer.focus
       entry.trigger

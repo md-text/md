@@ -387,14 +387,15 @@ describe "Md::App status bar" do
 end
 
 describe "Md::App menus" do
-  it "has File, Edit, Format, View, Options, Window and Help menus" do
+  it "has File, Edit, Insert, Format, View, Options, Window and Help menus" do
     with_app do |app|
-      app.main.menu_bar.menus.size.should eq 7
+      app.main.menu_bar.menus.size.should eq 8
       menu(app, 0).actions.map(&.text).should eq ["&Open…", "Open &Recent", "Reloa&d", "&Close", "", "&Previous File", "&Next File", "", "&Save", "Save &As…", "&Export as HTML…", "Export as &Text…", "", "&Quit"]
       menu(app, 0).actions[1].enabled?.should be_false # no history, nothing recent
-      menu(app, 4).actions.map(&.text).should eq ["&Overwrite Mode", "&Ask Before Discarding Changes", "A&uto-Save", "Keep a &Backup File", "&Watch File", "&Mouse", "&Clipboard", "Lin&ks", "Resi&zable Panes", "No An&imations", "D&etachable Menus", "Vi Mode: Use &Neovim Config", "", "&Load Config…", "&Save Config", "Sa&ve Config As…", "", "Clea&r Caches…"]
-      menu(app, 2).actions.map(&.text).should eq ["&Bold", "&Italic", "&Code", "Code B&lock", "", "I&ndent", "&Outdent", "", "As a &Task", "Toggle Task Chec&kbox", "", "&Promote Heading", "&Demote Heading", "", "&Soft Wrap", "&Hard Wrap", "Te&xt Width", "Re&wrap (to 80 Columns)"]
-      menu(app, 3).actions.map(&.text).should contain "CSS/QSS The&me" # with the other appearance choices
+      menu(app, 5).actions.map(&.text).should eq ["&Overwrite Mode", "&Ask Before Discarding Changes", "A&uto-Save", "Keep a &Backup File", "&Watch File", "&Mouse", "&Clipboard", "Lin&ks", "Resi&zable Panes", "No An&imations", "D&etachable Menus", "Vi Mode: Use &Neovim Config", "", "&Load Config…", "&Save Config", "Sa&ve Config As…", "", "Clea&r Caches…"]
+      menu(app, 2).actions.map(&.text).should eq ["&Heading", "T&able", "&Link", "&Image", "&Footnote", "", "&Bulleted List", "&Numbered List", "Block&quote", "Al&ert", "Horizontal &Rule", "", "As a &Task", "Toggle Task Chec&kbox"]
+      menu(app, 3).actions.map(&.text).should eq ["&Bold", "&Italic", "&Code", "Code B&lock", "", "I&ndent", "&Outdent", "", "&Promote Heading", "&Demote Heading", "", "&Soft Wrap", "&Hard Wrap", "Te&xt Width", "Re&wrap (to 80 Columns)"]
+      menu(app, 4).actions.map(&.text).should contain "CSS/QSS The&me" # with the other appearance choices
     end
   end
 
@@ -415,13 +416,13 @@ describe "Md::App menus" do
     with_app do |_, window|
       window.repaint
       row = window.dump.to_s.lines[2]
-      row.should match /\| File  Edit  Format  View  Options  Window  Help +Menu = F10 \/ Alt\+F \|$/
+      row.should match /\| File  Edit  Insert  Format  View  Options  Window  Help +Menu = F10 \/ Alt\+F \|$/
     end
   end
 
   it "shows and hides panes from the View menu, mirroring their state" do
     with_app do |app|
-      editor, viewer, toc = menu(app, 3).actions[0, 3]
+      editor, viewer, toc = menu(app, 4).actions[0, 3]
       editor.checked?.should be_true
       viewer.checked?.should be_false
       viewer.trigger
@@ -438,8 +439,8 @@ describe "Md::App menus" do
 
   it "sets the overwrite and mouse modes from the Options menu, in step with the status bar" do
     with_app do |app|
-      overwrite, confirm = menu(app, 4).actions[0, 2]
-      mouse = menu(app, 4).actions[5]
+      overwrite, confirm = menu(app, 5).actions[0, 2]
+      mouse = menu(app, 5).actions[5]
       confirm.checked?.should be_true
       confirm.trigger
       app.confirm_discard?.should be_false
@@ -486,7 +487,7 @@ describe "Md::App config" do
         window.mouse_enabled?.should be_false # reading in the viewer: not in `i`
         app.editor.line_numbers?.should be_true
         app.pane_sizes.should eq [40, 60, 20]
-        follow, highlight = menu(app, 3).actions.select { |a| a.text.in?("S&ync Cursor", "&Highlight Line") }
+        follow, highlight = menu(app, 4).actions.select { |a| a.text.in?("S&ync Cursor", "&Highlight Line") }
         follow.checked?.should be_true
         highlight.checked?.should be_true
         Md::Config.dirty?.should be_false # applying is not a change
