@@ -123,6 +123,32 @@ describe "Md::App sync cursor" do
       (app.editor.cursor_row - app.editor.scroll_position).should eq viewer_row
     end
   end
+
+  it "follows a scroll of the leading pane, the wheel's as the keys' moves" do
+    long = (1..60).map { |i| "Paragraph #{i}" }.join("\n\n") + "\n"
+    with_app Md::Source.new, text: long, view: false do |app, window|
+      app.show_pane Md::App::Pane::Viewer
+      app.editor.focus
+      app.sync_cursor = true
+      app.editor.cursor_position = at(app, 41)
+      window.repaint
+      app.editor.scroll 5 # what a wheel notch over the editor does
+      window.repaint
+      editor_row = app.editor.cursor_row - app.editor.scroll_position
+      (app.viewer.cursor_row - app.viewer.scroll_position).should eq editor_row
+
+      app.viewer.focus
+      app.viewer.scroll -3
+      window.repaint
+      viewer_row = app.viewer.cursor_row - app.viewer.scroll_position
+      (app.editor.cursor_row - app.editor.scroll_position).should eq viewer_row
+
+      app.sync_cursor = false # off: a scroll leaves the other pane alone
+      before = app.editor.scroll_position
+      app.viewer.scroll 4
+      app.editor.scroll_position.should eq before
+    end
+  end
 end
 
 describe "Md::App table of contents" do

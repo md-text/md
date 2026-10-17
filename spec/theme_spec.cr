@@ -10,10 +10,10 @@ private def with_theme_app(config = false, &)
   end
 end
 
-# The View → Theme entries.
+# The View → CSS/QSS Theme entries.
 private def theme_entries(app) : Array(Crysterm::Action)
   view = app.main.menu_bar.menus[3]
-  submenu = view.actions.find! { |action| action.text == "The&me" }
+  submenu = view.actions.find! { |action| action.text == "CSS/QSS The&me" }
   submenu.menu || [] of Crysterm::Action
 end
 

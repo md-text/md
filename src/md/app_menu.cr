@@ -142,7 +142,7 @@ module Md
       view.add_separator
       # The colors the window is drawn in, with the other appearance choices;
       # `F6` cycles them (`app_theme.cr`).
-      add_choices(view, "The&me", "theme", THEMES, @theme, "The colors the window is drawn in; F6 cycles them", ->theme_tip(Theme)) { |theme| theme_label theme }
+      add_choices(view, "CSS/QSS The&me", "theme", THEMES, @theme, "The colors the window is drawn in; F6 cycles them", ->theme_tip(Theme)) { |theme| theme_label theme }
       # Whether the viewer draws the document's images, and how, with the
       # Change for 5s trial (`app_media.cr`); `I` is free here.
       add_toggle view, "&Images", "images", @images, option_tip("md.images")

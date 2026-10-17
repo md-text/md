@@ -484,6 +484,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- View → Theme is now View → CSS/QSS Theme.
 - A backward search (`?`, `N` after `/`) skipped a match the cursor was
   inside and went to the one before it; it now finds that match, from its
   start, as Vim's `?` and Qt's backward find do, and steps back from there
@@ -576,6 +577,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- With View → Sync Cursor on, scrolling a pane with the mouse wheel left
+  the other pane where it was; it now follows, as for a move by the keys.
 - A picture the viewer shows with terminal graphics (kitty, sixel, iTerm2
   inline images, w3m, Überzug) covered a menu opened over it from the menu
   bar, a torn-off menu or a dialog; what is opened over a picture now stays
