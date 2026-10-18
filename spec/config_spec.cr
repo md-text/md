@@ -263,13 +263,13 @@ describe "Md::App config menu" do
     end
   end
 
-  it "keeps painting windows that are not focused, unless the config says otherwise" do
+  it "leaves the unfocused pause of animations at Crysterm's default, unless the config says otherwise" do
     with_config do
-      Crysterm::Config.render_pause_when_unfocused.should be_false
-      headless_window.pause_when_unfocused?.should be_false
-    end
-    with_config("render:\n  pause_when_unfocused: true\n") do
       Crysterm::Config.render_pause_when_unfocused.should be_true
+      headless_window.pause_when_unfocused?.should be_true
+    end
+    with_config("render:\n  pause_when_unfocused: false\n") do
+      Crysterm::Config.render_pause_when_unfocused.should be_false
     end
   end
 end

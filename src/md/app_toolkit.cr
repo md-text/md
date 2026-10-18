@@ -52,13 +52,13 @@ module Md
     # the torn-off menus, and turning it on again brings them back where
     # they were (Crysterm's option watcher does both).
     # View → Pause When Unfocused (`#pause_when_unfocused?`,
-    # `render.pause_when_unfocused`): whether a window stops painting while
-    # its terminal window is not focused, catching up when it is focused
-    # again — work saved on what nobody looks at. md turns it off by default
-    # (`Config.apply_defaults`): a window in the background is a page beside
-    # the one being typed in, showing another window's edits, a stream or a
-    # watched file as they come. It needs focus reports, which the
-    # terminal sends while the mouse is reported (`window.send_focus`).
+    # `render.pause_when_unfocused`): whether a window's animations pause
+    # while its terminal window is not focused — work saved on what nobody
+    # looks at; everything else paints as it comes, so a window in the
+    # background, a page beside the one being typed in, still shows another
+    # window's edits, a stream or a watched file. Crysterm's default, on, is
+    # md's. It needs focus reports, which the terminal sends while the mouse
+    # is reported (`window.send_focus`).
     alias ColorDepth = Crysterm::ColorDepth
     alias Hyperlinks = Crysterm::AutoToggle
 
