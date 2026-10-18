@@ -7,11 +7,6 @@ require "./spec_helper"
 # (`Md::Document::LineTerminator`, Qt Creator's `TextFileFormat`): opening
 # and saving a file does not change its line endings.
 
-private def place(app, line, column)
-  doc = app.editor.document
-  app.editor.text_cursor = Crysterm::TextCursor.new(doc, doc.block_position(line) + column)
-end
-
 private def encoding(app) : String
   app.main.status_bar.permanent_widgets[3].as(Crysterm::Widget::Label).text
 end

@@ -1,11 +1,6 @@
 require "./spec_helper"
 
 # Puts the editor's caret at *column* of *line*, both 0-based.
-private def place(app, line, column)
-  doc = app.editor.document
-  app.editor.text_cursor = Crysterm::TextCursor.new(doc, doc.block_position(line) + column)
-end
-
 # Selects the editor's text between document positions *from* and *to*.
 private def select_text(app, from, to)
   app.editor.text_cursor = Crysterm::TextCursor.new(app.editor.document, from, to)

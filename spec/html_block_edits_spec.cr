@@ -5,11 +5,6 @@ require "./spec_helper"
 # where one of kinds 1–6 starts (`App.code_lines`).
 
 # Puts the editor's caret at *column* of *line*, both 0-based.
-private def place(app, line, column)
-  doc = app.editor.document
-  app.editor.text_cursor = Crysterm::TextCursor.new(doc, doc.block_position(line) + column)
-end
-
 # *text* after Format → Rewrap → Document to *width* columns.
 private def rewrapped(text, width = 20)
   result = ""

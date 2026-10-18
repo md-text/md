@@ -7,11 +7,6 @@ require "file_utils"
 # refill of a paragraph to the same column.
 
 # Puts the editor's caret at *column* of *line*, both 0-based.
-private def place(app, line, column)
-  doc = app.editor.document
-  app.editor.text_cursor = Crysterm::TextCursor.new(doc, doc.block_position(line) + column)
-end
-
 # Types *text* into the editor, a key per character.
 private def type(window, text)
   text.each_char { |char| press window, char }

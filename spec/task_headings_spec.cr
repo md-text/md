@@ -1,11 +1,6 @@
 require "./spec_helper"
 
 # Puts the editor's caret at *column* of *line*, both 0-based.
-private def place(app, line, column)
-  doc = app.editor.document
-  app.editor.text_cursor = Crysterm::TextCursor.new(doc, doc.block_position(line) + column)
-end
-
 # The headings md finds in *text*, as {first line, last line, level}.
 private def headings_of(text)
   doc = Crysterm::TextDocument.new

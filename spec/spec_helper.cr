@@ -155,6 +155,12 @@ def notice(app)
   app.main.status_bar.message
 end
 
+# Puts the editor caret at 0-based *line* and *column*.
+def place(app, line, column)
+  doc = app.editor.document
+  app.editor.text_cursor = Crysterm::TextCursor.new(doc, doc.block_position(line) + column)
+end
+
 # The menu at *index* on the bar: File, Edit, Format, View, Options, Window,
 # Help.
 def menu(app, index)
