@@ -22,5 +22,7 @@
 /lib
 
 # A developer's own dependency overrides (sibling checkouts of Crysterm and
-# the like); shard.lock records the released versions
+# the like), and the lock shards writes: shard.yml's constraints are the
+# pins, and a build takes the newest release they allow
 /shard.override.yml
+/shard.lock

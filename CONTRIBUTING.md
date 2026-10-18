@@ -45,7 +45,8 @@ make release && sudo make install   # PREFIX=/usr/local by default
 
 > To build against local checkouts of Crysterm, Tput or the other
 > dependencies, list them in a `shard.override.yml` of your own; git ignores
-> it, and `shard.lock` keeps recording the released versions.
+> it. `shard.lock` is not tracked: a build takes the newest release each
+> dependency's constraint in `shard.yml` allows.
 
 ## Development
 
