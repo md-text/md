@@ -57,6 +57,23 @@ describe "Md::App windows" do
     end
   end
 
+  it "opens a new window on the table of contents alone when that is all this one shows" do
+    with_app Md::Source.new(path: "doc.md"), text: "# Doc\n\nText.\n", view: true do |app|
+      app.window_opener = recording_opener([] of Crysterm::Window)
+      app.show_pane Md::App::Pane::Editor
+      app.show_pane Md::App::Pane::Toc
+      app.hide_pane(Md::App::Pane::Editor).should be_true
+      app.hide_pane(Md::App::Pane::Viewer).should be_true
+      app.visible_panes.should eq [Md::App::Pane::Toc]
+      other = app.new_window || fail("no window was opened")
+      begin
+        other.visible_panes.should eq [Md::App::Pane::Toc]
+      ensure
+        other.window.destroy
+      end
+    end
+  end
+
   it "shows an & in a document's name as it is, not as a mnemonic" do
     with_app Md::Source.new(path: "Q&A.md"), text: "# Q\n", view: true do |app|
       entry = window_menu(app).actions[5]

@@ -1015,3 +1015,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   editor's caret now, as the entries themselves do.
 
 [Unreleased]: https://github.com/md-text/md/commits/main
+- Saving a file owned by a user or group id past an `Int32` (macOS's
+  `nobody`, large ids on NFS) failed with an internal error instead of
+  keeping the file's owner; the ids are read as the unsigned numbers they
+  are.
+- Window → New from a window showing only the table of contents opened the
+  new window with the editor beside it; it now shows the table of contents
+  alone, as the window it was opened from does.
+- A file dropped on the window as a `file:` URL that does not parse was
+  reported as an internal error; it is now left alone, as any paste that
+  is no file.
+- Insert → Footnote failed on a document holding a reference numbered past
+  an `Int32`; such a reference is not counted.
+- Save As onto a file open in linked windows put every window of the group
+  but the first at the top of the text; each keeps its place.
+- An `ArgumentError` raised while the window was being built was reported
+  as a usage error, with the help text and exit status 2; it is reported as
+  an internal error, as the comment said.

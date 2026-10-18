@@ -735,15 +735,17 @@ module Md
 
     # Brings the windows on *other* — an unmodified document of the file
     # this one was just saved as — over to this document, each keeping its
-    # caret's line and column (clamped); *other*, left by its last window,
+    # caret's line and column (clamped), read from every window before any
+    # moves: a linked group moves whole with its first window, the others'
+    # carets on the new text by then. *other*, left by its last window,
     # closes, and this document takes the file's key in the registry. A
     # linked group arriving does not bring its trail: the move is this
     # window's Save As, not a step of theirs, and this window's group keeps
     # its own.
     private def merge(other : Document) : Nil
       trail = link.try &.trail
-      other.views.dup.each do |view|
-        line, column = view.source_position
+      positions = other.views.map { |view| {view, view.source_position} }
+      positions.each do |view, (line, column)|
         view.switch_document @document
         view.go_to_line line, column
       end

@@ -47,7 +47,9 @@ module Md
           if info
             made = File.info(file.path)
             unless made.owner_id == info.owner_id && made.group_id == info.group_id
-              File.chown file.path, info.owner_id.to_i, info.group_id.to_i
+              # The ids are unsigned (`uid_t`): macOS's `nobody` is
+              # 4294967294, past an `Int32`.
+              File.chown file.path, info.owner_id.to_u32, info.group_id.to_u32
             end
             File.chmod file.path, info.permissions
           else

@@ -116,29 +116,30 @@ module Md
     # returns the exit status: for a spec, in place of `App#run`'s loop on
     # the terminal. What the block raises escapes the app, as from `App#run`.
     def self.run(args : Array(String), stdout : IO = STDOUT, stderr : IO = STDERR, stdin : IO = STDIN, window : Crysterm::Window? = nil, & : App -> Int32) : Int32
-      # A usage error is one of the command line's: once the window is built,
-      # an `ArgumentError` is the app's own and is reported as such below.
-      app = begin
-        options = parse(args)
-        if status = print_only(options, stdin, stdout)
+      # A usage error is one of the command line's, raised while it is read:
+      # once the window is being built, an `ArgumentError` is the app's own
+      # and is reported as such below.
+      options, source = begin
+        parsed = parse(args)
+        if status = print_only(parsed, stdin, stdout)
           return status
         end
 
-        source = Source.resolve(options.positional, stdin.tty?)
+        resolved = Source.resolve(parsed.positional, stdin.tty?)
         # Crysterm's config file and md's, the MD_*/CRYSTERM_* variables and
         # the toolkit and settings flags among *args*: for the window about to
         # open, so a `--help` or an `--export` reads none of it. A
         # `--crysterm-dump-config` prints every option and exits here; a value
         # that fits no option is an `Error`, reported below.
         Config.configure argv: args
-        log_to_file
-        launch(source, options, stdin, window)
+        {parsed, resolved}
       rescue ex : ArgumentError | OptionParser::Exception
         stderr.puts "md: #{ex.message}"
         stderr.puts help
         return 2
       end
-      yield app
+      log_to_file
+      yield launch(source, options, stdin, window)
     rescue ex : Error
       stderr.puts "md: #{ex.message}"
       1

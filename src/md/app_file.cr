@@ -238,7 +238,8 @@ module Md
     # path comes shell-escaped — a backslash before each space, quote,
     # parenthesis or other character the shell would read — and the
     # backslashes come off. A single-quoted one (VTE's) spells a quote in
-    # the name as `'\''`, closing the quotes around an escaped one.
+    # the name as `'\''`, closing the quotes around an escaped one. A
+    # `file:` URL that does not parse is no drop.
     private def dropped_path(pasted : String) : String?
       text = pasted.strip
       return if text.empty? || text.includes?('\n')
@@ -252,6 +253,8 @@ module Md
         text = text.gsub(/\\(.)/) { $1 }
       end
       text if File.file?(text)
+    rescue URI::Error
+      nil
     end
 
     # Re-reads the document's file from disk, keeping the reader's place;

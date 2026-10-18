@@ -130,12 +130,13 @@ module Md
     # Insert → Footnote: a reference, `[^1]`, after the caret or the
     # selection, numbered one past the document's highest, and its
     # definition at the end of the document, apart by a blank line, its
-    # `Footnote` selected there.
+    # `Footnote` selected there. A reference numbered past an `Int32` is
+    # not counted.
     def insert_footnote : Bool
       editor = formatting_editor
       doc = editor.document
       text = doc.plain_text
-      number = (text.scan(/\[\^(\d+)\]/).max_of?(&.[1].to_i) || 0) + 1
+      number = (text.scan(/\[\^(\d+)\]/).compact_map(&.[1].to_i?).max? || 0) + 1
       at = editor.text_cursor.selection_end
       ref = "[^#{number}]"
       gap = text.empty? || text.ends_with?("\n\n") ? "" : (text.ends_with?('\n') ? "\n" : "\n\n")

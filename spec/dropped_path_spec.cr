@@ -16,4 +16,11 @@ describe "Md::App#open_dropped" do
       FileUtils.rm_rf dir
     end
   end
+
+  it "takes a file: URL that does not parse for no drop" do
+    with_app do |app|
+      app.open_dropped("file://[").should be_false
+      app.source.path.should be_nil
+    end
+  end
 end

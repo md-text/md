@@ -200,15 +200,14 @@ module Md
 
     # Starts this window where *other*, on the same document, is: the same
     # panes shown and focused, the editor's caret, selection and scroll, the
-    # viewer's caret and scroll, and Sync Cursor (Window → New).
+    # viewer's caret and scroll, and Sync Cursor (Window → New). The panes
+    # *other* shows are shown first, the rest hidden after: `#hide_pane`
+    # keeps the only pane shown, so the editor this window starts with
+    # would stay beside a table of contents shown alone in *other*.
     protected def take_view_of(other : App) : Nil
-      Pane.each do |pane|
-        if other.widget(pane).visible?
-          show_pane pane
-        else
-          hide_pane pane
-        end
-      end
+      shown, hidden = Pane.values.partition { |pane| other.widget(pane).visible? }
+      shown.each { |pane| show_pane pane }
+      hidden.each { |pane| hide_pane pane }
       @sync_cursor.value = other.sync_cursor?
       @editor.text_cursor = other.editor.text_cursor
       @editor.scroll_cursor_to_row other.editor.cursor_viewport_row

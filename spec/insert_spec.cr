@@ -85,6 +85,14 @@ describe "Md::App Insert menu" do
     end
   end
 
+  it "numbers a footnote past the references that fit a number, ignoring a longer one" do
+    with_app text: "One[^99999999999] two[^3].\n", view: false do |app|
+      place app, 0, 0
+      app.insert_footnote.should be_true
+      app.markdown.should eq "[^4]One[^99999999999] two[^3].\n\n[^4]: Footnote\n"
+    end
+  end
+
   it "asks for a custom table size, offering the last one asked for" do
     with_app text: "", view: false do |app|
       insert_entry(app, "&Custom Size…", "T&able").trigger
