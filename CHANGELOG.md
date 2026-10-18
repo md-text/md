@@ -21,8 +21,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   renders it, a `<div class="markdown-alert markdown-alert-note">` with its
   title, and `--export text` starts its lines with the title chip the viewer
   shows (`ℹ NOTE`).
-- View → Pause When Unfocused (`render.pause_when_unfocused`, off in md):
-  a window stops painting while its terminal window is not focused.
+- View → Pause When Unfocused (Crysterm's `render.pause_when_unfocused`,
+  on): a window's animations pause while its terminal window is not
+  focused; edits from another window, a stream or a watched file show as
+  they come either way.
 - View → Media Backend → None (`media.backend: None`) draws no images and
   fetches none; an image with a title shows the picture glyph and the title
   where its picture would be. Link and image titles are now kept when a
@@ -312,8 +314,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   Open Recent goes empty; the question counts the recent files, the
   positions remembered in them and the recovery files, `(0)` included), the auto-save recovery files (the current
   document's is written again at the next auto-save) and md's cache
-  directory, `$XDG_CACHE_HOME/md` (the log file, emptied), with a notice
-  of what went. The settings stay.
+  directory, `$XDG_CACHE_HOME/md` (the log file too, which Crysterm opens
+  anew), with a notice of what went. The settings stay.
 - View → Rulers → Horizontal and Vertical: a column ruler along the top row
   of the editor and the viewer and a row ruler down their left, each shown
   on its own, counted in the text's columns — a `│` on every tenth column

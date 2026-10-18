@@ -139,7 +139,7 @@ describe "Md::App clear caches" do
     end
   end
 
-  it "empties the log file Crysterm writes instead of removing it, and runs without a history" do
+  it "removes the log file with the rest of the cache directory, and runs without a history" do
     with_xdg_dirs do |_, cache_dir, _|
       Dir.mkdir_p cache_dir
       log = File.join(cache_dir, "md.log")
@@ -151,8 +151,9 @@ describe "Md::App clear caches" do
         with_app do |app|
           app.history.should be_nil
           app.clear_caches.should eq({0, 0})
-          File.read(log).should eq ""
-          Dir.children(cache_dir).should eq ["md.log"]
+          # Crysterm, logging to standard error here (no terminal was bound),
+          # has no file to open anew; in a run it makes the file afresh.
+          Dir.children(cache_dir).should be_empty
         end
       ensure
         Crysterm::Config.set "log.file", previous

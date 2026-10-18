@@ -16,11 +16,11 @@ module Md
     # The open documents' recovery files go with the others: each is
     # written again at its next auto-save tick while its document is
     # modified, so nothing is lost that is not in an editor. The log file
-    # is emptied rather than removed, since Crysterm holds it open (in
-    # append mode, so later lines land in the emptied file); anything else
-    # in the cache directory is removed. Only md's own directories are
-    # touched: a log sent elsewhere (`CRYSTERM_LOG_FILE`) is left alone,
-    # and so is the history of a run that keeps none (specs).
+    # goes with the rest of the cache directory, and Crysterm opens it anew
+    # (`Crysterm.reopen_log_file`), so the lines from here on land in a
+    # fresh file rather than in the removed one's inode. Only md's own
+    # directories are touched: a log sent elsewhere (`CRYSTERM_LOG_FILE`) is
+    # left alone, and so is the history of a run that keeps none (specs).
 
     # md's cache directory, `$XDG_CACHE_HOME/md` (`~/.cache/md`): the log
     # file's home, as `Crysterm.default_log_file` places it.
@@ -61,7 +61,8 @@ module Md
         doc.mark_for_autosave
       end
       forget_window_places
-      remove_entries App.cache_dir, empty: Crysterm::Config.log_file
+      remove_entries App.cache_dir
+      Crysterm.reopen_log_file
       refresh_recent_menus
       notice "Cleared #{recent} recent file#{"s" unless recent == 1}, #{recovery} recovery file#{"s" unless recovery == 1}"
       {recent, recovery}
@@ -78,20 +79,15 @@ module Md
     end
 
     # Removes what is in *dir*, if it exists, and returns how many entries
-    # went; the file named by *empty* is emptied instead of removed. Each
-    # entry is tried on its own: one that will not go does not stop the
-    # rest, and is not counted.
-    private def remove_entries(dir : String, empty : String? = nil) : Int32
+    # went. Each entry is tried on its own: one that will not go does not
+    # stop the rest, and is not counted.
+    private def remove_entries(dir : String) : Int32
       return 0 unless Dir.exists? dir
       count = 0
       Dir.each_child(dir) do |child|
         path = File.join(dir, child)
         begin
-          if path == empty
-            File.write path, ""
-          else
-            FileUtils.rm_rf path
-          end
+          FileUtils.rm_rf path
           count += 1
         rescue IO::Error
           # Left for the next time.
