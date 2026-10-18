@@ -73,8 +73,8 @@ describe "Md::App windows on a stream" do
       b = a.new_window || fail("no window was opened")
       begin
         a.stream IO::Memory.new("# One\n\n# Two\n\n# Three\n\n")
-        # The reader posts every line and the end to the host's queue, and
-        # the host goes before its render fiber took them.
+        # The reader posts the job for the lines and the end to the host's
+        # queue, and the host goes before its render fiber ran it.
         Fiber.yield
         a.window.destroy
         b.document.host.should be b
@@ -253,6 +253,24 @@ describe "Md::App windows on a stream" do
       settle { !a.streaming? }
       chunks.should eq 1
       a.markdown.should eq (0...100).join { |i| "line #{i}\n" }
+    end
+    Md::Documents.all.should be_empty
+  end
+
+  it "posts one job for a burst of more lines than a window's queue holds" do
+    application = Crysterm::Application.new
+    with_app Md::Source.new(stdin: true), view: true do |a, first_window|
+      application.add first_window
+      chunks = 0
+      a.document.on(Md::Event::StreamAppended) { chunks += 1 }
+      # The reader brings every line before the render fiber runs a job: a
+      # job a line would fill the queue and park the reader, splitting the
+      # text into chunks.
+      lines = (0...3000).join { |i| "line #{i}\n" }
+      a.stream IO::Memory.new(lines)
+      settle { !a.streaming? }
+      chunks.should eq 1
+      a.markdown.should eq lines
     end
     Md::Documents.all.should be_empty
   end

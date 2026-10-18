@@ -584,6 +584,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   others blank and their labels still aligned, where they were `[x]`/`[ ]`,
   so the entries sit two columns further left; an ASCII terminal keeps
   `[x]`/`[ ]`. (Changed in Crysterm, which md builds against.)
+- A document streaming in from a fast pipe posted its windows one job per
+  line, up to the window's queue, which the reader then waited on; the lines
+  of a burst now go in one job, and a watched file that changed on disk is
+  read once, not twice, for the reload.
 
 ### Fixed
 

@@ -198,21 +198,22 @@ module Md
     end
 
     # Measures *text* as the continuation of a text ending in *before* (nil
-    # at the start): its newlines, its words — runs of non-whitespace,
-    # counted in one pass with nothing allocated, a run begun before *text*
-    # not counted again — and the last character so far.
+    # at the start): its newlines and its words — runs of non-whitespace, a
+    # run begun before *text* not counted again — counted in one pass with
+    # nothing allocated, and the last character so far.
     private def measure_text(text : String, before : Char? = nil) : {Int32, Int32, Char?}
-      words = 0
+      newlines = words = 0
       in_word = before ? !before.whitespace? : false
       text.each_char do |char|
         if char.whitespace?
+          newlines += 1 if char == '\n'
           in_word = false
         elsif !in_word
           in_word = true
           words += 1
         end
       end
-      {text.count('\n'), words, text[-1]? || before}
+      {newlines, words, text[-1]? || before}
     end
 
     # Forgets the cached measurements; the next refresh recomputes them.

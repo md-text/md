@@ -184,6 +184,12 @@ module Md
     # in whichever window, takes them (`#drain_stream`).
     @stream_pending = Deque(String).new
     @stream_end : Tuple(String?)? = nil
+    # Whether a `#drain_stream` job is posted and has yet to start, so the
+    # reader posts no other one for the lines it brings meanwhile: that job
+    # takes them all (`#deliver`). Cleared when the job starts, and when a
+    # window goes (`#detach`) or the document closes, as a job queued in a
+    # window destroyed before it ran is dropped and would never clear it.
+    @drain_posted = false
     # Whether the stream's line terminator is still to be detected, from
     # the first line break that arrives (`#receive`).
     @terminator_pending = false
@@ -272,6 +278,8 @@ module Md
         return
       end
       rehost if index == 0
+      # The pending job may have gone with the window: another is posted.
+      @drain_posted = false
       deliver unless @stream_pending.empty? && @stream_end.nil?
     end
 
@@ -294,6 +302,7 @@ module Md
       @streaming = false
       @stream_pending.clear
       @stream_end = nil
+      @drain_posted = false
       stop_watcher
       stop_autosave
       drop_recovery if clean
@@ -361,8 +370,10 @@ module Md
     # with `#finish_stream`. The lines wait in the document until a window
     # takes them (`#drain_stream`), so a window destroyed with them still
     # queued loses none, and a window busy while many came takes them in
-    # one chunk. The read stops at the next line once no window is
-    # left. The windows' viewers follow the tail (`App#stream`).
+    # one chunk. The posting is coalesced (`#deliver`): one job waits for
+    # any number of lines, so a fast pipe neither fills the window's queue
+    # nor blocks the reader on it. The read stops at the next line once no
+    # window is left. The windows' viewers follow the tail (`App#stream`).
     def start_stream(io : IO) : Nil
       @from_stream = @streaming = @editor_stale = true
       @terminator_pending = true
@@ -385,20 +396,26 @@ module Md
     end
 
     # Posts `#drain_stream` to the render fiber of the first view whose
-    # window takes it; false when none does (no view left, or the stream
-    # abandoned).
+    # window takes it, unless a job posted earlier has yet to start — that
+    # one takes what arrived since, so a burst of lines is one job, not one
+    # a line. True while a job is pending; false when none could be posted
+    # (no view left, or the stream abandoned), which stops the reader.
     private def deliver : Bool
       return false if @stream_abandoned
-      @views.any? { |view| view.window.post? { drain_stream view } }
+      return true if @drain_posted
+      @drain_posted = @views.any? { |view| view.window.post? { drain_stream view } }
     end
 
     # Takes in, on *view*'s render fiber, what the stream brought that no
     # window took in yet: the lines, joined into one chunk (`#receive`) —
     # one append to each viewer and one status refresh for a backlog, not
     # one a line, which made a fast stream ten times slower — then the end,
-    # once read (`#finish_stream`). A job finding nothing left — an earlier
-    # one took it — does nothing.
+    # once read (`#finish_stream`). The job is the one `#deliver` posted
+    # for everything since the last: starting, it lets the next line post
+    # another. A job finding nothing left — an earlier one took it, in a
+    # window that took over — does nothing.
     private def drain_stream(view : App) : Nil
+      @drain_posted = false
       unless @stream_pending.empty?
         chunk = @stream_pending.size == 1 ? @stream_pending.first : @stream_pending.join
         @stream_pending.clear
@@ -571,7 +588,12 @@ module Md
       path = @source.path || raise ArgumentError.new("the document has no file")
       # Taken before the read: a write after it is a change still to come.
       stamp = disk_stamp(path)
-      text = Source.decode(File.read(path))
+      reload Source.decode(File.read(path)), stamp
+    end
+
+    # `#reload` with the file's *text* already read, and the *stamp* taken
+    # before that read (`#file_changed`, which read the file to compare it).
+    private def reload(text : String, stamp : {Int64, Time}?) : Nil
       @line_terminator = LineTerminator.detect text
       @text.replace_plain_text text
       @disk_stamp = stamp
@@ -632,9 +654,11 @@ module Md
         notify "#{path} changed on disk; unsaved changes kept"
         return
       end
+      # Read once, for the comparison and the reload, after the stamp was
+      # taken, as `#reload` takes it.
       text = Source.decode(File.read(path))
       return if LineTerminator.detect(text) == @line_terminator && Crysterm::TextDocument.normalize_line_breaks(text) == markdown
-      reload
+      reload text, stamp
       notify "Reloaded #{path} (changed on disk)"
     rescue IO::Error
       # A file mid-rewrite; the next change is polled.
