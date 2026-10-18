@@ -228,7 +228,7 @@ module Md
 
     private def hyperlinks_label(policy : Hyperlinks) : String
       case policy
-      in .auto? then "&Auto (#{@window.hyperlinks_detected? ? "Yes" : "No"})"
+      in .auto? then "&Auto (#{hyperlinks_label(@window.hyperlinks_detected? ? Hyperlinks::On : Hyperlinks::Off).delete('&')})"
       in .on?   then "Al&ways"
       in .off?  then "&Never"
       end

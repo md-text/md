@@ -35,7 +35,7 @@ describe "Md::App toolkit options" do
   it "offers the hyperlink policies and tells the window" do
     with_app do |app, window|
       entries = submenu(app, 5, "Lin&ks")
-      entries.map(&.text).should eq ["&Auto (No)", "Al&ways", "&Never", "", "Double-click to &Open", "Open Local &Programs"]
+      entries.map(&.text).should eq ["&Auto (Never)", "Al&ways", "&Never", "", "Double-click to &Open", "Open Local &Programs"]
       entries[0, 3].map(&.checked?).should eq [true, false, false]
       app.viewer.links_enabled?.should be_true
       entries[2].trigger
@@ -90,7 +90,7 @@ describe "Md::App toolkit options" do
       entries = submenu(app, 5, "Lin&ks")
       entries[0].text = "stale"
       menu(app, 5).emit Crysterm::Event::AboutToShow
-      entries[0].text.should eq "&Auto (No)"
+      entries[0].text.should eq "&Auto (Never)"
     end
   end
 
