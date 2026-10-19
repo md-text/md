@@ -49,7 +49,7 @@ release: lib
 
 # Dependencies. Development dependencies (ameba) are included; use
 # `shards install --production` by hand for a dependencies-only install.
-lib: shard.yml
+lib: shard.yml shard.lock
 	shards install
 	@touch lib
 
