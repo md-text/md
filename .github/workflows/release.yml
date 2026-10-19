@@ -74,7 +74,7 @@ jobs:
         run: |
           docker run --rm -v "$PWD/..:/src" -w "/src/${PWD##*/}" "crystallang/crystal:$CRYSTAL_VERSION-alpine" sh -ec '
             apk add --no-cache unibilium-dev file
-            shards install --production
+            shards install --without-development
             mkdir -p bin
             crystal build --release --no-debug --static -Dwithout_readline -o bin/md src/bin/md.cr
             file bin/md
@@ -106,7 +106,7 @@ jobs:
             prefix="$(brew --prefix "${lib%/*}")"
             ln -s "$prefix/lib/${lib#*/}.a" static/
           done
-          shards install --production
+          shards install --without-development
           mkdir -p bin
           crystal build --release --no-debug --link-flags "-L$PWD/static" -o bin/md src/bin/md.cr
           otool -L bin/md
