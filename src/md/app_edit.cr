@@ -965,7 +965,8 @@ module Md
       empty = true
       units.each do |unit|
         if empty
-          current += " " if (item = ListItem.parse(head)) && item.spacing.empty?
+          # A marker, or a task box, that ended its line has no space after it.
+          current += " " if (item = ListItem.parse(head)) && (item.spacing.empty? || item.task.try { |box| !box.ends_with?(' ') && !box.ends_with?('\t') })
           current += unit
           empty = false
         elsif current.size + 1 + unit.size <= column
@@ -1072,6 +1073,8 @@ module Md
     # line, or nil.
     private def first_item(doc : Crysterm::TextDocument, first : Int32, last : Int32) : {Int32, ListItem}?
       (first..last).each do |i|
+        # `* * *` reads as an item of `* *`, and is a rule.
+        next if RULE.matches?(doc.blocks[i].text)
         if item = ListItem.parse(doc.blocks[i].text)
           return {i, item}
         end
@@ -1184,7 +1187,7 @@ module Md
       first, last = selected_blocks
       # A code block's line is code, whatever it looks like.
       code = App.code_lines doc, last
-      lines = (first..last).select { |i| !code[i] && ListItem.parse(doc.blocks[i].text) }
+      lines = (first..last).select { |i| !code[i] && !RULE.matches?(doc.blocks[i].text) && ListItem.parse(doc.blocks[i].text) }
       bare = lines.empty?
       if bare
         lines = (first..last).select do |i|
@@ -1198,7 +1201,9 @@ module Md
       end
       changed = false
       doc.edit do
-        lines.each do |i|
+        # From the last line up: a heading item's underline (`#untitle_task`)
+        # is a line more, which would move every line counted below it.
+        lines.reverse_each do |i|
           if bare
             lead = QUOTE_LEAD.match(doc.blocks[i].text).try(&.[0].size) || 0
             Crysterm::TextCursor.new(doc, doc.blocks[i].position + lead).insert_text "- "

@@ -292,6 +292,15 @@ module Md
       drop_recovery
     end
 
+    # The end of the net when the session ended some other way, with
+    # unsaved changes nobody was asked about (a signal, an error ending the
+    # loop; `App#watch_quit`): the timer stops, and the recovery file is
+    # brought up to date and stays, to be found at the next open.
+    def keep_recovery : Nil
+      stop_autosave
+      write_recovery if @autosave_dirty && @text.modified? && host.try(&.autosave?)
+    end
+
     # The end of the document: the shared Neovim ends, the stream is
     # abandoned, the watcher and the timer stop, the recovery file goes when
     # *clean*, and the registry forgets it.

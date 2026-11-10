@@ -157,7 +157,9 @@ module Md
     private def choose_in_prompt(question : String, forms : Array(String), &callback : Int32? ->) : Nil
       keys = forms.map { |form| form[form.index!('(') + 1].downcase }
       prompt = @main.status_bar.line_prompt
-      status_prompt("#{question} #{forms.join(", ")}: ", "") do |text|
+      # No completer: Tab would put a file name in, whose first letter an
+      # Enter then took for the answer.
+      status_prompt("#{question} #{forms.join(", ")}: ", "", nil) do |text|
         @choice_key.try &.off
         @choice_key = nil
         answer = @choice_answer

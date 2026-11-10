@@ -593,6 +593,37 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Unsaved changes kept their recovery file only through a `kill -9` or a
+  power loss: a closed terminal, a `kill` or an error ending the loop took
+  the file away with the edits, as a quit the user had answered does. It
+  now stays, brought up to date, and is announced at the next open.
+- A window whose terminal window was shut from outside (its close button)
+  stayed a view on its document: listed in the Window menu, keeping the
+  `:N` in the other's title, letting the last real window close over
+  unsaved changes without the question, and md running on with nothing on
+  screen once that one closed.
+- Vi Mode's `:wq!` and `:x!` closed the window when the write had failed,
+  the changes going with it; they now ask, as `:wq` does.
+- `Tab` at a question answered by a letter (Save changes? Replace?) put a
+  file name in the field, and `Enter` then took its first letter for the
+  answer; Find, Replace and Go to Line completed file names too.
+- Insert → As a Task and `Alt-X` over several items skipped the ones below
+  a heading item (`- ## Title`), counted a line off once its underline
+  went in; a `* * *` rule was made a task, or nested by `Tab`, as an item.
+- Insert → Footnote with the caret at the document's end put the
+  definition right behind the reference (`[^1][^1]: Footnote`).
+- Rewrap joined a task box alone on its line with the text below it
+  without a space (`- [ ]buy milk`).
+- A search pattern that compiles and then fails on the text (nested
+  repeats over a long line) raised at every edit, so the viewer stopped
+  following the editor until the search was cleared; it now finds nothing.
+- Edit → Paste went on refusing with Command mode's last error ("no
+  clipboard command found") after the clipboard mode was changed.
+- A link to a file that cannot be looked at (a directory without search
+  permission, a name too long) did nothing; it gives a notice.
+- The man page's keys listed the task entries under Format and left
+  `Alt-S`, the Insert menu, out.
+
 - With View → Sync Cursor on, scrolling a pane with the mouse wheel left
   the other pane where it was; it now follows, as for a move by the keys.
 - A picture the viewer shows with terminal graphics (kitty, sixel, iTerm2

@@ -128,7 +128,9 @@ module Md
     # on why.
     def paste : Nil
       text = clipboard.text
-      if error = clipboard.error
+      # Only Command mode's read sets the error anew; in the others an
+      # earlier command's failure would still be standing there.
+      if clipboard.mode.command? && (error = clipboard.error)
         notice "Cannot paste: #{error}"
         return
       end

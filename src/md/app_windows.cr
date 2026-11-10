@@ -107,7 +107,7 @@ module Md
         App.instances.delete self
         forget_active
         finish
-        leave_document
+        leave_document clean: @started && !@unsettled
         App.refresh_window_menus
       end
     end
@@ -120,16 +120,29 @@ module Md
       App.instances << self
       # A close (`Window#close`: Close Current, Quit, the terminal window shut)
       # tells before the teardown, while the panes still have their sizes.
-      @window.on(Crysterm::Event::WindowClosed) { finish }
+      # The terminal window shut from outside (its close button) only tells:
+      # Crysterm leaves the window for the handler to reattach or destroy,
+      # and left alone it stayed a view on its document, an entry in every
+      # Window menu and a window the application waited on after the last
+      # real one closed. After `Window#close` the destroy is its own, done
+      # early.
+      @window.on(Crysterm::Event::WindowClosed) do
+        finish
+        @window.destroy unless @window.destroyed?
+      end
       App.refresh_window_menus
     end
 
     # Saves what a window's end saves (`#finish`) when *application* is
     # about to quit — Crysterm's own quit key, an error ending the loop —
     # before it tears the windows down (from `#run` and `#join`, where the
-    # application is known); the subscription ends with the window.
+    # application is known); the subscription ends with the window. A quit
+    # the user made closed the windows first, each through its guard, and
+    # is finished by now; one that gets here with the window still open —
+    # a signal (the terminal closed, a `kill`), an error ending the loop —
+    # asked nobody, and unsaved changes keep their recovery file.
     private def watch_quit(application : Crysterm::Application) : Nil
-      subscription = application.on(Crysterm::Event::AboutToQuit) { finish }
+      subscription = application.on(Crysterm::Event::AboutToQuit) { finish settled: false }
       @window.on(Crysterm::Event::Destroy) { subscription.off }
     end
 
@@ -145,16 +158,23 @@ module Md
     # from `#run` after the loop ended. Whichever comes first — and only for
     # a window that was put on screen (`#run`, `#join`): an app built and
     # dropped without running, as a spec's, has nothing to save.
-    private def finish : Nil
+    private def finish(settled : Bool = true) : Nil
       return if @finished || !@started
       @finished = true
+      @unsettled = !settled && @document.text.modified?
       record_window_place
-      @document.finish_autosave if @document.views.all?(&.finished?)
+      if @document.views.all?(&.finished?)
+        @unsettled ? @document.keep_recovery : @document.finish_autosave
+      end
       save_history
       save_config
     end
 
     @finished = false
+
+    # Set when the window ended with unsaved changes nobody was asked
+    # about (`#watch_quit`): the recovery file stays (`#watch_destroy`).
+    @unsettled = false
 
     # Whether the window's end was saved (`#finish`).
     def finished? : Bool

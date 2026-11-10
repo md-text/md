@@ -102,7 +102,7 @@ module Md
     # Asks for a pattern (`#ask_text`) and searches for it; an empty or
     # cancelled answer searches nothing.
     def search_prompt(backward : Bool = false) : Nil
-      ask_text(backward ? "?" : "/", "", question: backward ? "Find backward:" : "Find:") do |answer|
+      ask_text(backward ? "?" : "/", "", question: backward ? "Find backward:" : "Find:", completer: nil) do |answer|
         search answer, backward if answer && !answer.empty?
       end
     end
@@ -162,15 +162,18 @@ module Md
       end
       w.text_cursor = found
       true
+    rescue Regex::Error
+      # The pattern failed on this text (`#each_match`): not found.
+      false
     end
 
     # Asks for a pattern (the last search's filled in) and a replacement
     # (`#ask_text`), one after the other, and replaces (`#replace`); an
     # empty or cancelled pattern, or a cancelled replacement, does nothing.
     def replace_prompt : Nil
-      ask_text("Replace: ", @search_pattern || "") do |pattern|
+      ask_text("Replace: ", @search_pattern || "", completer: nil) do |pattern|
         next if pattern.nil? || pattern.empty?
-        ask_text("With: ", "") do |replacement|
+        ask_text("With: ", "", completer: nil) do |replacement|
           replace pattern, replacement if replacement
         end
       end
@@ -223,7 +226,7 @@ module Md
       # message above the prompt: a notice would end as the question opens.
       wrapped = @replace_wrapped ? "Search hit BOTTOM, continuing at TOP. " : ""
       @replace_wrapped = false
-      status_prompt("#{wrapped}Replace? (y)es (n)o (a)ll (q)uit (l)ast ", "") { |text| replace_answered text }
+      status_prompt("#{wrapped}Replace? (y)es (n)o (a)ll (q)uit (l)ast ", "", nil) { |text| replace_answered text }
       field = prompt.field
       @replace_key = field.on(Crysterm::Event::KeyPress) do |e|
         next if e.key || !e.char.in?('y', 'n', 'a', 'q', 'l')
@@ -392,6 +395,10 @@ module Md
           pos = s + (s < bytes.size ? Char::Reader.new(text, s).current_char_width : 1)
         end
       end
+    rescue Regex::Error
+      # A pattern that compiled can still fail on a text (PCRE2's match
+      # limit, with nested repeats): the matches end there, rather than the
+      # error going up into every edit's re-highlighting.
     end
 
     # The characters of UTF-8 *bytes* from offset *from* up to *to*: the
@@ -461,7 +468,7 @@ module Md
 
     # Asks for a source line (`#ask_text`) and goes there.
     def go_to_line_prompt : Nil
-      ask_text(":", "", question: "Go to line:") do |answer|
+      ask_text(":", "", question: "Go to line:", completer: nil) do |answer|
         next unless answer
         text = answer.strip
         next if text.empty?

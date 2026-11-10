@@ -85,7 +85,7 @@ module Md
     # all the bits (FAT, some network shares), which is the safe side to err
     # on.
     def self.program?(path : String) : Bool
-      return false unless info = File.info?(path)
+      return false unless info = (File.info?(path) rescue nil)
       return true if info.file? && (info.permissions & File::Permissions.flags(OwnerExecute, GroupExecute, OtherExecute)).value != 0
       real = File.realpath(path) rescue path
       {path, real}.any? { |name| PROGRAM_EXTENSIONS.includes? File.extname(name.rstrip('/')).downcase }
@@ -295,7 +295,15 @@ module Md
     # window, through the guard, landing on *fragment*'s heading when there
     # is one; another kind of file with the platform opener (`#open_other`).
     private def follow_file(target : String, fragment : String) : Nil
-      unless info = File.info?(target)
+      begin
+        info = File.info?(target)
+      rescue ex : File::Error
+        # Not "no such file": a directory that may not be searched, a name
+        # too long.
+        notice "Cannot open #{target}: #{Md.error_text(ex)}"
+        return
+      end
+      unless info
         notice "No such file: #{target}"
         return
       end

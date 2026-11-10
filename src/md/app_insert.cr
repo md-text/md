@@ -139,7 +139,12 @@ module Md
       number = (text.scan(/\[\^(\d+)\]/).compact_map(&.[1].to_i?).max? || 0) + 1
       at = editor.text_cursor.selection_end
       ref = "[^#{number}]"
-      gap = text.empty? || text.ends_with?("\n\n") ? "" : (text.ends_with?('\n') ? "\n" : "\n\n")
+      # At the text's end the reference is what the definition comes after.
+      gap = if at == text.size
+              "\n\n"
+            else
+              text.ends_with?("\n\n") ? "" : (text.ends_with?('\n') ? "\n" : "\n\n")
+            end
       definition = "#{gap}#{ref}: Footnote\n"
       doc.edit do
         # The definition first, so the caret's position still holds.

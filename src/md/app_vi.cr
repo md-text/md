@@ -221,15 +221,16 @@ module Md
     # the file being edited is: Neovim knows the buffer by another name and
     # asks it as a copy (with `!`, the file existing), which would have
     # written the file and left the document unsaved, its file changed
-    # under it.
+    # under it. A write that failed is remembered for the quit of a `:wq!`
+    # (`#vi_quit`).
     private def vi_write(path : String?, rename : Bool) : Nil
       path = nil if path && (own = source.path) && Documents.key_for(path) == Documents.key_for(own)
       if path && (rename || source.path.nil?)
-        save_as path
+        vi_wrote save_as(path)
       elsif path
-        vi_write_copy path
+        vi_wrote vi_write_copy(path)
       elsif source.path
-        save
+        vi_wrote save
       else
         @vi_naming = true
         save_as_prompt do |saved|
@@ -243,22 +244,45 @@ module Md
 
     # `:w FILE` on a named document: the text goes to *path*, and the
     # document keeps its name, its file and its unsaved state.
-    private def vi_write_copy(path : String) : Nil
+    # Returns whether it was written.
+    private def vi_write_copy(path : String) : Bool
       @document.write_copy path
       notice "Wrote a copy to #{path}"
+      true
     rescue ex : IO::Error
       notice "Cannot write #{path}: #{Md.error_text(ex)}"
+      false
     end
+
+    # Notes how a `:w` went: when it failed, for the quit that may follow.
+    private def vi_wrote(saved : Bool) : Nil
+      @vi_write_failed_at = saved ? nil : Time.instant
+    end
+
+    # When the last `:w` failed, if it did.
+    @vi_write_failed_at : Time::Instant? = nil
+
+    # How long after a failed write a `:q!` is taken for the second half of
+    # a `:wq!` — Neovim sends the two one right after the other, and the
+    # quit does not say it came with a write — rather than one typed on
+    # seeing the failure.
+    VI_WRITE_QUIT_SPAN = 200.milliseconds
 
     # `:q`: closes this window, or every window with *all* (`:qa`, File →
     # Quit's way: every unsaved document asked about before anything closes),
     # asking about unsaved changes unless *bang* (`:q!`, `:qa!`); after the
-    # save of a `:wq` still asking for a name, once it is answered.
+    # save of a `:wq` still asking for a name, once it is answered. The
+    # quit of a `:wq!` whose write just failed asks like a `:wq`'s: the `!`
+    # was for the write, and Vim does not quit after a write that failed —
+    # the window closed with the changes the user had just asked to save.
     private def vi_quit(bang : Bool, all : Bool) : Nil
       if @vi_naming
         @vi_quit_after_naming = {bang, all}
         return
       end
+      failed_at = @vi_write_failed_at
+      @vi_write_failed_at = nil
+      bang = false if failed_at && Time.instant - failed_at < VI_WRITE_QUIT_SPAN
       if !bang
         all ? quit : close_window
       elsif all
